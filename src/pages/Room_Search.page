@@ -1,0 +1,3232 @@
+<apex:page controller="RoomSearchController">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <link rel="stylesheet" href="{!URLFOR($Resource.SLDS091, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    <script src="{!URLFOR($Resource.angularJSM)}"></script>
+    <c:Job_Board_Style_Componenet ></c:Job_Board_Style_Componenet>
+    <link rel="stylesheet" href="{!URLFOR($Resource.datePickerCss)}" />
+    <apex:includeScript value="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+    <script src="{!URLFOR($Resource.moment)}" ></script>
+    <script src="{!URLFOR($Resource.moment_timezone_data)}" ></script>
+    <script src="{!URLFOR($Resource.jquery)}"></script>
+    <script src="{!URLFOR($Resource.Pagination)}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.fullCalendarCss)}" />
+    <script src="{!URLFOR($Resource.fullCalendarJs)}" ></script>
+    <script src="{!URLFOR($Resource.fullCalendar_Scheduler_js)}" ></script>
+    <apex:stylesheet value="{!URLFOR($Resource.fullCalendar_Scheduler_css)}" />
+    <body>
+    <div class="slds" ng-app="RoomSearch" ng-controller="RoomSearchController">
+        <div ng-hide="search.isLoaded" class="{{styleClass}}">
+            <c:slds_Loading />
+        </div>
+        <style>
+            .slds-size--6-of-12 {
+                display: inline-block;
+                width: 49%;
+            }
+                .modal {display: block;}
+            .keyword-search {
+                position: relative;
+            }
+
+            .keyword-search button {
+
+            }
+
+            .keyword-search input {
+                padding-right: 32px;
+            }
+            
+            .round-button {
+                border-radius: 50%;
+            }
+
+            .contactInfo span:after {
+              content: '|';
+            }
+
+            .contactInfo span:last-child:after {
+              content: '';
+            }
+
+            ._720kb-datepicker-calendar {
+                position: absolute;
+            }
+
+            //Loader Screen
+            .loader {
+                position:   fixed;
+                z-index:    25000;
+                top:        0;
+                left:       0;
+                height:     100%;
+                width:      100%;
+                background: rgba(230, 233, 239, 0.91)
+                            url('{!URLFOR($Resource.SLDS091,'/assets/images/spinners/slds_spinner_brand.gif')}')
+                            50% 50%
+                            no-repeat;
+                background-size: 60px 60px;
+            }
+
+            .filter-section {
+              _border: 1px #ABA solid;
+              padding: 5px;
+              margin: 12px 0;
+              position: relative;
+              box-shadow: 0 0 2px rgba(0, 0, 0, .4);
+            }
+
+            .filter-section .title {
+              content: 'Text';
+              font-size: 15px;
+              position: absolute;
+              top: -10px;
+              background-color: #fff;
+              padding: 0 5px;
+            }
+            
+            ul.pagination li.active a {
+                background-color: #0070d2;
+                color: white;
+            }
+
+            ul.pagination li:hover:not(.active) a {
+                background-color: #ddd;
+            }
+
+            ul.pagination {
+                display: inline-block;
+                padding: 0;
+                margin: 0;
+            }
+
+            ul.pagination li {
+                display: inline;
+                margin-left: 0;
+            }
+
+            ul.pagination li a {
+                color: black;
+                float: left;
+                padding: 8px 16px;
+                border: 1px solid #ddd;
+                margin: 0 4px;
+                text-decoration: none !important;
+            }
+            
+            div.right {
+                text-align: right;
+            }
+            
+            /*Style for the Multi Picklist */
+            .invisible {
+                visibility: hidden;
+            }
+
+            .visible {
+                visibility: visible;
+            }
+            .nowrapStyle {
+                white-space: normal !important;
+            }
+            
+            .multipicklist.slds-picklist__label {
+                min-width: unset;
+            }
+            .fc-cell-content {
+                background-color: (search.value) ? "blue" : "";
+            }
+            //This below styles for toggle options
+         
+             .toggleCheckbox {
+                width: 1px;
+                height: 1px;
+                border: 0;
+                clip: rect(0 0 0 0);
+                margin: -1px;
+                overflow: hidden;
+                padding: 0;
+                position: absolute;
+             }
+             
+             .bottomNonClass {
+                 margin-bottom: 0!important;
+             }
+             
+             .gridClass {
+                 display: flex;
+             }
+             
+             .checkboxtoggle1 {
+                 width: 100%;
+             }
+             
+             .faxContainerClass {
+                font-size: .625rem;
+                color: #54698d;
+             }
+             
+             .checkbocFaxClass {
+                display: block;
+                position: relative;
+                width: 3rem;
+                height: 1.5rem;
+                border: 1px solid #9faab5;
+                padding: .125rem;
+                border-color: #0070d2;
+                background-color: #0070d2;
+                border-radius: 15rem;
+                transition: background-color .2s cubic-bezier(.75,0,.08,1);
+             }
+             
+             .checkbocFaxClass::after {
+                content: '';
+                position: absolute;
+                top: 1px;
+                left: 1px;
+                width: 1.25rem;
+                height: 1.25rem;
+                background-color: #fff;
+                border-radius: 15rem;
+              }
+                       
+                       
+              .toggleCheckbox:checked~.faxContainerClass .checkbocFaxClass::after {
+                    content: ' ';
+                    position: absolute;
+                    top: .25rem;
+                    left: .6rem;
+                    height: .7rem;
+                    width: .45rem;
+                    border-bottom: 2px solid #fff;
+                    border-right: 2px solid #fff;
+                    border-radius: 0;
+                    background-color: transparent;
+                    transform: rotate(45deg);
+              }
+              
+             .toggleCheckbox:checked~.faxContainerClass .checkbocFaxClass::before {
+                content: '';
+                position: absolute;
+                top: 1px;
+                right: 1px;
+                width: 1.25rem;
+                height: 1.25rem;
+                background-color: #fff;
+                border-radius: 15rem;
+                transition: transform .2s cubic-bezier(.75,0,.08,1);
+            }
+              
+            .checkboxOn {
+                display: none;
+            }
+            
+            .checkbocOff {
+                display: block;
+            }
+            
+            .backdrop {
+                z-index: 100000;
+            }
+            
+            .control_header {
+                top: 0;
+                _height: 50px;
+                z-index: 5;
+                width: 100%;
+            }
+            .color-info div {
+                line-height: 25px;
+                display: inline-block;
+            }
+            
+            .square {
+                height: 15px;
+                width: 15px;
+                display: inline-block;
+            }
+            
+        </style>
+   
+        <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+            <div class="slds-grid">
+               <div class="slds-media__figure">
+                    <svg aria-hidden="true" class="slds-icon slds-icon--large slds-icon-standard-user">
+                        <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#user"></use>
+                    </svg>
+                </div>
+               <div class="slds-media__body">
+                   <div class="slds-grid">
+                       <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="Weekly Attendance Record">Search Room</h1>
+                   </div>
+               </div>
+               <div class="slds-col slds-no-flex slds-align-bottom">
+                   <div class="slds-button slds-button--neutral" ng-click="getroomdetails();" style="cursor: pointer;">Room Schedules</div>&nbsp;&nbsp;
+               </div>
+
+               <div class="slds-col slds-no-flex slds-align-bottom" ng-hide="search.hideScheduleId">
+                   <div class="slds-button slds-button--neutral" ng-click="getschedules();" style="cursor: pointer;">Instructor Schedules</div>&nbsp;&nbsp;
+               </div>
+               <div class="slds-col slds-no-flex slds-align-bottom" ng-if="type == 'ASSIGN'">
+                   <div class="slds-button-group" role="group">
+                      <button class="slds-button slds-button--neutral" ng-click="goBack();">Back</button>
+                   </div>
+               </div>
+           </div>
+        </div>
+        <div class="page">
+            <div class="slds-grid" style="margin: 35px auto;">
+                <div class="slds-col slds-size--3-of-12 side-bar control-bar hide-mobile" id="filter">
+                    <h3 class="header-text-2">Filter</h3>
+                    <div class="slds-button slds-button--brand" ng-click="checkUrl();" style="cursor: pointer;margin-left: 45%;margin-top: -15%;">Search</div>
+                    <div class="hidden-break-2"></div>
+
+                    <!-- General Filters -->
+                    <div class="filter-section">
+                        <span class="title">
+                            Room Preferences
+                        </span>
+                        <!-- Location Picklist -->
+                        
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="jobTravel">Location</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <select id="jobLanguage" ng-model="search.selectedLocation" ng-options="location.Id as location.Name for location in search.locationList" ng-change="getFloorsByLocation();" class="slds-select" ></select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floor Picklist -->
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Floor</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <multi-picklist options="search.floorNameList" selected-options="search.selectedFloors" on-blur="getSuitesByFloor"></multi-picklist>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <!-- Suite Picklist -->
+                        <!--<div class="slds-form-element">
+                            <label class="slds-form-element__label" for="jobTravel">Suite</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <select id="jobLanguage" ng-model="search.selectedSuite" ng-options="suite.Id as suite.Name for suite in search.suiteList"  class="slds-select"></select>
+                                </div>
+                            </div>
+                        </div>-->
+                        
+                        
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Suite</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <multi-picklist options="search.suiteNameList" selected-options="search.selectedSuites"></multi-picklist>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <!-- Function Picklist -->
+                        <!--<div class="slds-form-element">
+                            <label class="slds-form-element__label" for="jobTravel">Function</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <select ng-model="search.selectedFunction" ng-options="function for function in search.functionList" class="slds-select" ></select>
+                                </div>
+                            </div>
+                        </div>-->
+                        
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Function</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <multi-picklist options="search.functionNameList" selected-options="search.selectedFunctions"></multi-picklist>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <!-- Capacity Picklist -->
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="jobTravel">Student Capacity</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <input type="text" ng-model="search.enteredCapacity" class="slds-input" placeholder="Capacity" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Window or Interior Picklist -->
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="jobTravel">Window or Interior?</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <select ng-model="search.selectedRoomType" class="slds-select">
+                                        <option value="Both">Both</option>
+                                        <option value="Window">Window</option>
+                                        <option value="Interior">Interior</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                      
+                        
+                    </div>
+                    
+                    <!-- Schedule FIlter -->
+                    <div class="filter-section" ng-hide="search.hideScheduleId">
+                        <div class="title">
+                            Room Activity
+                        </div>
+                        <!-- Time period filter -->
+                        <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                            <div class="slds-form-element">
+                                <div class="slds-form-element__control" >
+                                    <label class="slds-checkbox">
+                                        <input type="checkbox" class="slds-select" ng-model="search.section" />
+                                        <span class="slds-checkbox--faux"></span>
+                                        <span class="slds-form-element__label">Same As Section</span>
+                                    </label>
+                                </div>
+                                <div class="slds-form-element__control" >
+                                    <label class="slds-checkbox">
+                                        <input type="checkbox" class="slds-select" ng-model="search.language" />
+                                        <span class="slds-checkbox--faux"></span>
+                                        <span class="slds-form-element__label">Same As Language</span>
+                                    </label>
+                                </div>
+                                <div class="slds-form-element__control" >
+                                    <label class="slds-checkbox">
+                                        <input type="checkbox" class="slds-select" ng-model="search.instructor" />
+                                        <span class="slds-checkbox--faux"></span>
+                                        <span class="slds-form-element__label">Same As Instructor</span>
+                                    </label>
+                                </div>
+                           
+                            </div>
+                            
+                        </div>
+                        <!--<div class="slds-button slds-button--brand" ng-click="searchByDate();" style="cursor: pointer;">Search</div>-->
+                        
+                    </div>
+                    
+                    <!-- Schedule FIlter -->
+                    <div class="filter-section">
+                        <div class="title">
+                            Schedule Details
+                        </div>
+                        <!-- Time period filter -->
+                        <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                            <div>
+                                <label class="slds-form-element__label" for="lookup">Start Date</label>
+                                <datepicker date-format="MM/dd/yyyy">
+                                    <input type="text" ng-model="search.selectedStartDate" class="slds-input" placeholder="Start Date" />
+                                </datepicker>
+                            </div>
+                            <div>
+                                <label class="slds-form-element__label" for="lookup">End Date</label>
+                                <datepicker date-format="MM/dd/yyyy">
+                                    <input type="text" ng-model="search.selectedEndDate" class="slds-input" placeholder="End Date" />
+                                </datepicker>
+                            </div>
+                            <div>
+                                <label class="slds-form-element__label" for="lookup">Start Time</label>
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                    <select ng-model="search.selectedStartTime" class="slds-select" ng-options="time for time in search.timePickList"></select>
+                                </div>
+                            </div>
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label" for="lookup">End Time</label>
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                    <select ng-model="search.selectedEndTime" class="slds-select" ng-options="time for time in search.timePickList"></select>
+                                </div>
+                            </div>
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label" for="days">Days</label>
+                                <div class="slds-form-element">
+                                    
+                                    <div class="slds-form-element__control" >
+                                        <label class="slds-checkbox">
+                                            <input type="checkbox" class="slds-select" ng-model="search.monday" />
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Monday</span>
+                                        </label>
+                                    </div>
+                                    <div class="slds-form-element__control" >
+                                        <label class="slds-checkbox">
+                                            <input type="checkbox" class="slds-select" ng-model="search.tuesday" />
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Tuesday</span>
+                                        </label>
+                                    </div>
+                                    <div class="slds-form-element__control" >
+                                        <label class="slds-checkbox">
+                                            <input type="checkbox" class="slds-select" ng-model="search.wednesday" />
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Wednesday</span>
+                                        </label>
+                                    </div>
+                                    <div class="slds-form-element__control" >
+                                        <label class="slds-checkbox">
+                                            <input type="checkbox" class="slds-select" ng-model="search.thursday" />
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Thursday</span>
+                                        </label>
+                                    </div>
+                                    <div class="slds-form-element__control" >
+                                        <label class="slds-checkbox">
+                                            <input type="checkbox" class="slds-select" ng-model="search.friday" />
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Friday</span>
+                                        </label>
+                                    </div>
+                                    <div class="slds-form-element__control" >
+                                        <label class="slds-checkbox">
+                                            <input type="checkbox" class="slds-select" ng-model="search.saturday" />
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Saturday</span>
+                                        </label>
+                                    </div>
+                                    <div class="slds-form-element__control" >
+                                        <label class="slds-checkbox">
+                                            <input type="checkbox" class="slds-select" ng-model="search.sunday" />
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Sunday</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--<div class="slds-button slds-button--brand" ng-click="searchByDate();" style="cursor: pointer;">Search</div>-->
+                        
+                    </div>
+                    <button class="slds-button" ng-click="clearFilter();">Clear Filter</button>
+                    <div class="slds-button slds-button--brand" ng-click="checkUrl();" style="cursor: pointer;">Search</div>
+                </div>
+                
+                
+                <div class="content slds-col slds-size--9-of-12">
+                    
+                    <div style="float: right;">
+                        <div class="slds-form-element">
+                          <label class="checkboxtoggle1 gridClass">
+                            
+                            <input name="checkbox" ng-model="search.togglePosition" type="checkbox" aria-describedby="toggle-desc" class="toggleCheckbox" style="width: 1px;height: 1px;border: 0;clip: rect(0 0 0 0);margin: -1px;overflow: hidden;padding: 0;position: absolute;" ng-click="conflictsDisplayfunction();"/>
+                            <span id="toggle-desc" class="faxContainerClass" aria-live="assertive">
+                              <span class="checkbocFaxClass"></span>
+                            </span>
+                            <span class="slds-form-element__label bottomNonClass" style="font-size: 15px;"> Hide Conflicts</span>
+                          </label>
+                        </div>
+                    </div>   
+                    <div ng-show="ConflictsDisplay">
+                        <div class="body"> <!-- Body -->
+                            <h1 class="header-text">Rooms</h1>
+                            
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label" for="jobTravel">Search by Name</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <input type="text" class="slds-input" ng-model="search.searchByName" placeholder="Search by Name" style="width: 75%;"/>
+                                        <button class="slds-button slds-button--brand" ng-click="checkUrl();">Search</button>
+                                        <button class="slds-button slds-button--brand" ng-click="clearNameValue();">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="hidden-break"></div>
+                            <div>
+                                <h2 ng-if="!rooms.length" class="header-text-2">
+                                    <a class="slds-button"><span> No rooms found. Please alter your search parameters to find more.</span></a>
+                                </h2>
+                                <h2 ng-if="rooms.length" class="header-text-2">
+                                   <a class="slds-button"><span>Showing {{((options.offset * options.resultSize) + 1 ) + ' to ' + ((options.offset * options.resultSize) + rooms.length)}} of {{search.totalRecords}} rooms.</span></a>
+                                </h2>
+                                <div class="right">
+                                    <div class="pager1"></div>
+                                </div>
+                                <div class="break"></div> 
+                            </div>
+                            <div ng-repeat="room in rooms = search.DisplayList | orderBy:'Name':false" >
+                                <div class="job_list">
+                                    <h1 class="header-text-2">
+                                        <a target="_blank" href="{!$Site.Prefix}/{{room.Id}}"><span ng-bind="room.Name"></span></a>
+                                        <!--<small class="slds-badge" ng-if="search.conflicts[room.Id]" style="background-color: #FF3322; color: #FFF" ng-bind="search.conflicts[room.Id]"></small>-->
+                                        <small ng-if="type == 'ASSIGN' && room.Room_Status__c == 'Active' && allowRoomEdit"><a style="color: rgb(5, 191, 0); text-decoration: underline;" href="javascript:void(0);" ng-click="assignRoom(room.Id);">Assign</a></small>
+                                        <small ng-if="room.Room_Status__c == 'Under Construction'"><a style="color: darkred; text-decoration: underline;" href="javascript:void(0);">Under Construction</a></small>
+                                        <!--<small style="position: absolute; right: 70px; padding: 10px; cursor: pointer;" ng-click="getSchedulesByRooms(room.Id,room.Name);">
+                                            <span class="slds-icon_container slds-icon_container--circle slds-icon-action-description" style="border-radius: 16px; padding: 5px; color: white;font-size: 16px; cursor: pointer;">
+                                                More Info
+                                            </span>
+                                        </small>-->
+                                        <span class="slds-icon_container slds-icon_container--circle slds-icon-action-description round-button" ng-click="updateNewNotes(room.Id);" style="position: absolute; right: 70px; padding: 9px; cursor: pointer;min-height: 35px;min-width: 35px;" >
+                                            <svg class="slds-icon slds-icon--x-smalsmall" style="width: 20px; height: 15px">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2,'/assets/icons/action-sprite/svg/symbols.svg#new_note')}"></use>
+                                            </svg>
+                                            
+                                        </span>
+                                        <span class="slds-icon_container slds-icon_container--circle slds-icon-action-description round-button" ng-click="getSchedulesByRooms(room.Id,room.Name);" style="position: absolute; right: 25px; padding: 9px; cursor: pointer;min-height: 35px;min-width: 35px;">
+                                            <svg class="slds-icon slds-icon--x-smalsmall" style="width: 20px; height: 15px">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2,'/assets/icons/action-sprite/svg/symbols.svg#more')}"></use>
+                                            </svg>   
+                                        </span>
+                                    </h1>
+                                    <div>
+                                        <div>
+                                            <small class="contactInfo">
+                                                <span ng-if="room.Ext__c">Phone : <a href="tel:{{room.Ext__c}}" ng-bind="room.Ext__c"></a></span>
+                                                <span ng-if="room.Floor_Suite__r.Name">Suite : <a target="_blank" href="{!$Site.Prefix}/{{room.Floor_Suite__c}}" ng-bind="room.Floor_Suite__r.Name"></a></span>
+                                                <span ng-if="room.Location_n__r">Location : <a href="" ng-bind="room.Location_n__r.Name"></a></span>
+                                                <span ng-if="room.Function__c">Function : <a href="" ng-bind="room.Function__c"></a></span>
+                                                <span ng-if="room.Student_Capacity__c">Student Capacity : <a href="" ng-bind="room.Student_Capacity__c"></a></span>
+                                                <span ng-if="room.Room_Location__c"><a href="" ng-bind="room.Room_Location__c"></a></span>
+                                                <span ng-if="search.conflicts[room.Id]">Conflicts : <a href="" ng-bind="search.conflicts[room.Id]"></a></span>
+                                                <span ng-if="!search.conflicts[room.Id]">No Conflicts<a href="" ng-bind=""></a></span>
+                                            </small>
+                                       </div>
+                                    </div>
+                                    <div class="break"></div>
+                                </div>
+                            </div>
+                            <div class="right">
+                                <div class="pager2"></div>
+                            </div>
+                         </div>
+                    </div>
+                    
+                </div>
+                
+                <!--Calendar box-->
+                
+                <div class="slds-modal {{search.modalStateForCalendar}}" style="z-index: 9005 !important;" aria-hidden="false" role="dialog" >
+                    <div class="slds-modal__container" style="width: 100%;max-width: 99%; height: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Room Schedules </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                                <div class="slds-card__body">
+                                    
+                                            <label class="slds-form-element__label" style="font-size: 15px; font-weight: 700;">Start Date:</label>
+                                                <span ng-if="search.selectedStartDate">{{search.selectedStartDate}}, </span>
+                                                <span ng-if="!search.selectedStartDate">N/A,</span>&nbsp;
+                                            <label class="slds-form-element__label" style="font-size: 15px; font-weight: 700;">End Date:</label>
+                                                <span ng-if="search.selectedEndDate">{{search.selectedEndDate}},</span>
+                                                <span ng-if="!search.selectedEndDate">N/A,</span>&nbsp;
+                                            <label class="slds-form-element__label" style="font-size: 15px;font-weight: 700;">Start Time:</label>
+                                                <span ng-if="search.selectedStartTime">{{search.selectedStartTime}},</span>
+                                                <span ng-if="!search.selectedStartTime">N/A,</span>&nbsp;
+                                            <label class="slds-form-element__label" style="font-size: 15px;font-weight: 700;">End Time:</label>
+                                                <span ng-if="search.selectedEndTime">{{search.selectedEndTime}},</span>
+                                                <span ng-if="!search.selectedEndTime">N/A,</span>&nbsp;
+                                            <label class="slds-form-element__label" style="font-size: 15px;font-weight: 700;">Days:</label> 
+                                                <span ng-if="search.sunday">Sun </span>
+                                                <span ng-if="search.sunday && search.monday">,</span>
+                                                <span ng-if="search.monday">Mon </span>
+                                                <span ng-if="(search.sunday || search.monday) && search.tuesday">,</span>
+                                                <span ng-if="search.tuesday">Tue </span>
+                                                <span ng-if="(search.sunday || search.monday || search.tuesday) && search.wednesday">,</span>
+                                                <span ng-if="search.wednesday">Wed </span>
+                                                <span ng-if="(search.sunday || search.monday || search.tuesday || search.wednesday) && search.thursday">,</span>
+                                                <span ng-if="search.thursday">Thu </span>
+                                                <span ng-if="(search.sunday || search.monday || search.tuesday || search.wednesday || search.thursday) && search.friday">,</span>
+                                                <span ng-if="search.friday">Fri </span>
+                                                <span ng-if="(search.sunday || search.monday || search.tuesday || search.wednesday || search.thursday || search.friday) && search.saturday">,</span>
+                                                <span ng-if="search.saturday">Sat</span>
+                                                <span ng-if="!search.sunday && !search.monday && !search.tuesday && !search.wednesday && !search.thursday && !search.friday && !search.saturday">N/A</span>
+                                    
+                                        
+                                        
+                                    <div style="float: right;">
+                                        <div class="slds-form-element">
+                                          <label class="checkboxtoggle1 gridClass">
+                                            
+                                            <input name="checkbox" ng-model="search.togglePosition2" type="checkbox" aria-describedby="toggle-desc" class="toggleCheckbox" style="width: 1px;height: 1px;border: 0;clip: rect(0 0 0 0);margin: -1px;overflow: hidden;padding: 0;position: absolute;" ng-click="conflictsDisplayInCalendar()"/>
+                                            <span id="toggle-desc" class="faxContainerClass" aria-live="assertive">
+                                              <span class="checkbocFaxClass"></span>
+                                            </span>
+                                            <span class="slds-form-element__label bottomNonClass" style="font-size: 15px;"> Hide Conflicts</span>
+                                          </label>
+                                        </div>
+                                    </div>
+                                    <div id="calendar"></div>    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <span style="float:left;">
+                            <article class="control_header">
+                                <div class="color-info">
+                                     <div class="slds-col"><div class="square" style="background-color:green;"></div><div>RA</div></div>
+                                     <div class="slds-col"><div class="square" style="background-color:blue;"></div><div>EE</div></div>
+                                     <div class="slds-col"><div class="square" style="background-color:yellow;"></div><div>AA</div></div>
+                                     <div class="slds-col"><div class="square" style="background-color:orange;"></div><div>AFP</div></div>
+                                     <div class="slds-col"><div class="square" style="background-color: rgb(59, 145, 173);"></div><div>Others</div></div>
+                               </div>
+                           </article> </span>
+                            <div ng-click="search.modalStateForCalendar='';search.modalBackdropStateForCalendar=''; closeModalOfCalendar();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{search.modalBackdropStateForCalendar}}" style="z-index: 9000 !important;"></div>
+                
+                <!--End of Calendar box-->
+                
+                <!-- Instructor Info Box --->
+                
+                <div class="slds-modal {{search.modlaStateForSchedule}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;max-width: 1200px;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Schedule Details </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                                <div class="slds-card__body">
+                                    <div ng-hide="search.ScheduleRecordsbyins.length > 0" class="slds-text-align--center"> No schedules found. </div>
+                                    <table ng-show="search.ScheduleRecordsbyins.length > 0" class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" style="padding-top: 1%;">
+                                        <thead>
+                                            <!--<th></th>-->
+                                            <td class="slds-cell-wrap"><span class="">Name</span></td>
+                                            <td class="slds-cell-wrap"><span class="">Days</span></td>
+                                            <!--<td><span class="slds-truncate">Travel Dates</span></td>-->
+                                            <td><span class="slds-truncate">Training Dates</span></td>
+                                            <td><span class="slds-truncate">Time</span></td>
+                                            <td class="slds-cell-wrap"><span class="slds-truncate">Project</span></td>
+                                            <td class="slds-cell-wrap"><span class="slds-truncate">Project Task</span></td>
+                                            <td class="slds-cell-wrap">
+                                                <span class="slds-truncate">Instructor</span>
+                                            </td>
+                                            <td class="slds-cell-wrap"><span class="slds-truncate">Room</span></td>
+                                             <td class="slds-cell-wrap"><span>Qty Per Session</span></td>
+                                            <td class="slds-cell-wrap"><span>Total Project Qty</span></td>
+                                            <td class="slds-cell-wrap"><span>Total Planned Qty</span></td>
+                                            <td class="slds-cell-wrap"><span>Unit</span></td>
+                                            <!--<td class="slds-cell-wrap"><span>Timezone</span></td>-->
+                                        </thead>
+                                        <tbody>
+                                            <tr class="slds-hint-parent" ng-repeat="sch in search.ScheduleRecordsbyins">
+                                                <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Id}}"> {{sch.Name}} </a></span></td>
+                                                <td class="slds-cell-wrap"><span ng-bind="getDays(sch)"></span></td>
+                                                <!--<td class="slds-cell-wrap"><span> {{sch.Travel_In__c | date:"MM-dd-yyyy"}} - {{sch.Travel_Out__c | date:"MM-dd-yyyy"}} </span></td>-->
+                                                <td class="slds-cell-wrap"><span> {{sch.Start_Date__c | date:"MM-dd-yyyy"}} - {{sch.End_Date__c | date:"MM-dd-yyyy"}} </span></td>
+                                                <td class="slds-cell-wrap"><span> {{sch.Start_Time__c}} - {{sch.End_Time__c}} </span></td>
+                                                <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Project__c}}"> {{sch.Project__r.Name}} </a></span></td>
+                                                <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Project_Task__c}}"> {{sch.Project_Task__r.Name}} </a></span></td>
+                                                <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Instructor__c}}" ng-bind="decodeHTML(sch.Instructor__r.Name)"></a></span></td>
+                                                <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Room__c}}"> {{sch.Room__r.Name}} </a></span></td>
+                                                <td class="slds-cell-wrap"><span> {{sch.Hours_Planned__c}} </span></td>
+                                                <td class="slds-cell-wrap"><span> {{sch.Total_Hours__c}} </span></td>
+                                                <td class="slds-cell-wrap"><span> {{sch.Project_Task__r.Total_Qty_Planned__c}} </span></td>
+                                                <td class="slds-cell-wrap"><span> {{sch.Project_Task__r.Unit__c}} </span></td>
+                                                <!--<td class="slds-cell-wrap"><span> {{sch.Timezone__c}} </span></td>--> 
+                                            </tr> 
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <!--<button ng-click="qualificationSubmission()" class="slds-button slds-button--neutral slds-button--brand">Submit</button>-->
+                            <div ng-click="search.modlaStateForSchedule='';search.modalBackdropStateForSchedule='';" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{search.modalBackdropStateForSchedule}}"></div>
+                <!-- End info  box -->
+                
+                <!-- More info -->
+                <div class="slds-modal {{search.modlaStateForSchedulebyRooms}}" style="z-index: 9015 !important;" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;max-width: 99%;height : 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Schedule Details : Room No - {{ search.roomName }} </h2><br></br>
+                            <h2><label class="slds-form-element__label" style="font-size: 15px; font-weight: 700;">Start Date:</label>
+                                <span ng-if="search.selectedStartDate">{{search.selectedStartDate}}, </span>
+                                <span ng-if="!search.selectedStartDate">N/A,</span>&nbsp;
+                            <label class="slds-form-element__label" style="font-size: 15px; font-weight: 700;">End Date:</label>
+                                <span ng-if="search.selectedEndDate">{{search.selectedEndDate}},</span>
+                                <span ng-if="!search.selectedEndDate">N/A,</span>&nbsp;
+                            <label class="slds-form-element__label" style="font-size: 15px;font-weight: 700;">Start Time:</label>
+                                <span ng-if="search.selectedStartTime">{{search.selectedStartTime}},</span>
+                                <span ng-if="!search.selectedStartTime">N/A,</span>&nbsp;
+                            <label class="slds-form-element__label" style="font-size: 15px;font-weight: 700;">End Time:</label>
+                                <span ng-if="search.selectedEndTime">{{search.selectedEndTime}},</span>
+                                <span ng-if="!search.selectedEndTime">N/A,</span>&nbsp;
+                            <label class="slds-form-element__label" style="font-size: 15px;font-weight: 700;">Days:</label> 
+                                <span ng-if="search.sunday">Sun </span>
+                                <span ng-if="search.sunday && search.monday">,</span>
+                                <span ng-if="search.monday">Mon </span>
+                                <span ng-if="(search.sunday || search.monday) && search.tuesday">,</span>
+                                <span ng-if="search.tuesday">Tue </span>
+                                <span ng-if="(search.sunday || search.monday || search.tuesday) && search.wednesday">,</span>
+                                <span ng-if="search.wednesday">Wed </span>
+                                <span ng-if="(search.sunday || search.monday || search.tuesday || search.wednesday) && search.thursday">,</span>
+                                <span ng-if="search.thursday">Thu </span>
+                                <span ng-if="(search.sunday || search.monday || search.tuesday || search.wednesday || search.thursday) && search.friday">,</span>
+                                <span ng-if="search.friday">Fri </span>
+                                <span ng-if="(search.sunday || search.monday || search.tuesday || search.wednesday || search.thursday || search.friday) && search.saturday">,</span>
+                                <span ng-if="search.saturday">Sat</span>
+                                <span ng-if="!search.sunday && !search.monday && !search.tuesday && !search.wednesday && !search.thursday && !search.friday && !search.saturday">N/A</span>
+                            </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                            <div class="slds-tabs--default">
+                                <ul class="slds-tabs--default__nav" role="tablist">
+                                    <li class="slds-tabs__item slds-text-heading--label" id="li11" title="Schedule" role="presentation"><a role="tab" tabindex="0" aria-selected="false" aria-controls="tab-scoped-11" ng-click="openBox11();">Schedule</a></li>
+                                    <li class="slds-tabs__item slds-text-heading--label" id="li12" title="Events" role="presentation"><a role="tab" tabindex="1" aria-selected="false" aria-controls="tab-scoped-12" ng-click="openBox12();">Events</a></li>
+                                    <li class="slds-tabs__item slds-text-heading--label" id="li13" title="Conflicts" role="presentation"><a role="tab" tabindex="2" aria-selected="false" aria-controls="tab-scoped-13" ng-click="openBox13();">Conflicts</a></li>
+                                </ul>
+                                <div id="tab-scoped-11" class="slds-tabs__content slds-show" role="tabpanel">
+                                    <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                                        <div class="slds-card__body">
+                                            <div ng-hide="search.ScheduleRecordsbyroom.length > 0" class="slds-text-align--center"> No schedules found. </div>
+                                            <table ng-show="search.ScheduleRecordsbyroom.length > 0" class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" style="padding-top: 1%;">
+                                                <thead>
+                                                    <!--<th></th>-->
+                                                    <td class="slds-cell-wrap"><span class="">Name</span></td>
+                                                    <td class="slds-cell-wrap"><span class="">Days</span></td>
+                                                    <!--<td><span class="slds-truncate">Travel Dates</span></td>-->
+                                                    <td><span class="slds-truncate">Training Dates</span></td>
+                                                    <td><span class="slds-truncate">Time</span></td>
+                                                    <td class="slds-cell-wrap"><span class="slds-truncate">Project</span></td>
+                                                    <td class="slds-cell-wrap"><span class="slds-truncate">Project Task</span></td>
+                                                    <td class="slds-cell-wrap">
+                                                        <span class="slds-truncate">Instructor</span>
+                                                    </td>
+                                                    <!--<td class="slds-cell-wrap"><span class="slds-truncate">Room</span></td>-->
+                                                    <td class="slds-cell-wrap"><span>Qty Per Session</span></td>
+                                                    <td class="slds-cell-wrap"><span>Total Project Qty</span></td>
+                                                    <td class="slds-cell-wrap"><span>Total Planned Qty</span></td>
+                                                    <td class="slds-cell-wrap"><span>Unit</span></td>
+                                                    <!--<td class="slds-cell-wrap"><span>Timezone</span></td>-->
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="slds-hint-parent" ng-repeat="sch in search.ScheduleRecordsbyroom">
+                                                        <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Id}}"> {{sch.Name}} </a></span></td>
+                                                        <td class="slds-cell-wrap"><span ng-bind="getDays(sch)"></span></td>
+                                                        <!--<td class="slds-cell-wrap"><span> {{sch.Travel_In__c | date:"MM-dd-yyyy"}} - {{sch.Travel_Out__c | date:"MM-dd-yyyy"}} </span></td>-->
+                                                        <td class="slds-cell-wrap"><span> {{sch.Start_Date__c | date:"MM-dd-yyyy"}} - {{sch.End_Date__c | date:"MM-dd-yyyy"}} </span></td>
+                                                        <td class="slds-cell-wrap"><span> {{sch.Start_Time__c}} - {{sch.End_Time__c}} </span></td>
+                                                        <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Project__c}}"> {{sch.Project__r.Name}} </a></span></td>
+                                                        <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Project_Task__c}}"> {{sch.Project_Task__r.Name}} </a></span></td>
+                                                        <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{sch.Instructor__c}}"> {{sch.Instructor__r.Name}} </a></span></td>
+                                                        <!--<td class="slds-cell-wrap"><span> {{sch.Room__r.Name}} </span></td>-->
+                                                        <td class="slds-cell-wrap"><span> {{sch.Hours_Planned__c}} </span></td>
+                                                        <td class="slds-cell-wrap"><span> {{sch.Total_Hours__c}} </span></td>
+                                                        <td class="slds-cell-wrap"><span> {{sch.Project_Task__r.Total_Qty_Planned__c}} </span></td>
+                                                        <td class="slds-cell-wrap"><span> {{sch.Project_Task__r.Unit__c}} </span></td>
+                                                        <!--<td class="slds-cell-wrap"><span> {{sch.Timezone__c}} </span></td>-->  
+                                                    </tr> 
+                                                    
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="tab-scoped-12" class="slds-tabs__content slds-hide" role="tabpanel">
+                                    <!--<div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                                        <div class="slds-card__body">-->
+                                        <div ng-show="search.ScheduleRecordsbyroom.length > 0">
+                                            <iframe ng-src="{{urlPrefix + '/apex/RoomEvents_Clone?Id='+roomId}}" style="width:100%;height:1200px !important;"></iframe>
+                                        </div>
+                                        <div ng-hide="search.ScheduleRecordsbyroom.length > 0" class="slds-text-align--center"> No events found. </div>
+                                        <!--</div>
+                                    </div>-->
+                                    
+                                </div>
+                                
+                                <div id="tab-scoped-13" class="slds-tabs__content slds-hide" role="tabpanel">
+                                    <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                                        <div class="slds-card__body">
+                                            <div ng-hide="search.conflictRecords.length > 0" class="slds-text-align--center"> No conflicts found. </div>
+                                            <table ng-show="search.conflictRecords.length > 0" class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" style="padding-top: 1%;">
+                                                <thead>
+                                                    <!--<th></th>-->
+                                                    <td class="slds-cell-wrap"><span class="">Name</span></td>
+                                                    <td class="slds-cell-wrap"><span class="">Event</span></td>
+                                                    <td><span class="slds-truncate">Conflict Event</span></td>
+                                                    <td><span class="slds-truncate">Date</span></td>
+                                                    <td class="slds-cell-wrap">Conflict Event Start Time</td>
+                                                    <td class="slds-cell-wrap">Conflict Event End Time</td>
+                                                    <td class="slds-cell-wrap">Instructor Conflict</td>
+                                                    <td class="slds-cell-wrap">Room Conflict</td>
+                                                    <td class="slds-cell-wrap">
+                                                        <span class="slds-truncate">Student Conflict</span>
+                                                    </td>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="slds-hint-parent" ng-repeat="conflict in search.conflictRecords">
+                                                        <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{conflict.Id}}"> {{conflict.Name}} </a></span></td>
+                                                        <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{conflict.Event__c}}"> {{conflict.Event__r.Name}} </a></span></td>
+                                                        <td class="slds-cell-wrap"><span><a target="_blank" href="{!$Site.Prefix}/{{conflict.Conflict_Event__c}}"> {{conflict.Conflict_Event__r.Name}} </a></span></td>
+                                                        
+                                                        <td class="slds-cell-wrap"><span> {{conflict.Date__c | date:"MM/dd/yyyy"}}</span></td>
+                                                        <td class="slds-cell-wrap"><span> {{conflict.Conflict_Event__r.Start_Time__c}} </span></td>
+                                                        <td class="slds-cell-wrap"><span> {{conflict.Conflict_Event__r.End_Time__c}} </span></td>
+                                                        <td class="slds-cell-wrap">
+                                                            <span class="slds-truncate" style="margin-left: 30%;">
+                                                                <label class="slds-checkbox checkbox_custom">
+                                                                    <input name="checkbox" type="checkbox" ng-model="conflict.Instructor_Conflict__c" ng-disabled="true"/>
+                                                                    <span class="slds-checkbox--faux" style="background-color: #3333335c;"></span>
+                                                                    <span class="slds-form-element__label slds-assistive-text"></span>
+                                                                </label>
+                                                            </span>
+                                                        </td>
+                                                        <td class="slds-cell-wrap">
+                                                            <span class="slds-truncate" style="margin-left: 30%;">
+                                                                <label class="slds-checkbox checkbox_custom">
+                                                                    <input name="checkbox" type="checkbox" ng-model="conflict.Room_Conflict__c" ng-disabled="true"/>
+                                                                    <span class="slds-checkbox--faux" style="background-color: #3333335c;"></span>
+                                                                    <span class="slds-form-element__label slds-assistive-text"></span>
+                                                                </label>
+                                                            </span>
+                                                        </td>
+                                                        <td class="slds-cell-wrap">
+                                                            <span class="slds-truncate" style="margin-left: 30%;">
+                                                                <label class="slds-checkbox checkbox_custom">
+                                                                    <input name="checkbox" type="checkbox" ng-model="conflict.Student_Conflict__c" ng-disabled="true"/>
+                                                                    <span class="slds-checkbox--faux" style="background-color: #3333335c;"></span>
+                                                                    <span class="slds-form-element__label slds-assistive-text"></span>
+                                                                </label>
+                                                            </span>
+                                                        </td>
+                                                        
+                                                    </tr> 
+                                                    
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <!--<button ng-click="qualificationSubmission()" class="slds-button slds-button--neutral slds-button--brand">Submit</button>-->
+                            <div ng-click="search.modlaStateForSchedulebyRooms='';search.modalBackdropStateForSchedulebyRooms='';" style="cursor: pointer;" class="slds-button slds-button--neutral slds-button--brand">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{search.modalBackdropStateForSchedulebyRooms}}" style="z-index: 9010 !important;"></div>
+                
+                <!-- End of More Info box --->
+                
+                <!-- New Note -->
+                <div class="slds-modal {{search.modlaStateForRoomNotes}}" style="z-index: 9015 !important;" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;max-width: 50px;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Room No - {{search.roomRecordForNotes.Name}} </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                            
+                            
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label" for="text-input-01">Notes:</label>
+                                <div class="slds-form-element__control">
+                                    <textarea ng-model="search.RoomNotes" rows="5" cols="35"></textarea>
+                                </div>
+                            </div>
+                             
+                        </div>
+                        <div class="slds-modal__footer">
+                            <!--<button ng-click="qualificationSubmission()" class="slds-button slds-button--neutral slds-button--brand">Submit</button>-->
+                            <div ng-click="saveRoomNotes(); search.modlaStateForRoomNotes='';search.modalBackdropStateForRoomNotes='';" style="cursor: pointer;" class="slds-button slds-button--neutral slds-button--brand">Save</div>
+                            <div ng-click="search.modlaStateForRoomNotes='';search.modalBackdropStateForRoomNotes='';" style="cursor: pointer;" class="slds-button slds-button--neutral slds-button--brand">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{search.modalBackdropStateForRoomNotes}}" style="z-index: 9010 !important;"></div>
+                
+                <!-- End of New Note box --->
+                
+                <!-- Message -->
+             
+                <div class="slds-modal {{search.messageModal}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Message </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium">
+                            <span>Hide Conflict requires schedule information to search</span>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="search.messageModal='';search.messageModalBackDrop='';search.isLoaded = true;" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{search.messageModalBackDrop}}"></div>
+               
+                <!-- End Message -->
+                
+                
+                <div>
+                    <div aria-hidden="false" role="dialog" class="slds-modal slds-modal--prompt {{modal.successModal}}">
+                        <div class="slds-modal__container slds-modal--prompt">
+                            <div class="slds-modal__header slds-theme--success slds-theme--alert-texture">
+                                <h2 class="slds-text-heading--medium">Info</h2>
+                            </div>
+                            <div class="slds-modal__content slds-p-around--medium">
+                                <div>
+                                    <p><span ng-bind="modal.successMessage"></span></p>
+                                </div>
+                            </div>
+                            <div class="slds-modal__footer slds-theme--default">
+                                <button class="slds-button slds-button--neutral" ng-click="modal.successModal = '';" onClick="false" type="button">Okay</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-backdrop {{modal.successModalBackdrop}}"></div>
+                </div>
+
+                <div>
+                    <div aria-hidden="false" role="dialog" class="slds-modal slds-modal--prompt {{modal.errorModal}}">
+                        <div class="slds-modal__container slds-modal--prompt">
+                            <div class="slds-modal__header slds-theme--error slds-theme--alert-texture">
+                                <h2 class="slds-text-heading--medium">Info</h2>
+                            </div>
+                            <div class="slds-modal__content slds-p-around--medium">
+                                <div>
+                                    <p><span ng-bind="modal.errorMessage"></span></p>
+                                </div>
+                            </div>
+                            <div class="slds-modal__footer slds-theme--default">
+                                <button class="slds-button slds-button--neutral" ng-click="modal.successModal = '';" onClick="false" type="button">Okay</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-backdrop {{modal.errorModalBackdrop}}"></div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="slds-modal" ng-class="{'slds-fade-in-open': options.isErrorOpen}" aria-hidden="false" role="dialog">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__header slds-theme--error">
+                        <h2 class="slds-text-heading--medium">Error</h2>
+                    </div>
+                    <div class="slds-modal__content slds-p-around--medium">
+                        <div>
+                            <p ng-bind="options.errorMessage"></p>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">
+                        <button class="slds-button slds-button--neutral" ng-click="options.isErrorOpen = false;">Close</button>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop" ng-class="{'slds-modal-backdrop--open': options.isErrorOpen}"></div>
+        </div>
+
+        <!-- Contact Info box -->
+        <div>
+            <div class="slds-modal" ng-class="{'slds-fade-in-open': options.isInfoOpen}" aria-hidden="false" role="dialog">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__header">
+                        <h2 class="slds-text-heading--medium">{{data.modal.Name}}</h2>
+                    </div>
+                    <div class="slds-modal__content slds-p-around--medium">
+                        <div>
+                            Room Info.
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">
+                        <button ng-click="options.isInfoOpen = false;" class="slds-button slds-button--neutral slds-button--brand">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slds-modal-backdrop" ng-class="{'slds-modal-backdrop--open': options.isInfoOpen}"></div>
+        <c:UserPermission />
+        
+    
+    <!-- Script code for multiselect -->
+
+        <script type="text/ng-template" id="multiplePick.html">
+            <div id="mulipicklist">
+                <div class="slds-picklist" aria-expanded="true">
+                    <button type="button" class="slds-button slds-button--neutral slds-picklist__label multipicklist" aria-haspopup="true" ng-click="toggleDropdown($event)" style="width: 100%;">
+                        <span class="slds-truncate" style="font: 14px/30px 'Salesforce Sans',Arial,sans-serif; font-size: 14px; line-height: 30px;">{{count}} Selected</span>
+                        <svg aria-hidden="true" class="slds-icon">
+                            <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, 'assets/icons/utility-sprite/svg/symbols.svg#down')}"></use>
+                        </svg>
+                    </button>
+                    <div class="slds-dropdown slds-dropdown--left slds-dropdown--menu" ng-class="{'slds-hide': !isOptVisible}" style="position: absolute; width: 100%;">
+                        <ul class="slds-dropdown__list" role="menu"  style="height: 110px;overflow-y: scroll;">
+                          <li id="{{$index}}"  href="#"  class="slds-dropdown__item" ng-repeat="inp in pickListOptions track by $index" ng-class="{'slds-is-selected':isSelected(inp)}" ng-click="toggleSelectOption(inp)">
+                            <a href="javascript:void(0)" role="menuitemradio">
+                                <p class="">
+                                    <svg style="left: -10px;" ng-class="{'visible': isSelected(inp)}" aria-hidden="true" class="slds-icon slds-icon--selected slds-icon--x-small slds-icon-text-default slds-m-right--x-small invisible">
+                                        <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, 'assets/icons/utility-sprite/svg/symbols.svg#check')}"></use>
+                                    </svg>
+                                    <span ng-bind="inp"></span>
+                                </p>
+                            </a>
+                          </li>
+                        </ul>
+                     </div>
+                </div>
+            </div>
+        </script>
+    <!-- End of multi select script -->    
+    </div>
+    <script>
+    
+        var underscore = angular.module('underscore', []);
+        underscore.factory('_', ['$window', function($window) {
+            return $window._;
+        }]);
+        
+        var app = angular.module('RoomSearch', ['720kb.datepicker','underscore']);
+        app.controller('RoomSearchController', function($scope, $timeout, QueryApex, helper) {
+            $scope.data = {};
+            $scope.search = [];
+            $scope.search.scheduledEvents = [];
+            $scope.search.scheduledEventSource = {};
+            $scope.search.roomResource = [];
+            $scope.search.roomResourceWithConflicts = [];
+            $scope.search.roomCollection = {};
+            $scope.search.filteredRoomResource = {};
+            $scope.search.suiteNameList = [];
+            $scope.search.suiteIdNameMap = [];
+            $scope.search.selectedSuites = [];
+            $scope.search.functionNameList = [];
+            $scope.search.allRoomIds = [];
+            $scope.search.selectedFunctions = [];
+            $scope.search.floorNameList = [];
+            $scope.search.selectedFloors = [];
+            $scope.roomRecordForUpdation = {};
+            $scope.ConflictsDisplay = true;
+            $scope.search.RoomNotes = '';
+            $scope.search.messageModal = '';
+            $scope.search.messageModalBackDrop = '';
+            $scope.search.allowHideConflict = false;
+            
+            $scope.enter = {
+                enteredStartDate : '',
+                enteredEndDate: '',
+                enteredStartTime: '',
+                enteredEndTime: ''
+            };
+            $scope.urlPrefix = '{!$Site.Prefix}';
+            $scope.saveRoomNotes = function(){
+                //console.log('::$scope.search.roomRecordForNotes:::',$scope.search.roomRecordForNotes.Notes__c);
+                //console.log('::$scope.search.roomNotes:::',$scope.search.RoomNotes);
+                var oldNotes = $scope.search.roomRecordForNotes.Notes__c;
+                if($scope.search.RoomNotes != oldNotes){
+                    console.log('::oldNotes::');
+                    var roomForUpdate = [];
+                    roomForUpdate.push({Id: $scope.search.roomRecordForNotes.Id, Notes__c: $scope.search.RoomNotes});
+                    helper.saveNotes(roomForUpdate); 
+                }  
+            }
+            $scope.closeModalOfCalendar = function(){
+                console.log('::::::search.roomResource:::::::',search.roomResource);
+                console.log(':$scope.search.roomCollection::::',search.roomCollection);
+                search.roomCollection = {};
+                search.roomResource = [];
+                $('#calendar').fullCalendar( 'destroy' );
+                $('#calendar').fullCalendar('removeEventSource', search.filteredRoomResource);
+            }
+            $scope.options = {
+                isInfoOpen: false,
+                isErrorOpen: false,
+                resultSize: 20,
+                offset: 0
+            };
+
+            $scope.enter.days = {
+                moday: false,
+                tueday: false,
+                wednesday: false,
+                thursday: false,
+                friday: false,
+                saturday: false,
+                sunday: false
+            }
+
+            $scope.search.days = {
+                moday: false,
+                tueday: false,
+                wednesday: false,
+                thursday: false,
+                friday: false,
+                saturday: false,
+                sunday: false
+            }
+            
+            $scope.search.monday = false;
+            $scope.search.tuesday = false;
+            $scope.search.wednesday = false;
+            $scope.search.thursday = false;
+            $scope.search.friday = false;
+            $scope.search.saturday = false;
+            $scope.search.sunday = false;
+            
+            var search = $scope.search;
+            search.isLoaded = true;
+            var data = $scope.data;
+            data.allRooms = [];
+            
+            $scope.checkUrl = function() {
+                $scope.options.offset = 0;
+                $scope.search.isLoaded = false;
+                //helper.setUrl($scope);
+                
+                if($scope.search.selectedStartDate
+                   && $scope.search.selectedEndDate
+                   && $scope.search.selectedStartTime
+                   && $scope.search.selectedEndTime
+                   && ($scope.search.monday
+                   || $scope.search.tuesday
+                   || $scope.search.wednesday
+                   || $scope.search.thursday
+                   || $scope.search.friday
+                   || $scope.search.saturday
+                   || $scope.search.sunday)) {
+                       
+                       $scope.search.allowHideConflict = true;
+                } else {
+                       $scope.search.allowHideConflict = false;
+                }
+                
+                if(!$scope.search.allowHideConflict && $scope.search.togglePosition) {
+                    $scope.search.messageModal = 'slds-fade-in-open';
+                    $scope.search.messageModalBackDrop = 'slds-modal-backdrop--open';
+                    $scope.search.togglePosition = false
+                }  else {         
+                    helper.getRooms(search, data, $scope);
+                }
+               
+            }
+            
+            $scope.clearNameValue = function(){
+                $scope.search.searchByName = '';
+                $scope.checkUrl();
+            }
+            
+            $scope.clearFilter = function() {
+                helper.clearFilter($scope);
+            }
+
+            $scope.filterRooms = function() {
+                //return [];
+                return helper.filterRooms(data.allRooms, search, data);
+            }
+
+            //To filter in the distinct elements
+            $scope.unique = function(list) {
+                var uniqueList = [];
+                for(var i = 0; i < list.length; i++) {
+                    if(uniqueList.indexOf(list[i]) == -1)
+                        uniqueList.push(list[i]);
+                }
+                return uniqueList;
+            }
+            
+            function init() {
+                console.log('init Called.');
+                helper.initSearch($scope);
+                helper.setPopState($scope);
+                //helper.getRooms(search, data, $scope);
+            }
+           
+            $scope.getSuitesByFloor = function() {
+                $scope.search.selectedSuites = [];
+                console.log('::::getsuites::');
+                helper.getSuitebyFloor(search);    
+            }
+            
+            $scope.getFloorsByLocation = function() {
+                $scope.search.selectedFloors = [];
+                
+                helper.getFloorbylocation(search);    
+            }
+
+
+            $scope.searchByDate = function() {
+                helper.searchByDate($scope);
+            }
+            $scope.updateNewNotes = function(roomId) {
+                helper.getroomsByRoomId(roomId, search);
+            }        
+
+            $scope.searchByProximity = function() {
+                helper.searchByProximity($scope);
+            }
+
+            $scope.getMiles = function(miles) {
+                if(miles) {
+                    return (Math.floor(miles * 100) / 100) + ' miles away.';
+                }
+            }
+
+            $scope.assignRoom = function(roomId) {
+                helper.assignRoom($scope.scheduleId, roomId, $scope.returnId, $scope);
+            }
+
+            $scope.goBack = function() {
+                window.location = '{!$Site.Prefix}/' + $scope.returnId;
+            }
+            
+            $scope.getschedules = function() {
+                $scope.search.isLoaded = false;
+                console.log('::::::::ins button::::::::');
+                
+                helper.getSchedulesByInstructor($scope.scheduleId,$scope.search);
+            }
+            
+            $scope.getroomdetails = function() {
+                console.log('::::::::calendar::::::::');
+                $scope.search.isLoaded = false;
+                $scope.search.togglePosition2 = $scope.search.togglePosition;
+                helper.getAllProjectEvents($scope.search);
+            }
+            
+            $scope.openBox11 = function(){
+                $('.slds-active').removeClass('slds-active');
+                $('#li11').addClass('slds-active');
+                $('.slds-show').removeClass('slds-show');
+                $('#tab-scoped-11').addClass('slds-show');
+                $('#tab-scoped-12').addClass('slds-hide');
+            }
+            
+            $scope.openBox12 = function() {
+                $('.slds-active').removeClass('slds-active');
+                $('#li12').addClass('slds-active');
+                $('.slds-show').removeClass('slds-show');
+                $('#tab-scoped-11').addClass('slds-hide');
+                $('#tab-scoped-12').addClass('slds-show');
+            }
+            
+            $scope.openBox13 = function() {
+                $('.slds-active').removeClass('slds-active');
+                $('#li13').addClass('slds-active');
+                $('.slds-show').removeClass('slds-show');
+                $('#tab-scoped-11').addClass('slds-hide');
+                $('#tab-scoped-12').addClass('slds-hide');
+                $('#tab-scoped-13').addClass('slds-show');
+            }
+            
+            $scope.getDays = function(record) {
+                var days = '';
+                if(record.Sunday__c)
+                    days += 'Sun';
+                if(record.Monday__c) {
+                    days = setComma(days);
+                    days += 'Mon';
+                }
+                if(record.Tuesday__c) {
+                    days = setComma(days);
+                    days += 'Tue';
+                }
+                if(record.Wednesday__c) {
+                    days = setComma(days);
+                    days += 'Wed';
+                }
+                if(record.Thursday__c) {
+                    days = setComma(days);
+                    days += 'Thu';
+                }
+                if(record.Friday__c) {
+                    days = setComma(days);
+                    days += 'Fri';
+                }
+                if(record.Saturday__c) {
+                    days = setComma(days);
+                    days += 'Sat';
+                }
+                days += '.';
+                console.log('::days::',days);
+                return days;
+            }
+            
+            var setComma = function(text) {
+                if(text.length > 0)
+                    text += ', ';
+                return text;
+            }
+
+            $scope.getSchedulesByRooms = function(roomId,roomName) {
+                $scope.search.isLoaded = false;
+                $scope.roomId =  roomId;
+                $scope.search.roomName = roomName;
+                helper.getSchedulesByRooms(roomId, $scope.search);
+            }
+
+            var k = 0;
+            $scope.conflictsDisplayfunction = function() {
+                $scope.search.isLoaded = false;
+                if($scope.search.allowHideConflict) {
+                    if(k == 0) {
+                        $scope.search.DisplayList = [];
+                        $scope.search.togglePosition = true;
+                        helper.getRooms(search, data, $scope);
+                        k = 1;
+                    } else {
+                        $scope.search.DisplayList = [];
+                        $scope.search.togglePosition = false;
+                        $scope.data.totalRecords = $scope.search.totalRec;
+                        helper.getRooms(search, data, $scope);
+                        k = 0;
+                    }
+                } else {
+                    $scope.search.messageModal = 'slds-fade-in-open';
+                    $scope.search.messageModalBackDrop = 'slds-modal-backdrop--open';
+                    $scope.search.togglePosition = false;
+                }
+            }
+            
+            var i = 0;
+            
+            $scope.conflictsDisplayInCalendar = function() {
+                //i = k;
+                $scope.styleClass = 'backdrop';
+                $scope.search.isLoaded = false;
+                if($scope.search.allowHideConflict) {
+                    if(i == 0) {
+                        $scope.search.roomResource = [];
+                        $scope.search.togglePosition2 = true;
+                        $('#calendar').fullCalendar( 'destroy' );
+                        helper.displayResources($scope.search);
+                        //console.log('::displayresourcelist::',$scope.search.roomResource);
+                        i = 1;
+                    } else {
+                        $scope.search.roomResource = [];
+                        $scope.search.togglePosition2 = false;
+                        $('#calendar').fullCalendar( 'destroy' );
+                        helper.displayResources($scope.search);
+                        //console.log('::displayresourcelist::',$scope.search.roomResource);
+                        i = 0;
+                    } 
+                } else {
+                    $scope.search.messageModal = 'slds-fade-in-open';
+                    $scope.search.messageModalBackDrop = 'slds-modal-backdrop--open';
+                    $scope.search.togglePosition = false;
+                    $scope.search.togglePosition2 = false;
+                }
+            }
+            
+            $scope.decodeHTML = function(encodedStr){
+                var parser = new DOMParser;
+                var dom = parser.parseFromString(
+                    '<!doctype html><body>' + encodedStr,
+                    'text/html');
+                var decodedString = dom.body.textContent;
+                
+                //console.log(decodedString);
+                return decodedString;
+            }
+            
+            init();
+            
+      
+        })
+        .factory('helper', function(QueryApex, $timeout) {
+
+            //var scheduledEvents = [];
+            var cancelledEvents = [];
+            var completedEvents = [];
+            //var roomCollection = {}; 
+            var roomResource = [];
+            //Function to show error
+            function showError(scope, message) {
+                //Show error only if message is not equal to null
+                if(message) {
+                    scope.options.isErrorOpen = true;
+                    scope.options.errorMessage = message;
+                }
+            }
+
+
+            //Function to construct the search parameters.
+            function formUrl(search) {
+                var url = '';
+                url = getUriValue(url, 'startDate', search.selectedStartDate);
+                url = getUriValue(url, 'endDate', search.selectedEndDate);
+                url = getUriValue(url, 'startTime', search.selectedStartTime);
+                url = getUriValue(url, 'endTime', search.selectedEndTime);
+                url = getUriValue(url, 'sunday', search.days.sunday);
+                url = getUriValue(url, 'monday', search.days.monday);
+                url = getUriValue(url, 'tuesday', search.days.tuesday);
+                url = getUriValue(url, 'wednesday', search.days.wednesday);
+                url = getUriValue(url, 'thursday', search.days.thursday);
+                url = getUriValue(url, 'friday', search.days.friday);
+                url = getUriValue(url, 'saturday', search.days.saturday);
+
+                url = getUriValue(url, 'location', search.selectedLocation);
+                url = getUriValue(url, 'capacity', search.enteredCapacity);
+                url = getUriValue(url, 'roomType', search.selectedRoomType);
+
+                if(search.enteredZip)
+                    url = getUriValue(url, 'proximity', search.enteredProximity);
+                url = getUriValue(url, 'zip', search.enteredZip);
+                //suite
+                url = getUriValue(url, 'searchByName', search.searchByName);
+                //url = getUriValue(url, 'suite', search.selectedSuite);
+
+                url = getUriValue(url, 'function', search.selectedFunction);
+
+                return url;
+            }
+
+            //Function to form the Url component from an array.
+            function getUriValueFromArray(url, key, list) {
+                var value = '';
+                for(var i = 0; i < list.length; i++) {
+                    if(list[i].isChecked) {
+                        if(value != '')
+                            value += ';';
+                        value += encodeURIComponent(list[i].label);
+                    }
+                }
+                if(value != '') {
+                    if(url != '')
+                        url += '&';
+                } else
+                    return url;
+
+                return url + key + '=' + value;
+            }
+
+            //Function to form the Url component from a variable.
+            function getUriValue(url, key, value) {
+                if(value) {
+                    if(url == '') {
+                        url = key + '=' + encodeURIComponent(value);
+                    }
+                    else {
+                        url += '&' + key + '=' + encodeURIComponent(value);
+                    }
+                }
+                return url;
+            }
+
+            //Function to only to return the matching rooms with the search parameters.
+            function filterRooms(allRooms, search, data) {
+                //return allRooms;
+                var filteredRooms = [];
+                for(var i = 0; i < allRooms.length; i++)
+                    if(checkRoom(allRooms[i], search, data))
+                        filteredRooms.push(allRooms[i]);
+                return filteredRooms;
+            }
+
+            //Function to valdate all search parameters matches with a particular room
+            function checkRoom(room, search, data) {
+                if(checkLocation(room, search.selectedLocation) && checkCapacity(room, search.enteredCapacity) && checkRoomType(room, search.selectedRoomType) && checkFunction(room, search.selectedFunction) && checkSuite(room,search.selectedSuites))
+                    return true;
+                return false;
+            }
+
+            //Function to check location match
+            function checkLocation(room, location) {
+                if(location == 'All' || room.Location_n__c == location)
+                    return true;
+                return false;
+            }
+
+            //Function check room capacity match
+            //Created on 21-Apr-2016
+            function checkCapacity(room, capacity) {
+                if(!capacity || room.Student_Capacity__c >= capacity)
+                    return true;
+                return false;
+            }
+
+            //Function to check roomType
+            //Created on 21-Apr-2016
+            function checkRoomType(room, roomType) {
+                if(!roomType || roomType == 'Both' || room.Room_Location__c == roomType)
+                    return true;
+                return false;
+            }
+
+            //Fuinction to check Suite
+            //Created on 21-Apr-2016
+            function checkSuite(room, suite) {
+                if(!suite || suite == 'All' || room.Floor_Suite__c == suite)
+                    return true;
+                return false;
+            }
+
+            //Fuinction to check the Function type
+            //Created on 22-Apr-2016
+            function checkFunction(room, func) {
+                if(!func || func == 'All' || room.Function__c == func)
+                    return true;
+                return false;
+            }
+
+            //function to read the url and find the search parameters.
+            function getSearchParameters(scope) {
+                console.log(':::::getsearchparameter::');
+                var search = scope.search;
+                var enter = scope.enter;
+
+                var location = getQueryVariable('location');
+                search.selectedLocation = search.locationList.indexOf(location) >= 0?location:'All';
+                search.enteredCapacity = getQueryVariable('capacity');
+
+                var roomType = getQueryVariable('roomType');
+                search.selectedRoomType = (roomType == 'Window' || roomType == 'Interior')?roomType:'Both';
+
+                var suite = getQueryVariable('suite');
+                //search.selectedSuite = search.suiteList.indexOf(suite) >= 0?suite:'All';
+
+                search.selectedStartDate = getQueryVariable('startDate');
+                console.log(':::search.selectedEndTime:::::::::',getQueryVariable('startDate'));
+                search.selectedEndDate = getQueryVariable('endDate');
+                console.log(':::search.selectedEndTime:::::::::',search.selectedEndDate);
+                search.selectedStartTime = getQueryVariable('startTime');
+                search.selectedEndTime = getQueryVariable('endTime');
+                search.days.monday = getQueryVariable('monday')?true:false;
+                search.days.tuesday = getQueryVariable('tuesday')?true:false;
+                search.days.wednesday = getQueryVariable('wednesday')?true:false;
+                search.days.thursday = getQueryVariable('thursday')?true:false;
+                search.days.friday = getQueryVariable('friday')?true:false;
+                search.days.saturday = getQueryVariable('saturday')?true:false;
+                search.days.sunday = getQueryVariable('sunday')?true:false;
+
+                search.searchByName = getQueryVariable('searchByName');
+                var func = getQueryVariable('function');
+                //search.selectedFunction = func?func:'All';
+
+                search.enteredZip = getQueryVariable('zip');
+                search.enteredProximity = getQueryVariable('proximity');
+
+                enter.enteredZip = search.enteredZip;
+
+                enter.enteredStartDate = search.selectedStartDate;
+                enter.enteredEndDate = search.selectedEndDate;
+                enter.enteredStartTime = search.selectedStartTime;
+                enter.enteredEndTime = search.selectedEndTime;
+
+                enter.days = {
+                    monday: search.days.monday,
+                    tuesday: search.days.tuesday,
+                    wednesday: search.days.wednesday,
+                    thursday: search.days.thursday,
+                    friday: search.days.friday,
+                    saturday: search.days.saturday,
+                    sunday: search.days.sunday
+                }
+            }
+
+            //Find wheather the page is used to search or assign rooms.
+            function findActionType(scope) {
+                var scheduleId = getQueryVariable('scheduleId');
+                var returnId = getQueryVariable('returnId');
+                console.log('findActionType', scheduleId, returnId, !scheduleId && !returnId);
+                if(!scheduleId && !returnId) {
+                    scope.pageType = 'SEARCH_ROOM';
+                    return;
+                }
+                scope.returnId = returnId;
+                scope.scheduleId = scheduleId;
+                scope.pageType = 'ASSIGN_ROOM';
+                scope.options.showTimeSearch = true;
+            }
+            
+            //Query url with a key.
+            function getQueryVariable(name, url) {
+                if (!url) url = location.href;
+                name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+                var regexS = "[\\?&]"+name+"=([^&#]*)";
+                var regex = new RegExp( regexS );
+                var results = regex.exec( url );
+                return !results ? '' : decodeURIComponent(results[1]).replace('%2B', '+');
+            }
+            var n=0;
+            //Get rooms
+            function getRooms(search, data, scope) {
+                //console.log('::::::getrooms:::::');
+               
+                if(!scope.search.allowHideConflict)
+                    scope.search.togglePosition = false;
+                
+                var modifiedStartDate;
+                if(search.selectedStartDate){
+                    modifiedStartDate = moment(search.selectedStartDate,'MM/DD/YYYY').format('YYYY-MM-DD');
+                }
+                var modifiedEndDate;
+                if(search.selectedEndDate){
+                    modifiedEndDate = moment(search.selectedEndDate,'MM/DD/YYYY').format('YYYY-MM-DD');
+                }
+                //console.log('::modifiedEndDate:',modifiedEndDate);
+                var conflictSearchParameter = {
+                    startDate: modifiedStartDate,
+                    endDate: modifiedEndDate,
+                    startTime: search.selectedStartTime,
+                    endTime: search.selectedEndTime,
+                    monday: search.monday,
+                    tuesday: search.tuesday,
+                    wednesday: search.wednesday,
+                    thursday: search.thursday,
+                    friday: search.friday,
+                    saturday: search.saturday,
+                    sunday: search.sunday,
+                    
+                }
+        
+                var locId;
+                if(search.selectedLocation != 'All'){
+                    locId = search.selectedLocation;
+                } else {
+                    locId = null;
+                }
+                
+                var funName = [];
+                if(search.selectedFunctions){
+                    funName = search.selectedFunctions;
+                } else {
+                    funName = null;
+                }
+                
+                var floorName = [];
+                if(search.selectedFloors){
+                    floorName = search.selectedFloors;
+                } else {
+                    floorName = null;
+                }
+
+                var roomty;
+                if(search.selectedRoomType != 'Both'){
+                    roomty = search.selectedRoomType;
+                } else {
+                    roomty = null;
+                }
+
+                var suiIds = [];
+                if(search.selectedSuites){
+                    for(var j = 0; j < search.selectedSuites.length; j++){
+                        suiIds.push(search.suiteIdNameMap[search.selectedSuites[j]]);
+                    }
+                  
+                } else {
+                    suiIds = null;
+                }
+
+                var cap;
+                if(search.enteredCapacity != null){
+                    cap = parseInt(search.enteredCapacity);
+                } else {
+                    cap = null;
+                }
+                
+                var sec;
+                if(search.section){
+                    sec = search.section;
+                }
+                
+                var lag;
+                if(search.language){
+                    lag = search.language;
+                }
+                
+                var ins;
+                if(search.instructor){
+                    ins = search.instructor;
+                }
+                
+                // For searcByName option
+                var searchName;
+                if(search.searchByName)
+                    searchName = search.searchByName;
+
+                var SearchParameter = {
+                    locationId: locId,
+                    function: funName,
+                    floor: floorName,
+                    capacity: cap,
+                    roomType: roomty,
+                    suiteId: suiIds,
+                    section: sec,
+                    language: lag,
+                    instructor: ins,
+                    searchByName : searchName,
+                    resultSize: scope.options.resultSize,
+                    offset: scope.options.offset
+                }
+
+                var isConflictCheckNeed = false;
+                var zip = search.enteredZip?search.enteredZip:null;
+                if(conflictSearchParameter.startDate && conflictSearchParameter.startTime && conflictSearchParameter.endDate && conflictSearchParameter.endTime)
+                    isConflictCheckNeed = true;
+               
+                if(!isConflictCheckNeed)
+                    conflictSearchParameter = null;
+                if(!scope.scheduleId)
+                    scope.scheduleId = null;
+                QueryApex.getAllRooms(isConflictCheckNeed, conflictSearchParameter, zip, SearchParameter, scope.scheduleId).then(function(response){
+                    console.log('rooms:::::',response);
+                    search.DisplayList = [];
+                    data.allRooms = response.allRooms;
+                    search.allRoomRecords = response.allRooms;
+                    search.allConflictRooms = response.allRoomsWithoutConflicts;
+                    scope.search.allRoomIds = response.filteredRoomIds;
+                    scope.search.roomsForCalendar = response.roomsForCalendar;
+                    search.conflicts = response.conflicts;
+                    search.roomsWithoutConflicts = [];
+                    for(var j = 0; j < data.allRooms.length ; j++){
+                        if(search.conflicts){
+                            if(!search.conflicts.hasOwnProperty(data.allRooms[j].Id)){
+                                search.roomsWithoutConflicts.push(data.allRooms[j]);
+                            }
+                        }
+                        else if(!search.roomsWithoutConflicts.includes(data.allRooms[j])){
+                            search.roomsWithoutConflicts.push(data.allRooms[j]);
+                        }
+                    }
+                    //console.log(':::No conflicts:::',search.roomsWithoutConflicts);
+                    data.proximity = response.proximities;
+                    search.totalRec = response.recordCount;
+                    data.totalRecords = search.totalRec;
+                    console.log(':search.togglePosition::',search.togglePosition);
+                    if(search.togglePosition){
+                         
+                        search.totalRecords = search.allConflictRooms.length;
+                        console.log(':displaylist::',search.DisplayList); 
+                    } else {
+                        
+                        search.totalRecords = response.recordCount;
+                        search.DisplayList = search.allRoomRecords;
+                    }
+                    console.log('::total::',search.totalRecords);
+                    isSearchFinished(search, data, true);
+                    search.isLoaded = true;
+                    setPagination(search.totalRecords, scope.options.resultSize, scope.options.offset + 1, function(pagination) {
+                        console.log('offset', scope.options.offset, pagination.pageNumber);
+                        if(search.togglePosition){
+                            
+                            search.DisplayList = search.allConflictRooms.slice(scope.options.offset * 20, (scope.options.offset * 20)+20);
+                          
+                            //console.log(':displaylist::',search.DisplayList); 
+                        } else {
+                            search.totalRecords = response.recordCount; 
+                            search.DisplayList = search.allRoomRecords;
+                        }
+                        if(pagination.pageNumber != scope.options.offset + 1) {
+                            
+                            scope.options.offset = pagination.pageNumber - 1;
+                            
+                            getRooms(search, data, scope);
+                            scope.$apply();
+                        }
+                    });
+                }, function(error){
+                    console.log(error);
+                });
+            }
+            
+            //Function to check whether the logged in user has the permission to Assign the Room by GRK on April 27, 2018
+            function getHasRoomAssignPermission(scope) { 
+                QueryApex.checkForRoomEditPermission().then(function(response) {
+                    console.log('::::::::checkForRoomEditPermission:::::::::::');
+                    scope.allowRoomEdit = response;
+                    metaComplete(scope.search, 'hasEditPermission', true, scope.data, scope);
+                },
+                function(error){
+                    console.log('Error getHasRoomAssignPermission::' + error);
+                });
+            }
+            
+            //Function get the timepicklist values
+            function getTimePicklist(scope) {
+                QueryApex.getTimePicklist().then(function(response){
+                    console.log('::::::::timepicklist:::::::::::');
+                    scope.search.timePickList = response;
+                    metaComplete(scope.search, 'timePickList', true, scope.data, scope);
+                },
+                function(error){
+                    console.log('Error getTimePicklist' + error);
+                });
+            }
+            
+            //Function to get the Locations pick list values.
+            function getLocation(scope) {
+                QueryApex.getLocation().then(function(response) {
+                    console.log('::::::::getLocation:::::::::::');
+                    scope.search.locationList = response;
+                    scope.search.locationList.unshift({Name: 'All', Id: 'All'});
+                    
+                    console.log('location::::::::::', response);
+                    metaComplete(scope.search, 'location', true, scope.data, scope);
+                },
+                function(error) {
+                    console.log('errorLocation', error);
+                });
+            }
+
+            function getSuitebyFloor(search) {
+                console.log('dependancy');
+                var floorName = [];
+                if(search.selectedFloors){
+                    floorName = search.selectedFloors;
+                } else {
+                    floorName = null;
+                }
+                QueryApex.getSuitebyFloor(floorName).then(function(response) {
+                    search.roomList = response;
+                    search.suiteNameList = [];
+                    console.log(':::roomList::::',response);
+                    for(var j = 0; j < search.roomList.length; j++){
+                        if(!search.suiteNameList.includes(search.roomList[j].Floor_Suite__r.Name)){
+                            search.suiteNameList.push(search.roomList[j].Floor_Suite__r.Name);
+                        }
+                        search.suiteIdNameMap[search.roomList[j].Floor_Suite__r.Name] = search.roomList[j].Floor_Suite__c;
+                        
+                    }
+                    console.log(':::suiteNameList::::',search.suiteNameList);
+                    console.log(':::suiteIdNameMap::::',search.suiteIdNameMap);
+                },
+                function(error) {
+                    console.log('errorSuite', error);
+                });
+            }
+            
+            function getFloorbylocation(search) {
+                console.log('dependancy');
+                var locId;
+                if(search.selectedLocation != 'All'){
+                    locId = search.selectedLocation;
+                } else {
+                    locId = null;
+                }
+                QueryApex.getFloorbylocation(locId).then(function(response) {
+                    search.roomList = response;
+                    search.floorNameList = [];
+                    //console.log(':::floorList::::',response);
+                    for(var j = 0; j < search.roomList.length; j++){
+                        if(!search.floorNameList.includes(search.roomList[j].Floor_Suite__r.Floor__c)){
+                            search.floorNameList.push(search.roomList[j].Floor_Suite__r.Floor__c);
+                        }
+                    }
+                    
+                    var floorMap1 = {'E1st FL': 0,'H1st FL':1, '2nd FL': 2, '3rd FL': 3, '4th FL': 4, '5th FL': 5, '6th FL': 6, '7th FL': 7, '8th FL': 8, '9th FL': 9, '10th FL': 10, '11th FL': 11, '12th FL': 12};
+                    var floorMap2 = {0: 'E1st FL',1: 'H1st FL', 2: '2nd FL', 3: '3rd FL', 4: '4th FL', 5: '5th FL', 6: '6th FL', 7: '7th FL', 8: '8th FL', 9: '9th FL', 10: '10th FL', 11: '11th FL', 12: '12th FL'};
+                    var array1 = [];
+                    var array2 = [];
+                    for(var j = 0; j < search.floorNameList.length; j++){
+                        array1.push(floorMap1[search.floorNameList[j]]); 
+                    }
+                    array1.sort(function(a, b){return a-b});
+                    for(var j = 0; j < array1.length; j++){
+                        array2.push(floorMap2[array1[j]]); 
+                    }
+                    //console.log(':::array1::::',array1);
+                    //console.log(':::array2::::',array2);
+                    search.floorNameList = array2;
+                    console.log(':::floorNameList::::',search.floorNameList);
+                },
+                function(error) {
+                    console.log('errorSuite', error);
+                });
+            }
+
+            //Function to get Funciton pick list
+            //Created on 22-Apr-2016
+            function getFunctionPicklist(scope) {
+                QueryApex.getFunctionPicklist().then(function(response) {
+                    console.log('::::::::functionPicklist:::::::::::',response);
+                    scope.search.functionList = response;
+                    //scope.search.functionList.unshift('All');
+                    for(var j = 0; j < scope.search.functionList.length; j++){
+                        scope.search.functionNameList.push(scope.search.functionList[j]);
+                    }
+                    metaComplete(scope.search, 'func', true, scope.data, scope);
+                },
+                function(error) {
+                    console.log('errorFunction', error);
+                });
+            }
+
+            //Function to get Floor pick list
+            //Created on 5-Apr-2017
+            function getFloorPicklist(scope) {
+                QueryApex.getFloorPicklist().then(function(response) {
+                    console.log('::::::::floorPicklist:::::::::::',response);
+                    scope.search.floorList = response;
+                    //scope.search.floorList.unshift('All');
+                    for(var j = 0; j < scope.search.floorList.length; j++){
+                        scope.search.floorNameList.push(scope.search.floorList[j]);
+                    }
+                    metaComplete(scope.search, 'floor', true, scope.data, scope);
+                },
+                function(error) {
+                    console.log('errorFunction', error);
+                });
+            }
+            
+
+            //Get Filter Values.
+            function getMetaValues(search, data, scope) {
+                console.log('::::::::getMetaValues:::::::::::::');
+                getTimePicklist(scope);
+                getLocation(scope);
+                getFunctionPicklist(scope);
+                getFloorPicklist(scope);
+                getHasRoomAssignPermission(scope);
+            }
+
+            //To track all the completion of the meta request.
+            function metaComplete(search, key, value, data, scope) {
+                // To declare a variable to track all finished meta requests.
+                if(!search.isMetaFinished)
+                    search.isMetaFinished = {
+                            timePickList: false,
+                            location: false,
+                            func: false,
+                            floor: false,
+                            hasEditPermission: false,
+                            isFinished: function() {
+                                return this.timePickList && this.location && this.func && this.floor && this.hasEditPermission
+                            }
+                        };
+                //Assigning a completed task
+                search.isMetaFinished[key] = value;
+
+                //Finding all meta requests are finished.
+                if(search.isMetaFinished.isFinished()) {
+                    console.log('meta completed.');
+                    //Call onMetaLoad function.
+                    onMetaLoad(search, data, scope);
+                }
+            }
+
+            //Funtion to track all the search request
+            function isSearchFinished(search, data, value) {
+                if(!search.isSearchFinished)
+                    search.isSearchFinished = false;
+                search.isSearchFinished = value;
+                if(search.isSearchFinished) {
+                    onSearchLoaded(search, data);
+                }
+            }
+
+            //Called On finish of the Search query
+            function onSearchLoaded(search, data) {
+                console.log('search load completed.', search, data);
+                search.isLoaded = true;
+            }
+
+            //Called after all meta data are collected.
+            function onMetaLoad(search, data, scope) {
+                console.log(':::::::');
+                getSearchParameters(scope);
+                
+                //getRooms(search, data, scope);
+            }
+
+            //Initialize the search page.
+            function initSearch(scope) {
+                console.log('initSearch Called.');
+                getMetaValues(scope.search, scope.data, scope);
+                var scheduleId = getQueryVariable('scheduleId');
+                var returnId = getQueryVariable('returnId');
+                var scheduleStatus = getQueryVariable('status');
+                scope.type = 'SEARCH';
+                if(scheduleId && returnId && scheduleStatus) {
+                    scope.returnId = returnId;
+                    scope.scheduleId = scheduleId;
+                    scope.type = 'ASSIGN';
+                    scope.scheduleStatus = scheduleStatus;
+                }
+                scope.search.hideScheduleId = false;
+                if(!scope.scheduleId) {
+                    scope.search.hideScheduleId = true;
+                } else {
+                    scope.search.hideScheduleId = false;
+                }
+                if(scheduleId && returnId){
+                    prepopLocationCapacity(scheduleId, returnId,scope);
+                }
+                
+            }
+
+            //Funtion to set the popState Event listener
+            function setPopState(scope) {
+                window.onpopstate = function(event) {
+                    scope.search.isLoaded = false;
+                    getSearchParameters(scope);
+                    scope.$apply();
+                    $timeout(function() {
+                        scope.search.isLoaded = true;
+                    }, 0);
+                };
+            }
+            //Search Rooms By date
+            function searchByDate(scope) {
+                if(scope.search.selectedStartDate != scope.enter.enteredStartDate
+                    || scope.search.selectedEndDate != scope.enter.enteredEndDate
+                    || scope.search.selectedStartTime != scope.enter.enteredStartTime
+                    || scope.search.selectedEndTime != scope.enter.enteredEndTime
+                    || scope.search.days.moday != scope.enter.days.monday
+                    || scope.search.days.tuesday != scope.enter.days.tuesday
+                    || scope.search.days.wednesday != scope.enter.days.wednesday
+                    || scope.search.days.thursday != scope.enter.days.thursday
+                    || scope.search.days.friday != scope.enter.days.friday
+                    || scope.search.days.saturday != scope.enter.days.saturday
+                    || scope.search.days.sunday != scope.enter.days.sunday) {
+
+                    scope.search.selectedStartDate = scope.enter.enteredStartDate;
+                    scope.search.selectedEndDate = scope.enter.enteredEndDate;
+                    scope.search.selectedStartTime = scope.enter.enteredStartTime;
+                    scope.search.selectedEndTime = scope.enter.enteredEndTime;
+                    scope.search.days.monday = scope.enter.days.monday;
+                    scope.search.days.tuesday = scope.enter.days.tuesday;
+                    scope.search.days.wednesday = scope.enter.days.wednesday;
+                    scope.search.days.thursday = scope.enter.days.thursday;
+                    scope.search.days.friday = scope.enter.days.friday;
+                    scope.search.days.saturday = scope.enter.days.saturday;
+                    scope.search.days.sunday = scope.enter.days.sunday;
+
+                    assignUrlToTheAddressBar(formUrl(scope.search));
+                    getRooms(scope.search, scope.data, scope);
+                }
+            }
+
+            //set Url on the address bar.
+            function setUrl(scope) {
+                var url = formUrl(scope.search);
+                assignUrlToTheAddressBar(url);
+            }
+
+
+            function assignUrlToTheAddressBar(url) {
+                if(url) window.history.pushState("", "", '/apex/Room_Search?' + url);
+                else window.history.pushState("", "", '/apex/Room_Search');
+            }
+
+            //TO calculate the score of an room.
+            function getScore(scope, room) {
+                //Score is calculated with the below formula.
+                //score = (no_of_skill * score_per_skill) + (no_of_languages * score_per_language) + (no_of_months * score_per_each_month_of_total_experience)
+                //return (scope.options.skillScore * room.skillScore + scope.options.languageScore * room.languageScore + scope.options.experienceScore * room.experienceScore);
+            }
+
+            //Function to search by proximity
+            //Created on 19-Apr-2016
+            function searchByProximity(scope) {
+                scope.search.enteredZip = scope.enter.enteredZip;
+                setUrl(scope);
+                getRooms(scope.search, scope.data, scope);
+            }
+
+            //Function to open contact information
+            //Created on 20-Apr-2016
+            function openContact(room, scope) {
+                console.log('openContact Clicked.', room);
+                scope.options.isContactOpen = true;
+                scope.data.modal = room;
+            }
+
+            //Function to clearFilter
+            //Created on 21-Apr-2016
+            function clearFilter(scope) {
+                //window.history.pushState("", "", '/apex/Room_Search');
+                scope.search.selectedFloors = [];
+                scope.search.selectedLocation = [];
+                scope.search.selectedSuites = [];
+                scope.search.selectedFunctions = [];
+                scope.search.enteredCapacity = '';
+                scope.search.selectedRoomType = '';
+                scope.search.section = false;
+                scope.search.language = false;
+                scope.search.instructor = false;
+                scope.search.selectedStartDate = '';
+                scope.search.selectedEndDate = '';
+                scope.search.selectedStartTime = '';
+                scope.search.selectedEndTime = '';
+                scope.search.monday = false;
+                scope.search.tuesday = false;
+                scope.search.wednesday = false;
+                scope.search.thursday = false;
+                scope.search.friday = false;
+                scope.search.saturday = false;
+                scope.search.sunday = false;
+                //getSearchParameters(scope);
+                getRooms(scope.search, scope.data, scope);
+            }
+
+            //Function assign room
+            //Created on 22-Apr-2016
+            //Room will be assigned to the given schedule and redirected to the given Id
+            function assignRoom(scheduleId, roomId, returnId, scope) {
+                console.log('assignRoom Called', scope.scheduleStatus);
+                if(!scheduleId || !roomId) {
+                    return;
+                }
+                scope.search.isLoaded = true;
+                QueryApex.assignRoom(scheduleId, roomId).then(function(response){
+                    if(scope.search.conflicts && scope.search.conflicts[roomId]) {
+                        window.location = '/apex/eventManagement_hybrid?schId=' + scope.scheduleId + '&parentId=' + scope.returnId + '&type=PROJECT&room=' + roomId;
+                    } else {
+                        scope.search.isLoaded = false;
+                        window.location = '/' + returnId;
+                    }
+                }, function(error){
+                    showError(error.message);
+                    scope.search.isLoaded = false;
+                });
+            }
+            
+            function prepopLocationCapacity(scheduleId, returnId, scope) {
+                console.log('::::',scope.search.isLoaded);
+                QueryApex.prepopLocationCapacity(scheduleId, returnId).then(function(response){
+                    scope.search.isLoaded = true;
+                    if(response){
+                        scope.search.selectedLocation = response.locationId;
+                        scope.search.enteredCapacity = response.studentCount;
+                        console.log('::::response.startDate::::',response.startDate);
+                        scope.search.selectedStartDate = moment(response.startDate).format('MM/DD/YYYY');
+                        console.log('::scope.search.selectedStartDate::',scope.search.selectedStartDate);
+                        scope.search.selectedEndDate = moment(response.endDate).format('MM/DD/YYYY');
+                        scope.search.selectedStartTime = response.startTime;
+                        scope.search.selectedEndTime = response.endTime;
+                        scope.search.monday = response.monday;
+                        scope.search.tuesday = response.tuesday;
+                        scope.search.wednesday = response.wednesday;
+                        scope.search.thursday = response.thursday;
+                        scope.search.friday = response.friday;
+                        scope.search.saturday = response.saturday;
+                        scope.search.sunday = response.sunday;
+                        
+                        if(scope.search.selectedStartDate
+                           && scope.search.selectedEndDate
+                           && scope.search.selectedStartTime
+                           && scope.search.selectedEndTime
+                           && (scope.search.monday
+                           || scope.search.tuesday
+                           || scope.search.wednesday
+                           || scope.search.thursday
+                           || scope.search.friday
+                           || scope.search.saturday
+                           || scope.search.sunday)) {
+                               
+                               scope.search.allowHideConflict = true;
+                        } else {
+                               scope.search.allowHideConflict = false;
+                        }
+                        getRooms(scope.search, scope.data, scope);
+
+                    }
+                    //console.log('res:::::::::locCap', response);
+                }, function(error){
+                    showError(error.message);
+                    scope.search.isLoaded = false;
+                });
+            }
+            
+            function getSchedulesByInstructor(scheduleId,search) {
+                QueryApex.getSchedulesByInstructor(scheduleId).then(function(response){
+                    search.isLoaded = true;
+                    search.modalDisplay = false;
+                        console.log(':::::::::modalDisplay:::', search.modalDisplay);
+                    if(response){
+                        search.modalDisplay = true;
+                        console.log(':::::::::modalDisplay:::', search.modalDisplay);
+                        console.log('res:::::::::sche:::ins', response);
+                        search.ScheduleRecordsbyins = response;
+                        search.modlaStateForSchedule = 'slds-fade-in-open';
+                        search.modalBackdropStateForSchedule = 'slds-modal-backdrop--open';
+                        console.log(':::::::::::search.ScheduleRecords::::::::::',search.ScheduleRecordsbyins);
+                    }
+                    
+                }, function(error){
+                    showError(error.message);
+                    search.isLoaded = false;
+                });
+                
+            }
+            
+            function getSchedulesByRooms(roomId,search) {
+                console.log(':::getSchedulesByRooms::::');
+                QueryApex.getSchedulesByRooms(roomId).then(function(response){
+                    search.isLoaded = true;
+                   
+                    if(response){
+                        console.log('res:::::::::sche:::room', response);
+                        search.ScheduleRecordsbyroom = response.scheduleRecords;
+                        search.conflictRecords = response.conflictRecords;
+                        
+                        if(search.ScheduleRecordsbyroom.length > 0) {
+                            search.roomName = search.ScheduleRecordsbyroom[0].Room__r.Name;
+                        } else {
+                            if(search.roomCollection[roomId] != undefined){
+                                search.roomName = search.roomCollection[roomId].name;
+                            }
+                        }
+                        search.modlaStateForSchedulebyRooms = 'slds-fade-in-open';
+                        search.modalBackdropStateForSchedulebyRooms = 'slds-modal-backdrop--open';
+                        console.log(':::::::::::search.ScheduleRecords::::::::::',search.ScheduleRecordsbyroom);
+                    }
+                    
+                }, function(error){
+                    showError(error.message);
+                    search.isLoaded = false;
+                });
+            }
+           
+            function getroomsByRoomId(roomId,search) {
+                console.log(':roomId::::',roomId)
+                QueryApex.getroomsByRoomId(roomId).then(function(response){
+                    search.isLoaded = true;
+                   
+                    if(response){
+                        console.log('res::::::::room', response);
+                        search.roomRecordForNotes = response[0];
+                        search.RoomNotes = search.roomRecordForNotes.Notes__c;
+                        search.modlaStateForRoomNotes = 'slds-fade-in-open';
+                        search.modalBackdropStateForRoomNotes = 'slds-modal-backdrop--open';
+                    }
+                    
+                }, function(error){
+                    showError(error.message);
+                    search.isLoaded = false;
+                });
+            }
+            function saveNotes(roomForUpdate){
+                console.log('::roomForUpdate::::',roomForUpdate);
+                QueryApex.saveNotes(roomForUpdate).then(function(response){
+                    //search.isLoaded = true;
+                    if(response){
+                        console.log('res::::::::room', response);    
+                    }
+                    
+                }, function(error){
+                    showError(error.message);
+                    //search.isLoaded = false;
+                });
+            }
+            
+            
+            function decodeHTML(encodedStr){
+                var parser = new DOMParser;
+                var dom = parser.parseFromString(
+                    '<!doctype html><body>' + encodedStr,
+                    'text/html');
+                var decodedString = dom.body.textContent;
+                
+                return decodedString;
+            }
+            
+            function formatTime(time) {
+                var hours = 0;
+                var minutes = 0;
+                var h = time.split(' ');
+                var m = h[0].split(':');
+                var t = [];
+                if(m[1] != undefined)
+                    minutes = m[1];
+                if(h[1] == 'AM') {
+                    hours = m[0];
+                } else if(h[1] == 'PM'){
+                    if(m[0] == '12')
+                        hours = 12;
+                    else
+                        hours = parseInt(m[0]) + 12;
+                }
+                //console.log('::::h:',hours);
+                //console.log('::::h:',minutes);
+                return hours+':'+minutes+':00';
+            }
+            function setEvent(record,search) {
+                
+                var event = {};
+                var integer;
+                if(record.RoomId) {
+                    if(!search.roomCollection[record.RoomId]) {
+                        integer = parseInt(record.RoomName)
+                        if(isNaN(integer)) integer = record.RoomName;
+                        
+                        search.roomCollection[record.RoomId] = {title: record.RoomNumber, id: record.RoomId, name: record.RoomName, roomNo: integer};
+                    }
+                }
+                //console.log('::::roomCollection:::',search.roomCollection);
+                if(record.StratTime != undefined && record.EndTime != undefined && record.RoomId != undefined){
+                    
+                    var stTime = record.StratTime;
+                    var endTime = record.EndTime;
+                    record.customInfo = decodeHTML(record.customInfo);
+                    
+                    if(record.sectionType == 'RA'){
+                        event = {
+                            id: record.ScheduleId,
+                            resourceId: record.RoomId, 
+                            title: record.customInfo,
+                            start: formatTime(stTime),
+                            end: formatTime(endTime),
+                            backgroundColor: 'green'
+                        };
+                    } else if(record.sectionType == 'EE'){
+                        event = {
+                            id: record.ScheduleId,
+                            resourceId: record.RoomId, 
+                            title: record.customInfo,
+                            start: formatTime(stTime),
+                            end: formatTime(endTime),
+                            backgroundColor: 'blue'
+                        };
+                    } else if(record.sectionType == 'AA'){
+                        event = {
+                            id: record.ScheduleId,
+                            resourceId: record.RoomId, 
+                            title: record.customInfo,
+                            start: formatTime(stTime),
+                            end: formatTime(endTime),
+                            backgroundColor: 'yellow',
+                            textColor: 'black'
+                        };
+                    } else if(record.sectionType == 'AFP'){
+                        event = {
+                            id: record.ScheduleId,
+                            resourceId: record.RoomId, 
+                            title: record.customInfo,
+                            start: formatTime(stTime),
+                            end: formatTime(endTime),
+                            backgroundColor: 'orange'
+                        };
+                    } else {
+                        event = {
+                            id: record.ScheduleId,
+                            resourceId: record.RoomId, 
+                            title: record.customInfo,
+                            start: formatTime(stTime),
+                            end: formatTime(endTime)
+                            //backgroundColor: 'purple'
+                        };
+                    }
+                    search.scheduledEvents.push(event);
+                    
+                }
+                //console.log(':::scheduledEvents:&&::::',search.scheduledEvents);
+                
+            }
+            
+            function initCalendar(search) {
+                  
+                $('#calendar').fullCalendar({
+                    selectable : true,
+                    events : [],
+                    minTime: '06:00:00',
+                    maxTime: '21:30:00',
+                    slotDuration: '00:15:00',
+                    resourceAreaWidth: '10%',
+                    slotLabelInterval: '00:30:00',
+                    filterResourcesWithEvents: true,
+                    schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+                    
+                    resources : search.roomResource,
+                    /*customButtons: {
+                        myCustomButton: {
+                            text: 'More Info',
+                            click: function() {
+                                //alert('clicked the custom button!');
+                                getSchedulesByRooms('a0860000008j4UZAAY',search);
+                            }
+                        }
+                    },
+                    header: {
+                        left: 'myCustomButton',
+                        center: '',
+                        right: ''
+                    },*/
+                    height: 500,
+                    header: {
+                        left: '',
+                        center: '',
+                        right: ''
+                    },
+                    
+                    eventClick: function(event, jsEvent, view) {
+                        $scope.modalState = 'slds-fade-in-open';
+                        $scope.modalBackdropState = 'slds-modal-backdrop--open"';
+                        $scope.data = {};
+                        angular.copy(event, $scope.data);
+                        $scope.$apply();
+                    }
+                });
+                
+                window.setTimeout(function() {
+                    
+                    $('#calendar').fullCalendar('changeView', 'timelineDay');
+                    addResourceDetailsButton(search);
+                }, 0);
+            }
+            
+            var resourceAreaClass = '.fc-resource-area';
+            var resourceContainerClass = '.fc-cell-content';
+            var resourceTextContainerClass = 'span.fc-cell-text';
+            
+            function addResourceDetailsButton(search) {
+                
+                var resourceArea = document.querySelectorAll(resourceAreaClass);
+                //console.log('resource area', resourceArea);
+                if(resourceArea) {
+                    for(var j = 0; j < resourceArea.length; j++) {
+                        var containers = resourceArea[j].querySelectorAll(resourceContainerClass);
+                        //console.log('all container', containers);
+                        for(var i = 0; i < containers.length; i++) {
+                            addButton(containers[i], search);
+                        }
+                    }
+                }
+            }
+            
+            function addButton(element, search) {
+                
+                //console.log('add button called', element);
+                if(element) {
+                    
+                    var textElement = element.querySelector(resourceTextContainerClass);
+                    var parent = textElement.parentElement;
+                    //console.log(':parentElement:::::',parent);
+                    var text = textElement.innerHTML;
+                    if(textElement && textElement.innerHTML != 'Resources') {
+                        
+                        var svglink = "{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/action-sprite/svg/symbols.svg#more')}";
+                        var span = document.createElement("span");
+                        span.className = 'slds-icon_container slds-icon_container--circle slds-icon-action-description round-button';
+                        var svg = document.createElementNS('http://www.w3.org/2000/svg', "svg");
+                        var use = document.createElementNS('http://www.w3.org/2000/svg', "use");
+                        svg.setAttribute("class", "slds-icon slds-icon--x-smalsmall");
+                        svg.setAttribute("style", "width: 20px; height: 15px;");
+                        use.setAttribute("xlink:href",svglink);
+                        svg.appendChild(use);
+                        for(var j = 0; j < roomResource.length; j++){
+                            if(text == roomResource[j].title){
+                                var endvalue = text.split("-");
+                                if(endvalue[1] == 'I'){
+                                    parent.setAttribute("style", "background-color: grey;");
+                                }
+                                //console.log(':end::',endvalue[1]);
+                                var roomId = roomResource[j].id;
+                                //console.log(roomResource[j].id);
+                                
+                            }
+                        }
+                        
+                        span.innerHTML = svg.outerHTML;
+                        //textElement.innerHTML = span.outerHTML + textElement.innerHTML;
+                        
+                        textElement.insertBefore(span, textElement.firstChild);
+
+                        span.addEventListener('click', function(){
+                            //console.log('::more::');
+                            detailButtonClickCallback(text, search);
+                        });
+                                                
+                        //console.log('button added.');
+                        
+                        var newNotelink = "{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/action-sprite/svg/symbols.svg#new_note')}";
+                        var nspan = document.createElement("span");
+                        nspan.className = 'slds-icon_container slds-icon_container--circle slds-icon-action-description round-button';
+                        var nsvg = document.createElementNS('http://www.w3.org/2000/svg', "svg");
+                        var nuse = document.createElementNS('http://www.w3.org/2000/svg', "use");
+                        nsvg.setAttribute("class", "slds-icon slds-icon--x-smalsmall");
+                        nsvg.setAttribute("style", "width: 20px; height: 15px;");
+                        nuse.setAttribute("xlink:href",newNotelink);
+                        nsvg.appendChild(nuse);
+                        nspan.innerHTML = nsvg.outerHTML;
+                        //textElement.innerHTML = nspan.outerHTML + textElement.innerHTML;
+                        
+                        
+                        textElement.insertBefore(nspan, textElement.firstChild);
+                        
+                        nspan.addEventListener('click', function(){
+                            newNoteButtonClickCallback(text, search);
+                            //console.log('text', text);
+                        });
+                        
+                        //console.log('icon added.');
+                    }
+                }
+            }
+            
+            function newNoteButtonClickCallback(text, search) {
+                console.log('::room name:::',text);
+                if(text){
+                    for(var j = 0; j < roomResource.length; j++){
+                        if(text == roomResource[j].title){
+                            var roomId = roomResource[j].id;
+                            //console.log(roomResource[j].id);
+                            
+                        }
+                    }
+                    getroomsByRoomId(roomId, search);
+                    //search.modlaStateForRoomNotes = 'slds-fade-in-open';
+                    //search.modalBackdropStateForRoomNotes = 'slds-modal-backdrop--open';
+                }
+                //TODO: compare the name with all the resources to find the exact resource.
+            }
+            
+            
+            
+            function detailButtonClickCallback(text, search) {
+                console.log(text);
+                if(text){
+                    console.log(':::roomResource::',roomResource);
+                    for(var j = 0; j < roomResource.length; j++){
+                        if(text == roomResource[j].title){
+                            var endvalue = text.split("-");
+                            if(endvalue[1] == 'I'){
+                                search.value = true;
+                            }
+                            console.log(':end::',endvalue[1]);
+                            var roomId = roomResource[j].id;
+                            //console.log(roomResource[j].id);
+                            
+                        }
+                    }
+                    getSchedulesByRooms(roomId, search);
+                }
+                //TODO: compare the name with all the resources to find the exact resource.
+            }
+            function sortArray(sortList){
+                var orderedList = [];
+                orderedList = sortList.sort(function(a,b) {
+                    if(typeof a.roomNo === "number" && typeof b.roomNo === "number"){
+                        return (a.roomNo > b.roomNo) ? 1 : ((b.roomNo > a.roomNo) ? -1 : 0);
+                    } else {
+                        if(typeof a.roomNo === "string" && typeof b.roomNo === "number"){
+                            return 1;
+                        } else {
+                            if(typeof a.roomNo === "string" && typeof b.roomNo === "string"){
+                                return (a.roomNo > b.roomNo) ? 1 : ((b.roomNo > a.roomNo) ? -1 : 0);
+                            } else {
+                                return -1;
+                            }
+                        }
+                    }
+                });
+                return orderedList;
+            }
+            function displayResources(search){
+                search.roomResourceWithConflicts = [];
+                search.roomCollection = {};
+                search.roomResourceWithoutConflict = [];
+                QueryApex.getAllProjectEvents(search).then(function(response){
+                    //console.log('::search.allRoomIds::1',search.allRoomIds);
+                    //console.log('::search.conflicts::1',search.conflicts); 
+                    if(response){
+                        search.scheduledEvents = [];
+                        var records = response;
+                        console.log(':::::::displayResources:::::::::::::;',records);
+                        for(var i in records) {
+                            setEvent(records[i],search);
+                        }
+                        console.log('::search.roomsForCalendar::1',search.roomsForCalendar); 
+                        for(var i=0; i < search.roomsForCalendar.length; i++){
+                            if(search.roomsForCalendar[i].Id) {
+                                if(!search.roomCollection[search.roomsForCalendar[i].Id]) {
+                                    var loc = '';
+                                    var roomno;
+                                    if(search.roomsForCalendar[i].Room_Location__c == 'Interior' && search.roomsForCalendar[i].Room_Location__c != null){
+                                        loc = search.roomsForCalendar[i].Room_Location__c.replace('Interior','I');
+                                    }else if(search.roomsForCalendar[i].Room_Location__c != null && search.roomsForCalendar[i].Room_Location__c == 'Window'){
+                                        loc = search.roomsForCalendar[i].Room_Location__c.replace('Window','W');  
+                                    }
+                                    
+                                    if(search.roomsForCalendar[i].Name != null)
+                                        roomno = search.roomsForCalendar[i].Name +'-'+loc;
+                                        
+                                    integer = parseInt(search.roomsForCalendar[i].Name)
+                                    if(isNaN(integer)) integer = search.roomsForCalendar[i].Name;
+                                    
+                                    search.roomCollection[search.roomsForCalendar[i].Id] = {title: roomno, id: search.roomsForCalendar[i].Id, name: search.roomsForCalendar[i].Name, roomNo: integer};
+                                   
+                                }
+                            }
+                        }
+                        for(var r in search.roomCollection) {
+                            search.roomResourceWithConflicts.push(search.roomCollection[r]);
+                            if(search.conflicts && !search.conflicts.hasOwnProperty(r))
+                                search.roomResourceWithoutConflict.push(search.roomCollection[r]);
+                        }
+                        //console.log('::::search.roomResourceWithConflicts:::',search.roomResourceWithConflicts.length);
+                        //console.log('::::search.roomResourceWithoutConflict:::',search.roomResourceWithoutConflict.length);
+                        //console.log(':::::::search.togglePosition2:::::',search.togglePosition2);
+                        if(search.togglePosition2){
+                            search.roomResource = sortArray(search.roomResourceWithoutConflict);
+                        } else {
+                            search.roomResource = sortArray(search.roomResourceWithConflicts);
+                        }
+                        //console.log('::::::search.roomResource:::::::',search.roomResource);
+                        initCalendar(search);
+                        search.scheduledEventSource = {events: search.scheduledEvents, color: '#3B91AD', textColor: '#FFF'};
+                        
+                        $('#calendar').fullCalendar('addEventSource', search.scheduledEventSource);
+                        
+                        search.isLoaded = true;
+                    }
+                    
+                }, function(error) {
+                        console.log('error', error);
+                        search.isLoaded = false;
+                });
+            }
+            
+            function getAllProjectEvents(search) {
+                search.roomResourceWithConflicts = [];
+                search.roomCollection = {};
+                //console.log('::search.allRoomIds::',search.allRoomIds);
+                //console.log('::search.conflicts::',search.conflicts);
+                var locId;
+                if(search.selectedLocation != 'All'){
+                    locId = search.selectedLocation;
+                } else {
+                    locId = null;
+                }
+                
+                var funName = [];
+                if(search.selectedFunction != 'All'){
+                    funName = search.selectedFunctions;
+                } else {
+                    funName = null;
+                }
+                
+                var floorName = [];
+                if(search.selectedFloors){
+                    floorName = search.selectedFloors;
+                } else {
+                    floorName = null;
+                }
+
+                var roomty;
+                if(search.selectedRoomType != 'Both'){
+                    roomty = search.selectedRoomType;
+                } else {
+                    roomty = null;
+                }
+
+                var suiIds = [];
+                if(search.selectedSuites){
+                    for(var j = 0; j < search.selectedSuites.length; j++){
+                        suiIds.push(search.suiteIdNameMap[search.selectedSuites[j]]);
+                    }
+                    
+                    //console.log('::suiIds::::',suiIds);
+                } else {
+                    suiIds = null;
+                }
+
+                var cap;
+                if(search.enteredCapacity != null){
+                    cap = parseInt(search.enteredCapacity);
+                } else {
+                    cap = null;
+                }
+
+                var SearchParameter = {
+                    locationId: locId,
+                    function: funName,
+                    floor: floorName,
+                    capacity: cap,
+                    roomType: roomty,
+                    suiteId: suiIds
+                }
+                
+                QueryApex.getAllProjectEvents(search).then(function(response){
+                    
+                    if(response){
+                        search.scheduledEvents = [];
+                        var records = response;
+                        search.schedules = response;
+                        for(var i in records) {
+                            setEvent(records[i],search);
+                        }
+                        //console.log('::schedule records:::',response);
+                        //console.log(':::toggle:::',search.togglePosition2,search.conflicts);
+                        for(var i = 0; i < search.roomsForCalendar.length; i++){
+                            if(search.roomsForCalendar[i].Id) {
+                                if(!search.roomCollection[search.roomsForCalendar[i].Id]) {
+                                    var loc = '';
+                                    var roomno;
+                                    if(search.roomsForCalendar[i].Room_Location__c == 'Interior' && search.roomsForCalendar[i].Room_Location__c != null){
+                                        loc = search.roomsForCalendar[i].Room_Location__c.replace('Interior','I');
+                                    }else if(search.roomsForCalendar[i].Room_Location__c != null && search.roomsForCalendar[i].Room_Location__c == 'Window'){
+                                        loc = search.roomsForCalendar[i].Room_Location__c.replace('Window','W');  
+                                    }
+                                    
+                                    if(search.roomsForCalendar[i].Name != null)
+                                        roomno = search.roomsForCalendar[i].Name +'-'+loc;
+                                        
+                                    integer = parseInt(search.roomsForCalendar[i].Name)
+                                    if(isNaN(integer)) integer = search.roomsForCalendar[i].Name;
+                                    
+                                    if(search.togglePosition2 && !search.conflicts.hasOwnProperty(search.roomsForCalendar[i].Id)) {
+                                        search.roomCollection[search.roomsForCalendar[i].Id] = {title: roomno, id: search.roomsForCalendar[i].Id, name: search.roomsForCalendar[i].Name, roomNo: integer};
+                                    } else if(!search.togglePosition2){
+                                        search.roomCollection[search.roomsForCalendar[i].Id] = {title: roomno, id: search.roomsForCalendar[i].Id, name: search.roomsForCalendar[i].Name, roomNo: integer};
+                                    }
+                                }
+                            }
+                        }
+                        
+                        //console.log('::::::search.roomCollection::::',search.roomCollection);
+                        
+                        for(var r in search.roomCollection) {
+                            search.roomResourceWithConflicts.push(search.roomCollection[r]);
+                        }
+                        
+                        search.roomResource = sortArray(search.roomResourceWithConflicts);
+                        
+                        roomResource = search.roomResource;
+                        
+                        search.roomResourcesWithoutConflicts = [];
+                       
+                        initCalendar(search);
+                        
+                        search.scheduledEventSource = {events: search.scheduledEvents, color: '#3B91AD', textColor: '#FFF'};
+                        var cancelledEventSource = {events: cancelledEvents, color: '#FFA500', textColor: '#FFF'};
+                        var completedEventSource = {events: completedEvents, color: '#660099', textColor: '#FFF'};
+                        console.log('scheduledEventSource:::::::::',search.scheduledEventSource);
+                        
+                        $('#calendar').fullCalendar('addEventSource', search.scheduledEventSource);
+                        $('#calendar').fullCalendar('addEventSource', cancelledEventSource);
+                        $('#calendar').fullCalendar('addEventSource', completedEventSource);
+                        search.isLoaded = true;
+                        search.modalStateForCalendar = 'slds-fade-in-open';
+                        search.modalBackdropStateForCalendar = 'slds-modal-backdrop--open';
+                        
+                    }
+                    
+                }, function(error) {
+                        console.log('error', error);
+                        search.isLoaded = false;
+                });
+            }
+           
+            function setPagination(resultSize, noOfRecordsPerPage, currentPage, callback) {
+                var dataSource = [];
+                var paginationSize = Math.ceil(resultSize / noOfRecordsPerPage);
+                for(var i = 0; i < paginationSize; i++) {
+                    dataSource.push(i);
+                }
+                $('.pager1').pagination({
+                    dataSource: dataSource,
+                    pageSize: 1,
+                    showPrevious: false,
+                    showNext: false,
+                    pageNumber: currentPage,
+                    ulClassName: 'pagination',
+                    callback: function(data, pagination) {
+                        //console.log('data', data);
+                        //console.log('pagination', pagination);
+                        callback(pagination);
+                    }
+                });
+
+                $('.pager2').pagination({
+                    dataSource: dataSource,
+                    pageSize: 1,
+                    showPrevious: false,
+                    showNext: false,
+                    pageNumber: currentPage,
+                    ulClassName: 'pagination',
+                    callback: function(data, pagination) {
+                        //console.log('data', data);
+                        //console.log('pagination', pagination);
+                        callback(pagination);
+                    }
+                });
+            }
+            return {
+                formUrl: formUrl,
+                getSearchParameters: getSearchParameters,
+                filterRooms: filterRooms,
+                initSearch: initSearch,
+                setUrl: setUrl,
+                searchByDate: searchByDate,
+                setPopState: setPopState,
+                getScore: getScore,
+                searchByProximity: searchByProximity,
+                openContact: openContact,
+                clearFilter: clearFilter,
+                assignRoom: assignRoom,
+                showError: showError,
+                setPagination: setPagination,
+                prepopLocationCapacity: prepopLocationCapacity,
+                getRooms: getRooms,
+                getSchedulesByInstructor: getSchedulesByInstructor,
+                getSchedulesByRooms: getSchedulesByRooms,
+                getSuitebyFloor: getSuitebyFloor,
+                getFloorbylocation: getFloorbylocation,
+                getAllProjectEvents: getAllProjectEvents,
+                getroomsByRoomId: getroomsByRoomId,
+                saveNotes: saveNotes,
+                displayResources: displayResources
+            }
+        })
+        .factory('QueryApex', function($q) {
+            //Get all rooms from the contact.
+            function getAllRooms(isConflictCheckNeed, conflictSearchParameter, zip, SearchParameter, scheduleId) {
+                var def = $q.defer();
+                console.log('::::::::con:::::::::::',conflictSearchParameter,SearchParameter);
+                console.log('::::::::scheduleId:::::::::::',scheduleId);
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getRooms}',
+                  conflictSearchParameter,
+                  SearchParameter,
+                  scheduleId,
+                  function(response, ev) {
+                      //console.log('::::::::rrrr:::::::::::',response);
+
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+
+                return def.promise;
+            }
+
+            //Resolve Responses
+            function resolveResponse(response, ev, def) {
+                if(ev.status) {
+                    def.resolve(response);
+                } else {
+                    def.reject(ev);
+                }
+            }
+
+            //Get Time picklist values.
+            function getTimePicklist() {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getTimePicklist}',
+                  function(response, ev) {
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+
+            //Get Location picklist values.
+            function getLocation() {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getLocation}',
+                  function(response, ev) {
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+
+            function getSuitebyFloor(floorname) {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getSuitesbyRoomFloors}',floorname,
+                  function(response, ev) {
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            function getFloorbylocation(locId) {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getFloorsbylocation}',locId,
+                  function(response, ev) {
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+
+            //Function to get Floor Picklist
+            //Created on 5-Apr-2017
+            function getFloorPicklist() {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getFloorPicklist}',
+                  function(response, ev) {
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            //Function to get Function Picklist
+            //Created on 22-Apr-2016
+            function getFunctionPicklist() {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getFunctionPicklist}',
+                  function(response, ev) {
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+
+            //Function to get Function Picklist
+            //Created on 22-Apr-2016
+            function assignRoom(scheduleId, roomId) {
+                var def = $q.defer();
+                console.log('assign room called.', scheduleId, roomId);
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.setRoom}',
+                  scheduleId,
+                  roomId,
+                  function(response, ev) {
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            function prepopLocationCapacity(scheduleId, returnId) {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.prepopLocationAndCapacity}',
+                  scheduleId,
+                  returnId,
+                  function(response, ev) {
+                      console.log('::::::res:locationCapacity::::::',response);
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            function getSchedulesByInstructor(scheduleId) {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getSchedulesByInstructor}',
+                  scheduleId,
+                  function(response, ev) {
+                      console.log('::::::res:ins sche::::::',response);
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            function getSchedulesByRooms(roomId) {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getSchedulesByRooms}',
+                  roomId,
+                  function(response, ev) {
+                      console.log('::::::res::room sche:::::',response);
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            function getroomsByRoomId(roomId) {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.getroomsByRoomId}',
+                  roomId,
+                  function(response, ev) {
+                      console.log('::::::res::rooms:::::',response);
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            function saveNotes(roomForUpdate) {
+                console.log('::::json::::',JSON.stringify(roomForUpdate));
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.RoomSearchController.updateRoom}',
+                  JSON.stringify(roomForUpdate),
+                  function(response, ev) {
+                      console.log('::::::res::rooms:::::',response);
+                      resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            function getAllProjectEvents(search) {
+                var def = $q.defer();
+                search.finalIdList = [];
+                if(search.togglePosition2){
+                    console.log('::if::enter::::conflict:;',search.conflicts);
+                    for(var j = 0; j < search.allRoomIds.length ; j++){
+                        if(search.conflicts){
+                            if(!search.conflicts.hasOwnProperty(search.allRoomIds[j])){
+                                search.finalIdList.push(search.allRoomIds[j]);
+                            }
+                        } else {
+                            search.finalIdList.push(search.allRoomIds[j]);
+                        }
+                    }
+                } else {
+                    console.log('::else::show::::conflict:;');
+                    search.finalIdList = search.allRoomIds;
+                }
+                console.log('::::roomm:Ids:::',search.finalIdList.length);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.RoomSearchController.getRoomDetails}',
+                    search.finalIdList,
+                    function(response, ev) {
+                        resolveResponse(response, ev, def);
+                  },
+                  {escape: true}
+                );
+                return def.promise;
+            }
+            
+            // To check whether the logged in user has the permission to Edit/Assign the Room by GRK on April 27, 2018
+            var checkForRoomEditPermission = function() {
+                var def = $q.defer();
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.RoomSearchController.checkForRoomEditCP}',
+                    function(response, ev) {
+                        resolveResponse(response, ev, def);
+                    },
+                    {escape: true}
+                );
+                return def.promise;
+            }
+          
+            return {
+                getAllRooms : getAllRooms,
+                getTimePicklist: getTimePicklist,
+                getLocation: getLocation,
+                getFunctionPicklist: getFunctionPicklist,
+                getFloorPicklist: getFloorPicklist,
+                assignRoom: assignRoom,
+                prepopLocationCapacity: prepopLocationCapacity,
+                getSchedulesByInstructor: getSchedulesByInstructor,
+                getSchedulesByRooms: getSchedulesByRooms,
+                getSuitebyFloor: getSuitebyFloor,
+                getFloorbylocation: getFloorbylocation,
+                getAllProjectEvents: getAllProjectEvents,
+                getroomsByRoomId: getroomsByRoomId,
+                saveNotes: saveNotes,
+                checkForRoomEditPermission: checkForRoomEditPermission
+            }
+        })
+        .directive('multiPicklist',function($document){
+            return {
+                restrict: 'EA',
+                templateUrl:'multiplePick.html',
+                replace:true,
+                scope: {
+                  pickListOptions : '=?options',
+                  selectedOptions : '=?',
+                  onBlur: '=?onBlur',
+                  isVisible: '='
+                },
+                controller:function($scope){
+                    console.log('pickListOptions', $scope.pickListOptions);
+                
+                    var selectedOptArr = [];
+                    $scope.count = 0;
+                    $scope.toggleSelectOption = function (option) {
+                        var intIndex = selectedOptArr.indexOf(option);
+                        if(intIndex > -1){
+                             selectedOptArr.splice(intIndex, 1);
+                        } else {
+                            selectedOptArr.push(option);
+                        }
+                        $scope.updateSelectedOptions(selectedOptArr);
+                    };
+                    
+                    $scope.updateSelectedOptions = function(temp){
+                        console.log(temp);
+                        $scope.selectedOptions = temp;
+                        $scope.count = selectedOptArr.length;
+                    };
+                    
+                    
+                    function updatePicklist(selectedList) {
+                        selectedOptArr = [];
+                        if(selectedList){
+                            selectedOptArr = selectedList;
+                        }
+                    }
+                    
+                    $scope.$watch('selectedOptions', function(newVar, oldVar){
+                        //console.log('inside watcher',newVar);
+                        updatePicklist(newVar);
+                        $scope.updateSelectedOptions(newVar);
+                    }, true);
+                   
+                    $scope.isSelected = function(opt){
+                        
+                        return selectedOptArr.indexOf(opt) > -1;
+                    };
+                    $scope.toString = function(temp, exp){
+                        return temp.join(exp);
+                    };
+                    $scope.toArray = function(temp, exp){
+                        return temp.split(exp);
+                    };
+                    $scope.filterOptions = function(){
+                        if($scope.selectedOptions){
+                            selectedOptArr = $scope.selectedOptions;
+                            console.log("assigning is selected",selectedOptArr)
+                        }else{
+                            selectedOptArr = [];
+                        }
+                        $scope.count = selectedOptArr.length;
+                    };
+                },
+                link:function(scope,element,attr,ctrl){
+                   //console.log('multipicklist', scope);
+                   if(scope.selectedOptions){
+                       scope.filterOptions();
+                   }
+                   var showOptions;
+                   var bindHandler = function(event){
+                        //console.log("binding:::::",event);
+                        var isClickedElementChildOfPopup = element[0].contains(event.target);
+                        if (isClickedElementChildOfPopup) {
+                            return;
+                        }
+                        //console.log(element,isClickedElementChildOfPopup, event.target,element[0].contains(event.target));
+                        scope.$apply(function(){
+                            scope.toggleDropdown(event);
+                        });
+                   }
+                   scope.toggleDropdown = function ($event) {
+                       scope.isOptVisible = !scope.isOptVisible;
+                       //console.log("going to bind",scope.isOptVisible);
+                        if(scope.isOptVisible){
+                             $document.bind('click',bindHandler);
+                        } else {
+                            console.log("unbinding", scope.onBlur, typeof scope.onBlur);
+                            $document.unbind('click');
+                            if(typeof scope.onBlur === 'function') {
+                                console.log(':on change::');
+                                scope.onBlur();
+                            }
+                            scope.isVisible = !scope.isVisible;
+                        }
+                    };
+                    
+                }
+            };
+        });
+    </script>
+    </body>
+</html>
+</apex:page>

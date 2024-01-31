@@ -1,0 +1,167 @@
+<aura:component access="public" controller="Mobile_SupervisorTimeApproval_Ctrl">
+    <!-- input from parent cmp -->
+    <aura:attribute name="summaryDetails" type="Object" access="public" description="week summary related all info"/>
+    <aura:attribute name="specificWeekInfo" type="Object" access="public" description="selected week related all info"/>
+    <aura:attribute name="selectedRowValue" type="String" access="public" description="selected row value in summary info"/>
+    <aura:attribute name="updatedTCD" type="List" access="public" default="[]" description="passed from child to parent for dml , parent to child for holding changed info"/>
+    <!-- end if parent input-->
+    
+    <aura:attribute name="viewName" type="String" access="public" description="name of view"/>
+    <aura:attribute name="detailInfo" type="List" access="public" description="list of entries"/>
+    <aura:attribute name="previousIcondisplay" type="Boolean" access="public" default="true"/>
+    <aura:attribute name="nextIcondisplay" type="Boolean" access="public" default="true"/>
+    <aura:attribute name="currentIndex" type="Boolean" access="public"/>
+    <aura:attribute name="showSpinner" type="Boolean" access="public"/>
+    <aura:attribute name="approvedHrs" type="Decimal" access="public"/>
+    <aura:attribute name="rejectedHrs" type="Decimal" access="public"/>
+    <aura:attribute name="approvedIds" type="List" access="public" default="0"/>
+    <aura:attribute name="rejectedIds" type="List" access="public" default="0"/>
+    <aura:attribute name="displayRejectBox" type="Boolean" access="public"/>
+    <aura:attribute name="rejectionReason" type="String" access="public"/>
+    <aura:attribute name="btnIndex" type="Integer" access="public" description="to capture the reject btn index for reason adding"/>
+    <aura:attribute name="actionType" type="String" access="public"/>
+    <aura:attribute name="overAllActionHrs" type="Decimal" access="public"/>
+    <aura:attribute name="overAllActionMsg" type="String" access="public"/>
+    <aura:attribute name="displayConfirmation" type="Boolean" access="public" description="display over all action approve,reject confirmation modal"/>
+    <aura:attribute name="DAApproverMsg" type="String" access="public"/>
+    <aura:attribute name="alreadyApprovedIds" type="List" access="public"/>
+    <aura:attribute name="alreadyRejectedIds" type="List" access="public"/>
+    <aura:attribute name="rejectAllReason" type="String" access="public"/>
+    <aura:attribute name="CommitInfo" type="String" access="public"/>
+    <aura:attribute name="displayCommitInfo" type="Boolean" access="public"/>
+    <aura:attribute name="nextIconClicked" type="Boolean" access="public" default="false"/>
+    <aura:attribute name="previousIconClicked" type="Boolean" access="public" default="false"/>
+    <aura:attribute name="displaySaveAlert" type="Boolean" access="public"/>
+    <aura:attribute name="tcdIds" type="String[]" default="[]" access="public"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <!-- To handle header cmp related event -->
+    <aura:handler name="clickEvent" event="c.childClickEvent" action="{!c.handleChildEvent}"/>
+    <aura:registerEvent name="approvalDetailEvent" type="c.childClickEvent"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    
+    <article aura:id="displayDetail" class="slds-card">
+        <div class="slds-card__header">
+            <c:HeaderComponent headerName="{!v.viewName}" subHeader="" displayInfo="{!v.displayCommitInfo}" information="{!v.CommitInfo}" previousIconDisplay="{!v.previousIcondisplay}" nextIconDisplay="{!v.nextIcondisplay}"/>
+        </div>
+        <ui:scrollerWrapper class="scrollerSize">
+            <div class="slds-card__body slds-card__body_inner">
+                <aura:if isTrue="{!not(empty(v.detailInfo))}">
+                    <ul>
+                        <aura:iteration items="{!v.detailInfo}" var="day" indexVar="index">
+                            <li class="slds-nav-vertical__item slds-border_top slds-border_bottom">
+                                <aura:if isTrue="{!v.summaryDetails.showDateGrouping}">
+                                    <span class="slds-nav-vertical__action">
+                                        <span class="slds-p-left_x-small">{!day.chargeCode}</span>
+                                    </span>
+                                    <span class="slds-nav-vertical__action">
+                                        <span class="slds-col slds-order_1">Submitted Hours: {!day.hours}</span>
+                                    </span>
+                                    <aura:set attribute="else">
+                                        <span class="slds-nav-vertical__action">
+                                            <span class="slds-p-left_x-small">{!day.chargeCode}</span>
+                                        </span>
+                                        <span class="slds-nav-vertical__action">
+                                            <span class="slds-col slds-order_1">{!day.dateVal}</span>
+                                            <span class="slds-col slds-order_1">{!day.hours}</span>
+                                        </span>
+                                    </aura:set>
+                                </aura:if>
+                                <span class="slds-nav-vertical__action">
+                                    <div class="slds-col slds-order_1">
+                                        <lightning:button variant="neutral" aura:id="approveBtn" class="{!day.status == 'Approved' ? 'btnApprove' : 'normalBtn'}" name="{!index}" label="Approve" onclick="{!c.approveClick}"/>
+                                    </div>
+                                    <div class="slds-col slds-order_2">
+                                        <lightning:button variant="neutral" aura:id="rejectBtn" class="{!day.status == 'Rejected' ? 'btnReject' : 'normalBtn'}" label="Reject" name="{!index}" onclick="{!c.rejectClick}"/>
+                                    </div>
+                                </span>
+                            </li>
+                        </aura:iteration>
+                    </ul>
+                    <aura:set attribute="else">
+                        <div style="text-align: center;font-size: 18px;">No entries for approval</div>                    
+                    </aura:set>
+                </aura:if>
+            </div>
+        </ui:scrollerWrapper>
+        <footer class="slds-card__footer">
+            <span style="font-size: 18px;">Approved Hours : {!v.approvedHrs}</span><br/>
+            <span style="font-size: 18px;">Rejected Hours : {!v.rejectedHrs}</span><br/>
+            <div class="slds-grid slds-p-top_medium" >
+                <aura:if isTrue="{!not(empty(v.detailInfo))}">
+                    <div class="slds-col slds-order_1">
+                        <lightning:button variant="brand" label="Save" onclick="{!c.savechangesOnly}"/>
+                    </div>
+                    <div class="slds-col slds-order_2">
+                        <lightning:button variant="brand" label="Approve All" onclick="{!c.approveAllClick}"/>
+                    </div>
+                    <div class="slds-col slds-order_3">
+                        <lightning:button variant="brand" label="Reject All" onclick="{!c.rejectAllClick}"/>
+                    </div>
+                </aura:if>
+                <div class="slds-col slds-order_4">
+                    <lightning:button variant="brand" label="Back" onclick="{!c.backClick}"/>
+                </div>
+            </div>
+        </footer>
+    </article>
+    
+    <!-- To capture reject reason -->
+    <aura:if isTrue="{!v.displayRejectBox}">
+        <c:sldsModal aura:id="rejectModal">
+            <aura:set attribute="header">Reason For Rejection</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <lightning:textarea aura:id="rejectReasonBox" label="Enter Rejection Reason" value="{!v.rejectionReason}"/><br/>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Okay" class="buttonCls" onclick="{!c.okayonRejectReason}"/>
+                <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeonRejectReason}"/>
+            </aura:set>
+        </c:sldsModal>    
+    </aura:if>
+    
+    <!-- To display confirmation on Save, Approve & Reject All actions -->
+    <aura:if isTrue="{!v.displayConfirmation}">
+        <c:sldsModal aura:id="confirmationModal">
+            <aura:set attribute="header">Confirmation</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <aura:if isTrue="{!v.actionType == 'RejectAll'}">
+                    <lightning:textarea aura:id="rejectAllReason" label="Enter Rejection Reason" value="{!v.rejectAllReason}"/><br/>
+                </aura:if>
+                <aura:if isTrue="{!v.summaryDetails.delegatedApprovers != '--None--'}">
+                    <p><aura:unescapedHtml value="{!v.DAApproverMsg}" /></p><br/>
+                </aura:if>
+                <p><aura:unescapedHtml value="{!v.overAllActionMsg}"/></p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Yes" class="buttonCls" onclick="{!c.yesClickApproveReject}"/>
+                <lightning:button variant="brand" label="No" class="buttonCls" onclick="{!c.closeClickApproveReject}"/>
+            </aura:set>
+        </c:sldsModal> 
+    </aura:if>
+    
+    <!-- Unsaved data validation Modal -->
+    <aura:if isTrue="{!v.displaySaveAlert}">
+        <c:sldsModal aura:id="saveAlertModal" closeAction="{!c.saveAlertClose}">
+            <aura:set attribute="header">Confirmation</aura:set>
+            <aura:set attribute="displayCloseImage" value="true">
+            </aura:set>
+            <aura:set attribute="content">
+                <p>Would you like to save changes?</p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Continue" class="buttonCls" onclick="{!c.yesClickonAlert}"/>
+                <lightning:button variant="brand" label="Discard" class="buttonCls" onclick="{!c.discardonAlert}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    <!-- End of unsaved data validation modal -->
+    
+</aura:component>

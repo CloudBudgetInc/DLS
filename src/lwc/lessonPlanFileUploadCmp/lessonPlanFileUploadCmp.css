@@ -1,0 +1,5 @@
+.slds-file-selector__dropzone{
+    /*content: 'Attach Files' !important;*/
+    border:none;
+    padding:none;
+}

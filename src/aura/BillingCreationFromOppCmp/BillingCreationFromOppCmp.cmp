@@ -1,0 +1,87 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global"  Controller="BillingCreationFromOpp_Ctrl">
+    
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="billingRowInfo" type="Map" default="{opliItemsList :  []}"/>
+    <aura:attribute name="studentContacts" type="List"/>
+    <aura:attribute name="showStudentSelection" type="Boolean" default="false"/>
+    <aura:attribute name="selectedConId" type="String"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <ltng:require styles="/resource/QuickActionFullPage"></ltng:require>
+    
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <!-- Create Billing Table -->
+    <lightning:card title="">
+        <aura:set attribute="actions">
+            <lightning:button label="Create Billing" variant="brand" onclick="{!c.createBillings}"/>            
+        </aura:set>
+        
+        <aura:if isTrue="{!and(v.billingRowInfo !=null,v.billingRowInfo.opliItemsList.length > 0)}">
+            <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal table slds-table_fixed-layout">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="wrap fontCls"><b>Billing Line Product</b></th>
+                        <th class="wrap fontCls"><b>Billing Line Opportunity</b></th>
+                        <th class="wrap centerAlignClass fontCls"><b>Billing Line Quantity</b></th>
+                        <th class="wrap centerAlignClass fontCls"><b>Billing Line Unit Price</b></th>
+                        <th class="wrap centerAlignClass fontCls"><b>Billing Line CLIN</b></th>
+                        <th class="wrap centerAlignClass fontCls"><b>Billing Line Comment</b></th>
+                        <th class="wrap centerAlignClass fontCls"><b>Billing Line Total</b></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Opportunity Line Item Info-->
+                    <aura:iteration items="{!v.billingRowInfo.opliItemsList}" var="opli" indexVar="opliIndex">
+                        <tr>
+                            <td class="wrap">{!opli.opliName}</td>
+                            <td class="wrap">{!opli.oppName}</td>
+                            <td class="wrap"><center>
+                                <aura:if isTrue="{!opli.isBillineNotExist}">
+                                    <div style="width: 70%;"><lightning:input variant="label-hidden" label=" " aura:id="qtyId" type="number" min="0" value="{!opli.quantity}" step="0.01" name="{!opliIndex}" onchange="{!c.calculateTotal}"/></div>
+                                    <aura:set attribute="else">
+                                        <div>{!opli.quantity}</div>  
+                                    </aura:set>
+                                </aura:if>
+                                </center></td>
+                            <td class="wrap"><center><div>{!opli.unitPrice}</div></center></td>
+                            <td class="wrap"><center>{!opli.clinName}</center></td>
+                            <td class="wrap"><div class="textAreaCls"><lightning:textarea label="" value="{!opli.comment}"/></div></td>
+                            <td class="wrap"><center><ui:outputNumber value="{!'$'+(opli.total)}" format="0.00"/></center></td>
+                        </tr>
+                    </aura:iteration>
+                    <tr>
+                        <td style="font-size:1.1rem;text-align:left;"><b>Records Count</b></td>
+                        <td class="wrap fontCls"><ui:outputNumber value="{!v.billingRowInfo.billingRecCount}"/></td>
+                        <td colspan="3"></td>
+                        <td style="font-size:1.1rem;text-align:right;"><b>Total</b></td>
+                        <td class="wrap fontCls"><center><ui:outputNumber value="{!'$'+(v.billingRowInfo.billingColumnTotal)}" format="0.00"/></center>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <aura:set attribute="else">
+                <center><h1>No records to display</h1></center>
+            </aura:set>
+        </aura:if>
+        
+        <aura:if isTrue="{!v.showStudentSelection}"> 
+            <div class="slds-box slds-m-top_medium">
+            <lightning:radioGroup aura:id="studentCA" name="radioGroup"
+                                  label="Contact to receive email"
+                                  options="{! v.studentContacts }"
+                                  required="true"
+                                  value="{!v.selectedConId}"
+                                  type="radio"/>   
+            </div>
+        </aura:if>
+    </lightning:card>
+</aura:component>

@@ -1,0 +1,174 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="NewOrderLoanController">
+    <aura:attribute name="newLoanObj" type="Map" description="To hold the new MR record values"/>
+    <aura:attribute name="projectRecords" type="List" default="[]"/>
+    <aura:attribute name="displayNewLoanModel" type="Boolean" default="false"/>
+    <aura:attribute name="searchByField" type="String" default=""/>
+    <aura:attribute name="radioOptions" type="List" default="[{'label': 'Material Name', 'value': 'Name'},
+                                                             {'label': 'ISBN', 'value': 'ISBN__c'}]"/>
+    
+    <aura:attribute name="requestTypes" type="List" default="['Instructor','Staff','Student']"/>
+    <aura:attribute name="placeHolderName" type="String" default="Material Name"/>
+    <aura:attribute name="showinputDetails" type="Boolean" default="true"/>
+    <aura:attribute name="materialsDetails" type="List" default="[]"/>   
+    <aura:attribute name="qtyEntered" type="Boolean" default="false"/>
+    <aura:attribute name="displaySuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="isNewLoan" type="Boolean" default="false" access="public" Description="Used to store the the record is Loaded or not" />
+    <aura:attribute name="displayQty" type="Boolean" default="true" description="to display the qty and notes input"/>
+    <aura:attribute name="notesEntered" type="Boolean" default="false"/>
+    <aura:attribute name="fromType" type="String" default="Qty" description="To identify which apply option is clicked Qty or notes"/>
+    
+    <!-- Attributes passed from other components -->
+    <aura:attribute name="materialId" type="String" default="" access="global"/>
+    <aura:attribute name="projectId" type="String" default="" access="global"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:handler name="change" value="{!v.newLoanObj.selectedContact}" action="{!c.getRelatedProjects}"/>
+    <!-- For redirect to the vf page after record creation -->
+    <aura:registerEvent name="reloadEvent" type="c:reloadEvent"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    
+    <div>
+        <!--lightning:button variant="brand" label="New Loan" onclick="{!c.openNewLoanModel}" /-->
+        
+        <aura:if isTrue="{!v.displayNewLoanModel}">
+            
+            <c:sldsModal aura:id="newLoanModel" modelWidth="66%">
+                <aura:set attribute="header">New Loan</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!v.showinputDetails}">
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem padding="around-small" size="6" class="lookup-IconClass">
+                                <c:LookupSearch aura:id="lookup" selection="{!v.newLoanObj.selectedContact}" onSearch="{!c.lookupSearch}" iconName="standard:record" objectName="Contact" fieldName="Name" condition="" label="Select Contact" placeholder="Select Contact" isMultiEntry="false" isRequired="true"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="6">
+                                <lightning:select aura:id="projectSelect" name="Project" class="selectReq" label="Select Project" value="{!v.newLoanObj.selectedProject}">
+                                    <option text="-- Select--" value=""/>
+                                    <aura:iteration items="{!v.projectRecords}" var="pro">
+                                        <option text="{!pro.Name}" value="{!pro.Id}" selected="{!v.newLoanObj.selectedProject == pro.Id ? true :false}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="6" class="lookup-IconClass">
+                                <aura:if isTrue="{!not(v.newLoanObj.materialDisabled)}">
+                                    <c:LookupSearch aura:id="materialLookup" selection="{!v.newLoanObj.selectedMaterials}" onSearch="{!c.materialLookupSearch}" iconName="standard:record" objectName="Materials__c" fieldName="{!v.searchByField}" condition="Inactive__c = false" label="Select Material" placeholder="{!v.placeHolderName}" isMultiEntry="true" allowMultiSelect="true" isRequired="true"/>
+                                    <aura:set attribute="else">
+                                        <lightning:input type="text" label="Select Material" value="{!v.newLoanObj.selectedMaterials[0].Name}" disabled="{!v.newLoanObj.materialDisabled}"/>
+                                    </aura:set>
+                                </aura:if>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="6">
+                                <lightning:layout>
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <div class="outerGroup" style="margin-top: 1%;">
+                                            <lightning:radioGroup name="radioGroup" label="Search By" options="{! v.radioOptions }" value="{!v.searchByField}" type="radio" onchange="{!c.changeSearchByField}"/>
+                                        </div>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <aura:if isTrue="{!not(v.qtyEntered)}">
+                                            <lightning:input aura:id="qtyVal" type="number" label="Qty" value="{!v.newLoanObj.Qty}" class="selectReq"/><br/>
+                                            <aura:set attribute="else">
+                                                <lightning:input type="text" label="Qty" value="Varied" disabled="true"/>
+                                            </aura:set>
+                                        </aura:if>
+                                        <a onclick="{!c.getQtyValues}">Apply Different Qty</a>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="6" class="lookup-IconClass">
+                                <c:LookupSearch aura:id="locationLookup" selection="{!v.newLoanObj.selectedLocation}" onSearch="{!c.locationLookupSearch}" iconName="standard:location" objectName="MTT_Location__c" fieldName="Name" condition="" label="Select Location" placeholder="Location Name" isMultiEntry="false" isRequired="true"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="6">
+                                <ui:inputDate aura:id="loanedOut" label="Date Loaned Out" class="slds-input datePickerClass requiredClass" value="{!v.newLoanObj.loanedOutDate}" displayDatePicker="true" format="MM-DD-YYYY"/>      
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="6">
+                                <lightning:select aura:id="requestType" label="Request Type" class="selectReq" value="{!v.newLoanObj.requestType}">
+                                    <option text="-- Select--" value=""/>
+                                    <aura:iteration items="{!v.requestTypes}" var="req">
+                                        <option text="{!req}" value="{!req}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="6">
+                                <aura:if isTrue="{!not(v.notesEntered)}">
+                                	<lightning:textarea label="Request Notes" value="{!v.newLoanObj.requestNotes}"/>
+                                    <aura:set attribute="else">
+                                    	<lightning:textarea label="Request Notes" value="Varied" disabled="true"/>
+                                    </aura:set>
+                                </aura:if>
+                                <a onclick="{!c.getNotesValues}">Apply Request Notes</a>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                        <aura:set attribute="else">
+                            <table class="slds-table slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-1">
+                                <thead>
+                                    <tr>
+                                        <th>Material Name</th>
+                                        <aura:if isTrue="{!v.displayQty}">
+                                            <th>Quantity</th>
+                                            <aura:set attribute="else">
+                                                <th>Notes</th>
+                                            </aura:set>
+                                        </aura:if>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <aura:iteration items="{!v.materialsDetails}" var="material">
+                                        <tr>
+                                            <td>
+                                                <span>{!material.Name}</span>
+                                            </td>
+                                            <td>
+                                                <aura:if isTrue="{!v.displayQty}">
+                                                	<lightning:input aura:id="qtyInput" type="number" label="" value="{!material.qty}"/>
+                                                    <aura:set attribute="else">
+                                                    	<lightning:textarea aura:id="notesInput" class="notesClass" label="" value="{!material.notes}"/>
+                                                    </aura:set>
+                                                </aura:if>
+                                                
+                                            </td>
+                                        </tr>
+                                    </aura:iteration>           
+                                </tbody>
+                            </table>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <aura:if isTrue="{!v.showinputDetails}">
+                        <lightning:button variant="brand" label="Submit" class="buttonCls" onclick="{!c.submitClick}"/>
+                        <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.cancelClick}"/>
+                        <aura:set attribute="else">
+                            <lightning:button variant="brand" label="Okay" class="buttonCls" onclick="{!c.okayClickOnQty}"/>
+                            <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.cancelOnQty}"/>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+        <aura:if isTrue="{!v.displaySuccessModal}">
+            <c:sldsModal aura:id="successModal">
+                <aura:set attribute="header">{!v.successTitle}</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <p>{!v.successMsg}</p>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnSuccess}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+    </div>
+    
+</aura:component>

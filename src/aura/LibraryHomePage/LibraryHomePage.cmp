@@ -1,0 +1,335 @@
+<aura:component access="global" controller="LibrarySearchController">
+    <aura:attribute name="userType" type="String" default=""/>
+    <aura:attribute name="loanFilter" type="Map" default="{}"/>
+    <aura:attribute name="loanFilterValues" type="Map" default="{}"/>
+    <aura:attribute name="materialRequestRecords" type="List" default="[]"/>
+    <aura:attribute name="MRRecordTypeMap" type="Map" default="{}"/>
+    <aura:attribute name="header" type="List" access="public"/>
+    <aura:attribute name="tableConfig" type="Map" access="public"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="materialRequestRecord" type="Map" default="{}"/>
+    <aura:attribute name="loanRequestStatus" type="List" default="['Loaned Out','Returned','Transferred to new Project']"/>
+    <aura:attribute name="showLoanViewMore" type="Boolean" default="false"/>
+    <aura:attribute name="showSaveBtn" type="Boolean" default="false"/>
+    <aura:attribute name="showViewMore" type="Boolean" default="false"/>
+    <aura:attribute name="displayEdit" type="Boolean" default="false"/>
+    <aura:attribute name="displayDeleteConfirmation" type="Boolean" default="false"/>
+    <aura:attribute name="isNewLoan" type="Boolean" default="false"/>
+    <aura:attribute name="isNewRequest" type="Boolean" default="false"/>
+    
+    <aura:attribute name="selectedProject" type="String" default=""/>
+    <aura:attribute name="instructorProjects" type="List" default="[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:handler name="change" value="{!v.loanFilter.supervisor}" action="{!c.clearTable}"/>
+    <aura:handler name="change" value="{!v.loanFilter.relatedContact}" action="{!c.clearTable}"/>
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClicked}"/>
+    <aura:handler name="change" value="{!v.isNewRequest}" action="{!c.isNewRequestChanged}" />
+    <aura:handler name="change" value="{!v.isNewLoan}" action="{!c.isNewLoanChanged}" />
+    
+    <!--Transfer to new project related attribute -->
+    <aura:attribute name="displayProjectSelection" type="Boolean" default="false"/>
+    
+    <aura:handler name="onSaveSuccess" event="force:recordSaveSuccess" action="{!c.handleSaveSuccess}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    
+    <!-- display material request table with filters -->
+    <aura:if isTrue="{!or(v.userType == 'Internal',v.userType == 'Staff')}">
+        <div class="c-container">
+            <lightning:layout multipleRows="true">
+                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                    <lightning:select label="Record Type" value="{!v.loanFilter.selectedRecordType}" onchange="{!c.getStatusValues}">
+                        <aura:iteration items="{!v.loanFilterValues.recordTypeValues}" var="rt">
+                            <option value="{!rt.value}">{!rt.label}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layoutItem>
+                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                    <lightning:select label="Status" value="{!v.loanFilter.selectedStatus}" onchange="{!c.clearTable}">
+                        <aura:iteration items="{!v.loanFilterValues.statusValues}" var="status">
+                            <option value="{!status.value}">{!status.label}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layoutItem>
+                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                    <c:LookupSearch aura:id="supervisor" selection="{!v.loanFilter.supervisor}" onSearch="{!c.supervisorLookupSearch}" 
+                                    iconName="standard:record" objectName="Contact" fieldName="Name" condition="" label="Supervisor" 
+                                    isMultiEntry="false" isRequired="false"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                    <c:LookupSearch aura:id="contact" selection="{!v.loanFilter.relatedContact}" onSearch="{!c.contactLookupSearch}" 
+                                    iconName="standard:record" objectName="Contact" fieldName="Name" condition="" label="Contact" 
+                                    isMultiEntry="false" isRequired="false"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                    <lightning:select label="Location" value="{!v.loanFilter.selectedLocation}" onchange="{!c.clearTable}">
+                        <aura:iteration items="{!v.loanFilterValues.dlsLocationValues}" var="location">
+                            <option value="{!location.value}">{!location.label}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layoutItem>
+                <lightning:layoutItem size="12" padding="around-small">
+                    <center>
+                        <lightning:button label="Search" class="btn btn-primary" onclick="{!c.searchBtnClick}"/>
+                        <lightning:button label="New Loan" class="btn btn-primary" onclick="{!c.newLoanBtnClick}"/>
+                        <lightning:button label="New Order" class="btn btn-primary" onclick="{!c.newOrderBtnClick}"/>
+                    </center>
+                </lightning:layoutItem>
+                <lightning:layoutItem size="12" padding="around-small">
+                    <!-- table-->
+                    <div class="ldtTableCls matReqClass">
+                        <aura:if isTrue="{!v.materialRequestRecords.length > 0}">
+                            <ldt:datatableDev aura:id="materialTable" dataRows="{!v.materialRequestRecords}" header="{!v.header}" config="{!v.tableConfig}"/>
+                            <aura:set attribute="else">
+                                <center><span>No Records To Display</span></center>
+                            </aura:set>
+                        </aura:if>
+                        
+                    </div>
+                </lightning:layoutItem>
+            </lightning:layout>
+        </div>
+    </aura:if>
+    
+    
+    <!-- Loan Model to display more information -->
+    <aura:if isTrue="{!v.showLoanViewMore}">
+        <c:sldsModal aura:id="LoanModal" header="{!v.materialRequestRecord.Name}" displayCloseImage="false" modelWidth="60%">
+            <aura:set attribute="content">
+                <p style="font-size:medium;">
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr class="slds-line-height_reset">
+                                <th scope="col">
+                                    <span class="slds-truncate">DLS Class #</span>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Library Location</span>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Date Loaned Out</span>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Date Returned</span>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Status</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent">
+                                
+                                <td data-label="DLS Class #">
+                                    <span class="slds-truncate">{!v.materialRequestRecord.Project__r.DLS_Class__c}</span>
+                                </td>
+                                <td data-label="Library Location">
+                                    <span class="slds-truncate">{!v.materialRequestRecord.Location__r.Name}</span>
+                                </td>
+                                <td data-label="Date Loaned Out">
+                                    <ui:outputDate value="{!v.materialRequestRecord.Date_Loaned_Out__c}" format="MM/DD/YYYY"/>
+                                </td>
+                                <td data-label="Date Returned">
+                                    <ui:outputDate value="{!v.materialRequestRecord.Date_Returned__c}" format="MM/DD/YYYY"/>
+                                </td>
+                                <td data-label="Status">
+                                    <aura:if isTrue="{!v.showSaveBtn}">
+                                        <lightning:select label="" aura:id="loanStatus" value="{!v.materialRequestRecord.Request_Status__c}" onchange="{!c.loanStatusChanged}">
+                                            <aura:iteration items="{!v.loanRequestStatus}" var="status">
+                                                <option value="{!status}">{!status}</option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                        <aura:set attribute="else">
+                                            <span class="slds-truncate">{!v.materialRequestRecord.Request_Status__c}</span>
+                                        </aura:set>
+                                    </aura:if>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.showSaveBtn}">
+                    <lightning:button class="btn btn-primary" label="Save" onclick="{!c.saveLoanDetails}"/>
+                </aura:if>
+                <lightning:button class="btn btn-primary" label="Close" onclick="{!c.closeLoanViewMore}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Other Type MR records View More model -->
+    <aura:if isTrue="{!v.showViewMore}">
+        <c:sldsModal aura:id="viewMoreModal" header="{!v.materialRequestRecord.Name}" displayCloseImage="false" modelWidth="80%">
+            <aura:set attribute="content">
+                <p style="font-size:medium;overflow-x: auto;">
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr class="slds-line-height_reset">
+                                <aura:if isTrue="{!v.materialRequestRecord.RecordType.DeveloperName == 'Project_Materials_Request'}">
+                                    <th scope="col">
+                                        <span class="slds-truncate">DLS Class #</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Delivery Location</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Due Date</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Ordered Date</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Delivered Date</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Request Notes</span>
+                                    </th>
+                                </aura:if>
+                                <aura:if isTrue="{!v.materialRequestRecord.RecordType.DeveloperName == 'Material_Transfer'}">
+                                    <th scope="col">
+                                        <span class="slds-truncate">Source Location</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Target Location</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Quantity</span>
+                                    </th>
+                                </aura:if>
+                                <aura:if isTrue="{!v.materialRequestRecord.RecordType.DeveloperName == 'Material_Disposal'}">
+                                    <th scope="col">
+                                        <span class="slds-truncate">Location</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Inventory Type</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Quantity</span>
+                                    </th>
+                                </aura:if>
+                                <th scope="col">
+                                    <span class="slds-truncate">Action</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent">
+                                <aura:if isTrue="{!v.materialRequestRecord.RecordType.DeveloperName == 'Project_Materials_Request'}">
+                                    <td data-label="DLS Class #">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Project__r.DLS_Class__c}</span>
+                                    </td>
+                                    <td data-label="Delivery Location">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Delivery_Location__c}</span>
+                                    </td>
+                                    <td data-label="Due Date">
+                                        <ui:outputDate value="{!v.materialRequestRecord.Due_Date__c}" format="MM/DD/YYYY"/>
+                                    </td>
+                                    <td data-label="Ordered Date">
+                                        <ui:outputDate value="{!v.materialRequestRecord.Date_Ordered__c}" format="MM/DD/YYYY"/>
+                                    </td>
+                                    <td data-label="Delivery Date">
+                                        <ui:outputDate value="{!v.materialRequestRecord.Date_Delivered__c}" format="MM/DD/YYYY"/>
+                                    </td>
+                                    <td data-label="Request Notes" class="slds-hyphenate" style="white-space: pre-line;">
+                                        <div><span>{!v.materialRequestRecord.Request_Notes__c}</span></div>
+                                    </td>
+                                </aura:if>
+                                <aura:if isTrue="{!v.materialRequestRecord.RecordType.DeveloperName == 'Material_Transfer'}">
+                                	<td data-label="Source Location">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Location__r.Name}</span>
+                                    </td>
+                                    <td data-label="Target Location">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Target_Location__r.Name}</span>
+                                    </td>
+                                    <td data-label="Quantity">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Qty__c}</span>
+                                    </td>
+                                </aura:if>
+                                <aura:if isTrue="{!v.materialRequestRecord.RecordType.DeveloperName == 'Material_Disposal'}">
+                                	<td data-label="Location">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Location__r.Name}</span>
+                                    </td>
+                                    <td data-label="Inventory Type">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Source_Inventory_Type__c}</span>
+                                    </td>
+                                    <td data-label="Quantity">
+                                        <span class="slds-truncate">{!v.materialRequestRecord.Qty__c}</span>
+                                    </td>
+                                </aura:if>
+                                
+                                <td data-label="Action">
+                                    <a href="" style="cursor: pointer;" onclick="{!c.openEditRecord}">Edit</a>
+                                    <a href="" style="margin-left: 20px;cursor: pointer;color: #0070d2;" onclick="{!c.openDeleteConfimation}">Delete</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="btn btn-primary" label="Close" onclick="{!c.closeViewMore}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Standard Edit Cmp -->
+    <aura:if isTrue="{!v.displayEdit}">
+        <c:sldsModal aura:id="editModal" header="{!v.materialRequestRecord.Name}" displayCloseImage="false" modelWidth="80%">
+            <aura:set attribute="content">
+                <force:recordEdit aura:id="edit" recordId="{!v.materialRequestRecord.Id}" />
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="btn btn-primary" label="Save" onclick="{!c.saveEditedRecord}"/>
+                <lightning:button class="btn btn-primary" label="Cancel" onclick="{!c.closeEdit}"/>
+            </aura:set>       
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Delete Confirmation -->
+    <aura:if isTrue="{!v.displayDeleteConfirmation}">
+        <c:sldsModal aura:id="deleteModal" header="Confirmation" displayCloseImage="false">
+            <aura:set attribute="content">
+                <center><p style="font-size:medium;">Are you sure you want to delete this Materials Request?</p></center>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="btn btn-primary" label="Delete" onclick="{!c.deleteOkClick}"/>
+                <lightning:button class="btn btn-primary" label="Cancel" onclick="{!c.deleteCancel}"/>
+            </aura:set>       
+        </c:sldsModal>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.displayProjectSelection}">
+    	<c:sldsModal aura:id="showProjectSelection" header="Select Project" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="content">
+                <lightning:select label="Project" aura:id="project" value="{!v.selectedProject}">
+                    <option value="">--None--</option>
+                    <aura:iteration items="{!v.instructorProjects}" var="pro">
+                        <option value="{!pro.Id}">{!pro.DLS_Class__c} / {!pro.Name}</option>
+                    </aura:iteration>
+                </lightning:select>
+                <br/><br/>
+                Would you like to transfer this material request to this project?
+                <br/><br/>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="btn btn-primary" label="Proceed" onclick="{!c.proceedClickOnProjectSelection}"/>
+                <lightning:button class="btn btn-primary" label="Cancel" onclick="{!c.cancelClickProjectSelection}"/>
+            </aura:set>       
+        </c:sldsModal>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.isNewLoan}">
+        <c:NewLoanCmp isNewLoan="{!v.isNewLoan}"/>
+    </aura:if>
+    <aura:if isTrue="{!v.isNewRequest}">
+        <c:NewOrderCmp  isNewRequest="{!v.isNewRequest}"/>
+    </aura:if>
+    
+</aura:component>

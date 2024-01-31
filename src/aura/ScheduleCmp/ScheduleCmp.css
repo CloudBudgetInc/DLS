@@ -1,0 +1,13 @@
+.THIS .wrap {
+    white-space:normal !important;
+}
+.THIS .fontSize {
+    font-size:small;
+}
+.THIS .iconDisable>button>lightning-primitive-icon:nth-child(2){
+    display:none;
+}
+
+.THIS .helpTextClass .slds-form-element__icon {
+    padding-top: 0;
+}

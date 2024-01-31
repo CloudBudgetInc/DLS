@@ -1,0 +1,70 @@
+<apex:page Controller="irexController" showheader="false"
+standardStylesheets="false" readOnly="true">
+<head><style type="text/css">
+        body{
+            background-color:#E2ECF5;
+            margin:0px;
+        }
+        p.one {
+            background-color:#136CC0;
+            text-align:center;
+            margin:0px;
+            color:#FFFFFF;
+            font-size:20pt;
+            font-weight:Bold;
+            }
+        p.two {
+            background-color:#E2ECF5;
+            text-align:center;
+            margin:0px;
+            text-align:left;
+            color:#136CC0;
+            font-size:12pt;
+    }
+        div{
+        background-color:#FFFFFF;
+        margin:0px;
+        }
+        td, th{
+        width:125px;
+        font-size:12px;
+        vertical-align: middle; 
+        text-align:center;
+        color:#136CC0;
+        }
+        td, tr{
+        border-top:2px solid white;
+        }
+    </style>
+ <title>IREX Test Scores</title></head>
+    <body>
+    <div style="position:relative;height:100px;margin:0px;color:#FFFFFF">
+        <img   src="{!URLFOR($Resource.xDLSlogox)}"   style="width:300px;height:100px;left:300px;top:0px;position:absolute;" />
+        <apex:outputText value="{!Month(today())}/{!Day(today())}/{!Year(today())}"   style="left:250px;top:150px;position:absolute;color:#136CC0;font-size:20pt;" /></div>
+        <p class="one">Week: {!Month(firstDay)}/{!Day(firstDay)}/{!Year(firstDay)} to {!Month(lastDay)}/{!Day(lastDay)}/{!Year(lastDay)}</p>
+    <p class="two"> 
+         <table   id="Completed Tests" cellpadding="3" style="left:250px;top:200px;position:absolute;border:2px solid white;"  >
+        <tr  style="font-weight:Bold;" >
+        <th>
+        Exam Date
+              </th><th>
+        Candidate Name
+        </th><th>
+        Speaking
+        </th><th>
+        Listening
+        </th><th>
+        Reading
+        </th><th>
+        Writing
+            </th></tr>
+        <apex:repeat value="{!currentOpp}" var="opp">
+        <tr style="font-weight:Normal;">
+        <td>{!opp.English_Exam_Date_Time__c}</td>
+        <td>{!opp.IREX_Number__c}</td>
+        <td>{!opp.English_Oral_Exam_Speaking__c}</td>
+        <td>{!opp.English_Oral_Exam_Listening__c}</td>
+        <td>{!opp.English_Oral_Exam_Reading__c}</td>
+        <td>{!opp.English_Exam_Writing__c}</td>
+        </tr></apex:repeat></table></p></body>
+</apex:page>

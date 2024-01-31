@@ -1,0 +1,53 @@
+<aura:component>    
+    <aura:attribute name="formTempElement" type="Form_Template_Element__c"/>
+    <aura:attribute name="formTempEleIdwithOptionLimit" type="Map"/>
+    <aura:attribute name="formTempEleIdWithResponseForUniqueResponse" type="MAP"/>
+    <aura:attribute name="options" type="LIST"/>
+    <aura:attribute name="selectedValues" type="LIST" default="[]"/>
+    <aura:attribute name="formTempIdWithFormResElement" type="Map"/>
+    <aura:attribute name="formResponseId" type="String"/>
+    <aura:attribute name="formResponseElement" type="Form_Response_Element__c" default="{'sObjectType':'Form_Response_Element__c'}"/>
+    <aura:attribute name="showQuestion" type="Boolean" default="false"></aura:attribute>
+    <aura:attribute name="other" type="String"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:method name="validate" action="{!c.validateFormResponse}" access="public"></aura:method>
+    <aura:method name="showError" action="{!c.showErrorMessage}" access="public">
+        <aura:attribute name="tempEleIds" type="String"/>
+    </aura:method>
+    
+    <aura:if isTrue="{!v.showQuestion}">
+        <label class="slds-form-element__label">
+            <div class="slds-grid">
+                <aura:if isTrue="{!v.formTempElement.Required__c}"><span class="slds-required" title="required">* </span></aura:if>
+                <span><lightning:formattedRichText value="{!v.formTempElement.Question__c}"/></span>
+            </div>
+        </label>
+        
+        <aura:if isTrue="{!v.formTempElement.Question_Type__c == 'Text'}">
+            <lightning:input aura:id="inputCmp" required="{!v.formTempElement.Required__c}" type="text" label="" value="{!v.formResponseElement.Feedback__c}"/>
+        </aura:if>
+        <aura:if isTrue="{!v.formTempElement.Question_Type__c == 'Picklist'}">
+            <lightning:combobox aura:id="inputCmp" required="{!v.formTempElement.Required__c}" label="" value="{!v.formResponseElement.Feedback__c}" options="{!v.options}" /> 
+            <aura:if isTrue="{! or(v.formResponseElement.Feedback__c == 'Other', v.formResponseElement.Feedback__c == 'other')}">
+                <lightning:inputRichText aura:id="otherInputCmp"  value="{!v.other}"/>
+            </aura:if>
+        </aura:if>
+        <aura:if isTrue="{!v.formTempElement.Question_Type__c == 'Email'}">
+            <lightning:input aura:id="inputCmp"  required="{!v.formTempElement.Required__c}" type="email" label="" value="{!v.formResponseElement.Feedback__c}"/>
+        </aura:if>
+        <aura:if isTrue="{!v.formTempElement.Question_Type__c == 'Number'}">
+            <lightning:input aura:id="inputCmp"  required="{!v.formTempElement.Required__c}" type="number" label="" value="{!v.formResponseElement.Feedback__c}"/>
+        </aura:if>
+        <aura:if isTrue="{!v.formTempElement.Question_Type__c == 'Multiple Choice'}">
+            <c:multiSelectCmp aura:id="inputCmp"  required="{!v.formTempElement.Required__c}" label="" selectedvalue="{!v.selectedValues}" optionsList="{!v.options}"/>
+        </aura:if>
+         <aura:if isTrue="{!v.formTempElement.Question_Type__c == 'Rating'}">
+             <c:RatingCmp value="{!v.formResponseElement.Feedback__c}" readOnly="false"/>             
+        </aura:if>
+        <aura:if isTrue="{!v.formTempElement.Question_Type__c == 'Rich Text Area'}">
+            <lightning:inputRichText  aura:id="inputCmp"  value="{!v.formResponseElement.Feedback__c}"/>
+        </aura:if>        
+    </aura:if>
+</aura:component>

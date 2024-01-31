@@ -1,0 +1,800 @@
+<apex:page standardStyleSheets="false" showHeader="false" sidebar="false" cache="false">
+      <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <title>JobBoard Template</title>
+<style type="text/css" title="currentStyle" media="screen">
+.atsMaster {
+    WIDTH: 100%; 
+    font-size: 12px; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-Serif;
+}
+
+.atsForm {
+    PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-TOP: 0px;
+}
+
+.atsInput {
+width: 300px;
+}
+
+.atsSelect {
+}
+
+.atsButton {
+}
+
+.atsError {
+    COLOR: #ff0000;
+}
+
+table.atsError tbody tr td {
+COLOR: #ff0000;
+}
+
+table.atsError tr td {
+COLOR: #ff0000;
+}
+
+.atsRequired {
+    COLOR: #ff0000;
+}
+
+.atsSelectedJobTitle {
+    PADDING-RIGHT: 1px; PADDING-LEFT: 1px; FONT-WEIGHT: bold; PADDING-BOTTOM: 1px; PADDING-TOP: 1px;
+}
+
+.atsSelectedJobText {
+    BORDER-RIGHT: #000000 1px solid; PADDING-RIGHT: 2px; BORDER-TOP: #000000 1px solid; PADDING-LEFT: 2px; PADDING-BOTTOM: 2px; BORDER-LEFT: #000000 1px solid; PADDING-TOP: 2px; BORDER-BOTTOM: #000000 1px solid; BACKGROUND-COLOR: #d3d3d3;
+}
+
+.atsNavBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+
+.atsNavHello {
+    FLOAT: left;
+}
+.atsNavLinks {
+    FLOAT: right;
+}
+
+#atsSearchBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+
+#atsSearchTitle {
+    font-size: 14px; 
+    color: #00353A;
+    margin: 0;
+    padding: 0 0 10px 0; 
+    font-family: Arial, Helvetica, sans-Serif;
+    font-weight: bold; 
+}
+
+#atsNoJobsMessage {
+    
+}
+
+.atsSearchTable {
+    padding: 6px;
+    BORDER-TOP: #000000 0px solid; 
+    BORDER-RIGHT: #000000 0px solid;
+    BORDER-LEFT: #000000 0px solid; 
+    BORDER-BOTTOM: #000000 0px solid;
+    WIDTH: 100%; 
+    
+    
+}
+.atsSearchTdLeft {
+    PADDING-RIGHT: 4px; PADDING-LEFT: 2px; PADDING-BOTTOM: 4px; PADDING-TOP: 4px; TEXT-ALIGN: right;  float: left;
+    white-space: nowrap;
+}
+.atsSearchTdRight {
+    PADDING-RIGHT: 4px; PADDING-LEFT: 4px; PADDING-BOTTOM: 4px; PADDING-TOP: 4px;
+}
+#atsSearchResultsBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+#atsSearchResultsTitle {
+    FONT-WEIGHT: bold; PADDING-BOTTOM: 4px;
+}
+#atsNoResultsMessage {
+    
+}
+#atsSearchResultsText {
+    PADDING-BOTTOM: 10px;
+}
+.atsSearchResultsTable {
+    WIDTH: 100%;
+}
+.atsSearchResultsHead {
+    PADDING-RIGHT: 4px; FONT-WEIGHT: bold; PADDING-BOTTOM: 2px;
+}
+.atsSearchResultsData {
+    padding: 8px 5px;
+    border-top: #ccc 1px solid;
+    vertical-align: top;
+}
+#atsJobDetailsBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+#atsJobDetailsHeader {
+    MARGIN-BOTTOM: 10px;
+}
+#atsJobDetailsFooter {
+    MARGIN-TOP: 10px;
+}
+.atsJobDetailsTable {
+    PADDING-BOTTOM: 10px;
+}
+.atsJobDetailsTdLeft {
+    PADDING-RIGHT: 15px; FONT-WEIGHT: bold; PADDING-BOTTOM: 5px; PADDING-TOP: 5px; WIDTH: 25%; VALIGN: top; 
+}
+.atsJobDetailsTdRight {
+    PADDING-BOTTOM: 5px; PADDING-TOP: 5px; WIDTH: 75%; COLOR: #4C6A82; FONT-WEIGHT: bold; VALIGN: top;
+}
+.atsJobDetailsTdTwoColumn {
+    PADDING-TOP: 15px; COLOR: #000000; FONT-WEIGHT: normal;
+}
+#atsJobDetailsLoginBox {
+    MARGIN-TOP: 20px;
+}
+.atsJobDetailsAlreadyLogin {
+    FONT-WEIGHT: bold;
+}
+#atsJobDetailsLoginTitle {
+    FONT-WEIGHT: bold; PADDING-BOTTOM: 2px;
+}
+.atsLoginTable {
+    BORDER-RIGHT: #000000 1px solid; PADDING-RIGHT: 6px; BORDER-TOP: #000000 1px solid; PADDING-LEFT: 6px; PADDING-BOTTOM: 6px; BORDER-LEFT: #000000 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #000000 1px solid;
+}
+.atsLoginAlreadyRegisteredTd {
+    BORDER-RIGHT: #000000 1px solid; PADDING-RIGHT: 6px; PADDING-LEFT: 6px; PADDING-BOTTOM: 6px; WIDTH: 48%; PADDING-TOP: 6px;
+}
+#atsAlreadyRegisteredTitle {
+    FONT-WEIGHT: bold;
+}
+#atsAlreadyRegisteredText {
+    PADDING-BOTTOM: 8px;
+}
+.atsAlreadyRegisteredTable {
+    WIDTH: 100%;
+}
+.atsAlreadyRegisteredTdLeft {
+    PADDING-RIGHT: 4px; PADDING-BOTTOM: 8px;
+}
+.atsAlreadyRegisteredTdRight {
+    PADDING-BOTTOM: 8px;
+}
+.atsLoginNotRegisteredTd {
+    PADDING-RIGHT: 6px; PADDING-LEFT: 6px; PADDING-BOTTOM: 6px; WIDTH: 52%; PADDING-TOP: 6px;
+}
+#atsNotRegisteredTitle {
+    FONT-WEIGHT: bold;
+}
+#atsNotRegisteredText {
+    
+}
+#atsNotRegisteredUL {
+    MARGIN-TOP: 0px; MARGIN-BOTTOM: 8px;
+}
+#atsSecurePasswordMessage {
+    
+}
+#atsForgotPasswordBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+#atsForgotPasswordTitle {
+    FONT-WEIGHT: bold;
+}
+#atsForgotPasswordText {
+    
+}
+#atsForgotPasswordError {
+    MARGIN-TOP: 10px; FONT-WEIGHT: bold; MARGIN-BOTTOM: 10px; COLOR: #ff0000;
+}
+.atsForgotPasswordTable {
+    PADDING-TOP: 6px;
+}
+.atsForgotPasswordTdLeft {
+    PADDING-RIGHT: 4px;
+
+}
+.atsForgotPasswordTdCenter {
+    PADDING-RIGHT: 4px;
+}
+.atsForgotPasswordTdRight {
+    PADDING-RIGHT: 4px;
+}
+#atsSentPasswordBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+#atsSentPasswordTitle {
+    FONT-WEIGHT: bold;
+}
+#atsSentPasswordText {
+    
+}
+#atsSentPasswordReturnToJobDetail {
+    MARGIN-TOP: 10px;
+}
+#atsFormBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+#atsFormText {
+    
+}
+.atsFormTable {
+    WIDTH: 100%;
+    float: left;
+}
+
+.atsFormTable textarea {
+    width: 200px;
+    height: 80px;
+    border: 2px solid #cccccc;
+    padding: 3px;
+    font-family: Tahoma, sans-serif;
+}
+
+.atsFormTable input {
+    width: 200px;
+    padding: 3px;
+    font-family: Tahoma, sans-serif;
+}
+
+#atsFormTdRequiredText {
+    TEXT-ALIGN: right;
+}
+.atsFormTdError {
+    TEXT-ALIGN: left;
+}
+.atsFormTdTitle {
+    FONT-WEIGHT: bold; 
+    padding: 0; 
+    BORDER-BOTTOM: #ccc 1px solid
+}
+.atsFormTdLeft {
+    PADDING-TOP: 8px; 
+    TEXT-ALIGN: right; 
+    white-space: nowrap; 
+}
+.atsFormTdRight {
+    PADDING-RIGHT: 50px; PADDING-LEFT: 8px; PADDING-TOP: 8px; TEXT-ALIGN: left; 
+}
+.atsFormTdTwoColumnLeft {
+    PADDING-TOP: 8px; TEXT-ALIGN: left; 
+}
+.atsFormTdTwoColumnUpload {
+    PADDING-TOP: 8px; 
+    TEXT-ALIGN: left; 
+    float: left;
+}
+
+.atsFormTdTwoColumnUpload input {
+    width: 20px;
+}
+
+.atsFormTdTwoColumnUpload textarea, .atsFormTdTwoColumnLeft textarea {
+    width: 450px;
+    height: 200px;
+    border: 2px solid #cccccc;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+
+.atsFormTdTwoColumnCenter {
+    PADDING-TOP: 8px; TEXT-ALIGN: center; 
+}
+#atsDisplayBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+.atsDisplayTdSavedMsg {
+    FONT-WEIGHT: bold; COLOR: #0000ff; PADDING-TOP: 10px;
+}
+.atsDisplayTdError {
+    TEXT-ALIGN: left;
+}
+.atsDisplayTable {
+    WIDTH: 100%;
+}
+.atsDisplayTdTitle {
+    FONT-WEIGHT: bold; PADDING-TOP: 16px; BORDER-BOTTOM: #ccc 1px solid;
+    margin-bot: 6px;
+}
+.atsDisplayTdLeft {
+    PADDING-TOP: 10px; TEXT-ALIGN: left;
+}
+.atsDisplayTdRight {
+    PADDING-TOP: 10px; TEXT-ALIGN: right;
+}
+.atsDisplayTdCenter {
+    PADDING-TOP: 10px; TEXT-ALIGN: center;
+}
+#atsApplicationSubmittedBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+#atsApplicationSubmittedMain {
+    FONT-WEIGHT: bold;
+}
+#atsApplicationSubmittedHomepage {
+    MARGIN-TOP: 10px;
+}
+#atsApplicationSubmittedSub {
+    MARGIN-TOP: 10px;
+}
+#atsErrorPageBox {
+    PADDING-BOTTOM: 20px; PADDING-TOP: 10px;
+}
+.atsErrorPageMessage {
+    FONT-WEIGHT: bold; COLOR: #ff0000;
+}
+
+.demotitle {
+    FONT-WEIGHT: bold; COLOR: #ff0000; FONT-FAMILY: Tahoma, Arial, Helvetica; FONT-SIZE: 22px;
+
+
+}
+
+.tcdemo_Container_Title {
+    FONT-WEIGHT: Normal; COLOR: #000000; FONT-FAMILY: Tahoma, Arial, Helvetica; FONT-SIZE: 15px;
+}
+
+.atsMailJob {
+    text-align: right;
+    padding: 3px 0 3px 0;
+    margin: 0;
+}
+
+.atsMailJobImage {
+
+}
+
+.atsMailJob a:link    {text-decoration:none; }
+.atsMailJob a:visited {text-decoration:none; }
+.atsMailJob a:hover   {text-decoration:underline; }
+.atsMailJob a:active  {text-decoration:none; }
+
+.atsEmailTable, .atsPreScreen {
+    padding: 6px;
+    WIDTH: 100%; 
+    
+    
+}
+.atsEmailTdLeft {
+    PADDING-RIGHT: 4px; PADDING-LEFT: 2px; PADDING-BOTTOM: 4px; PADDING-TOP: 4px; TEXT-ALIGN: right;  
+    float: left;
+    white-space: nowrap;  
+}
+.atsEmailTdRight {
+    PADDING-RIGHT: 4px; PADDING-LEFT: 4px; PADDING-BOTTOM: 4px; PADDING-TOP: 4px; ;
+}
+
+.atsEmailTable textarea {
+    width: 300px;
+    height: 120px;
+    border: 2px solid #cccccc;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+
+.atsEmailTable input, .atsPreScreen select, .atsPreScreen input {
+    width: 300px;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+
+.atsPreScreen td {
+    padding: 5px;
+}
+
+
+.block ul#js-menu{list-style:none; padding-left:10px; margin:18px 0 0 0;}
+.block ul#js-menu li{padding-left: 25px; padding-bottom:10px;}
+.block ul#js-menu{font-size: 12px; font-style:italic;}
+.block ul#js-menu li {}
+
+.confirmationaccept {
+background:#e5f7e3;
+background-position:7px 7px;
+border:1px solid #c5e1c8;
+font-weight:700;
+color:#005e20;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+
+.confirmationerror {
+background:#ffebeb;
+background-position:7px 7px;
+border:1px solid #f5c1c2;
+font-weight:700;
+color:#9e0b0f;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+
+.confirmationwarning {
+background:#fffeeb;
+background-position:7px 7px;
+border:1px solid #e6e5d8;
+font-weight:700;
+color:#555;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+
+.confirmationquestion {
+background:#e8f8fe;
+background-position:7px 7px;
+border:1px solid #cfdfe5;
+font-weight:700;
+color:#004a80;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+
+
+ul, li, ul li, ol li { margin:0; }
+#js-menu li{ display:inline; margin-left:15px; float:right;}
+
+body, body td {
+font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+        
+}
+
+h1, h2, h3{ display:block;}
+body{ width:100%; background-color:#E2ECF5;}
+body,td,th {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+a {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #666;
+}
+a:link {
+    text-decoration: none;
+}
+a:visited {
+    text-decoration: none;
+    color: #036;
+}
+a:hover {
+    text-decoration: underline;
+}
+a:active {
+    text-decoration: none;
+}
+h1 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 11px;
+    color: #666;
+}
+h6 {
+    font-size: 9px;
+    color: #666;
+}
+
+</style>        
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<!-- Save for Web Slices (aboutus.psd) -->
+<table id="Table_01" width="1351" height="1459" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+    <tr>
+        <td colspan="28">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_01.jpg')}" width="1350" height="14" alt="" /></td>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="14" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="4" rowspan="10">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_02.jpg')}" width="231" height="92" alt="" /></td>
+        <td colspan="6" rowspan="9"><a href="http://dlsdc.zxq.net/index.html"><img src="{!URLFOR($Resource.html_template2, 'img/LOGO.jpg')}" alt="" width="299" height="73" border="0" /></a></td>
+        <td colspan="18">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_04.jpg')}" width="820" height="3" alt="" /></td>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="3" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="4" rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_05.jpg')}" width="223" height="51" alt="" /></td>
+        <td width="330" height="29" colspan="10" bgcolor="#E2ECF4">&nbsp;</td>
+        <td colspan="4" rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_07.jpg')}" width="267" height="51" alt="" /></td>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="29" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="10">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_08.jpg')}" width="330" height="19" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="19" alt="" /></td>
+    </tr>
+
+    <tr>
+        <td colspan="2" rowspan="6"><a href="http://dlsdc.zxq.net/gsaschedule.html"><img src="{!URLFOR($Resource.html_template2, 'img/schedule.jpg')}" alt="" width="96" height="22" border="0" /></a></td>
+        <td colspan="8">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_10.jpg')}" width="234" height="3" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="3" alt="" /></td>
+    </tr>
+    <tr>
+        <td rowspan="6">
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_11.jpg')}" width="142" height="38" alt="" /></td>
+        <td colspan="2" rowspan="3"><a href="http://dlsdc.zxq.net/aboutus.html"><img src="{!URLFOR($Resource.html_template2, 'img/about.jpg')}" alt="" width="67" height="17" border="0" /></a></td>
+        <td rowspan="9">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_13.jpg')}" width="14" height="109" alt="" /></td>
+        <td rowspan="6">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_14.jpg')}" width="15" height="38" alt="" /></td>
+        <td colspan="3" rowspan="4"><a href="http://dlsdc.zxq.net/resourcespolicies.html"><img src="{!URLFOR($Resource.html_template2, 'img/resources.jpg')}" alt="" width="121" height="18" border="0" /></a></td>
+        <td colspan="5">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_16.jpg')}" width="114" height="3" alt="" /></td>
+
+        <td colspan="2" rowspan="2">
+              <a href="http://dlsdc.zxq.net/inquiryform.html"><img src="{!URLFOR($Resource.html_template2, 'img/contact.jpg')}" alt="" width="53" height="16" border="0" /></a></td>
+        <td rowspan="16">
+    <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_18.jpg')}" alt="" width="198" height="1390" align="top" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="3" alt="" /></td>
+    </tr>
+    <tr>
+        <td rowspan="8">
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_19.jpg')}" width="12" height="106" alt="" /></td>
+        <td colspan="2" rowspan="2">
+              <a href="http://dlservices.force.com/careers"><img src="{!URLFOR($Resource.html_template2, 'img/employment.jpg')}" alt="" width="83" height="14" border="0" /></a></td>
+        <td colspan="2" rowspan="5">
+            <img src="{!URLFOR($Resource.html_template2, 'img/index_21.jpg')}" width="19" height="35" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="13" alt="" /></td>
+    </tr>
+    <tr>
+
+        <td colspan="2" rowspan="4">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_22.jpg')}" width="53" height="22" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="1" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="2" rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_23.jpg')}" width="67" height="21" alt="" /></td>
+        <td colspan="2" rowspan="3">
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_24.jpg')}" width="83" height="21" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="1" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="3" rowspan="2">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_25.jpg')}" width="121" height="20" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="1" alt="" /></td>
+
+    </tr>
+    <tr>
+        <td colspan="6">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_26.jpg')}" width="299" height="19" alt="" /></td>
+        <td colspan="2">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_27.jpg')}" width="96" height="19" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="19" alt="" /></td>
+    </tr>
+
+    <tr>
+        <td colspan="2" rowspan="5">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_28.jpg')}" width="222" height="113" alt="" /></td>
+        <td colspan="3" rowspan="2"><a href="http://dlsdc.zxq.net/langaugetraining.html"><img src="{!URLFOR($Resource.html_template2, 'img/language-training.jpg')}" alt="" width="156" height="17" border="0" /></a></td>
+        <td colspan="3" rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_30.jpg')}" width="93" height="71" alt="" /></td>
+        <td colspan="4" rowspan="2"><a href="http://dlsdc.zxq.net/curriculumdevelopment.html"><img src="{!URLFOR($Resource.html_template2, 'img/curriculum-development.jpg')}" alt="" width="212" height="17" border="0" /></a></td>
+        <td rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_32.jpg')}" width="56" height="71" alt="" /></td>
+
+        <td rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_33.jpg')}" width="38" height="71" alt="" /></td>
+        <td colspan="3"><a href="http://dlsdc.zxq.net/translation.html"><img src="{!URLFOR($Resource.html_template2, 'img/translation.jpg')}" alt="" width="91" height="13" border="0" /></a></td>
+        <td colspan="2" rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_35.jpg')}" width="103" height="71" alt="" /></td>
+        <td rowspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_36.jpg')}" width="19" height="71" alt="" /></td>
+        <td colspan="4" rowspan="2"><a href="http://dlsdc.zxq.net/otherservices.html"><img src="{!URLFOR($Resource.html_template2, 'img/other-services.jpg')}" alt="" width="121" height="17" border="0" /></a></td>
+        <td rowspan="10">
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_38.jpg')}" width="15" height="1352" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="13" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="3" rowspan="2">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_39.jpg')}" width="91" height="58" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="4" alt="" /></td>
+
+    </tr>
+    <tr>
+        <td colspan="3">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_40.jpg')}" width="156" height="54" alt="" /></td>
+        <td colspan="4">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_41.jpg')}" width="212" height="54" alt="" /></td>
+        <td colspan="4">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_42.jpg')}" width="121" height="54" alt="" /></td>
+        <td>
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="54" alt="" /></td>
+    </tr>
+    <tr>
+        <td rowspan="2">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_43.jpg')}" width="1" height="42" alt="" /></td>
+        <td colspan="4">
+          <img src="{!URLFOR($Resource.html_template2, 'img/contactsubhead.jpg')}" width="237" height="36" alt="" /></td>
+        <td colspan="2" rowspan="5">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_45.jpg')}" width="18" height="1195" alt="" /></td>
+
+        <td width="659" height="1155" colspan="17" rowspan="4" align="left" valign="top" bgcolor="#ffffff">
+           <h1>Careers</h1>
+        <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                         
+                              <tr>
+                              
+                                <td align="left"><ts2:Menu ></ts2:Menu></td>
+                                <td align="right"><ts2:LoggedInLegend ></ts2:LoggedInLegend></td>
+                              </tr>
+                            </table>
+                            <br/>
+                            <apex:insert name="body"/>   
+        
+        
+        </td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="36" alt="" /></td>
+    </tr>
+    <tr>
+
+        <td colspan="4">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_47.jpg')}" width="237" height="6" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="6" alt="" /></td>
+    </tr>
+    <tr>
+        <td rowspan="5">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_48.jpg')}" width="221" height="1239" alt="" /></td>
+        <td width="239" height="551" colspan="6" align="left" valign="top" bgcolor="#ffffff"><table width="100%" cellpadding="0" cellspacing="0">
+
+          <tr>
+            <td valign="top" align="left" bgcolor="#ffffff"><strong>Phone:</strong> (703) - 243 - 4855
+              <div>
+                <div id="block-block-2">
+                  <div></div>
+                </div>
+              </div></td>
+          </tr>
+
+          <tr>
+            <td align="left" height="29"><strong>Email:</strong> <a href="info@dlsdc.com">info@dlsdc.com</a></td>
+          </tr>
+        </table>
+          <ul>
+            <li>employment</li>
+        </ul></td>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="551" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="6" rowspan="2">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_50.jpg')}" width="239" height="602" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="562" alt="" /></td>
+    </tr>
+
+    <tr>
+        <td colspan="17">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_51.jpg')}" width="659" height="40" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="40" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="5" rowspan="2">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_52.jpg')}" width="187" height="86" alt="" /></td>
+
+        <td width="548" height="68" colspan="13" align="center" valign="top" bgcolor="#E2ECF4"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr>
+          <td align="center" valign="top"><h5><a href="http://dlsdc.zxq.net/aboutus.html">About DLS</a> | <a href="http://dlsdc.zxq.net/gsaschedule.html">GSA Schedule</a> | <a href="http://dlsdc.zxq.net/resourcespolicies.html">Students Resources</a> | Employment | <a href="http://dlsdc.zxq.net//contact.html">Contact</a></h5></td>
+            </tr>
+
+            <tr>
+              <td align="center" valign="top"><h6>Copyright © 2011 <a href="http://dlsdc.zxq.net/">Diplomatic Language Services</a>. 1901 N Fort Myer   Dr, 6th Floor Arlington, VA 22209 703-243-4855</h6></td>
+            </tr>
+    </table></td>
+        <td colspan="7" rowspan="2">
+        <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_54.jpg')}" width="181" height="86" alt="" /></td>
+        <td>
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="68" alt="" /></td>
+    </tr>
+    <tr>
+        <td colspan="13">
+            <img src="{!URLFOR($Resource.html_template2, 'img/inquiryform_55.jpg')}" width="548" height="18" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="18" alt="" /></td>
+    </tr>
+    <tr>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="221" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="1" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="8" height="1" alt="" /></td>
+        <td>
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="147" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="30" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="52" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="11" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="7" height="1" alt="" /></td>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="52" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="142" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="11" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="56" height="1" alt="" /></td>
+        <td>
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="14" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="38" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="58" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="15" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="18" height="1" alt="" /></td>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="74" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="29" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="12" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="19" height="1" alt="" /></td>
+        <td>
+
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="64" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="3" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="16" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="38" height="1" alt="" /></td>
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="15" height="1" alt="" /></td>
+
+        <td>
+            <img src="{!URLFOR($Resource.html_template2, 'img/spacer.gif')}" width="198" height="1" alt="" /></td>
+        <td></td>
+    </tr>
+</table>
+<!-- End Save for Web Slices -->
+</body>
+</html>
+</apex:page>

@@ -1,0 +1,28 @@
+<aura:component >
+    <aura:attribute name="gridColumns" type="List" access="Public" />
+    <aura:attribute name="gridData" type="List" access="Public" />
+    <aura:attribute name="activityChecked" type="Boolean"  default="false" access="public" Description="To Store Ischecked"/>
+
+    <div>
+        <table  aria-multiselectable="true" class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover slds-tree slds-table_tree" >
+            <thead>
+                <aura:iteration items="{!v.gridColumns}" var="columns">
+                    <th aria-label="Account Name" aria-sort="none" class="slds-text-title_caps slds-has-button-menu slds-is-resizable slds-is-sortable wrapHeader" style="{!v.activityChecked == true ? 'text-align:center;width:9rem;':'width:9rem;'}" scope="col">
+                        {!columns.label}</th>
+                </aura:iteration>
+                <th aria-label="Action" aria-sort="none" class="slds-text-title_caps slds-has-button-menu slds-is-resizable slds-is-sortable"  style="text-align:center;" scope="col">
+                        Action</th>
+            </thead> 
+            <tbody>
+                <aura:iteration items="{!v.gridData}" var="data" >
+                        <c:treeGridRow gridData="{!data}" gridColumns="{!v.gridColumns}" activityChecked="{!v.activityChecked}" />
+                </aura:iteration>
+                <aura:if isTrue="{!v.gridData.length == 0}">
+                    <tr>
+                        <td colspan="7" class="slds-text-align--center">No Records Found</td>
+                    </tr>
+                </aura:if>
+            </tbody>
+        </table>
+    </div>
+</aura:component>

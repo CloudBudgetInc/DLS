@@ -1,0 +1,68 @@
+<template>
+		<div class="c-container">
+        <lightning-layout multiple-rows="true">
+						<template if:true = {isLoading}>
+								<lightning-spinner alternative-text="Loading" variant = 'brand' size="medium"></lightning-spinner>
+						</template>
+            <lightning-layout-item  size=6 small-device-size="12" medium-device-size="6" large-device-size="6" class="slds-form-element__control" padding="around-small" >
+							
+								<lightning-input data-id = 'Subject' name = 'Subject' type = 'text' label = 'Subject' onchange = {handleChange}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size=6 small-device-size="12" medium-device-size="6" large-device-size="6" class="slds-form-element__control" padding="around-small">
+                <lightning-input type="date" name="ActivityDate" label="Due Date" onchange={handleChange}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size=6 small-device-size="12" medium-device-size="6" large-device-size="6" class="slds-form-element__control" padding="around-small">
+               <c-lookup data-id="WhoId" label="Name"
+
+													s-object-api-name="Contact" placeholder="Search Contact"
+
+													fields="Id, Name"  icon-name="standard:contact"
+
+													 onlookupupdate={handleRecordSelection} field-api-name="WhoId">
+
+								</c-lookup>
+            </lightning-layout-item>
+            <lightning-layout-item size=6 small-device-size="12" medium-device-size="6" large-device-size="6" class="slds-form-element__control" padding="around-small">
+								<c-lookup data-id="WhatId" label="Select Project"
+
+													s-object-api-name="Acctseed__Project__c" placeholder="Search Project"
+
+													fields="Id, Name, Training_Location__c" icon-name="custom:custom68" search-field="DLS_Ref__c"
+
+													 onlookupupdate={handleRecordSelection} default-record-id={projectRecordId} disabled=true field-api-name="WhatId">
+
+								</c-lookup>
+            </lightning-layout-item>
+            <lightning-layout-item size=6 small-device-size="12" medium-device-size="6" large-device-size="6" class="slds-form-element__control" padding="around-small">
+                <c-lookup data-id="OwnerId" label="Assigned To"
+
+													s-object-api-name="User" placeholder="Search User"
+
+													fields="Id, Name" icon-name="standard:user" 
+
+													 required onlookupupdate={handleRecordSelection} field-api-name="OwnerId">
+
+								</c-lookup>
+            </lightning-layout-item>
+            <lightning-layout-item size=6 small-device-size="12" medium-device-size="6" large-device-size="6" class="slds-form-element__control" padding="around-small">
+               <lightning-combobox
+																		name="Status"
+																		label="Status"
+																		value={value}
+																	  required
+																		placeholder="Select Status"
+																	  class = "required-combobox"
+																		options={statusOptions}
+																		onchange={handleChange}
+																		data-id="Status" ></lightning-combobox>
+            </lightning-layout-item>
+						<div class="slds-col--bump-left">
+								<lightning-button variant="brand" label = 'Save' class= "slds-p-around_x-small" onclick = {handleSave} >
+								</lightning-button>
+								<lightning-button  label = 'Cancel'  class= "slds-p-around_x-small" onclick = {handleCancel}>
+								</lightning-button>
+						</div>
+        </lightning-layout>
+				
+    </div>
+</template>

@@ -1,0 +1,217 @@
+<!-- Developed by Siva Prasanth on 23/10/2019-->
+<apex:page showHeader="false" controller="AdminTimesheetExport_Ctrl" renderAs="pdf" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false" >
+    <html> 
+        <head>
+            <style>
+                .notesCls b{
+                    color:#055E89  !important;  
+                }
+                .notesBldCls{
+                    font-weight: bold;
+                    font-size:1rem !important;
+                    font-family: Lato!important;
+                    color: #055e89!important;
+                }
+                .Green{
+                    background-color:#ABD25A;
+                }
+                .Red{
+                    background-color:#FA8072;
+                }
+                .borderRight{
+                    border-right: 2px solid black;
+                }
+                .borderTop{
+                    border-top: 0px solid black !important;
+                }
+                darkBorderTop{
+                    border-top: 3px solid black !important;
+                }
+                .darkborder{
+                    border-top: 2px solid black;
+                }
+                .borderBottomCls{
+                    border-bottom:0px solid black !important
+                }
+                .wrapCls{
+                    white-space:pre-wrap;
+                }
+                .wrapBreakCls{
+                     white-space: pre-wrap !important;                                                                                                                         
+                }
+                .sldsHideCls{
+                    display : none;
+                }
+                @page{
+                    size:landscape;
+                    @bottom-right {
+                        content: "Page " counter(page) " - " counter(pages);
+                        font-family: 'Arial', 'Helvetica', sans-serif;
+                        font-size:10px;
+                    }
+                }
+            </style>
+        </head>
+        <div>
+            <div style="float:left;width:35%;">
+                <apex:image url="{!$Resource.DLS_Logo_v1}" width="100" height="50"/>
+            </div>
+            <div style="float:left;width:65%;">
+              <h3>Timesheet - {!adminTimeInfo.instructorName} </h3>
+            </div>
+        </div>
+        <br/><br/><br/><br/>
+        <!--Instructor Time Entry Section-->
+        <apex:outputPanel rendered="{!IF(AND(adminTimeInfo.entries != NULL, adminTimeInfo.entries.size > 0),true,false)}">
+            <table width="100%" cellspacing="0" cellpadding="6"  border="1" style="table-layout:fixed;">
+                <thead>
+                    <tr>
+                        <th class="wrapBreakCls" width="24%"><center>Charge Code</center></th>
+                        <apex:repeat value="{!adminTimeInfo.weekDates}" var="wkDay">
+                            <th width="10%" style="font-size:0.875rem;"><center>{!wkDay.dateValue}<div>{!wkDay.dayVal} </div></center></th>
+                        </apex:repeat>
+                        <th  width="6%" ><center>Total<div>Hours</div></center></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:repeat value="{!adminTimeInfo.entries}" var="wkEntry">
+                        <tr>
+                            <td  width="21%" class="{!IF((wkEntry.taskType == 'Preparation time'),'darkborder wrapBreakCls','wrapBreakCls')}" style="text-align:left;"><apex:outputText value="{!wkEntry.chargeCode1}" escape="false" /></td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td class="{!IF((wkEntry.taskType == 'Preparation time'),'darkborder','')}"><center>{!dayEntry.dayHours}</center></td>                               
+                            </apex:repeat>
+                            <td  class="{!IF((wkEntry.taskType == 'Preparation time'),'darkborder','')}"><center>{!wkEntry.totalHours}</center></td>
+                        </tr>
+                        <tr class="{!IF((wkEntry.taskType == 'Preparation time'),'','sldsHideCls')}">
+                            <td>AM - Start Time</td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td><center>{!dayEntry.startTime1}</center></td>                               
+                            </apex:repeat>
+                             <td class="borderBottomCls"></td>
+                        </tr>
+                        <tr  class="{!IF((wkEntry.taskType == 'Preparation time'),'','sldsHideCls')}">
+                            <td>AM - End Time</td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td><center>{!dayEntry.endTime1}</center></td>                               
+                            </apex:repeat>
+                             <td class="borderBottomCls borderTop"></td>
+                        </tr>
+                        <tr class="{!IF((wkEntry.taskType == 'Preparation time'),'','sldsHideCls')}">
+                            <td>PM - Start Time</td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td class="tablePadCls"><center>{!dayEntry.startTime2}</center></td>                               
+                            </apex:repeat>
+                             <td class="borderBottomCls borderTop"></td>
+                        </tr>
+                        <tr  class="{!IF((wkEntry.taskType == 'Preparation time'),'','sldsHideCls')}">
+                            <td>PM - End Time</td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td><center>{!dayEntry.endTime2}</center></td>                               
+                            </apex:repeat>
+                             <td class="borderBottomCls borderTop"></td>
+                        </tr>
+                        <tr class="{!IF((wkEntry.taskType == 'Language Training'),'','sldsHideCls')}">
+                            <td class="tablePadCls">Start Time</td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td><center>{!dayEntry.startTime1}</center></td>                               
+                            </apex:repeat>
+                            <td class="borderBottomCls"></td>
+                        </tr>
+                        <tr class="{!IF((wkEntry.taskType == 'Language Training'),'','sldsHideCls')}">
+                            <td>End Time</td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td><center>{!dayEntry.endTime1}</center></td>                               
+                            </apex:repeat>
+                            <td class="borderBottomCls borderTop"></td>
+                        </tr>
+                        <tr style="{!IF((wkEntry.taskType == 'Language Training'),'','sldsHideCls')}">
+                            <td>Late Cancellation?</td>
+                            <apex:repeat value="{!wkEntry.dayEntries}" var="dayEntry">
+                                <td class="{!IF((dayEntry.lateCancellation),'','sldsHideCls')}"><center><img src="/img/checkbox_checked.gif"/><div>
+                                    <a style="color:#055E89;">View Notes</a></div></center></td>
+                                <td  class="{!IF((!dayEntry.lateCancellation),'','sldsHideCls')}"><center><img src="/img/checkbox_unchecked.gif"/></center></td>
+                            </apex:repeat>
+                            <td style="{!IF((wkEntry.taskType == 'Language Training'),'borderTop borderBottomCls','borderTop')}"></td>
+                        </tr>
+                    </apex:repeat>
+                    <tr>
+                        <td class="darkborder wrapCls">Total Hours</td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.monHrs}</b></center></td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.tueHrs}</b></center></td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.wedHrs}</b></center></td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.thuHrs}</b></center></td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.friHrs}</b></center></td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.satHrs}</b></center></td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.sunHrs}</b></center></td>
+                        <td class="darkborder"><center><b>{!adminTimeInfo.totalHrsDayColEntries.TotaldayHrs}</b></center></td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:outputPanel> 
+        <apex:outputPanel rendered="{!IF(OR(adminTimeInfo.entries == null,adminTimeInfo.entries.size == 0),true,false)}">
+            <br/><br/><center>No records to display <br/></center>
+        </apex:outputPanel>     
+        <br/><br/>
+        
+        <!--Student Time Entry Section-->
+        <div style="page-break-before:always;"> 
+            <apex:image url="{!$Resource.DLS_Logo_v1}" width="100" height="50"/><br/>
+            <h3>Student Time:</h3>
+            <apex:outputPanel rendered="{!IF(AND(adminTimeInfo.studentEntries != NULL, adminTimeInfo.studentEntries.size > 0),true,false)}">
+                <table width="100%" border="1" cellspacing="0" cellpadding="6">
+                    <thead>
+                        <tr>
+                            <th style="word-wrap:break-word;"><center>Student Name</center></th>
+                            <apex:repeat value="{!adminTimeInfo.weekDates}" var="wkDay">
+                                <th><center>{!wkDay.dateValue}<div>{!wkDay.dayVal} </div></center></th>
+                            </apex:repeat>
+                            <th><center>Total<div>Hours</div></center></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:repeat value="{!adminTimeInfo.studentEntries}" var="stuWKTime">
+                            <tr>
+                                <td style="word-wrap:break-word;" width="24%"><center>{!stuWKTime.studentName}</center></td>
+                                <apex:repeat value="{!stuWKTime.entries}" var="stuTime"> 
+                                    <td><center>{!stuTime.hours}
+                                        <div class="{!IF((stuTime.displayNotesLink == 'true'),'','sldsHideCls')}">
+                                            <a style="color:#055E89;">Notes</a>
+                                        </div></center></td> 
+                                </apex:repeat>
+                                <td><center>{!stuWKTime.totalHours}</center></td>
+                            </tr>
+                        </apex:repeat>
+                    </tbody>
+                </table><br/>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!IF((adminTimeInfo.studentEntries.size ==  null),true,false)}">
+                <br/><br/><center>No records to display <br/><br/></center> 
+            </apex:outputPanel>  
+        </div>
+        
+        <!-- Notes Section -->
+        <h3> Notes:</h3>
+        <apex:outputPanel rendered="{!IF(AND(adminTimeInfo.notes != null, adminTimeInfo.notes.size > 0),true,false)}">
+            <table width="100%" cellspacing="0" cellpadding="0">
+                <thead></thead>
+                <tbody>
+                    <table>
+                        <thead></thead>
+                        <tbody>
+                            <apex:repeat value="{!adminTimeInfo.notes}" var="note">
+                                <tr>
+                                    <td>
+                                        <span><span class="notesBldCls">Comment:</span><span class="slds-p-right_small notesCls"><apex:outputText value="{!note.notes}" escape="false" /></span></span>  
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                        </tbody>
+                    </table>
+                </tbody>
+            </table>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!IF((adminTimeInfo.notes == null),true,false)}">
+            <br/><br/><center>No records to display <br/><br/></center>
+        </apex:outputPanel>
+    </html>
+</apex:page>

@@ -1,0 +1,271 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="Staff_Daily_Timesheet_Ctrl">
+    
+    <aura:attribute name="dateSelected" type="Date" access="public" description="selected date in current week"/>
+    <aura:attribute name="notesList" type="List" access="public" description="to hold notes info"/>
+    <aura:attribute name="weekName" type="String" access="public" description="to seletced week name"/>
+    <aura:attribute name="weekList" type="List" access="public" description="current week summary info"/>
+    <aura:attribute name="initialValues" type="Object" access="public" description="contains all initial set of info"/>
+    <aura:attribute name="specificWeekInfo" type="Object" access="public" description="contains current week detailed info"/>
+    <aura:attribute name="currWeekIndex" type="Integer" access="public" description="selected week index"/>
+    <aura:attribute name="selectedStart" type="Date" access="public" description="week start"/>
+    <aura:attribute name="selectedEnd" type="Date" access="public" description="week end"/>
+    <aura:attribute name="previousIconDisplay" type="Boolean" access="public" description="to display previous icon"/>
+    <aura:attribute name="nextIconDisplay" type="Boolean" access="public" description="to display next icon"/>
+    <aura:attribute name="showAllbuttons" type="Boolean" default="true" access="public" description="to display submit,manage btns"/>
+    <aura:attribute name="showRecallBtn" type="Boolean" default="true" access="public" description="to display recall btn"/>
+    
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="public" description="spinner"/>
+    <aura:attribute name="loadNextWeekData" type="Boolean" default="false" access="public" description="to load next week data"/>
+    <aura:attribute name="nextIconClick" type="Boolean" default="false" access="public" description="to identify next icon click"/>
+    <aura:attribute name="previousIconClick" type="Boolean" default="false" access="public" description="to identify previous icon click"/>
+    <aura:attribute name="overAllActionMsg" type="String" access="public" description="to hold submit / recall confirmation msg"/>
+    <aura:attribute name="buttonType" type="String" access="public" description="to identify submit / recall btn type"/>
+    <aura:attribute name="displaySubmitConfirmation" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="displaySuccessModal" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="successTitle" type="String" access="public"/>
+    <aura:attribute name="successMsg" type="String" access="public"/>
+    <aura:attribute name="todayDate" type="Date" access="public"/>
+    <aura:attribute name="documents" type="List" access="public" description="contains documents content"/>
+    <aura:attribute name="previousChargeCodeList" type="List" access="public" description="contains previous week CC"/>
+    <aura:attribute name="displayChargecodeModal" type="Boolean" access="public"/>
+    <aura:attribute name="displayChargeCodeConfirmation" type="Boolean" access="public"/>
+    <aura:attribute name="weekHrsSum" type="Decimal" access="public" description="contains summary grand total"/>
+    <aura:attribute name="displayDetail" type="Boolean" access="public" default="false" description="detail component display or not"/>
+    <aura:attribute name="displayNotes" type="Boolean" access="public"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <!--aura:handler name="getSelectedElementEvent" event="c:getSelectedElementEvent" action="{!c.handleLookupEvent}"/-->
+    <aura:handler name="clickEvent" event="c.childClickEvent" action="{!c.handleChildEvent}"/>
+    <!-- To handle event from EntryDetail component end / start of next week -->
+    <aura:handler name="entryDetailEvent" event="c.childClickEvent" action="{!c.handleEntryDetailEvent}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    <div style="overflow-y : scroll;">
+        <article aura:id="summary" class="slds-card slds-show">
+            <div class="slds-card__header">
+                <c:HeaderComponent headerName="Weekly View" subHeader="{!v.weekName}" previousIconDisplay="{!v.previousIconDisplay}" nextIconDisplay="{!v.nextIconDisplay}"/>
+            </div>
+            <div class="slds-card__body slds-card__body_inner" aura:id="summaryBody" style="overflow-y: scroll;">
+                <div class="slds-grid slds-wrap slds-grid_pull-padded">
+                    <table class="slds-table_bordered slds-p-horizontal_small slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-2">
+                        <tbody>
+                            <aura:iteration items="{!v.weekList}" var="wk">
+                                <tr onclick="{!c.dateRowclick}" data-value="{!wk.dateVal}">
+                                    <td class="slds-p-left_medium">
+                                        <div class="slds-p-top_small slds-p-bottom_small">{!wk.dateVal}</div>
+                                    </td>
+                                    <td class="slds-p-right_x-large">
+                                        <div class="slds-p-top_small slds-p-bottom_small">{!wk.dayType}</div>
+                                    </td>
+                                    <td class="slds-p-right_medium">
+                                        <div class="slds-p-top_small slds-p-bottom_small">{!wk.totalHrs}</div>
+                                    </td>
+                                </tr>
+                            </aura:iteration>
+                            <tr>
+                                <td class="slds-p-left_medium"><div class="slds-p-top_small slds-p-bottom_small" style="font-weight: bold;">Total Hours</div></td>
+                                <td></td>
+                                <td><div class="slds-p-top_small slds-p-bottom_small" style="font-weight: bold;">{!v.weekHrsSum}</div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <footer class="slds-card__footer">
+                <div class="slds-grid slds-p-around_x-small">
+                    <aura:if isTrue="{!v.showAllbuttons}">
+                        <div class="slds-col slds-p-top_small">
+                            <lightning:button variant="brand" label="Submit" class="slds-align--absolute-center" onclick="{!c.submitClick}"/>
+                        </div>
+                    </aura:if>
+                    <aura:if isTrue="{!v.showRecallBtn}">
+                        <div class="slds-col slds-p-top_small">
+                            <lightning:button variant="brand" label="Recall" class="slds-align--absolute-center" onclick="{!c.recallClick}"/>
+                        </div>
+                    </aura:if>
+                    <div class="slds-col slds-p-top_small">
+                        <lightning:button variant="brand" label="Notes" onclick="{!c.displayNotes}" class="slds-align--absolute-center"/>
+                    </div>
+                    <aura:if isTrue="{!v.showAllbuttons}">
+                        <div class="slds-col slds-p-top_small">
+                            <lightning:button variant="brand" label="Manage" onclick="{!c.chargeCodeDeletion}" class="slds-align--absolute-center"/>
+                        </div>
+                    </aura:if>
+                </div>
+            </footer>
+            <div class="slds-p-around_x-small slds-p-left-small">
+                <aura:if isTrue="{!not(empty(v.documents))}">
+                    <div>
+                        <a aura:id="policyTag" href="" onclick="{!c.procedureDownload}" target="_blank" download="Timekeeping Policies">
+                            <lightning:icon iconName="doctype:word" size="small" variant="inverse"/>
+                            Timekeeping Policies &amp; Procedures
+                        </a>
+                    </div>
+                    <div class="slds-p-top_x-small">
+                        <a aura:id="presentationTag" href="" onclick="{!c.pptDownload}" download="Timekeeping Training Presentation" target="_blank">
+                            <lightning:icon iconName="doctype:ppt" size="small" variant="inverse"/>
+                            Timekeeping Training Presentation 
+                        </a>
+                    </div>
+                </aura:if>
+            </div>
+        </article>
+        
+        <aura:if isTrue="{!v.displayDetail}">
+            <c:EntryDetailCmp aura:id="entryDetailCmp" initialValues="{!v.initialValues}" specificWeekInfo="{!v.specificWeekInfo}" currWeekIndex="{!v.currWeekIndex}" 
+                              dateSelected="{!v.dateSelected}" showAllbuttons="{!v.showAllbuttons}"/>
+        </aura:if>
+        
+        <!-- Notes display modal -->
+        <aura:if isTrue="{!v.displayNotes}">
+            <c:sldsModal aura:id="notesModal">
+                <aura:set attribute="header">Notes</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!v.notesList.length > 0}">
+                        <div class="slds-grid slds-wrap slds-grid_pull-padded">
+                            <table class="slds-table_bordered slds-p-horizontal_small slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-2">
+                                <tbody>
+                                    <aura:iteration items="{!v.notesList}" var="note">
+                                        <tr>
+                                            <td>
+                                                <div class="slds-p-top_small slds-p-bottom_small">
+                                                    <aura:if isTrue="{!and(note.Edited != null,note.Edited != '')}">
+                                                        <span style="font-weight: bold;">Edited: </span><span>{!note.Edited}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.ChargeCode != null,note.ChargeCode != '')}">
+                                                        <span style="font-weight: bold;">Charge Code: </span><span>{!note.ChargeCode}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.TaskName != null,note.TaskName != '')}">
+                                                        <span style="font-weight: bold;">Task Name: </span><span>{!note.TaskName}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.Daydate != null,note.Daydate != '')}">
+                                                        <span style="font-weight: bold;">Date: </span><span>{!note.Daydate}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.OldHours != null,note.OldHours != '')}">
+                                                        <span style="font-weight: bold;">Old Hours: </span><span>{!note.OldHours}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.NewHours != null,note.NewHours != '')}">
+                                                        <span style="font-weight: bold;">New Hours: </span><span>{!note.NewHours}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.OldStatus != null,note.OldStatus != '')}">
+                                                        <span style="font-weight: bold;">Old Status: </span><span>{!note.OldStatus}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.NewStatus != null,note.NewStatus != '')}">
+                                                        <span style="font-weight: bold;">New Status: </span><span>{!note.NewStatus}</span><br/>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!and(note.Comment != null,note.Comment != '')}">
+                                                        <span style="font-weight: bold;">Comment: </span><span>{!note.Comment}</span><br/>
+                                                    </aura:if>                          
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </aura:iteration>
+                                </tbody>
+                            </table>
+                        </div>
+                        <aura:set attribute="else">
+                            <div style="padding-left:6rem;">Data not found.</div>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <div class="slds-button slds-button_neutral" style="cursor: pointer;" onclick="{!c.closeNotes}">Close</div>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        <!-- Notes display modal end -->
+        
+        <!-- Submit & Recall Action confimation Modal -->
+        <aura:if isTrue="{!v.displaySubmitConfirmation}">
+            <c:sldsModal aura:id="submitConfirmModal">
+                <aura:set attribute="header">Confirmation</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <p>{!v.overAllActionMsg}</p>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="brand" label="Okay" class="buttonCls" onclick="{!c.okayClickonWholeAction}"/>
+                    <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.cancelOnSubmit}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        <!-- End of Submit &  Recall confirmation  modal -->
+        
+        <!-- Submit & Recall Action success/failer msg display -->
+        <aura:if isTrue="{!v.displaySuccessModal}">
+            <c:sldsModal aura:id="successMsgModal">
+                <aura:set attribute="header">{!v.successTitle}</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <p>{!v.successMsg}</p>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnSuccess}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        <!-- End of Submit &  Recall success/failer msg display-->
+        
+        <!-- Modal to display previous week charge code to manage -->
+        <aura:if isTrue="{!v.displayChargecodeModal}">
+            <c:sldsModal aura:id="CCdisplayModal">
+                <aura:set attribute="header">Manage Previous Week Charge Code</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!not(empty(v.previousChargeCodeList))}">
+                        <div class="slds-grid slds-wrap slds-grid_pull-padded" style="height: auto;overflow: scroll;">
+                            <table class="slds-table_bordered slds-p-horizontal_small slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-2">
+                                <tbody>
+                                    <aura:iteration items="{!v.previousChargeCodeList}" var="code" indexVar="index">
+                                        <tr>
+                                            <td class="slds-cell-wrap nowrapStyle slds-p-right_x-small">
+                                                <div class="slds-hyphenate slds-p-top_small slds-p-bottom_small" style="{!'color:' + code.color}">{!code.chargeCode}</div>
+                                            </td>
+                                            <td class="slds-p-left_x-small" onclick="{!c.deleteCC}" data-value="{!index}">
+                                                <lightning:icon iconName="utility:delete" size="small"/>
+                                            </td>
+                                        </tr>
+                                    </aura:iteration>
+                                </tbody>
+                            </table>
+                        </div>
+                        <aura:set attribute="else">
+                            <span>No Records to display</span>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <aura:if isTrue="{!not(empty(v.previousChargeCodeList))}">
+                        <lightning:button variant="brand" label="Save" class="buttonCls" onclick="{!c.displayCCDeleteConfirmation}"/>
+                    </aura:if>
+                    <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickCC}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        <!-- End of previous week charge code display modal -->
+        
+        <!-- confirmation for charge code deletion from current page -->
+        <aura:if isTrue="{!v.displayChargeCodeConfirmation}">
+            <c:sldsModal aura:id="CCConfirmationModal">
+                <aura:set attribute="header">Confirmation</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <p>Do you want to delete these Charge Code from current week?</p>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="brand" label="Yes" class="buttonCls" onclick="{!c.updatePastLines}"/>
+                    <lightning:button variant="brand" label="No" class="buttonCls" onclick="{!c.closeDeleteModal}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        <!-- End of CC confirmation modal -->
+    </div>
+</aura:component>

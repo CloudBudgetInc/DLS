@@ -1,0 +1,18 @@
+.THIS .selectSize  {
+    position: relative;
+    width: 70% !important;
+}
+.THIS .slds-table thead th {
+    line-height: 2.5 !important;
+}
+.THIS .slds-table tbody td {
+    line-height: 2.5 !important;
+}
+.THIS .imgAction1{
+    background-color: white;
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.8rem!important;
+    max-height: 2rem!important;
+    cursor:pointer;
+}

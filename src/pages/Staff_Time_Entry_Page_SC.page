@@ -1,0 +1,38 @@
+<apex:page showheader="{!$CurrentPage.parameters.showHeader != 'false'}">
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+    <apex:includeScript value="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"/>
+    <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+    <script src="{!URLFOR($Resource.Filter)}"/>
+    <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+    
+    <script src="{!URLFOR($Resource.moment)}"></script>
+    <script src="{!URLFOR($Resource.MomentTimezone_Data)}"></script>
+    <!-- script src="{!URLFOR($Resource.MomentTimezone)}"></script -->
+    
+    <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+    
+    <style>
+        .slds:not(html), .slds body {
+            background: white !important;
+        }
+        
+        html .brandQuaternaryBgr {
+            background: white !important;
+        }
+    </style>
+        
+    <div ng-app="myApp" ng-controller="DLS_Staff_Controller">
+        <c:Staff_Time_Entry_Page_Component />
+    </div>
+    
+    <script>
+        var underscore = angular.module('underscore', []);
+        underscore.factory('_', ['$window', function($window) {
+            return $window._;
+        }]);
+        console.log(':::::::site::::::::::::::','{!$Site.Name}');
+        var app = angular.module('myApp', ['angular.filter','ngRoute','720kb.datepicker','underscore']);
+    </script>
+    <c:Staff_Time_Entry_Ctrl_Component />
+</apex:page>

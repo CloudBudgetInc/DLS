@@ -1,0 +1,119 @@
+<template>
+    <li class = 'paddingBottom'>
+        <div class={cssString}>
+            <div class="slds-media">
+                <div class="slds-media__figure">
+
+                    <lightning-icon icon-name = {iconName} onclick={handleExpandOrCollapse} size='xx-small'
+                        class='slds-button slds-button_icon'>
+                    </lightning-icon>
+                    <lightning-icon icon-name={activityData.iconName} size='small'>
+                    </lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                    <div class="slds-grid slds-grid_align-spread slds-timeline__trigger">
+                        <div class="slds-grid slds-grid_vertical-align-center slds-truncate_container_75 slds-no-space">
+                            <h3 class="slds-truncate">
+                                <a onclick = {handleNavigation}>
+                                    {activityData.subject}
+                                </a>
+                                <template if:true = {activityData.hasAttachment}>
+                                    <lightning-icon icon-name="utility:attach" size = 'x-small' class="slds-p-left_xxx-small"></lightning-icon>
+                                </template>
+                            </h3>
+                        </div>
+                        <div class="slds-timeline__actions slds-timeline__actions_inline">
+                            <template if:true = {isEmail}>
+                                <template if:true = {activityData.isUnOpened}>
+                                    <lightning-icon icon-name="utility:email" class = 'slds-icon slds-icon-text-default slds-icon_x-small' size="xx-small">
+
+                                    </lightning-icon>
+                                </template>
+                                <template if:false = {activityData.isUnOpened}>
+                                    <lightning-icon icon-name="utility:email_open" class = 'slds-icon slds-icon-text-default slds-icon_x-small' size="xx-small">
+
+                                    </lightning-icon>
+                                </template>
+                                <p class="slds-timeline__date">{activityData.lastOpenedDate}</p>
+                            </template>
+                            <p class = {activityData.dateFieldsWrapperInstance.activityDateAsStringClass}>{activityData.dateFieldsWrapperInstance.activityDateAsString}</p>
+                        </div>
+                    </div>
+                    <template if:false= {isEmail}>
+                        <p class="slds-m-horizontal_xx-small">
+                            {activityData.activityString}
+                        </p>
+                    </template>
+                    <template if:true= {isEmail}>
+                        <p class="slds-m-horizontal_xx-small">
+                            <template if:false = {isLoggedInUser}>
+                                <lightning-formatted-email value={activityData.fromAddress} hide-icon></lightning-formatted-email>
+                            &nbsp;sent an email to&nbsp;
+                            <lightning-formatted-email value={activityData.toAddress} hide-icon></lightning-formatted-email>
+                            {activityData.activityString}
+                            </template>
+                            <template if:true = {isLoggedInUser}>
+                                {activityData.fromAddress}{activityData.activityString}
+                                <lightning-formatted-email value={activityData.toAddress} hide-icon></lightning-formatted-email>
+                            </template>
+                        </p>
+                    </template>
+                    <article
+                        class="slds-box slds-timeline__item_details slds-theme_shade slds-m-top_x-small slds-m-horizontal_xx-small"
+                        aria-hidden="true">
+                        <ul class="slds-list_horizontal slds-wrap">
+                            <template if:true={isEmail}>
+                                <li class="slds-grid slds-grid_vertical slds-size_1-of-2 slds-p-bottom_small">
+                                    <span class="slds-text-title">From Address</span>
+                                    <p class="slds-p-top_x-small">
+                                        <lightning-formatted-email value={activityData.fromAddress} hide-icon></lightning-formatted-email>
+                                    </p>
+                                </li>
+                                <li class="slds-grid slds-grid_vertical slds-size_1-of-2 slds-p-bottom_small">
+                                    <span class="slds-text-title">To Address</span>
+                                    <p class="slds-p-top_x-small">
+                                        <lightning-formatted-email value={activityData.toAddress} hide-icon></lightning-formatted-email>
+                                        {activityData.activityString}
+                                    </p>
+                                </li>
+                                <li class="slds-grid slds-grid_vertical slds-size_2-of-2 slds-p-bottom_small">
+                                    <span class="slds-text-title">Text Body</span>
+                                    <p class="slds-p-top_x-small">
+                                        {activityData.mailSubject}
+                                        <!--<lightning-formatted-rich-text value = {timelineData.mailSubject}>
+
+                                        </lightning-formatted-rich-text> -->
+                                    </p>
+                                </li>
+                            </template>
+                            <template if:true={isEvent}>
+                                <li class="slds-grid slds-grid_vertical slds-size_1-of-2 slds-p-bottom_small">
+                                    <span class="slds-text-title">Start</span>
+                                    <p class="slds-p-top_x-small">
+                                        <lightning-formatted-date-time value={activityData.eventStartDateInMilliSeconds}
+                                            year='numeric' month='2-digit' day='2-digit' hour="2-digit"
+                                            minute="2-digit">
+                                        </lightning-formatted-date-time>
+                                    </p>
+                                </li>
+                                <li class="slds-grid slds-grid_vertical slds-size_1-of-2 slds-p-bottom_small">
+                                    <span class="slds-text-title">End</span>
+                                    <p class="slds-p-top_x-small">
+                                        <lightning-formatted-date-time value={activityData.eventEndDateInMilliSeconds}
+                                            year='numeric' month='2-digit' day='2-digit' hour="2-digit"
+                                            minute="2-digit">
+                                        </lightning-formatted-date-time>
+                                    </p>
+                                </li>
+                            </template>
+                        </ul>
+                        <div if:false= {isEmail}>
+                            <span class="slds-text-title">Description</span>
+                            <p class="slds-p-top_x-small">{activityData.description}</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </li>
+</template>

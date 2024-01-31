@@ -1,0 +1,40 @@
+<!--
+  @description       : 
+  @author            : Vasanthram
+  @group             : 
+  @last modified on  : 07-12-2023
+  @last modified by  : Vasanthram
+-->
+<aura:component implements="forceCommunity:availableForAllPageTypes,forceCommunity:themeLayout" access="global" controller="JobCommunityHomePage_Ctrl">
+    <aura:attribute name="search" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="profileMenu" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="navBar" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="newHeader" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="backgroundImageURL" type="string"/>
+
+    <ltng:require scripts="{!join(',', 
+                           $Resource.DLS_Communites_CSS + '/Communites_CSS/script/jquery-3.2.1.slim.min.js')}"
+                  styles="{!join(',', 
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/styles.css',
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/bootstrap.css',
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/font-awesome/css/all.css')}"/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <div class="themed-page">
+        <div class="header">
+            <c:careerCommunityHeaderCmp></c:careerCommunityHeaderCmp>
+        </div>
+        <div class="mainContentArea" style="padding: 1rem;">
+            {!v.body}
+        </div>
+        <div class="footer">
+            <c:CommunityFooterCmp communityName="{!v.communityName}"/>
+        </div>
+    </div>
+</aura:component>

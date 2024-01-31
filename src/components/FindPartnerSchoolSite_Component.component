@@ -1,0 +1,224 @@
+<!-- Created by Sukanya on Feb 13 2017:To make separate component for each Page & Controller
+    This component refers to - FindPartnerSchoolSite - findPartnerSchoolSiteCtrl in ResourcesPageComponents
+-->
+<apex:component controller="FindPartnerSchoolSite_Compo_Ctrl">
+    <script>
+        app.controller('findPartnerSchoolSiteCtrl',function($scope,$location, $route,geochartService,$timeout) {
+            $scope.clientsitemap = {};
+            $scope.partnersitemap = {};
+            
+            $scope.usasitemap = {};
+            $scope.internationalsitemap = {};
+            
+            $scope.countryAndContinentMap = {};
+            $scope.continentCountMap = {};
+            $scope.continentCodeMap = {};
+            
+            $scope.currentData = [];
+            $scope.tempStateData = [];
+            $scope.tempContinentData = [['Region Code','Continent','Sites']];
+            $scope.tempCountryData = [['Country','Sites']];
+            
+            $scope.isSitepage = false;
+            if('{!$Site.Name}' != '') {
+                $scope.isSitepage = true;
+            }
+            
+            function getSchoolsiteDetails(){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.FindPartnerSchoolSite_Compo_Ctrl.getSchoolsiteRec}',
+                    function(response, ev) {                        
+                        console.log(':::getSchoolsiteDetails::',response);
+                        if(ev.status) {
+                            countryRec(response.countryList);
+                            mttLocationRec(response.mttLocationList);
+                            mttLocationRec(response.partnerLocations);
+                            mttLocationRec(response.clientLocations);
+                            
+                            $timeout(function(){
+                                geochartFunction();
+                            },100);
+                            
+                            document.getElementById("spinner").style.display = 'none';                        
+                        } 
+                    },
+                    {escape: true}
+                );
+            }
+            
+            function countryRec(countryRecords){
+                angular.forEach(countryRecords, function(value, key) {                    
+                    $scope.countryAndContinentMap[value.Country_Name__c.toUpperCase()] = value.Sub_Continent_Name__c;
+                    $scope.continentCodeMap[value.Sub_Continent_Name__c] = value.Continent_Code__c.trim();
+                });
+                //console.log('::::::$scope.continentCodeMap::::',$scope.continentCodeMap);
+            }
+            
+            //-------- Query location records with DLS , Partner & Client RTs--------------
+            
+            function mttLocationRec(mttlocRecords){
+            
+                angular.forEach(mttlocRecords, function(value, key) { 
+                                 
+                      //if(value.RecordType.DeveloperName != 'Client_Site') {
+                          
+                          if( value.Country__c == 'United States' || value.Country__c == 'USA' || value.Country__c == 'US') {
+                          
+                              if($scope.usasitemap[value.State__c]){
+                                  var temp = $scope.usasitemap[value.State__c];
+                                  $scope.usasitemap[value.State__c] = temp + 1;
+                              }else{
+                                  $scope.usasitemap[value.State__c] = 1;
+                              }
+                          }
+                              
+                          if(value.Country__c) {
+                              if( value.Country__c == 'United States' || value.Country__c == 'USA' || value.Country__c == 'US') {
+                                  value.Country__c = 'UNITED STATES OF AMERICA';
+                              }
+                              value.Country__c = value.Country__c.toUpperCase();
+                          }
+                          
+                          if($scope.internationalsitemap[value.Country__c]){
+                              var temp = $scope.internationalsitemap[value.Country__c];
+                              $scope.internationalsitemap[value.Country__c] = temp + 1;
+                          }else{
+                              $scope.internationalsitemap[value.Country__c] = 1;
+                          }
+                      //}
+                  });
+                  //console.log('::::::$scope.usasitemap::::',$scope.usasitemap);
+                  //console.log('::::::$scope.internationalsitemap::::',$scope.internationalsitemap);
+            }
+                        
+            //-------- Query Location with Partner Site RT records --------------
+            
+            function partnerLocations(locationRecords){
+                angular.forEach(locationRecords, function(value, key) {           
+                      
+                      if( value.Country__c == 'United States' || value.Country__c == 'USA' || value.Country__c == 'US') {
+                          
+                          if($scope.usasitemap[value.State__c]){
+                              var temp = $scope.usasitemap[value.State__c];
+                              $scope.usasitemap[value.State__c] = temp + 1;
+                          }else{
+                              $scope.usasitemap[value.State__c] = 1;
+                          }
+                      }
+                          
+                      if(value.Country__c) {
+                          if( value.Country__c == 'United States' || value.Country__c == 'USA' || value.Country__c == 'US') {
+                              value.Country__c = 'UNITED STATES OF AMERICA';
+                          }
+                          value.Country__c = value.Country__c.toUpperCase();
+                      }
+                      
+                      if($scope.internationalsitemap[value.Country__c]){
+                          var temp = $scope.internationalsitemap[value.Country__c];
+                          $scope.internationalsitemap[value.Country__c] = temp + 1;
+                      }else{
+                          $scope.internationalsitemap[value.Country__c] = 1;
+                      }
+                  });
+                  
+                  //console.log('::::::$scope.internationalsitemap::::',$scope.internationalsitemap);
+                  
+                  geochartFunction();
+            }            
+            
+            function geochartFunction(){
+                console.log('enter chart function');
+                angular.forEach(Object.keys($scope.internationalsitemap), function(value, key) {   
+                    
+                    var clist = [];
+                    clist.push(value);
+                    clist.push($scope.internationalsitemap[value]);
+                    $scope.tempCountryData.push(clist);
+                    
+                    if($scope.countryAndContinentMap[value] && $scope.internationalsitemap[value] ){
+                            
+                        if($scope.continentCountMap[$scope.countryAndContinentMap[value]]){
+                            var temp = $scope.continentCountMap[$scope.countryAndContinentMap[value]];
+                            $scope.continentCountMap[$scope.countryAndContinentMap[value]] = temp + $scope.internationalsitemap[value];
+                        }else{
+                            $scope.continentCountMap[$scope.countryAndContinentMap[value]] = $scope.internationalsitemap[value];
+                        }
+                    }
+                    
+                });            
+                
+                angular.forEach(Object.keys($scope.continentCountMap), function(value, key) {   
+                    
+                    var clist = [];               
+                    clist.push($scope.continentCodeMap[value]);
+                    clist.push(value);
+                    clist.push($scope.continentCountMap[value]);
+                    $scope.tempContinentData.push(clist);
+                });
+                //console.log('::::$scope.tempContinentData:::',$scope.tempContinentData);
+                drawRegionsMap($scope.tempContinentData,'subcontinent');
+            }
+                    
+            // Drawing geochart with new values -----
+              
+            var chart;
+            function drawRegionsMap(currentData,typeOfMap,regionName) {
+                
+                geochartService.loadChartData(currentData,typeOfMap,regionName); 
+                $scope.currentData = [];
+                $scope.currentData = currentData;
+                chart = geochartService.getChart();
+                google.visualization.events.addListener(chart, 'select', myClickHandler)
+            }
+                        
+            function myClickHandler(){
+                
+                var selection = chart.getSelection();
+                var message = '';
+                for (var i = 0; i < selection.length; i++) {
+                    message = $scope.currentData[selection[0].row + 1];
+                }
+                
+                if(message.length == 3){
+                    drawRegionsMap($scope.tempCountryData,'country',message[0]);
+                }else{
+                    if(message[0] == 'UNITED STATES OF AMERICA'){
+                        
+                        $scope.tempStateData = [['State','Sites']];
+                        angular.forEach(Object.keys($scope.usasitemap), function(value, key) {   
+                
+                            var clist = [];
+                            clist.push(value);
+                            clist.push($scope.usasitemap[value]);
+                            $scope.tempStateData.push(clist);
+                        });
+                        drawRegionsMap($scope.tempStateData,'state');
+                    }else if( message[0].length == 2){
+                        window.location = '#/FindPartnerSchool/US/'+message[0];
+                    }else{
+                        window.location = '#/FindPartnerSchool/IN/'+message[0];
+                    }
+                }            
+            }
+            
+            // Continent Geochart Map draw ---
+            
+            $scope.showContinentView = function(){
+            
+                console.log('::::showContinentView :::');
+                drawRegionsMap($scope.tempContinentData,'subcontinent');
+            }
+            
+            $scope.goToResourceTab = function(){
+                window.location = '/apex/Web_ResourcePage#/';
+            }
+            
+            // Search redirect function -----
+            $scope.searchDistance = function(){
+                 console.log('back.......');
+                 window.location = '#/FindPartnerSchool';
+            }  
+            getSchoolsiteDetails();
+        });
+    </script>
+</apex:component>

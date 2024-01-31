@@ -1,0 +1,48 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="CongaButtonsController">
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:attribute name="url" type="String"/>
+    <aura:attribute name="card" type="Map" default="{'title' : '', 'message' : '', 'buttonName' : ''}"/>
+    <aura:attribute name="showErrorMsg" type="Boolean" default="false"/>
+    <aura:attribute name="returnStatus" type="String" default=""/>
+    <aura:attribute name="selectedtemplateOption" type="String" default=""/>
+    <aura:attribute name="congaPickist" type="List" default="[{'label':'Job Summary Report - Labor Actual','value':'Job Summary Report - Labor Actual'},{'label':'Job Summary Report - Labor Planned','value':'Job Summary Report - Labor Planned'}]"/>
+    <aura:attribute name="isCongaPickist" type="Boolean" default="false"/>
+    <aura:attribute name="returnValue" type="Map" default="{'valueReturn' : '', 'serverUrlSessionId' : ''}"/>
+    <aura:attribute name="congaQueryName" type="String" default=""/>
+    
+    <div class="slds-col modal-header slds-modal__header">
+        <h1 style='font-weight: bold;  font-size: 150%;'>{!v.showErrorMsg == true ? v.card.title : v.isCongaPickist == true ? 'Job Summary Report' : 'Message'}</h1>
+    </div>
+    <div  style="height: 170px;">
+        <br/> <br/>
+        <aura:if isTrue="{!v.showErrorMsg}">
+            {!v.card.message}
+        </aura:if>
+        <aura:if isTrue="{!v.isCongaPickist}">
+            <lightning:combobox name="job summary" aura:id = "congaTypeId" label="Choose Option" required="true"  value = "{!v.selectedtemplateOption}" options="{!v.congaPickist}" /><br/><br/>
+            <aura:set attribute ="else">
+                <aura:if isTrue ="{!v.returnStatus == 'warning'}">
+                    <br/>  <p style="font-size: medium;">The Total Hours of Contact Assignments are Lesser than the Project Task Total Planned Hours! 
+                    Click Ok to Proceed or cancel to Manage the Hours!</p>
+                </aura:if>
+            </aura:set>
+        </aura:if>
+    </div>
+    <div class="slds-col modal-footer slds-modal__footer">       
+        <aura:if isTrue="{!v.showErrorMsg}">
+            <lightning:button class="slds-float_right" variant="brand" onclick="{!c.closeAction}"/>
+            <aura:set attribute = "else">
+                <aura:if isTrue="{!v.isCongaPickist}">
+                    <lightning:button variant="neutral" label="Proceed" onclick="{!c.proceedClk}" />
+                    <lightning:button variant="neutral" label="Cancel" onclick="{!c.closeSldsModal}" />  
+                    <aura:set attribute ="else">
+                        <aura:if isTrue ="{!v.returnStatus == 'warning'}">
+                            <lightning:button variant="neutral" label="Okay" onclick="{! c.downloadCongaDoc}" />
+                            <lightning:button variant="neutral" label="Cancel" onclick="{!c.openValidationVFPage}" />  
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+        </aura:if>  
+    </div>
+</aura:component>

@@ -1,0 +1,137 @@
+<apex:page html-data-ng-app="myApp" showHeader="false" standardStylesheets="false" sidebar="false" docType="html-5.0" controller="TeamworkPage_Ctrl">
+    <apex:form >
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <head>
+        <script src="{!URLFOR($Resource.moment)}"></script>
+        <script src="{!URLFOR($Resource.MomentTimezone_Data)}"></script>
+        <apex:stylesheet value="{!URLFOR($Resource.DataTable_Angular,'angular-datatables-master/vendor/datatables/media/css/jquery.dataTables.min.css')}"/>
+        <script src="{!URLFOR($Resource.DataTable_Angular,'angular-datatables-master/vendor/jquery/dist/jquery.min.js')}"/>
+        <script src="{!URLFOR($Resource.DataTable_Angular,'angular-datatables-master/vendor/datatables/media/js/jquery.dataTables.min.js')}"/>
+        <script src="{!URLFOR($Resource.DataTable_Angular,'angular-datatables-master/vendor/angular/angular.min.js')}"/>
+        <script src="{!URLFOR($Resource.DataTable_1)}"/>
+        
+        <apex:slds />
+        <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <!--<script src="https://cdn.datatables.net/plug-ins/1.10.13/sorting/datetime-moment.js"></script>-->
+                
+        <style>
+            .imageCls {
+                height: 30px;
+                width: 30px;
+            }
+            .nowrapStyle {
+                white-space: normal !important;
+            }
+            .slds-scope {    
+                line-height: 1.3;
+            }           
+        </style>
+       
+        <script type="text/javascript">
+            angular.module('myApp',['datatables']).controller("ctrl",function($scope,$timeout,DTColumnBuilder,DTOptionsBuilder,DTColumnDefBuilder){
+                 $scope.teamList = [];
+             Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.TeamworkPage_Ctrl.getTaskDetails}',
+                function(result, event) {
+                    if(event.status) {
+                        $timeout(function(){
+                            $scope.teamList = result;
+                            for(var i = 0;i < $scope.teamList.length;i++) {                 
+                                if($scope.teamList[i].DueDate) {
+                                    $scope.teamList[i].DueDate = millisecondToString($scope.teamList[i].DueDate);
+                                }
+                            }
+                        });
+                    } 
+                },{escape: false}
+            );
+            
+            function millisecondToString(millisecond) {
+                var date = new Date(millisecond);            
+                date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+                var day = date.getDate();
+                var month = date.getMonth() + 1;
+                if(day < 10) {
+                    day = '0' + day;
+                }
+                if(month < 10) {
+                    month = '0' + month;
+                }
+                return date.getFullYear() + '-' +month + '-' + day;
+            }
+            $scope.dtOptions = DTOptionsBuilder.newOptions().withOption('order', [2, 'asc']);
+           });
+        </script>
+    </head>
+   <body>    
+   <div class="slds-card">
+        <div class="slds-page-header" style="padding: 1rem;">
+            <div class="slds-grid">                    
+                <div class="slds-media__body">
+                    <div class="slds-grid">
+                        <h1 style="font-size: 18px;line-height: 0.5;" title="Task Detail">Task Detail</h1>
+                    </div>
+                </div>                  
+            </div> 
+        </div>
+        <div class="slds-card__body">
+           <div ng-controller="ctrl" class="table-responsive">     
+                <table datatable="ng" class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal" dt-options="dtOptions" dt-column-defs="dtColumnDefs">
+                    <thead>
+                        <tr class="slds-text-heading--label">
+                            <th scope="col" style="width:210px;">
+                                <div class="slds-truncate">Task Name</div>
+                            </th>
+                            <th scope="col" style="width:210px;">
+                                <div class="slds-truncate">Parent Task</div>
+                            </th>
+                            <th scope="col" style="width:210px;">
+                                <div class="slds-truncate">Task List</div>
+                            </th> 
+                            <th scope="col">
+                                <div class="slds-truncate">Due Date</div>
+                            </th> 
+                            <th scope="col">
+                                <div class="slds-truncate">Priority</div>
+                            </th> 
+                            <th scope="col">
+                                <div class="slds-truncate">Link</div>
+                            </th>                    
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="slds-hint-parent" ng-repeat ="a in teamList">                 
+                          <td data-label="Task Name" class="nowrapStyle">
+                              <div class="slds-hyphenate">{{a.Task_Name}}</div>
+                          </td>
+                           <td data-label="Parent Task" class="nowrapStyle">
+                               <div class="slds-hyphenate">{{a.ParentTask}}</div>
+                           </td>
+                           <td data-label="Task List" class="nowrapStyle">
+                               <div class="slds-hyphenate">{{a.TaskList}}</div>
+                           </td> 
+                           <td data-label="Due Date">
+                               <div class="slds-hyphenate" style = "display:none">{{a.DueDate}}</div>
+                               <div class="slds-hyphenate" >{{a.DueDate | date:'MM/dd/yyyy'}}</div>
+                           </td> 
+                           <td data-label="Column">
+                               <div class="slds-hyphenate">{{a.Priority}}</div>
+                           </td> 
+                           <td data-label="Link">                       
+                               <a href="{{a.TeamworkLink}}" target="_blank">
+                                   <apex:image styleClass="imageCls" value="{!URLFOR($Resource.Teamwork_Icon)}" />
+                               </a>
+                               <a href="/{{a.SalesforceLink}}" target="_blank">
+                                   <apex:image styleClass="imageCls" value="{!URLFOR($Resource.Salesforce_Icon)}" />
+                               </a>
+                           </td>                   
+                        </tr>
+                    </tbody>
+                </table>
+             </div>
+         </div>
+     </div>
+    </body>
+    </html>
+    </apex:form>    
+</apex:page>

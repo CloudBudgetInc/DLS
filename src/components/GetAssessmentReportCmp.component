@@ -1,0 +1,45 @@
+<apex:component controller="Assessment_Report_Helper" access="global">
+  
+    <style>
+        table.d {
+          table-layout: fixed;
+          width: 100%;  
+        }
+    </style>
+    
+    <apex:attribute name="projManagerIdVal" description="" type="String" assignTo="{!projManagerId}"/>
+    
+    <div style="{!IF(assessmentReports.size > 0, 'display:block', 'display:none')}" >
+  
+        <table border="1" style="border-collapse: collapse;" class="d">
+            <tr>
+                <th style="text-align: center; vertical-align: middle;">Report Name</th>
+                <th style="text-align: center; vertical-align: middle;">Report Date</th> 
+                <th style="text-align: center; vertical-align: middle;">Project</th> 
+                <th style="text-align: center; vertical-align: middle;">Instructor</th> 
+                <th style="text-align: center; vertical-align: middle;">Language</th> 
+                <th style="text-align: center; vertical-align: middle;">Report Type</th> 
+                <th style="text-align: center; vertical-align: middle;">Student</th> 
+            </tr>
+            <apex:repeat value="{!assessmentReports}" var="ar">
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">
+                        <a href="{!$Label.Org_Prefix_Start_URL}/lightning/r/Assessment_Report__c/{! ar.Id}/view" target="_blank"> 
+                            {! ar.Name} 
+                        </a>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        <apex:outputText value="{0,date,MM/dd/yy}"> 
+                            <apex:param value="{!ar.Report_Date__c}" /> 
+                        </apex:outputText>
+                    </td> 
+                    <td style="text-align: center; vertical-align: middle;">{! ar.Project__r.Name}</td> 
+                    <td style="text-align: center; vertical-align: middle;">{! ar.Instructor__r.Name}</td> 
+                    <td style="text-align: center; vertical-align: middle;">{! ar.Language_LU__r.Name}</td> 
+                    <td style="text-align: center; vertical-align: middle;">{!IF(ar.RecordType_Name__c == 'Test_Report', ar.Test_Report_Type__c, ar.Report_Type__c)}</td> 
+                    <td style="text-align: center; vertical-align: middle;">{! ar.Student__r.Name}</td> 
+                </tr>
+            </apex:repeat>
+        </table>
+    </div> 
+</apex:component>

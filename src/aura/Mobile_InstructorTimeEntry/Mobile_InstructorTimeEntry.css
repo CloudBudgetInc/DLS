@@ -1,0 +1,25 @@
+.THIS .row{
+    display: block !important;
+}
+.THIS .viewMoreCls{
+    cursor:pointer;
+    margin-right:0.5rem;
+    background-color: #055e89;
+}
+.THIS .slds-icon {
+    width: 1rem !important;
+    height: 1rem !important; 
+}
+.THIS .form-group{
+    margin-bottom: 0.25rem !important;
+}
+.THIS .slds-input[disabled]{
+    color: black !important;
+    -webkit-opacity:1;
+}
+.THIS .summaryApproved {
+    color: green !important;
+}
+.THIS .summaryRejected {
+    color: red !important;
+}

@@ -1,0 +1,992 @@
+<apex:page controller="GoogleBooks">
+<html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 10000;
+            top: 50% !important;
+            height: 100px !important;
+            width: 100px !important;
+            background: rgba(230, 233, 239, 0) url('/resource/1457602359000/SLDS091/assets/images/spinners/slds_spinner_brand.gif') 50% 50% no-repeat !important;
+            background-size: 60px 60px !important;
+            right: 50% !important;
+            left: 50% !important;
+            bottom: 50% !important;
+        }
+        
+        .loader {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(33, 33, 33, 0.1) none repeat scroll 0% 0%;
+            top: 0px;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system.css')}" />
+    <script src="{!URLFOR($Resource.angularjs)}"></script>
+    <div ng-app="GoogeleBooksSearch" ng-controller="GoogeleBooksSearchController" style="positiot: relative;">
+        <div class="slds-page-header" role="banner">
+            <div class="slds-grid">
+                <div class="slds-col slds-has-flexi-truncate">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                            <svg aria-hidden="true" class="slds-icon slds-icon--large slds-icon-standard-opportunity">
+                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, 'assets/icons/standard-sprite/svg/symbols.svg#article')}"></use>
+                            </svg>
+                        </div>
+                        <div class="slds-media__body">
+                            <p class="slds-page-header__title slds-truncate slds-align-middle" title="Rohde Corp - 80,000 Widgets">
+                                <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                                    <div class="slds-form-element">
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-grid">
+                                                <div class="slds-col slds-size--11-of-12">
+                                                    <input id="lookup" ng-model="keyword" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" aria-activedescendant="" />
+                                                </div>
+                                                <div class="slds-col slds-size--1-of-12">
+                                                    <button class="slds-button slds-button--brand" ng-click="search.search();">Search</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="slds-grid slds-page-header__detail-row">
+                        <div class="slds-col--padded slds-size--1-of-2">
+                            <dl>
+                                <dt>
+                                    <p class="slds-text-heading--label slds-truncate" title="Field 1">Search by</p>
+                                </dt>
+                                <dd>
+                                    <fieldset class="slds-form-element">
+                                        <div class="slds-form-element__control">
+                                            <label class="slds-radio" style="display: inline-block;">
+                                                <input type="radio" ng-model="search.selectedType" value="ANY" name="options" />
+                                                <span class="slds-radio--faux"></span>
+                                                <span class="slds-form-element__label">Any</span>
+                                            </label>
+                                            <label class="slds-radio" style="display: inline-block;">
+                                                <input type="radio" ng-model="search.selectedType" value="TITLE" name="options" />
+                                                <span class="slds-radio--faux"></span>
+                                                <span class="slds-form-element__label">Title</span>
+                                            </label>
+                                            <label class="slds-radio" style="display: inline-block;">
+                                                <input type="radio" ng-model="search.selectedType" value="ISBN" name="options" />
+                                                <span class="slds-radio--faux"></span>
+                                                <span class="slds-form-element__label">ISBN</span>
+                                            </label>
+                                            <label class="slds-radio" style="display: inline-block;">
+                                                <input type="radio" ng-model="search.selectedType" value="AUTHOR" name="options" />
+                                                <span class="slds-radio--faux"></span>
+                                                <span class="slds-form-element__label">Author</span>
+                                            </label>
+                                            <label class="slds-radio" style="display: inline-block;">
+                                                <input type="radio" ng-model="search.selectedType" value="SUBJECT" name="options" />
+                                                <span class="slds-radio--faux"></span>
+                                                <span class="slds-form-element__label">Subject</span>
+                                            </label>
+                                            <label class="slds-radio" style="display: inline-block;">
+                                                <input type="radio" ng-model="search.selectedType" value="PUBLISHER" name="options" />
+                                                <span class="slds-radio--faux"></span>
+                                                <span class="slds-form-element__label">Publisher</span>
+                                            </label>
+                                        </div>
+                                    </fieldset>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-2">
+                            <dl>
+                                <dt>
+                                    <p class="slds-text-heading--label slds-truncate" title="Field2 (3)">Order By</p>
+                                </dt>
+                                <dd>
+                                    <div class="slds-form-element">
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-select_container">
+                                                <select id="select-01" class="slds-select" ng-model="search.orderBy">
+                                                    <option>Relevance</option>
+                                                    <option>Newest</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="margin: 10px;">
+            <button ng-if="search.materialId" class="slds-button slds-button--brand" ng-click="gotoMaterials();">Back</button>
+            <button ng-if="search.pageNumber > 0" class="slds-button slds-button--brand" style="float: right;" ng-click="goPrevious();">Previous</button>
+            <button ng-if="books" class="slds-button slds-button--brand" style="float: right;" ng-click="goNext();">Next</button>
+        </div>
+        <div class="slds-feed">
+            <ul class="slds-feed__list">
+                <li class="slds-feed__item" ng-repeat="book in books">
+                    <div class="slds-media slds-comment slds-hint-parent">
+                        <div class="slds-media__figure" ng-if="decodeString(book.volumeInfo.imageLinks.smallThumbnail)">
+                            <a href="#void" title="book.volumeInfo.title">
+                                <img src="{{decodeString(book.volumeInfo.imageLinks.smallThumbnail)}}" style="height: 150px;" alt="{{book.volumeInfo.title}}" />
+                            </a>
+                        </div>
+                        <div class="slds-media__body">
+                            <div class="slds-grid slds-grid--align-spread slds-has-flexi-truncate">
+                                <p class="slds-truncate">
+                                    <a href="decodeString(book.volumeInfo.infoLink)" title="book.volumeInfo.title" ng-bind="decodeString(book.volumeInfo.title)"></a>
+                                </p>
+                            </div>
+                            <p class="slds-text-body--small">
+                                <a ng-bind="decodeString(book.volumeInfo.subtitle)"></a>
+                            </p>
+                            <ul class="slds-tile__detail slds-list--horizontal slds-text-body--small">
+                            <!-- Auhtor -->
+                                <li class="slds-list__item slds-m-right--large" ng-if="book.volumeInfo.authors.length">
+                                    <span>Author(s):</span>
+                                    <span class="slds-m-left--xx-small">
+                                        <a href="#" ng-click="searchBookByType(author, 'AUTHOR')" style="margin: 0 4px;" ng-repeat="author in book.volumeInfo.authors" ng-bind="author"></a>
+                                    </span>
+                                </li>
+                                <!-- Published Date -->
+                                <li class="slds-list__item" ng-if="book.volumeInfo.publishedDate">
+                                    <span>Published Date:</span>
+                                    <span class="slds-m-left--xx-small">
+                                        <span href="#" ng-bind="book.volumeInfo.publishedDate"></span>
+                                    </span>
+                                </li>
+                                <!-- Publisher -->
+                                <li class="slds-list__item" ng-if="book.volumeInfo.publisher">
+                                    <span>Publisher:</span>
+                                    <span class="slds-m-left--xx-small">
+                                        <a href="#" ng-click="searchBookByType(book.volumeInfo.publisher, 'PUBLISHER');" ng-bind="book.volumeInfo.publisher"></a>
+                                    </span>
+                                </li>
+                                <!-- Content Version -->
+                                <li class="slds-list__item" ng-if="book.volumeInfo.contentVersion">
+                                    <span>Content Version:</span>
+                                    <span class="slds-m-left--xx-small">
+                                        <span href="#" ng-bind="book.volumeInfo.contentVersion"></span>
+                                    </span>
+                                </li>
+                            </ul>
+                            
+                            <ul class="slds-tile__detail slds-list--horizontal slds-text-body--small">
+                                <!-- Main Category -->
+                                <li class="slds-list__item" ng-if="book.volumeInfo.mainCategory">
+                                    <span>Main Category:</span>
+                                    <span class="slds-m-left--xx-small">
+                                        <a href="#" ng-bind="book.volumeInfo.mainCategory"></a>
+                                    </span>
+                                </li>
+                                <!-- Sub Category -->
+                                <li class="slds-list__item" ng-if="book.volumeInfo.categories.length">
+                                    <span>Sub Category:</span>
+                                    <span class="slds-m-left--xx-small">
+                                        <a href="#" style="margin: 0 4px;" ng-repeat="category in book.volumeInfo.categories" ng-click="searchBookByType(category, 'SUBJECT');" ng-bind="category"></a>
+                                    </span>
+                                </li>
+                            </ul>
+                            
+                            <ul class="slds-tile__detail slds-list--horizontal slds-text-body--small">
+                                <!-- Language -->
+                                <li class="slds-list__item" ng-if="book.volumeInfo.categories.length">
+                                    <span>Language:</span>
+                                    <span class="slds-m-left--xx-small">
+                                        <span href="#" style="margin: 0 4px;" ng-bind="book.volumeInfo.language"></span>
+                                    </span>
+                                </li>
+                                <!-- Identifier -->
+                                <li class="slds-list__item" ng-if="getIndentifierType(book);">
+                                    <span ng-bind="getIndentifierType(book);"></span>
+                                    <span class="slds-m-left--xx-small">
+                                        <a href="#" style="margin: 0 4px;" ng-bind="getIndentifier(book);" ng-click="searchBookByType(getIndentifier(book), 'ISBN');"></a>
+                                    </span>
+                                </li>
+                            </ul>
+                            
+                            <div class="slds-comment__content slds-text-longform" ng-bind="decodeString(book.volumeInfo.description)"></div>
+                            <ul class="slds-list--horizontal slds-has-dividers--right slds-text-body--small" ng-if="search.materialId">
+                                <li class="slds-list__item">
+                                    <button class="slds-button slds-button--brand slds-button--small" ng-click="mapBook(book);">Assign Book</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        
+        <!-- Mapping Modal -->
+        <div class="slds-modal slds-modal--large" role="dialog" ng-class="{'slds-fade-in-open': mappingModal.open}">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h2 class="slds-text-heading--medium">Map Values</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <div>
+                        <table class="slds-table slds-table--bordered">
+                            <thead>
+                                <tr>
+                                    <th>Field Name</th>
+                                    <th class="slds-size--4-of-12">Existing Value</th>
+                                    <th></th>
+                                    <th class="slds-size--4-of-12">New Value</th>
+                                    <th style="width: 60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <tr>
+                                        <td>Title</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.title"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.title" ng-click="mappingModal.enteredValue.title = mappingModal.existingValue.title">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.title" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.title != mappingModal.googleBookValue.title"
+                                                    ng-click="mappingModal.enteredValue.title = mappingModal.googleBookValue.title">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Authors</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.authors"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.authors" ng-click="mappingModal.enteredValue.authors = mappingModal.existingValue.authors">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.authors" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.authors != mappingModal.googleBookValue.authors"
+                                                    ng-click="mappingModal.enteredValue.authors = mappingModal.googleBookValue.authors">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Description</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.description"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.description" ng-click="mappingModal.enteredValue.description = mappingModal.existingValue.description">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <textarea class="slds-textarea" ng-model="mappingModal.enteredValue.description"></textarea>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.description != mappingModal.googleBookValue.description"
+                                                    ng-click="mappingModal.enteredValue.description = mappingModal.googleBookValue.description">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Publisher</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.publisher"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.publisher" ng-click="mappingModal.enteredValue.publisher = mappingModal.existingValue.publisher">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.publisher" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.publisher != mappingModal.googleBookValue.publisher"
+                                                    ng-click="mappingModal.enteredValue.publisher = mappingModal.googleBookValue.publisher">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Published Date</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.publishedDate"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.publishedDate" ng-click="mappingModal.enteredValue.publishedDate = mappingModal.existingValue.publishedDate">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.publishedDate" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.publishedDate != mappingModal.googleBookValue.publishedDate"
+                                                    ng-click="mappingModal.enteredValue.publishedDate = mappingModal.googleBookValue.publishedDate">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ISBN</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.isbn"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.isbn" ng-click="mappingModal.enteredValue.isbn = mappingModal.existingValue.isbn">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.isbn" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.isbn != mappingModal.googleBookValue.isbn"
+                                                    ng-click="mappingModal.enteredValue.isbn = mappingModal.googleBookValue.isbn">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Price</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.price"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.price" ng-click="mappingModal.enteredValue.price = mappingModal.existingValue.price">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.price" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.price != mappingModal.googleBookValue.price"
+                                                    ng-click="mappingModal.enteredValue.price = mappingModal.googleBookValue.price">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Category</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.category"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.category" ng-click="mappingModal.enteredValue.category = mappingModal.existingValue.category">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.category" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.category != mappingModal.googleBookValue.category"
+                                                    ng-click="mappingModal.enteredValue.category = mappingModal.googleBookValue.category">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sub Category</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.sub_category"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.sub_category" ng-click="mappingModal.enteredValue.sub_category = mappingModal.existingValue.sub_category">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.sub_category" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.sub_category != mappingModal.googleBookValue.sub_category"
+                                                    ng-click="mappingModal.enteredValue.sub_category = mappingModal.googleBookValue.sub_category">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Language</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind="mappingModal.existingValue.language"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.language" ng-click="mappingModal.enteredValue.language = mappingModal.existingValue.language">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <input class="slds-input" type="text" ng-model="mappingModal.enteredValue.language" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.language != mappingModal.googleBookValue.language"
+                                                    ng-click="mappingModal.enteredValue.language = mappingModal.googleBookValue.language">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Cover Image</td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind-html="mappingModal.existingValue.image"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.existingValue.imageString"
+                                                    ng-click="moveImappingModal.enteredValue.imageString = mappingModal.existingValue.imageString; mappingModal.enteredValue.image = mappingModal.existingValue.image;">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="slds-cell-wrap">
+                                            <span ng-bind-html="mappingModal.enteredValue.image"></span>
+                                        </td>
+                                        <td>
+                                            <button ng-if="mappingModal.enteredValue.imageString != mappingModal.googleBookValue.imageString"
+                                                    ng-click="moveImappingModal.enteredValue.imageString = mappingModal.googleBookValue.imageString; mappingModal.enteredValue.image = mappingModal.googleBookValue.image;">
+                                                <svg aria-hidden="true" class="slds-button__icon">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#undo')}"></use>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="slds-modal__footer">
+                    <button class="slds-button slds-button--brand" ng-click="assignBook();">Update and Return to the record</button>
+                    <button class="slds-button slds-button--neutral" ng-click="cancelMapping();">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop" ng-class="{'slds-backdrop--open': mappingModal.open}"></div>
+
+        
+        <!-- Laoding -->
+        <div ng-if="search.loading">
+            <div class="loader"></div>
+            <c:slds_Loading />
+        </div>
+    </div>
+    <script>
+        var app = angular.module('GoogeleBooksSearch', [])
+        .controller('GoogeleBooksSearchController', function($scope, DataService, $timeout, $sce){
+            console.log('controller entered.');
+            $scope.paginationFlag = false;
+            $scope.search = {};
+            $scope.searchParameters = {};
+            $scope.books = null;
+            $scope.mappingModal = {};
+            var searchParameters = $scope.searchParameters;
+            var search = $scope.search;
+            var mappingModal = $scope.mappingModal;
+            search.type = {};
+            
+            search.orderBy = 'Relevance';
+            mappingModal.open = false;
+            
+            function BookMap(title, authors, description, isbn, section, language, image, publisher, publishedDate, price, sub_category) {
+                console.log('s', publishedDate);
+                return {
+                    title: DecodeHtmlString(title) || '',
+                    authors: DecodeHtmlString(authors) || '',
+                    description: DecodeHtmlString(description) || '',
+                    isbn: DecodeHtmlString(isbn) || '',
+                    section: DecodeHtmlString(section) || '',
+                    language: DecodeHtmlString(language) || '',
+                    image: $sce.trustAsHtml(DecodeHtmlString(image)) || '',
+                    imageString: DecodeHtmlString(image) || '',
+                    price: price || '',
+                    publisher: publisher || '',
+                    publishedDate: publishedDate || '',
+                    sub_category: sub_category || ''
+                }
+            }
+            
+            search.selectedType = 'ANY';
+            
+            search.pageNumber = 0;
+            search.resultPerPage = 10;
+            
+            $scope.gotoMaterials = function() {
+                if(search.materialId) {
+                    window.location = '{!$Site.Prefix}' + '/' + search.materialId;
+                }
+            }
+            
+            //Decode Image URI
+            $scope.decodeString = function(url) {
+                if(url) {
+                    var decodeUrl = DecodeHtmlString(url);
+                    return decodeUrl;
+                }
+                return null;
+            }
+            
+            
+            $scope.mapBook = function(book) {
+                var bookData = null;
+                if(book && book.volumeInfo) {
+                    bookData = {
+                        title: book.volumeInfo.title,
+                        authors: getAuthorsList(book.volumeInfo.authors),
+                        description: book.volumeInfo.description,
+                        isbn: getIsbn(book.volumeInfo.industryIdentifiers),
+                        section: book.volumeInfo.mainCategory,
+                        language: book.volumeInfo.language,
+                        image: getImage(book.volumeInfo.imageLinks),
+                        publisher: book.volumeInfo.publisher,
+                        publishedDate: book.volumeInfo.publishedDate,
+                        price: getPrice(book),
+                        sub_category: getCategory(book.volumeInfo)
+                    }
+                    console.log(book.volumeInfo.publishedDate);
+                }
+                
+                mappingModal.fields = ['title', 'authors', 'description', 'isbn', 'section', 'language', 'image'];
+                
+                mappingModal.existingValue = new BookMap(search.materialData.title, search.materialData.authors, search.materialData.description,
+                                                        search.materialData.isbn, search.materialData.section, bookData.language,
+                                                        search.materialData.image, search.materialData.publisher, search.materialData.publishedDate,
+                                                        search.materialData.price, search.materialData.sub_category);
+                mappingModal.googleBookValue = new BookMap(bookData.title, bookData.authors, bookData.description, bookData.isbn, bookData.section,
+                                                        bookData.language, bookData.image, bookData.publisher, bookData.publishedDate, bookData.price, bookData.sub_category);
+                mappingModal.enteredValue = new BookMap(bookData.title, bookData.authors, bookData.description, bookData.isbn, bookData.section,
+                                                        bookData.language, bookData.image, bookData.publisher, bookData.publishedDate, bookData.price, bookData.sub_category);
+                
+                console.log(mappingModal.existingValue);
+                console.log(mappingModal.enteredValue);
+                mappingModal.open = true;
+            }
+            
+            function getPrice(book) {
+                if(book && book.saleInfo) {
+                    if(book.saleInfo.listPrice && book.saleInfo.listPrice.amount) {
+                        return book.saleInfo.listPrice.currencyCode + ' ' + book.saleInfo.listPrice.amount;
+                    }
+                    if(book.saleInfo.retailPrice && book.saleInfo.retailPrice.amount) {
+                        return book.saleInfo.retailPrice.currencyCode + ' ' + book.saleInfo.retailPrice.amount;
+                    }
+                }
+                return null;
+            }
+            
+            $scope.cancelMapping = function() {
+                mappingModal.open = false;
+            }
+            
+            $scope.assignBook = function(book) {
+                bookData = {
+                    title: mappingModal.enteredValue.title,
+                    authors: mappingModal.enteredValue.authors,
+                    description: mappingModal.enteredValue.description,
+                    isbn: mappingModal.enteredValue.isbn,
+                    section: mappingModal.enteredValue.category,
+                    language: mappingModal.enteredValue.language,
+                    image: mappingModal.enteredValue.imageString,
+                    sub_category: mappingModal.enteredValue.sub_category,
+                    publisher: mappingModal.enteredValue.publisher,
+                    publishedDate: mappingModal.enteredValue.publishedDate,
+                    price: mappingModal.enteredValue.price
+                }
+                search.loading = true;
+                DataService.assignBook(bookData, search.materialId).then(function(response){
+                    console.log('success', response);
+                    window.location = '/' + search.materialId;
+                }, function(error) {
+                    search.loading = false;
+                    console.log('error', error);
+                });
+            }
+            
+            function getImage(images) {
+                var imageUrl = null;
+                var imageTag = null;
+                if(images) {
+                    if(images.thumbnail) {
+                        imageUrl = images.thumbnail;
+                    } else if(images.smallThumbnail) {
+                        imageUrl = images.smallThumbnail;
+                    } else if(images.medium) {
+                        imageUrl = images.medium;
+                    } else if(images.large) {
+                        imageUrl = images.large;
+                    } else if(images.extraLarge) {
+                        imageUrl = images.extraLarge;
+                    } else if(images.small) {
+                        imageUrl = images.small;
+                    }
+                    if(imageUrl) {
+                        imageTag = '<img src="' + imageUrl + '" />';
+                    }
+                }
+                return imageTag;
+            }
+            
+            function getAuthorsList(authors) {
+                var authorField = null;
+                if(authors) {
+                    authorField = '';
+                    for(var i = 0; i < authors.length; i++) {
+                        if(authorField) {
+                            authorField += ', ';
+                        }
+                        authorField += authors[i];
+                    }
+                }
+                return authorField;
+            }
+            
+            function getIsbn(identifiers) {
+                var isbn = null;
+                if(identifiers) {
+                    for(var i = 0; i < identifiers.length; i++) {
+                        if(identifiers[i].type == 'ISBN_10' || identifiers[i].type == 'ISBN_13') {
+                            isbn = identifiers[i].identifier;
+                        }
+                    }
+                }
+                return isbn;
+            }
+            
+            function getCategory(volume) {
+                var category = null;
+                if(volume) {
+                    if(volume.mainCategory) {
+                        return volume.mainCategory;
+                    }
+                    if(volume.categories) {
+                        category = '';
+                        for(var i = 0; i < volume.categories.length; i++) {
+                            if(category) {
+                                category += ', ';
+                            }
+                            category += volume.categories[i];
+                        }
+                    }
+                }
+                return category;
+            }
+            
+            $scope.goPrevious = function() {
+                if(search.pageNumber > 0) {
+                    search.pageNumber--;
+                    searchParameters.searchIndex = search.pageNumber * search.resultPerPage;
+                    $scope.searchBook();
+                }
+            }
+            
+            $scope.goNext = function() {
+                search.pageNumber++;
+                //cosole.log('goNext called', search.pageNumber);
+                searchParameters.searchIndex = search.pageNumber * search.resultPerPage;
+                $scope.searchBook();
+            }
+            
+            $scope.searchBookByType = function(keyword, type) {
+                console.log(keyword, type);
+                $scope.keyword = keyword;
+                search.pageNumber = 0;
+                if(type != 'PUBLISHER' && type != 'AUTHOR' && type != 'SUBJECT' && type != 'ISBN' && type != 'TITLE') {
+                   type = 'ANY';
+                }
+                search.selectedType = type;
+                $scope.setSearchKeyword();
+                $scope.searchBook();
+            }
+            
+            function DecodeHtmlString(htmlString){
+                if(htmlString) {
+                    var temp = document.createElement("textarea");
+                    temp.innerHTML = htmlString;
+                    //console.log(htmlString, temp.value);
+                    return temp.value.replace(/amp;/g, '');
+                }
+                return '';
+            }
+            
+            $scope.getInfo = function(book) {
+                var infoList = [];
+                if(book.volumeInfo) {
+                    infoList.push(book.volumeInfo.language);
+                    if(book.volumeInfo.industryIdentifiers) {
+                        if(book.volumeInfo.industryIdentifiers.length > 0) {
+                            infoList.push(book.volumeInfo.industryIdentifiers[0].identifier);
+                        }
+                    }
+                }
+                return infoList;
+            }
+            
+            $scope.getIndentifier = function(book) {
+                var identifier = null;
+                if(book.volumeInfo && book.volumeInfo.industryIdentifiers && book.volumeInfo.industryIdentifiers.length) {
+                    identifier = book.volumeInfo.industryIdentifiers[0].identifier;
+                }
+                return identifier;
+            }
+            
+            $scope.getIndentifierType = function(book) {
+                var identifierType = null;
+                
+                if(book.volumeInfo && book.volumeInfo.industryIdentifiers && book.volumeInfo.industryIdentifiers.length) {
+                    identifierType = book.volumeInfo.industryIdentifiers[0].type + ':';
+                }
+                return identifierType;
+            }
+                        
+            $scope.searchBooksByKeyword = function() {
+                search.pageNumber = 0;
+                $scope.paginationFlag = true;
+                $scope.setSearchKeyword();
+                $scope.searchBook();
+            }
+            
+            $scope.setSearchKeyword = function() {
+                var keywordType = 'TITLE';
+                if(search.selectedType == 'ISBN') {
+                    keywordType = 'ISBN';
+                } else if(search.selectedType == 'AUTHOR') {
+                    keywordType = 'AUTHOR';
+                } else if(search.selectedType == 'PUBLISHER') {
+                    keywordType = 'PUBLISHER';
+                }  else if(search.selectedType == 'SUBJECT') {
+                    keywordType = 'SUBJECT';
+                }
+                
+                var orderBy = 'relevance';
+                if(search.orderBy == 'newest') {
+                    orderBy = 'newest';
+                }
+                var searchIndex = search.pageNumber * search.resultPerPage;
+                
+                searchParameters.keyword = $scope.keyword;
+                searchParameters.type = keywordType;
+                searchParameters.orderBy = orderBy;
+                searchParameters.searchIndex = searchIndex;
+                searchParameters.resultPerPage = search.resultPerPage;
+            }
+            
+            function getQueryVariable(name, url) {
+                if (!url) url = location.href;
+                name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+                var regexS = "[\\?&]"+name+"=([^&#]*)";
+                var regex = new RegExp( regexS );
+                var results = regex.exec( url );
+                return !results ? '' : decodeURIComponent(results[1]).replace(/\+/g, ' ').replace('%2B', '+');
+            }
+            
+            
+            $scope.searchBook = function() {
+                search.loading = true;
+                console.log('keyword to search', searchParameters.keyword, searchParameters.type, searchParameters.searchIndex, searchParameters.resultPerPage, searchParameters.orderBy);
+                DataService.getBookDetails(searchParameters.keyword, searchParameters.type, searchParameters.searchIndex, searchParameters.resultPerPage, searchParameters.orderBy).then(
+                    function(response) {
+                        console.log('success', response);
+                        $scope.books = response;
+                        search.loading = false;
+                    }, function(error) {
+                        console.log('error', error);
+                        search.loading = false;
+                    }
+                );
+                return;
+            }
+            
+            $scope.search.search = function() {
+                $scope.setSearchKeyword();
+                $scope.searchBook();
+            }
+            
+            function init() {
+                var searchKeyword = getQueryVariable('keyword');
+                var searchType = getQueryVariable('type');
+                var materialId = getQueryVariable('id');
+                console.log('init', searchKeyword, searchType);
+                if(materialId) {
+                    search.materialId = materialId;
+                    if(searchKeyword) {
+                        if(searchType != 'TITLE' && searchType != 'PUBLISHER' && searchType != 'AUTHOR' && searchType != 'ISBN' && searchType != 'SUBJECT') {
+                            searchType = 'ANY';
+                        }
+                        search.loading = true;
+                        DataService.getMaterial(search.materialId).then(
+                            function(response) {
+                                console.log(response);
+                                search.loading = false;
+                                search.materialData = response;
+                                $scope.keyword = searchKeyword;
+                                search.selectedType = searchType;
+                                $scope.setSearchKeyword();
+                                $scope.searchBook();
+                            },
+                            function(error) {
+                                search.loading = false;
+                                console.log(error);
+                            }
+                        );
+                    }
+                }
+            }
+            init();
+        })
+        .service('DataService', function($q){
+            function resolveResponse(response, ev, def) {
+                if(ev.status) {
+                    def.resolve(response);
+                } else {
+                    def.reject(ev);
+                }
+            }
+            
+            //Assign a google book data to a selected material record.
+            function assignBook(book, materialId) {
+                var def = $q.defer();
+                GoogleBooks.assignBook(
+                    book,
+                    materialId,
+                    function(response, ev) {
+                        resolveResponse(response, ev, def);
+                    }
+                );
+                return def.promise;
+            }
+            
+            
+            //Query the Material Data by material Id
+            function getMaterial(materialId) {
+                var def = $q.defer();
+                GoogleBooks.getMaterial(
+                    materialId,
+                    function(response, ev) {
+                        resolveResponse(response, ev, def);
+                    }
+                );
+                return def.promise;
+            }
+            
+            //Get Google Book Data using keyword.
+            function getBookDetails(keyword, keywordType, searchIndex, resultPerPage, orderBy) {
+                var def = $q.defer();
+                GoogleBooks.getBookDetails(
+                    keyword,
+                    keywordType,
+                    searchIndex,
+                    resultPerPage,
+                    orderBy,
+                    function(response, ev){
+                        resolveResponse(response, ev, def);
+                    }
+                );
+                return def.promise;
+            }
+            
+            return {
+                getBookDetails: getBookDetails,
+                assignBook: assignBook,
+                getMaterial: getMaterial
+            }
+        });
+    </script>
+</html>
+    
+</apex:page>

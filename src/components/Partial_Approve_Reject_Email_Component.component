@@ -1,0 +1,74 @@
+<apex:component controller="partial_Approve_RejectEmail_Ctrl" access="global">
+
+    <apex:attribute name="conId" type="Id" description="Id of the contact" assignTo="{!contactId}"/>
+    <apex:attribute name="cardId" type="Id" description="time card Id" assignTo="{!timecardId}"/>
+    
+    <html>
+    <style>
+         table {
+             border-width: 5px;
+             border-collapse: collapse;
+         }
+        
+        td {
+         border-width: 1px;
+         padding: 4px;
+         border-style: solid;
+        }
+        
+        th { 
+         color: #000000;
+         border-width: 1px ;
+         padding: 4px ;
+         border-style: solid ;
+        }
+    </style>
+        <body>
+            <p>Dear {!Name},</p><br/>
+            <p>Your timesheet for the period {!periodName} has been partially approved / rejected.</p><br/>
+            
+            <div style="{!IF((showApproveTable), 'display:block', 'display:none')}" >    
+                <p>The following entries have been approved:</p><br/>
+                
+                <table border = "0">
+                    <tr>
+                        <th>Date</th>
+                        <th>Hours</th>
+                    </tr>
+                    <apex:repeat value="{!approvedTimeEntryDetailsMap['Approved']}" var="day">
+                        <tr>
+                            <td>{!day.DateValue}</td>
+                            <td>{!day.Hours}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+            </div>
+            
+            <br/>
+            
+            <div style="{!IF((showRejectTable), 'display:block', 'display:none')}" >    
+                <p>The following entries have been rejected:</p><br/>
+                
+                <table border = "0">
+                    <tr>
+                        <th>Date</th>
+                        <th>Hours</th>
+                        <th>Comments</th>
+                    </tr>
+                    <apex:repeat value="{!rejectedTimeEntryDetailsMap['Rejected']}" var="day">
+                        <tr>
+                            <td>{!day.DateValue}</td>
+                            <td>{!day.Hours}</td>
+                            <td>{!day.Comments}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+            </div>
+            
+            <br/>
+            
+            <p>Thanks,<br/>Time Reporting System<br/><br/>This e-mail was auto generated. Please do not respond.</p>
+            
+            </body>
+    </html>
+</apex:component>

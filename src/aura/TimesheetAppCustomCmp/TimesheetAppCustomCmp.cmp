@@ -1,0 +1,61 @@
+<aura:component implements="flexipage:availableForRecordHome,force:lightningQuickAction,force:hasSObjectName,force:hasRecordId,lightning:actionOverride,force:appHostable,flexipage:availableForAllPageTypes" access="global" controller="TimeSheetAppApexController">
+    <aura:attribute name="workItems" type="agf__ADM_Work__c[]" access="global"/>
+    <aura:attribute name="timeInput" type="MBA_Timesheet__c" access="public" default="{'sobjectType': 'MBA_Timesheet__c',
+                                                                                      'Name': '',
+                                                                                      'MBA_Work_Item_Lookup__c':'',
+                                                                                      'Hours_Manual__c':null,
+                                                                                      'Date_of_Work__c':null,
+                                                                                      'Description__c': ''
+                                                                                      }"/>
+    <aura:attribute name="errMsg" type="String" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <lightning:navigation aura:id="navService"/>
+    
+    <div role="dialog" tabindex="-1" aura:id="editDialog" class="slds-modal" data-action-type="" data-modal="editDialog">
+        <div class="slds-modal__container">
+            <div class="slds-modal__header">
+                <h2 id="header" class="slds-text-heading--medium">New Time Entry</h2>
+            </div>
+            <div class="slds-modal__content slds-p-around--medium" aura:id="recordFieldContainer">                                  
+                
+                <div class="slds-form-element">
+                    <div class="slds-form-element__control">     
+                        
+                        <lightning:select name="timeEntryWorkItem" label = "Work Item" 
+                                          value="{!v.timeInput.MBA_Work_Item_Lookup__c}"
+                                          required="true"  aura:id="dataTableEditSelect"
+                                          messageWhenValueMissing="Choose a work item!">
+                            <option value="">-- None --</option>
+                            <aura:iteration items="{!v.workItems}" var="workItem">
+                                <option text="{!workItem.agf__Subject__c}" value="{!workItem.Id}"/>
+                            </aura:iteration>
+                        </lightning:select>
+                        
+						<lightning:input type="number" label="Hours" name="timeEntryHours" min = "0.1" step = "0.01" 
+                                 value="{!v.timeInput.Hours_Manual__c}" required="true" onchange="{!c.hoursValidation}"/>
+                        <p style="color:red;">{!v.errMsg}</p>
+                        
+                        <lightning:input type="date" name="timeEntryDate" value="{!v.timeInput.Date_of_Work__c}"
+                                 label="Actual Completed Date" required="true"/>
+                        
+                        <!--lightning:input name="timeEntryDesc" maxlength="80" value="{!v.timeInput.Description__c}"
+                                 label="Description" required="true"/-->
+                        <lightning:textarea aura:id="comments" label="Description" value="{!v.timeInput.Description__c}" 
+                                            rows="2" onchange="{!c.calculateLength}"
+                                    onfocus="{!c.validateDescription}" onblur="{!c.validateDescription}"/>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            <div class="slds-modal__footer">
+                <lightning:button label="Cancel" name="editDialog" onclick="{!c.closeEditModal}" />
+                <lightning:button variant="brand" label="Save" name="confirmEditRecord" onclick="{!c.saveEditModal}" />                                
+            </div>
+        </div>
+    </div>
+	<div class="slds-backdrop " aura:id="dialogBack"></div>  
+    
+</aura:component>

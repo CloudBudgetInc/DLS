@@ -1,0 +1,197 @@
+<!--
+  @description       : 
+  @author            : Vasanthram
+  @group             : 
+  @last modified on  : 09-21-2023
+  @last modified by  : Vasanthram
+-->
+<aura:component implements="flexipage:availableForRecordHome,force:appHostable,force:hasSObjectName,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction,flexipage:availableForAllPageTypes" access="global"  controller="ContactPlanned_DaysoffCtrl">
+    <aura:attribute name="selectedContact" type="List"  default="[]"/>
+    <aura:attribute name="StartDate" type="String"  default=""/>
+    <aura:attribute name="EndDate" type="String"  default=""/>
+    <aura:attribute name="sObjectName" type="String" default=""/>
+    <aura:attribute name="plannedOffRows" type="List" default="[]"/>
+    <aura:attribute name="plannedOffheader" type="List" default="[]"/>
+    <aura:attribute name="leaveType" type="List" default="[]"/>
+    <aura:attribute name="typeValues" type="List" default="[]"/>
+    <aura:attribute name="GetCAContacts" type="List" default="[]"/>
+    <aura:attribute name="tableconfig" type="Map"  default="{}"/>
+    <aura:attribute name="plannedOffdayRecord" type="Map"  default="{}"/>
+    <aura:attribute name="plannedOffRTNameIdMap" type="Map"  default="{}"/>
+    <aura:attribute name="contactRec" type="Map"  default="{}"/>
+    <aura:attribute name="plannedOffRecordType" type="List"  default="[]"/>
+    <aura:attribute name="recordId" type="String" default=""/>
+    <aura:attribute name="actionHeaderName" type="String" default=""/>
+    <aura:attribute name="requestPDORec" type="Map" default="{}"/>
+    <aura:attribute name="displayAddEditModel" type="Boolean" default="false"/>
+
+    <!-- For show popup for instructor PDO -->
+    <aura:attribute name="displayInstructorPDOConfirmation" type="Boolean" default="false"/>
+    <aura:attribute name="isCancelEvents" type="Boolean" default="false"/>
+
+
+    <aura:attribute name="isDisplaycontactProOpp" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="displayDeleteModel" type="Boolean" default="false"/>
+    <aura:attribute name="isFromContactAssignment" type="Boolean" default="false"/>
+    
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClick}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.searchPlannedOffRecords}"/>
+    <aura:registerEvent name="reloadEvent" type="c:reloadEvent"/>
+    
+    
+    <ltng:require scripts="{!join(',',
+                           $Resource.MomentjsResource,
+                           $Resource.MomentTimezone_Data)}"/>
+    
+    <aura:if isTrue ="{!v.showSpinner}">
+        <lightning:spinner variant="brand" style="background-color: rgba(0, 0, 0, 0.10);" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>   
+    <aura:if isTrue ="{!v.isFromContactAssignment == false}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <h1 style="font-weight:bold;">Planned Days Off</h1>
+            </aura:set>
+            <lightning:layout multiplerows="true">
+                <aura:if isTrue ="{!v.sObjectName == ''}">
+                    <lightning:layoutItem size="3"  padding="around-medium">
+                        <c:LookupSearch aura:id="ContactLookup" selection="{!v.selectedContact}" onSearch="{!c.ContactLookupSearch}"
+                                        iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" 
+                                        label="Contact" placeholder="Contact" isMultiEntry="false" isRequired="false"/>
+                    </lightning:layoutItem>
+                </aura:if>
+                <lightning:layoutItem size="3" padding="around-medium">
+                    <ui:inputDate label="From Date:" value="{!v.StartDate}" format="MM/dd/yyyy"  displayDatePicker="true" />
+                </lightning:layoutItem>
+                <lightning:layoutItem size="3"  padding="around-medium">
+                    <ui:inputDate label="To Date:" value="{!v.EndDate}" format="MM/dd/yyyy"  displayDatePicker="true"/>
+                </lightning:layoutItem> 
+                <lightning:layoutItem size="2" padding="around-medium" >
+                    <div style="margin-top:1.3rem;">
+                        <lightning:button label=" Search "  onclick="{!c.searchPlannedOffRecords}"/>
+                    </div>
+                </lightning:layoutItem>
+                <!--lightning:layoutItem size="2" padding="around-medium">
+            </lightning:layoutItem-->
+                <lightning:layoutItem size="1" >
+                    <div style="margin-top:2.4rem;">
+                        <lightning:button label="New" onclick="{!c.newPlannedOff}"/>
+                    </div>
+                </lightning:layoutItem>
+            </lightning:layout>
+            <aura:if isTrue="{!and(v.plannedOffRows.length >0,v.plannedOffheader.length > 0)}">
+                <ldt:datatableDev title="" 
+                                  aura:id="plannedOffTable" 
+                                  dataRows="{!v.plannedOffRows}"
+                                  header="{!v.plannedOffheader}"       
+                                  config="{!v.tableconfig}"  
+                                  noRecordsMessage="No Record to Display"/>
+                <aura:set attribute="else"><br/><br/>
+                    <p><center> No records Found </center></p>
+                    <br/>
+                    <br/>
+                </aura:set>
+            </aura:if>
+        </lightning:card>
+        
+    </aura:if>
+    <aura:if isTrue="{!v.displayAddEditModel}">
+        <c:Modal modelWidth="70%" aura:id="planOffAddEditModel"    hasCloseIcon="false">    
+            <aura:set attribute="header">
+                <h1>{!v.actionHeaderName}</h1>    
+            </aura:set>
+            <aura:set attribute="content">
+                <lightning:recordEditForm 
+                                          objectApiName="Planned_Days_Off__c">
+                    <lightning:messages />
+                    
+                    <lightning:layout class="slds-wrap" multipleRows="true">
+                        <aura:if isTrue ="{! or(v.sObjectName == 'AcctSeed__Project__c',v.sObjectName == 'Opportunity')}">
+                            <lightning:layoutItem size="4" padding="around-small" >                                                     
+                                <lightning:select required="true" label="Record Type"  value="{!v.plannedOffdayRecord.RecordTypeId}" onchange="{!c.SelectedPDORecordType}"> 
+                                    <option value=""></option>
+                                    <aura:iteration items="{!v.plannedOffRecordType}" var="i">
+                                        <option value="{!i.Id}" >{!i.RecordType}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                        </aura:if>
+                        <aura:if isTrue ="{!v.isDisplaycontactProOpp}">
+                            <lightning:layoutItem size="4" padding="around-small" >                                                     
+                                <lightning:select label="Contact"  aura:id="otherInputField"  value="{!v.plannedOffdayRecord.Contact__c}" onchange="{!c.SelectedPDORecordType}"> 
+                                    <option value=""></option>
+                                    <aura:iteration items="{!v.GetCAContacts}" var="i">
+                                        <option value="{!i.Id}" selected = "{!(v.plannedOffdayRecord.Contact__c == i.Id)}" >{!i.Name}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                        </aura:if>
+                        <lightning:layoutItem size="4" padding="around-small" >                                                     
+                            <ui:inputDate aura:id="dateInputField" label="From Date" required="true" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.Date__c}"/>  
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" padding="around-small" >                                                     
+                            <ui:inputDate label="To Date" aura:id="dateInputField"  displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.To_Date__c}"/>  
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" padding="around-small" >
+                            <lightning:select  label="Type"    value="{!v.plannedOffdayRecord.Type__c}">  
+                                <option value="">--None--</option>
+                                <aura:iteration items="{!v.typeValues}" var="i">
+                                    <option  value="{!i}">{!i}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" padding="around-small" >
+                            <lightning:select  label="Leave Type"  value="{!v.plannedOffdayRecord.Leave_Type__c}">  
+                                <option value="">--None--</option>
+                                <aura:iteration items="{!v.leaveType}" var="i">
+                                    <option  value="{!i}">{!i}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" padding="around-small"  >
+                            <lightning:textarea label="Description" required="true" aura:id="otherInputField"  value="{!v.plannedOffdayRecord.Description__c}"/>  
+                        </lightning:layoutItem>
+                    </lightning:layout>         
+                </lightning:recordEditForm>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Save" class="buttonCls" onclick="{!c.planOffAddEditSave}"/>
+                <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.planOffAddEditCancel}"/>
+            </aura:set>
+        </c:Modal>   
+    </aura:if>
+
+    <aura:if isTrue="{!v.displayInstructorPDOConfirmation}">
+        <c:Modal modelWidth="20%" aura:id="instructorPDOConfirmation"    hasCloseIcon="false">    
+            <aura:set attribute="header">
+                <h1>Confirmation</h1>    
+            </aura:set>
+            <aura:set attribute="content">
+                <div>
+                    <center><h1 style=" font-size: 1rem;">Would you like to delete the Events? If there will be a Substitute Instructor, please select No.</h1> </center>                 
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" class="buttonCls" label="Yes" onclick="{!c.savePDOWithCancelEvent}"  />
+                <lightning:button variant="brand" class="buttonCls" label="No"  onclick="{!c.savePDOWithoutCancelEvent}" />
+            </aura:set>
+        </c:Modal>   
+    </aura:if>
+    
+    <aura:if isTrue="{!v.displayDeleteModel}">
+        <c:Modal modelWidth="20%" aura:id="deletePDO"    hasCloseIcon="false">    
+            <aura:set attribute="header">
+                <h1>Delete Confirmation</h1>    
+            </aura:set>
+            <aura:set attribute="content">
+                <div>
+                    <center><h1 style=" font-size: 1rem;">Are you sure want to delete?</h1> </center>                 
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Yes" onclick="{!c.deleteYesClick}"  />
+                <lightning:button label="No"  onclick="{!c.deleteNoClick}" />
+            </aura:set>
+        </c:Modal>   
+    </aura:if>
+</aura:component>

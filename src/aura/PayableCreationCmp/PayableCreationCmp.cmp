@@ -1,0 +1,406 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global" controller="PayableCreation_Ctrl">
+    <aura:attribute name="fromDate" type="Date" default=""/>
+    <aura:attribute name="toDate" type="Date" default=""/>
+    <aura:attribute name="payableList" type="List" default="[]"/>
+    <aura:attribute name="billPaymentList" type="List" default="[]"/>
+    <aura:attribute name="payable" type="Object" default="{}"/>
+    <aura:attribute name="payableLineList" type="List" default="[]"/> 
+    <aura:attribute name="payRelCashDisburseList" type="List" default="[]"/> 
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/> 
+    <aura:attribute name="visibleError" type="Boolean" default="false"/> 
+    <aura:attribute name="showErrorMsg" type="String" default=""/> 
+    <aura:attribute name="payableSort" type="Map" default="{'fieldToSort':'Payable','arrowDirection':'','sortingOrder':''}"/>
+    <aura:attribute name="payableRowHeader" type="List" default="[]"/>
+    <aura:attribute name="payableId" type="String" default=""/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    <aura:attribute name="successErrorModal" type="Boolean" default="false"/>
+    <aura:attribute name="showProjectSearch" type="Boolean" default="false"/>
+            
+        <!--call server-->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <lightning:card title="Payable Sync">
+        <p class="slds-p-horizontal_small">
+            <lightning:layout>
+                <lightning:layoutItem padding="around-small" size="3">
+                    <lightning:input type="date" aura:id="fromDate" label="From Date" value="{!v.fromDate}"/>        
+                </lightning:layoutItem>
+                <lightning:layoutItem padding="around-small" size="3">
+                    <lightning:input type="date" aura:id="toDate" label="To Date" value="{!v.toDate}"/>        
+                </lightning:layoutItem>
+                <lightning:layoutItem padding="around-small" size="3">
+                    <div  class="slds-p-top_large">
+                        <lightning:button variant="brand" label="Submit" onclick="{!c.submitClick}"/>
+                    </div>
+                </lightning:layoutItem>
+            </lightning:layout>
+        </p>
+    </lightning:card>
+    
+    <lightning:card title="Payable Detail">
+        <p class="slds-p-horizontal_small">
+            <lightning:layout>
+                <lightning:layoutItem size="12">
+                    <aura:if isTrue="{!v.payableList.length > 0}">
+                        <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal table slds-table_fixed-layout">
+                            <thead class="slds-line-height_reset">
+                                <aura:iteration items="{!v.payableRowHeader}" var="headerName">
+                                    <th style="height: 2rem;" class="slds-is-sortable wrap cursorClass" data-name="{!headerName.name}" onclick="{!c.tableSort}" scope="col">
+                                        <div class="slds-cell-wrap" >
+                                            <aura:if isTrue="{! and(v.payableSort.arrowDirection == 'arrowdown', v.payableSort.fieldToSort == headerName.name) }">
+                                                <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="" />
+                                            </aura:if>  
+                                            <aura:if isTrue="{! and(v.payableSort.arrowDirection != 'arrowdown', v.payableSort.fieldToSort == headerName.name)}">
+                                                <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="" />
+                                            </aura:if>
+                                            {!headerName.label}
+                                        </div>
+                                    </th>
+                                </aura:iteration>
+                                <th scope="col" class="wrap">Action</th>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.payableList}" var="pay" indexVar="index">
+                                    <tr class="slds-hint-parent slds-p-top_small slds-p-bottom_small">
+                                        <td class="slds-p-left_small">
+                                            <aura:if isTrue="{!pay.isPayableExist}">
+                                                <div class="marginCls wrap greenColor">Synced</div>
+                                            </aura:if>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                                <div class="marginCls wrap"><a  name="{!pay.payable.Id}" onclick="{!c.goToSObjPage}">{!pay.payableName}</a></div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.payable.AcctSeed__Payee_Reference__c}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.vendorName}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.payable.Bill_com_AP_Active_Status__c}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.billAPApprovalStatus}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.dateVal}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.dueDateVal}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.glPostingDate}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">{!pay.accountingPeriod}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap">${!pay.amount}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="marginCls wrap" data-name="{!index}" onclick="{!c.openLineDetail}"><a>View Line</a></div>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                        <aura:set attribute="else">
+                            <center><p>No records to display</p></center>
+                        </aura:set>
+                    </aura:if>
+                </lightning:layoutItem>
+            </lightning:layout>
+        </p>
+    </lightning:card>
+    
+    <c:sldsModal aura:id="openLineDetail" header="Payable Sync" displayCloseImage="false" modelWidth="90%">
+        <aura:set attribute="content">
+            <aura:if isTrue="{!v.visibleError}">
+                <center><c:ToastCmp visibleError="{!v.visibleError}" showErrorMsg="{!v.showErrorMsg}"/></center>
+            </aura:if>
+            <p class="slds-p-horizontal_small">
+                <lightning:card title="Payable Detail">
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Payee Reference</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.AcctSeed__Payee_Reference__c}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Vendor</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.vendorName}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">AP Active Status</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.Bill_com_AP_Active_Status__c}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">AP Approval Status</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.billAPApprovalStatus}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Date</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.dateVal}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Due Date</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.dueDateVal}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">AP GL Posting Date</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.glPostingDate}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Accounting Period</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.payable.accountingPeriod}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Total</label>
+                                <div class="slds-form-element__control">
+                                    <aura:if isTrue="{!and(v.payable.isPayableWithPayableLineExist,or(v.payable.Bill_com_AP_Approval_Status__c != 'Waiting For Approval',v.payableLineList.length == 0))}">
+                                        <span class="slds-form-element__static">${!v.payable.amount}</span>
+                                        <aura:set attribute="else">
+                                            <div style="width:50% !important;">
+                                            <lightning:input variant="label-hidden" label=" " aura:id="hrsInput" value="{!v.payable.amount}" onblur="{!c.addDecimalPointToAmount}"/>
+                                            </div>
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                </lightning:card>
+            </p>
+                <lightning:card title="Payable Lines">
+                    <aura:if isTrue="{!v.payableLineList.length > 0}">
+                        <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal table slds-table_fixed-layout">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col" class="wrap">Sync Status</th>
+                                    <th scope="col" class="wrap">Payable Line</th>
+                                    <th scope="col" class="wrap" style="width: 11.5rem;">Project</th>
+                                    <th scope="col" class="wrap" style="width: 11.5rem;">Project Task</th>
+                                    <th scope="col" class="wrap">Quantity</th>
+                                    <th scope="col" class="wrap" style="width: 9rem;text-align: center;">Amount Per Quantity</th>
+                                    <th scope="col" class="wrap" style="width: 10rem;">Amount</th>
+                                    <th scope="col" class="wrap">Expense GL Account</th>
+                                    <th scope="col" class="wrap">GL Variable 1</th>
+                                    <th scope="col" class="wrap">GL Variable 2</th>
+                                    <th scope="col" class="wrap" style="width: 11rem;">Internal Comment</th>
+                                    <th scope="col" class="wrap"><center>Billable</center></th>
+                                    <th scope="col" class="wrap">Period To Bill</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.payableLineList}" var="line" indexVar="index">
+                                    
+                                    <tr class="slds-hint-parent">
+                                        <td class="wrap">
+                                            <aura:if isTrue="{!line.isPayableLineExist}">
+                                                <div class="marginCls greenColor">Synced</div>
+                                            </aura:if>
+                                        </td>
+                                        <td class="wrap">
+                                            <aura:if isTrue="{!line.isPayableLineExist}">
+                                                <div class="marginCls"><a  name="{!line.payableLineId}" onclick="{!c.goToSObjPage}">{!line.payableLineName}</a></div>
+                                            </aura:if>
+                                        </td>
+                                        <td class="wrap">
+                                            <aura:if isTrue="{!!and(line.isPayableLineExist,v.payable.Bill_com_AP_Approval_Status__c != 'Waiting For Approval')}">
+                                                <aura:if isTrue="{!and(empty(line.AcctSeed__Project__c),not(empty(v.payable.AcctSeed__Vendor__c)))}">
+                                                    <div style="margin-top:-1rem;">
+                                                        <c:LookupSearch aura:id="projectId" selectedIndex="{!index}" selection="{!line.projectLookup}" onSearch="{!c.projectLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project__c" fieldName="Name" condition= "{!v.payable.projectCondition}" label="" placeholder="Search Project" isMultiEntry="false"/>
+                                                    </div>
+                                                    <aura:set attribute="else">
+                                                        <div class="marginCls">{!line.projectName}</div>
+                                                    </aura:set>
+                                                </aura:if>
+                                                <aura:set attribute="else">
+                                                    <div class="marginCls">{!line.projectName}</div>
+                                                </aura:set>
+                                            </aura:if>
+                                        </td>
+                                        <td class="wrap">
+                                            <aura:if isTrue="{!empty(line.AcctSeed__Project_Task__c)}">
+                                                <aura:if isTrue="{!!and(line.isPayableLineExist,v.payable.Bill_com_AP_Approval_Status__c != 'Waiting For Approval')}">
+                                                    <aura:if isTrue="{!or(!empty(line.AcctSeed__Project__c),line.projectLookup.length > 0)}">
+                                                        <div style="margin-top:-1rem;">
+                                                            <c:LookupSearch selectedIndex="{!index}" aura:id="projectTaskId" selection="{!line.proTaskLookup}" onSearch="{!c.projectTaskLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project_Task__c" fieldName="Name" condition="{!line.projectTaskCondition}" label="" placeholder="Search Project Task" isMultiEntry="false" />
+                                                        </div>
+                                                    </aura:if>
+                                                </aura:if>
+                                                <aura:set attribute="else">
+                                                    <div class="marginCls">{!line.projectTaskName}</div>
+                                                </aura:set>
+                                            </aura:if>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls"><center><lightning:input variant="label-hidden" label=" " aura:id="payInput" type="number" step=".01" min="0" value="{!line.AcctSeed__Quantity__c}" name="{!index}" disabled="{!and(line.isPayableLineExist,v.payable.Bill_com_AP_Approval_Status__c != 'Waiting For Approval')}" onchange="{!c.calculateAmtperQuantity}"/></center></div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls"><center><ui:outputNumber value="{!'$'+(line.Amount_per_Quantity__c)}" /></center></div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls"><center><lightning:input variant="label-hidden" label=" " aura:id="payInput" type="text" value="{!line.AcctSeed__Amount__c}" name="{!index}" disabled="{!and(line.isPayableLineExist,v.payable.Bill_com_AP_Approval_Status__c != 'Waiting For Approval')}" onchange="{!c.calculateAmtperQuantity}" onblur="{!c.addDecimalPointToQty}"/></center></div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls">{!line.expenseGlAccName}</div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls">{!line.glAccountVarName}</div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls">{!line.gl2AccountVarName}</div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls"><center><lightning:textArea variant="label-hidden" label="" value="{!line.AcctSeed__Internal_Comment__c}" disabled="{!and(line.isPayableLineExist,v.payable.Bill_com_AP_Approval_Status__c != 'Waiting For Approval')}"/></center></div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div style="text-align:center;">
+                                                <lightning:input aura:id="billableId" type="checkbox" label="" checked="{!line.Billable__c}" disabled="{!and(line.isPayableLineExist,v.payable.Bill_com_AP_Approval_Status__c != 'Waiting For Approval')}"/>
+                                            </div>
+                                        </td>
+                                        <td class="wrap">
+                                            <div class="marginCls">{!line.accountingPeriod}</div>
+                                        </td>
+                                    </tr>                            
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                        <aura:set attribute="else">
+                            <center><p>No records to display</p></center>
+                        </aura:set>
+                    </aura:if>
+                </lightning:card>
+           
+            <div>
+                <div style="font-size:1rem;padding: 0.5rem;">Cash Disbursement</div>
+                        <aura:if isTrue="{!v.payRelCashDisburseList.length > 0}">
+                            <table class="slds-table--bordered" style="table-layout: fixed;width: 100%;white-space: nowrap;">
+                                <thead>
+                                    <tr class="slds-line-height_reset" style="line-height: 2.5rem;">
+                                        <th scope="col" class="wrap">Sync Status</th>
+                                        <th scope="col" class="wrap">Cash Disbursement</th>
+                                        <th scope="col" class="wrap">Reference</th>
+                                        <th scope="col" class="wrap">Vendor</th>
+                                        <th scope="col" class="wrap">Disbursement Date</th>
+                                        <th scope="col" class="wrap">Amount</th>
+                                        <th scope="col" class="wrap">Payment Type</th>
+                                        <th scope="col" class="wrap">Payment Status</th>
+                                        <th scope="col" class="wrap">Debit GL Account</th>
+                                        <th scope="col" class="wrap">Bank Account</th>
+                                        <th scope="col" class="wrap">Payment Description</th>
+                                    </tr> 
+                                </thead>
+                                <tbody>
+                                    <aura:iteration items="{!v.payRelCashDisburseList}" var="cd">
+                                        
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap padTableCls">
+                                                <aura:if isTrue="{!cd.isCashDisbursementExist}"> 
+                                                    <div class="marginCls greenColor">Synced</div>
+                                                </aura:if>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <aura:if isTrue="{!cd.isCashDisbursementExist}">
+                                                    <div class="marginCls"><a  name="{!cd.cashDisburseId}" onclick="{!c.goToSObjPage}">{!cd.cashDisburseName}</a></div>
+                                                </aura:if>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.cash.AcctSeed__Reference__c}</div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.vendorName}</div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls"><ui:outputDate format="MM/DD/YYYY" value="{!cd.cash.AcctSeed__Disbursement_Date__c}"/></div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.cash.AcctSeed__Amount__c}</div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.cash.AcctSeed__Type__c}</div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.cash.AcctSeed__Payment_Status__c}</div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.debitGlAccName}</div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.bankGlAccName}</div>
+                                            </td>
+                                            <td class="wrap padTableCls">
+                                                <div class="marginCls">{!cd.cash.Bill_com_Bill_Payment_Description__c}</div>
+                                            </td>
+                                        </tr>                            
+                                    </aura:iteration>
+                                </tbody>
+                            </table>
+                            <aura:set attribute="else">
+                                <center><p>No records to display</p></center>
+                            </aura:set>
+                </aura:if>
+            </div>      
+        </aura:set>
+        <aura:set attribute="footer">
+            <aura:if isTrue="{!or(!v.payable.isPayableExist,and(v.payable.isPayableExist,v.payable.billAPApprovalStatus == 'Waiting For Approval'))}">
+                <lightning:button variant="brand" label="Sync" onclick="{!c.payableCreationInputValidations}"/>
+            </aura:if>
+            <lightning:button variant="brand" label="Cancel" onclick="{!c.closeDetail}" />
+        </aura:set>
+    </c:sldsModal>
+    
+    <!-- Success/Error modal -->
+    <aura:if isTrue="{!v.successErrorModal}">
+        <c:sldsModal aura:id="successModel" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="header">
+                {!v.successTitle}
+            </aura:set>
+            <aura:set attribute="content">
+                <p>{!v.successMsg}</p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Close" class="btn btn-primary" onclick="{!c.successClose}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+</aura:component>

@@ -1,0 +1,69 @@
+<apex:page standardStyleSheets="false" showHeader="false" sidebar="false" cache="false">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Diplomatic Language Services</title>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<apex:stylesheet value="{!URLFOR($Resource.html_template_dls, 'css/styles.css')}" />
+<apex:stylesheet value="{!URLFOR($Resource.html_template_dls, 'css/jobboard.css')}" />
+</head>
+<body>
+<table width="990" border="0" cellpadding="0" cellspacing="0" align="center">
+    <tbody>
+        <tr>
+            <td valign="top" bgcolor="#FFFFFF" align="center">
+                <p class="ie7"></p>
+                <table width="95%" border="0" cellpadding="0" cellspacing="0">
+                    <tbody>
+                        <tr>
+                            <td valign="top" width="73%" align="center">
+                                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                    <tbody>
+                                        <tr>
+                                            <td height="200" valign="top" align="center">
+                                                <table width="94%" border="0" cellpadding="0" cellspacing="0">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>
+                                                                <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td valign="top" align="left">
+                                                                                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                                                                    <tr>
+                                                                                        <td valign="top"><ts2:Menu ></ts2:Menu></td>
+                                                                                        <td align="right" valign="top"><ts2:LoggedInLegend ></ts2:LoggedInLegend></td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td colspan="2" class="b-content">
+                                                                                            <h2>Careers</h2>
+                                                                                            <apex:insert name="body" />
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </table>    
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                             </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>&nbsp;</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+</body>
+</html>
+</apex:page>

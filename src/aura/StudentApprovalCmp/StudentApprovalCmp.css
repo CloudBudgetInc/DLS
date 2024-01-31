@@ -1,0 +1,101 @@
+.THIS .slds-icon {
+    width: 1rem !important;
+    height: 1rem !important; 
+}
+.THIS .slds-spinner_container {
+    position:fixed !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+    z-index: 1000000 !important;
+}
+.THIS .helpText {
+    margin-top:-10px !important;
+}
+.THIS .needHelpClass {
+    /*margin-right: 65rem;*/
+    margin-left: 1rem;
+    background-color: #ffcd56;
+    color: black;
+}
+.THIS .inputClass .slds-input {
+    text-align: center;
+    font-weight:bold;
+}
+.THIS .approvedClass .slds-input[disabled] {
+    background-color: #ABD25A !important;
+    font-weight:bold;
+}
+.THIS .rejectedClass .slds-input[disabled]{
+    background-color: #FA8072 !important;
+}
+.THIS .tableCls thead th {
+    text-transform: uppercase !important;
+    font-size:1rem !important;
+    border: 1px solid #055E89  !important;
+}
+.THIS .slds-form-element__label {
+    color: black !important;
+    font-size: 0.875rem !important;
+}
+.THIS .notesCls{
+    white-space:normal;
+    font-size:0.875rem !important;
+    font-weight:600;
+    font-family: 'Lato'!important;
+}
+.THIS .notesCls b{
+    color:#055E89  !important;  
+    
+}
+.THIS table td {
+    vertical-align: middle !important;
+}
+.THIS .notesBldCls{
+    font-weight: bold;
+    font-size:1rem !important;
+    font-family: Lato!important;
+    color: #055e89!important;
+}
+.THIS .comboCls .slds-input{
+    min-height: calc(2.700rem + 2px) !important;
+}
+.THIS h1{
+    font-weight: 500 !important;
+}
+.THIS a {
+    color: #055e89 !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+}
+.THIS .approvePillCls .slds-pill__action {
+    background-color:#ABD25A;
+    border-radius:0rem !important;
+    width: 6rem!important;
+}
+.THIS .rejectPillCls .slds-pill__action {
+    background-color:#FA8072;
+    border-radius:0rem !important;
+    width: 6rem!important;
+    
+}
+.THIS .slds-pill__remove svg {
+    fill:black !important;
+}
+.THIS .slds-icon_container{
+    border-radius:0rem !important;
+    color:black !important;
+}
+.THIS .darkborder {
+    border-bottom: 3px solid black !important;
+}
+.THIS table{
+    font-size:0.875 !important;
+}
+.THIS .slds-checkbox_faux{
+    margin-right:0rem !important;
+}
+.THIS .slds-icon-action-approval {
+    background-color: #ABD25A !important;
+}
+.THIS .wrap {
+    white-space:pre-line !important;
+}

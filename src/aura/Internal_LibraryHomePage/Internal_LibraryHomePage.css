@@ -1,0 +1,494 @@
+/* Global */
+.THIS body {
+	font-size: 0.875rem;
+	color: #37474F;
+	font-family: "Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+}
+/* Tables */
+.THIS .table th {
+	border-top: none;
+}
+.THIS .table-bordered thead  {
+	color: #055E89;
+}
+.THIS .table td  a:hover {
+  text-decoration: underline !important;
+}
+.THIS .table-bordered thead th {
+	font-weight: 400;
+	text-transform: uppercase;
+}
+.THIS .table-bordered thead th:not(:last-child) {
+	border-right: 1px solid #979797;
+}
+.THIS .table-bordered tbody td {
+	border-color: #DDDDDD;
+}
+.THIS .table .thead-light th {
+	color: #055E89;
+	background-color: rgba(5,94,137,0.1);
+	border: 1px solid #055E89 !important;
+    font-size: 1rem;
+}
+/*Table Bordered*/
+.THIS .table-bordered tbody td:not(:last-child) {
+	border-right: 1px solid #979797;
+}
+/*Table Striped*/
+.THIS .table-striped tbody tr:nth-of-type(odd) {
+    background-color: transparent;
+}
+.THIS .table-striped tbody tr:nth-of-type(even) {
+    background-color: #F9F9F9;
+}
+
+/* Tabs section */
+.THIS .nav-tabs {
+	width: fit-content;
+}
+
+/* Ratings */
+.THIS .fa-star,
+.THIS .fa-heart {
+	color: #D8D8D8;
+}
+
+.THIS .star {
+	color: #FFEB73;
+}
+
+.THIS .heart {
+	color: #F86262;
+}
+
+/* Card Title Underline */
+
+.THIS .card-title:after {
+	content: '';
+	display: block;
+	margin-top: 10px;
+	width: 60px;
+	height: 3px;
+	background: #055E89;
+}
+.THIS .card-title {
+    margin-bottom: 0.75rem;
+}
+
+.THIS h5, .THIS .h5 {
+     font-size: 1.25rem; 
+}
+.THIS .h5,.THIS h5 {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-top: 0;
+}
+/* Card box shadow */
+
+.THIS .card {
+	box-shadow: 0 2px 4px 0 rgba(193,193,193,0.5);
+}
+
+/* Vertical Tabs Section */
+
+.THIS .vertical-tabs {
+	border: 1px solid #DDDDDD;
+}
+
+.THIS .vertical-tabs .nav-tabs {
+	border-right: 1px solid #DDDDDD;
+	background: #f8f8f8;
+}
+
+/*Custom CSS*/
+/*Custom CSS for Card Mobile View */
+@media (max-width: 48em) {
+
+.THIS .responsive-card-table thead tr {
+	position: absolute;
+	top: -9999em;
+	left: -9999em;
+}
+
+.THIS .responsive-card-table tr {
+	display: block;
+	border-top: 2px solid #dddbda;
+}
+
+.THIS .responsive-card-table th {
+	display: block;
+	max-width: 100%;
+	width: 100%;
+	clear: both;
+	white-space: normal;
+	text-align: left;
+	padding: 0.75rem;
+	overflow: hidden;
+}
+.THIS .responsive-card-table td{
+	display: block;
+	max-width: 100%;
+	width: 100%;
+	clear: both;
+	white-space: normal;
+	overflow: hidden;
+	text-align: right;
+}
+
+.THIS .responsible-card-table thead {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	clip: rect(0px, 0px, 0px, 0px) !important;
+	margin: -1px !important;
+	border-width: 0px !important;
+	border-style: initial !important;
+	border-color: initial !important;
+	border-image: initial !important;
+	padding: 0px !important;
+	overflow: hidden !important;
+	
+}
+
+.THIS .responsive-card-table td:before {
+	float: left;
+	margin-top: 0.125rem;
+	font-size: 0.875rem;
+	line-height: 1.25;
+	color: rgb(105, 105, 105);
+	text-transform: uppercase;
+	letter-spacing: 0.0625rem;
+	display: block;
+	padding-bottom: 0.25rem;
+	content: attr(data-label);
+}
+.THIS .responsive-card-table tr > td:last-child {
+	padding: 0.75rem;
+}
+.THIS .responsive-card-table tr > td:first-child {
+	padding: 0.75rem;
+}
+}
+/*Custom CSS for ldt Table to override boostrap style*/
+.THIS .ldtTableCls table{
+    font-size:0.875rem !important;
+}
+.THIS .ldtTableCls table th {
+    border-top: none !important;
+    padding: 0.40rem !important;
+    vertical-align: top !important;
+}
+.THIS .ldtTableCls thead  {
+    color: #055E89 !important;
+}
+.THIS .ldtTableCls thead th {
+    text-transform: uppercase !important;
+    color: #055E89  !important;
+    font-size:1rem !important;
+    background-color: rgba(5,94,137,0.1)  !important;
+    border: 1px solid #055E89  !important;
+}
+.THIS .ldtTableCls thead th:not(:last-child) {
+    border-right: 1px solid #979797 !important;
+}
+.THIS .ldtTableCls td {
+    border-color: #DDDDDD !important;
+    padding: 0.75rem !important;
+    vertical-align: top !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+/*Table Bordered*/
+.THIS .ldtTableCls tbody td:not(:last-child) {
+    border-right: 1px solid #979797 !important;
+}
+/*Table Striped*/
+.THIS .ldtTableCls tbody tr:nth-of-type(odd) {
+    background-color: transparent !important;
+}
+.THIS .ldtTableCls  tbody tr:nth-of-type(even) {
+    background-color: #F9F9F9 !important;
+}
+.THIS .ldtTableCls .slds-th__action:hover {
+    background-color: #e6eff3 !important;
+}
+.THIS .ldtTableCls .slds-th__action:focus {
+    background-color: #e6eff3 !important;
+}
+
+.THIS .ldtTableCls  .slds-is-sortable{
+    background-color: #e6eff3 !important;
+}
+
+.THIS .ldtTableCls .ldtdev .slds-card {
+    border:white !important;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0)!important;
+}
+.THIS .ldtTableCls .slds-card {
+    border:white !important;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0)!important;
+}
+.THIS .ldtTableCls td a {
+    color: #055e89 !important;
+    text-decoration: none !important;
+}
+.THIS .ldtTableCls table td a:hover {
+    text-decoration: underline !important;
+}
+.THIS .ldtdev .slds-button_brand {
+    border: 1px solid transparent !important;
+    padding: 0.75rem 1.5rem !important;
+    color: #fff !important;
+    border-radius: 0 !important;
+    line-height: 1 !important;
+    font-size:0.875!important;
+    background-color: #055e89 !important;
+    
+}
+.THIS .ldtdev .slds-select[size] {
+    min-height: calc(2.875rem + (1px * 2)) !important;
+	 border-radius:0rem !important;
+}
+
+.THIS .ldtdev .slds-button_brand:hover {
+    color:  #055e89 !important;
+    background-color: #fff !important;
+    border-color:#055e89 !important;
+}
+.THIS .ldtdev .slds-button[disabled] {
+    background-color: #dddbda !important;
+    color:  #fff !important;
+    border-color:#dddbda !important;
+}
+/*Custom CSS for Lightning Select to override boostrap Select style*/
+.THIS .slds-form-element__label {
+    color: black!important;
+    font-size: .875rem!important;
+}
+.THIS .slds-select{
+    display: inline-block ;
+    width: 100%;
+    height: calc(1.25em + 1.5rem + 2px);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    vertical-align: middle;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    appearance: none;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    -webkit-appearance: none;
+}
+.THIS select {
+    
+    text-transform: none !important;
+    margin: 0 !important;
+    font-family: inherit !important;
+}
+
+.THIS .slds-select_container::after{
+    display : none !important;
+}
+.THIS .slds-select_container::before{
+    display : none !important;
+}
+.THIS .slds-select_container .slds-select { -webkit-appearance : menuList}
+.THIS input[type=text]{
+    display: block;
+    width: 100%;
+    padding: 0.70rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+   
+}
+
+.THIS input[type="search"] {
+    height: 45px;
+}
+/*Custom CSS for wrap the text in table*/
+
+.THIS .wrap {
+    white-space:normal !important;
+    word-break: break-word;
+}
+.THIS .btn {
+    padding: 0.50rem 1.5rem !important;
+}
+.THIS .btn {
+    padding: 0.50rem 1.5rem !important;
+}
+.THIS .btn {
+  display: inline-block;
+  font-weight: 400;
+  color: #2d2d2d;
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+  @media (prefers-reduced-motion: reduce) {
+    .THIS .btn {
+      transition: none; }
+}
+
+.THIS  .btn:hover {
+    color: #2d2d2d;
+    text-decoration: none; }
+.THIS  .btn:focus,.THIS .btn.focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(29, 69, 136, 0.25); }
+.THIS  .btn.disabled, .THIS .btn:disabled {
+    opacity: 0.65; }
+
+.THIS a.btn.disabled,
+.THIS fieldset:disabled a.btn {
+  pointer-events: none; }
+
+.THIS .btn-primary {
+  color: #fff;
+  background-color: #055e89;
+  border-color: #055e89; }
+.THIS .btn-primary:hover {
+    color: #055e89;
+    background-color: #fff;
+    border-color: #055e89; }
+.THIS .btn-primary:focus,.THIS .btn-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(63, 97, 154, 0.5); }
+.THIS .btn-primary.disabled,.THIS .btn-primary:disabled {
+    color: #999;
+    background-color: #1D4588;
+    border-color: #1D4588; }
+.THIS .btn-primary:not(:disabled):not(.disabled):active,.THIS .btn-primary:not(:disabled):not(.disabled).active,
+.THIS .show > .btn-primary.dropdown-toggle {
+    color: #fff;
+    background-color: #14305e;
+    border-color: #122a53;
+}
+.THIS.btn-primary:not(:disabled):not(.disabled):active:focus,.THIS .btn-primary:not(:disabled):not(.disabled).active:focus,
+    .THIS .show > .btn-primary.dropdown-toggle:focus {
+      box-shadow: 0 0 0 0.2rem rgba(63, 97, 154, 0.5);
+}
+
+.THIS .btn-secondary {
+  color: #055e89;
+  background-color: #fff;
+  border-color: #055e89; }
+.THIS .btn-secondary:hover {
+    color: #fff;
+    background-color: #055e89;
+    border-color: #055e89; }
+.THIS .btn-secondary:focus,.THIS .btn-secondary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5); }
+.THIS .btn-secondary.disabled,.THIS .btn-secondary:disabled {
+    color: #999;
+    background-color: #1D4588;
+    border-color: #1D4588; }
+.THIS .btn-secondary:not(:disabled):not(.disabled):active, .THIS .btn-secondary:not(:disabled):not(.disabled).active,
+.THIS .show > .btn-secondary.dropdown-toggle {
+    color: #fff;
+    background-color: #545b62;
+    border-color: #4e555b; }
+.THIS  .btn-secondary:not(:disabled):not(.disabled):active:focus,.THIS .btn-secondary:not(:disabled):not(.disabled).active:focus,
+.THIS .show > .btn-secondary.dropdown-toggle:focus {
+     box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
+}
+.THIS .table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #2d2d2d; }
+.THIS .table th,
+.THIS .table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6; }
+.THIS .table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6; }
+.THIS .table tbody + tbody {
+    border-top: 2px solid #dee2e6; }
+
+.THIS .table-sm th,
+.THIS .table-sm td {
+  padding: 0.3rem; }
+
+.THIS .table-bordered {
+  border: 1px solid #dee2e6;
+}
+.THIS .table-bordered th,
+.THIS .table-bordered td {
+    border: 1px solid #dee2e6;
+}
+.THIS .table-bordered thead th,
+ .THIS .table-bordered thead td {
+    border-bottom-width: 2px; 
+}
+
+.THIS .table-borderless th,
+.THIS .table-borderless td,
+.THIS .table-borderless thead th,
+.THIS .table-borderless tbody + tbody {
+  border: 0; }
+
+.THIS .table-striped tbody tr:nth-of-type(even) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.THIS .card-body{
+	flex: 1 1 auto;
+    padding: 1.25rem;
+}
+.THIS .nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+.THIS .nav-link {
+    display: block;
+    padding: 0.5rem 1rem;
+}
+.THIS .nav-link:hover,.THIS  .nav-link:focus {
+    text-decoration: none;
+}
+.THIS .nav-link.disabled {
+    color: #1D4588;
+    pointer-events: none;
+    cursor: default;
+}
+.THIS .nav-tabs {
+    border-bottom: transparent; }
+.THIS .nav-tabs .nav-item {
+    margin-bottom: -2px; }
+.THIS .nav-tabs .nav-link {
+    border: 2px solid transparent; 
+}
+.THIS .nav-tabs .nav-link:hover,.THIS  .nav-tabs .nav-link:focus {
+    border-color: transparent transparent #055e89 transparent;
+}
+.THIS .nav-tabs .nav-link.disabled {
+    color: #1D4588;
+    background-color: transparent;
+    border-color: transparent;
+}
+.THIS .nav-tabs .nav-link.active,
+.THIS .nav-tabs .nav-item.show .nav-link {
+    color: #055E89;
+    background-color: #fff;
+    border-color: transparent transparent #055e89 transparent;
+}
+.THIS .nav-tabs .dropdown-menu {
+    margin-top: -2px;
+}

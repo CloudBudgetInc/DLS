@@ -1,0 +1,13 @@
+.THIS .label-hidden > label {
+    display: none;
+}
+.THIS .slds-datepicker .slds-day {
+    display : contents;
+    position: absolute;
+    z-index: 7000;
+    left: -0.71875px;    
+}
+
+.THIS.slds-required{
+    /*display: none !important;*/
+}

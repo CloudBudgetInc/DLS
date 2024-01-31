@@ -1,0 +1,41 @@
+<aura:component>
+    <aura:attribute name="conAssign" type="Object"/>
+    <aura:attribute name="showActionCol" type="Boolean" default="true"/>
+    <aura:attribute name="showSentBadge" type="Boolean" default="false"/>
+    <aura:attribute name="showBadge" type="Boolean" default="false"/>
+    <aura:attribute name="fieldAPINameToShowBadge" type="String"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+
+    <aura:method name="toggleRow" action="{!c.toggleSelection}">
+        <aura:attribute name="isSelect" type="Boolean" /> 
+    </aura:method>
+
+    <aura:method name="selectedRow" action="{!c.getSelectedRowInfo}"/>
+
+    <tr class="slds-hint-parent">
+        <td class="slds-text-align_right" style="padding-right: 1rem;" role="gridcell">
+            <div class="slds-checkbox">
+                <lightning:input aura:id="selectRow" type="checkbox" label=""/>
+            </div>
+        </td>
+        <td data-label="Name" scope="row">
+            <div class="slds-truncate" title="{!v.conAssign.Candidate_Name__r.Name}">
+                <span class="slds-p-right_small">
+                    {!v.conAssign.Candidate_Name__r.Name}
+                </span>
+                
+                <aura:if isTrue="{!v.showBadge}">
+                    <lightning:badge label="Sent" class="slds-badge slds-theme_success"/>
+                </aura:if>
+            </div>
+        </td>  
+        <aura:if isTrue="{!v.showActionCol}">
+            <td data-label="Action" scope="row">
+                <div class="slds-truncate" title="Preview">
+                    <a onclick="{!c.actionHandler}" name="{!v.conAssign.Id}">Preview</a>
+                </div>
+            </td> 
+        </aura:if>
+    </tr>
+</aura:component>

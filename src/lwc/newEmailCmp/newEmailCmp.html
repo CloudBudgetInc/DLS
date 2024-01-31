@@ -1,0 +1,165 @@
+<template>
+    <template if:true = {showSpinner}>
+        <lightning-spinner alternative-text="Loading" variant = 'brand' size="medium"></lightning-spinner>
+    </template>
+    <lightning-combobox 
+        name="From"
+        label="From"
+        value = {loggedInUserValue}
+        options={fromEmailAddresses}
+        onchange = {handleFromChange}>
+        
+    </lightning-combobox>
+
+    <c-lookup
+    data-id="whoId"
+    label="To"
+    s-object-api-name="Contact" 
+    placeholder=""
+    fields="Name,Email" 
+    icon-name="standard:contact"
+    field-api-name="To"
+    onlookupupdate={handleAddContact}>
+    </c-lookup>
+    
+    <c-lookup
+    data-id="whoId"
+    label="Cc"
+    s-object-api-name="Contact" 
+    placeholder=""
+    fields="Name,Email" 
+    icon-name="standard:contact"
+    field-api-name="Cc"
+    multi-select
+    onlookupupdate={handleAddContact}>
+    </c-lookup>
+
+    <c-lookup
+    data-id="whoId"
+    label="Bcc"
+    s-object-api-name="Contact" 
+    placeholder=""
+    fields="Name,Email" 
+    icon-name="standard:contact"
+    field-api-name="Bcc"
+    multi-select
+    onlookupupdate={handleAddContact}>
+    </c-lookup>
+
+    <lightning-input type = 'text' label = 'Subject' onchange = {handleSubjectChange} placeholder="Enter Subject...">
+        
+    </lightning-input>
+
+    <lightning-input-rich-text label = 'Body' class="slds-p-top_small" value = {richText} onchange = {handleBodyChange}>
+
+    </lightning-input-rich-text>
+    <div class = 'slds-p-top_medium'>
+        <lightning-button-icon icon-name="utility:attach"  alternative-text="Attach File" title="Attach File" onclick = {handleOpenFileModal}></lightning-button-icon>
+        <lightning-button-icon icon-name="utility:insert_template"  alternative-text="Insert Template" title="Insert Template" onclick = {handleOpenInsertTemplate}></lightning-button-icon>
+    </div>
+
+    <template if:true = {isFilesEmptyOutsideModal}>
+        <template for:each = {filesOutsideModal} for:item="item" for:index="index">
+            <lightning-pill label= {item.FileName} name = {item.FileName} data-id = {index} onremove={handleFilesRemoveOutside} key = {item.Id}></lightning-pill>
+        </template>
+    </template>
+
+    <template if:true = {attachFileModal}>
+        <section role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h1 class="slds-modal__title slds-hyphenate">Upload File</h1>
+                </div>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- <input data-id="fileId" onchange= {handleFilesChange} name="file" type="file" class = 'slds-hide' multiple/> -->
+                    <lightning-input type="file"
+                         label="Attachment"
+                         onchange={handleFilesChange}
+                         multiple>
+                    </lightning-input>
+                    
+                    <!--<span class="slds-file-selector__button slds-button slds-button_neutral" onclick={uploadIconclick}>
+                        <lightning-icon icon-name="utility:upload" variant="brand" size="x-small"> </lightning-icon>Upload
+                    </span> -->
+                    <template if:true = {isFilesEmpty}>
+                        <template for:each = {filesInsideModal} for:item="item" for:index="index">
+                            <lightning-pill label= {item.FileName} name = {item.FileName} data-id = {index} onremove={handleFilesRemoveInside} key = {item.Id}></lightning-pill>
+                        </template>
+                    </template>
+                
+                </div>
+                
+                <div class="slds-modal__footer">
+                    <lightning-button
+                    variant="neutral"
+                    label="Cancel"
+                    class = 'slds-p-around_medium'
+                    onclick = {handleFileModalClose}>
+                    </lightning-button>
+                    <lightning-button
+                    variant="brand"
+                    label="Attach"
+                    onclick = {handleAttachFile}>
+                    </lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    </template>
+
+
+    <template if:true = {insertTemplateModal}>
+        <c-insert-email-template record-id = {recordId}
+        onvalue = {handleInsertSelectedTemplate}
+        oncancel = {handleInsertTemplateClose}>
+
+        </c-insert-email-template>
+    </template>
+
+    <c-modal-cmp header = "Warning" show-header show-footer show={showWarning}>
+        <div slot="body">
+            <p class="slds-align_absolute-center slds-p-around_large">Inserting this template will overwrite the current email.</p>
+        </div>
+        <div slot="footer">
+                <lightning-button
+                    variant="neutral"
+                    label="Cancel"
+                    class = 'slds-p-around_medium'
+                    onclick = {handleCancelInsert}>
+                </lightning-button>
+                <lightning-button
+                    variant="brand"
+                    label="Insert"
+                    onclick = {handleInsertTemplate}>
+                </lightning-button>
+        </div>
+    </c-modal-cmp>
+
+    <div class = 'rightAlign'>
+        <lightning-button label = 'Send' variant = 'brand' onclick = {handleMailSend}>
+        </lightning-button>
+        <lightning-button  label = 'Cancel'  class= "slds-p-around_x-small" onclick = {handleCancel}>
+        </lightning-button>
+    </div>
+
+    <c-modal-cmp header = "Warning" show-header show-footer show={isSubjectOrBodyEmpty}>
+        <div slot="body">
+            <p class="slds-align_absolute-center slds-p-around_large">Send this message without a subject or text in body?</p>
+        </div>
+        <div slot="footer">
+                <lightning-button
+                    variant="neutral"
+                    label="Cancel"
+                    class = 'slds-p-around_medium'
+                    onclick = {handleCancelWarning}>
+                </lightning-button>
+                <lightning-button
+                    variant="brand"
+                    label="Yes"
+                    onclick = {handleYesWarning}>
+                </lightning-button>
+        </div>
+    </c-modal-cmp>
+
+
+</template>

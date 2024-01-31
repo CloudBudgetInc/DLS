@@ -1,0 +1,48 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global" controller="CommunityCATabView_Controller">
+    <aura:attribute name="tabNames" type="List" default="[]" />
+    <aura:attribute name="CAListItems" type="List" default="[]" />
+    <aura:attribute name="CATabList" type="List" default="[]" />
+    <aura:attribute name="statusList" type="List" default="[]" />
+    <aura:attribute name="selectedTabName" type="String" default="Student" />
+    <aura:attribute name="selectedStatus" type="String" default="" />
+    <aura:attribute name="projectId" type="String" default="" />
+     <aura:attribute name="cATabName" type="String" default="" />
+    <aura:attribute name ="showSpinner" type = "Boolean" access = "PUBLIC" default = "false"/>
+    <aura:handler name="init" value="{!this}" action="{!c.init}" />
+    
+    <div class="card">
+        <span class="card-body">
+            <h5 class="card-title">CONTACT ASSIGNMENTS</h5>
+            <div class="card">
+                <span class="card-body cardBody">
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <aura:iteration items="{!v.tabNames}" var="tabItem" indexVar="index">
+                            <li class="nav-item">
+                                <a  class="{!tabItem.recordTypeValue == v.cATabName ? 'nav-link active' : 'nav-link '}" name="{!tabItem.recordTypeValue}" data-toggle="tab"  role="tab" onclick="{!c.cATabClick}">{!tabItem.recordTypeValue}</a>
+                            </li>
+                        </aura:iteration>
+                    </ul><br/>
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="12" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="3" >
+                            <lightning:select label="Status"  value="{!v.selectedStatus}" onchange="{!c.handleStatusChange}">
+                                <aura:iteration items="{!v.statusList}" var="status">
+                                    <option value="{!status}" selected="{!status == v.selectedStatus}">{!status}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                    </lightning:layout><br/>
+                    <div class="tab-content" id="myTabContent">
+                        <aura:iteration items="{!v.tabNames}" var="tabItem" indexVar="index">
+                            <aura:if isTrue="{!tabItem.recordTypeValue == v.cATabName}">
+                                <c:CAListViewCmp CATabList="{!v.CATabList}"/>
+                            </aura:if>
+                        </aura:iteration>
+                    </div>
+                </span>
+            </div>
+        </span>
+    </div>
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+    </aura:if>
+</aura:component>

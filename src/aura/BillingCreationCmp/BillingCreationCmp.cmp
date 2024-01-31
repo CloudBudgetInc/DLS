@@ -1,0 +1,268 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction,force:hasSObjectName,lightning:hasPageReference" access="global" controller="BillingCreation_Ctrl">
+  
+    <aura:attribute name="billingRowInfo" type="List" default="[]"/>
+    <aura:attribute name="projectIds" type="List" default="[]"/>
+    <aura:attribute name="billingCreationOption" type="List" default="[]"/>
+    <aura:attribute name="billingTypePickList" type="List" default="[]"/>
+
+    <aura:attribute name="selectedObjLookup" type="Map" default="{accountingPeriod : [],account : [],project : []}"/>
+    <aura:attribute name="billingContactMap" type="Map" default="{}"/>
+    <aura:attribute name="billingTypeGLAcc" type="Map" default="{}"/>
+    <aura:attribute name="accountCodeMap" type="Map" default="{}"/>
+    <aura:attribute name="billingLineCreationMap" type="Map" default="{}"/>
+    <aura:attribute name="billingCreationMap" type="Map" default="{}"/>
+    <aura:attribute name="journalCreationMap" type="Map" default="{}"/>
+    <aura:attribute name="journalEntryLineCreationMap" type="Map" default="{}"/>
+    
+    <aura:attribute name="validationMsg" type="String" default=""/>
+    <aura:attribute name="displayExistRecsMsg" type="String" default=""/>
+    <aura:attribute name="billingContact" type="String" default=""/>
+    <aura:attribute name="billingType" type="String" default=""/>
+    <aura:attribute name="selectedBillingOption" type="String" default=""/>
+    <aura:attribute name="billingRowDuplicateJSON" type="String" default=""/>
+    <aura:attribute name="sObjectName" type="String" />
+    
+    <aura:attribute name="isShowCLIN" type="Boolean" default="false"/>
+    <aura:attribute name="isEditableCLIN" type="Boolean" default="false"/>
+    <aura:attribute name="isHideInvoicedPT" type="Boolean" default="false"/> 
+    <aura:attribute name="billORJournalExistRecsModal" type="Boolean" default="false"/>
+    <aura:attribute name="isBillingSuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="selectAllBillingLine" type="Boolean" default="false"/>
+    <aura:attribute name="creationValidationModal" type="Boolean" default="false"/>
+    <aura:attribute name="isCreateBilling" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="billingColumnTotal" type="String" default="0.00"/>
+    <aura:attribute name="billingRecordsCnt" type="Integer" default="0"/>
+
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>  
+    
+    <aura:handler name="change" value="{!v.selectedObjLookup}" action="{!c.filterChange}"/>
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    <div>
+        
+        <!--W-002782 - Batch Billings (Invoice) Creation Process-->
+        <lightning:card title="Billings">
+            <aura:set attribute="actions">
+                <lightning:button label="Create Billing" variant="brand" onclick="{!c.openBillingModal}"/>
+            </aura:set>
+            <lightning:layout multipleRows="true">
+                <lightning:layoutItem size="3" padding="around-small">
+                    <abbr title="" class="slds-required" style="margin-left:0.1rem;">*</abbr>
+                    <div style="margin-top:-1.3rem;">
+                        <c:LookupSearch aura:id="apId" selection="{!v.selectedObjLookup.accountingPeriod}" onSearch="{!c.accountingPeriodSearch}" iconName="custom:custom3" objectName="AcctSeed__Accounting_Period__c" fieldName="Name" condition="" label="Accounting Period" placeholder="Search Accounting Period" isMultiEntry="false" isRequired="true"/>
+                    </div>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem size="3" padding="around-small">
+                    <abbr title="" class="slds-required" style="margin-left:0.1rem;">*</abbr>
+                    <div style="margin-top:-1.3rem;">
+                        <c:LookupSearch aura:id="accId" selection="{!v.selectedObjLookup.account}" onSearch="{!c.accountLookupSearch}" iconName="standard:account" objectName="Account" fieldName="Name" condition="" label=" Account" placeholder="Search Account" isMultiEntry="false"  isRequired="true"/>
+                    </div>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem size="2" padding="around-small">
+                    <lightning:select label="Billing Type" value="{!v.billingType}" aura:id="billingTypeId" class="labelCls" required="true" onchange="{!c.changeBillingType}">
+                        <option value="">--None--</option>
+                        <aura:iteration items="{!v.billingTypePickList}" var="billType">
+                        <option value="{!billType}" selected="{!(v.billingType == billType)}">{!billType}</option>
+                    </aura:iteration>
+                        </lightning:select> 
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem size="3" padding="around-small">
+                    <div style="margin-top:-0.1rem;">
+                        <c:LookupSearch aura:id="projectId" selection="{!v.selectedObjLookup.project}" onSearch="{!c.projectLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project__c" fieldName="Name" condition="" label="Project" placeholder="Search Project" isMultiEntry="false" />
+                    </div>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem size="1" padding="around-small">
+                    <div style="margin-top:1.3rem;">
+                        <lightning:button label="Search" variant="brand" onclick="{!c.billingSearchClick}"/>
+                    </div>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem size="3" padding="around-small">
+                    <div>
+                        <lightning:input aura:id="billId" type="checkbox" label="Select All" checked="{!v.selectAllBillingLine}" onchange="{!c.selectAllBillLine}"/>
+                    </div>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem size="3" padding="around-small">
+                    <div>
+                        <lightning:input type="checkbox" label="Hide Invoiced Project Tasks" checked="{!v.isHideInvoicedPT}" onchange="{!c.hideInvoicedPTs}"/>
+                    </div>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem size="3" padding="around-small">
+                    Billing Contact:
+                    <b>{!v.billingContact}</b>
+                </lightning:layoutItem>
+            </lightning:layout>
+            
+                <aura:if isTrue="{!v.billingRowInfo.length > 0}">
+                    <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal table slds-table_fixed-layout">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th class="wrap" style="width:2%;font-size:1.1rem;"></th>
+                                <th class="wrap" style="font-size:1.1rem;"><b>Billing Line Project Task</b></th>
+                                 <th class="wrap" style="font-size:1.1rem;"><b>Billing Line Project</b></th>
+                                <th class="wrap" style="font-size:1.1rem;"><b>QB Classification</b></th>
+                                <th class="wrap" style="font-size:1.1rem;"><b>GL Variable 2</b></th>
+                                <th class="wrap centerAlignClass" style="font-size:1.1rem;"><b>Billing Line Quantity</b></th>
+                                <th class="wrap centerAlignClass" style="font-size:1.1rem;"><b>Billing Line Unit Price</b></th>
+                                
+                                <aura:if isTrue="{!v.isShowCLIN}">
+                                    <th class="wrap centerAlignClass" style="font-size:1.1rem;"><b>Billing Line CLIN</b></th>
+                                </aura:if>
+                                
+                                <th class="wrap centerAlignClass" style="font-size:1.1rem;"><b>Billing Line Comment</b></th>
+                                <th class="wrap centerAlignClass" style="font-size:1.1rem;"><b>Billing Line Total</b></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!v.billingRowInfo}" var="pro" indexVar="pIndex">
+                                
+                                <!-- Project Task Info-->
+                                <aura:if isTrue="{!pro.projectTaskList.length > 0}">
+                                    <aura:iteration items="{!pro.projectTaskList}" var="pt" indexVar="pTIndex">
+                                        <aura:if isTrue="{!(!pt.isHidePTs)}">
+                                            <tr>
+                                                <td class="wrap"><lightning:input aura:id="billingId" type="checkbox" label="" checked="{!pt.isBillingLineChecked}" onchange="{!c.checkBillingLine}"/></td>
+                                                <td class="wrap"><a name="{!pt.projecTaskId}" onclick="{!c.goToSObjPage}">{!pt.projecTaskName}</a></td>
+                                                 <td class="wrap"><a name="{!pt.parentProjectId}" onclick="{!c.goToSObjPage}">{!pt.projectName}</a></td>
+                                                <td>{!pt.qbClassificationName}</td>
+                                                <td>{!pt.glAccountVar2Name}</td>
+                                                <td class="wrap"><center><div style="width:70%;">
+                                                    <lightning:input variant="label-hidden" label=" " aura:id="qtyId" type="number" min="0" value="{!pt.quantity}" step="0.01" name="{!pIndex+'~'+pTIndex}" onchange="{!c.calculateTotal}"/></div></center></td>
+                                                <td class="wrap"><center>
+                                                    <div style="width:70%;">
+                                                        <lightning:input variant="label-hidden" label=" " aura:id="qtyId" type="number" min="0" value="{!pt.unitPrice}" step="0.01"  name="{!pIndex+'~'+pTIndex}" onchange="{!c.calculateTotal}"/>
+                                                    </div>
+                                                    </center>
+                                                </td>
+                                                <aura:if isTrue="{!v.isShowCLIN}">
+                                                    
+                                                    <aura:if isTrue="{!and(v.isEditableCLIN,not(empty(pt.clinName)))}">
+                                                        <td class="wrap"><center>
+                                                            <div style="text-align:left;width: 90%;margin-top:-1rem;">
+                                                                <c:LookupSearch aura:id="clin" selection="{!pt.clinLookup}" onSearch="{!c.clinLookupSearch}" iconName="custom:custom17" objectName="CLIN__c" fieldName="Name" condition="" label="" placeholder="Search CLIN" isMultiEntry="false"  isRequired="false"/>
+                                                            </div> </center></td>
+                                                        <aura:set attribute="else">
+                                                            <td class="wrap"><center>{!pt.clinName}</center></td>
+                                                        </aura:set>
+                                                    </aura:if>
+                                                    
+                                                </aura:if>
+                                                <td class="wrap"><div class="textAreaCls"><lightning:textarea label="" value="{!pt.comment}"/></div></td>
+                                                <td class="wrap"><center><ui:outputNumber value="{!'$'+(pt.total)}" format="0.00"/></center></td>
+                                            </tr>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </aura:if>
+                            </aura:iteration>
+                            <tr>
+                                <td></td>
+                                <td style="font-size:1.1rem;text-align:left;"><b>Records Count</b></td>
+                                <td class="wrap fontCls"><ui:outputNumber value="{!v.billingRecordsCnt}"/></td>
+                                <td colspan="{!v.isShowCLIN ? '4' : '3'}"></td>
+                                <td style="font-size:1.1rem;text-align:right;"><b>Total</b></td>
+                                <td class="wrap fontCls"><center><ui:outputNumber value="{!'$'+(v.billingColumnTotal)}" format="0.00"/></center>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <aura:set attribute="else">
+                        <center><h1>No records to display</h1></center>
+                    </aura:set>
+                </aura:if>
+        </lightning:card>
+        
+        <!-- Create Billing Modal-->
+        <aura:if isTrue="{!v.isCreateBilling}">
+            <c:sldsModal aura:id="createBill">
+                <aura:set attribute="header">
+                    Create Billings
+                </aura:set>
+                <aura:set attribute="content">
+                    <center><div style="width:22rem;">
+                        <lightning:select label="" aura:id="selectedBillingId" value="{!v.selectedBillingOption}">
+                            <aura:iteration items="{!v.billingCreationOption}" var="bOption">
+                                <option value="{!bOption}">{!bOption}</option>
+                            </aura:iteration>
+                        </lightning:select> 
+                        </div></center>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Proceed" class="btn btn-primary" variant="brand" onclick="{!c.proceedToCreateBillingRec}"/>
+                    <lightning:button label="Close" class="btn btn-secondary" variant="brand" onclick="{!c.closeBillings}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+        <!-- Billing and Billing Line Creation Success Modal -->
+        
+        <aura:if isTrue="{!v.isBillingSuccessModal}">
+            <c:sldsModal aura:id="successBilling">
+                <aura:set attribute="header">
+                    Success
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue ="{!v.billingType == '11001-Monthly Arrears'}">
+                        <center>Billings and Billing Line records have been created successfully</center>
+                        <aura:set attribute="else">
+                            <center>Journal Entry and Journal Entry Line records have been created successfully</center>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Close" class="btn btn-secondary" variant="brand" onclick="{!c.closeBillingSuccessModal}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+         <!-- Creation Validation Modal -->
+        
+        <aura:if isTrue="{!v.creationValidationModal}">
+            <c:sldsModal  aura:id="createVal">
+                <aura:set attribute="header">
+                    <h1><b>Warning!!</b></h1>
+                </aura:set>
+                <aura:set attribute="content">
+                    <b style="font-size:1rem;">Fields required are as follows,</b><br/><br/>
+                    <aura:unescapedHtml value="{!v.validationMsg}" />
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Close" class="btn btn-secondary" variant="brand" onclick="{!c.closeValModal}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+        <!-- server side action service component -->
+        <c:ApexService aura:id="server"/>
+        
+        <aura:if isTrue="{!v.billORJournalExistRecsModal}">
+            <c:sldsModal  aura:id="existRecModal">
+                <aura:set attribute="header">
+                    <h1><b>Warning!!</b></h1>
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!or(v.billingType == '11005-Prepayment',v.billingType == '11002-Billed at End')}">
+                        <b style="font-size:1rem;">We have Journal Entry and Journal Entry Line for the selected Accounting Period and Project, Please use the following link to view the record.</b><br/>
+                        <aura:set attribute="else">
+                            <b style="font-size:1rem;">We have Billing and Billing Line for the selected Accounting Period and Project, Please use the following link to view the record.</b><br/>
+                        </aura:set>
+                    </aura:if>
+                    <aura:unescapedHtml value="{!v.displayExistRecsMsg}" />
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Close" class="btn btn-secondary" variant="brand" onclick="{!c.closeExistRecsModal}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+    </div>
+</aura:component>

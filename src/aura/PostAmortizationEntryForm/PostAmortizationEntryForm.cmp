@@ -1,0 +1,36 @@
+<aura:component controller="PostAmortizationEntry_Controller" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="entryList" type="AmortizationEntryDomain.AEWrapperClass[]" access="public" description="To show the record in Table"/>
+    <aura:attribute name="delList" type="List" access="public" description="To add the Id of the AE Id when unselected" default="[]"/>
+    <aura:attribute name="totalCount" type="Decimal" access="public" description="To display the Total Count of record"/>
+    <aura:attribute name="totalAmount" type="Decimal" access="public" description="To display the Total Amount"/>
+    <aura:attribute name="currentMonth" type="String" access="public" description="To display the current Depreciation Month"/>
+    <aura:attribute name="selectedFilter" type="String" access="public" default="Location"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="large" alternativeText="...loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <lightning:card title="Review Amortization Entries">
+        <aura:set attribute="title">
+            <b>Review Amortization Entries</b>
+            <div>Total Count: <b>{!v.totalCount}</b>, Total Amount: <b><ui:outputCurrency value="{!v.totalAmount}"/></b> , Current Depreciation Month: <b>{!v.currentMonth}</b></div>
+           
+            <div class="groupByClass">
+                <lightning:select aura:id="groupId" label="Group By" name="groupBy" onchange="{!c.handleSelect}"  value="{!v.selectedFilter}">
+                    <option value="Location" text="Location"/>
+                    <option value="Fixed Asset RecordType" text="Fixed Asset RecordType"/>
+                </lightning:select>
+            </div>
+            
+        </aura:set>
+        <aura:set attribute="actions">
+            <!--<lightning:button label="Post" onclick="{!c.toProcess}"/>-->
+            <lightning:button label="Close" onclick="{!c.toHome}"/>
+        </aura:set>
+        <aura:iteration items="{!v.entryList}" var="aeWrap">
+            <c:CustomAccordianForPostAEForm aeWrap="{!aeWrap}"/>
+        </aura:iteration>
+    </lightning:card>
+</aura:component>

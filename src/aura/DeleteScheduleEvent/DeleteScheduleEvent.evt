@@ -1,0 +1,4 @@
+<aura:event type="Component" description="This event is for deleting the schedule record">
+    <aura:attribute name = "deleteIndex" type = "Integer" />
+    <aura:attribute name = "canceltype" type = "String" />
+</aura:event>

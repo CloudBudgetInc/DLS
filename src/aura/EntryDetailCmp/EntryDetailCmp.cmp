@@ -1,0 +1,199 @@
+<aura:component controller="Staff_Daily_Timesheet_Ctrl">
+    <!-- From parent component -->
+    <aura:attribute name="initialValues" type="Object" access="public" description="contains all info for new records creation"/>
+    <aura:attribute name="dateSelected" type="Date" access="public" description="selected date name"/>
+    <aura:attribute name="locationList" type="List" access="public" description="location records"/>
+    <aura:attribute name="task_PayrollItemMap" type="Object" access="public" description="payroll Item map from custom setting"/>
+    <aura:attribute name="currWeekIndex" type="Integer" access="public" description="current week index"/>
+    <aura:attribute name="specificWeekInfo" type="Object" access="public" description="Current week while information"/>
+    <aura:attribute name="showAllbuttons" type="Boolean" access="public" description="to display add,save btn"/>
+    <!-- End of input from parent -->
+    
+    <aura:attribute name="timeDayList" type="Object[]" access="public" description="list of time entry records"/>
+    <aura:attribute name="taskList" type="List" access="public" description="filtered task based on selected project"/>
+    <aura:attribute name="dayRecord" type="Object" access="public" description="time Entry edit usage"/>
+    <aura:attribute name="locationRec" type="Object" access="public" description="to hold selected location rec"/>
+    <aura:attribute name="newDayRec" type="Object" access="public" description="to hold new entry information"/>
+    <aura:attribute name="showAddModal" type="Boolean" access="public" description="to display new row add model"/>
+    <aura:attribute name="UniqueKeySet" type="List" default="[]" access="public" description="contains already added rows key info"/>
+    <aura:attribute name="dailyPreviousIcon" type="Boolean" access="public" description="to display previous icon"/>
+    <aura:attribute name="dailyNextIcon" type="Boolean" access="public" description="to display next icon"/>
+    <aura:attribute name="nextIconClick" type="Boolean" default="false" access="public" description="to display next week name first date"/>
+    <aura:attribute name="previousIconClick" type="Boolean" default="false" access="public" description="to display previous week name last date"/>
+    <aura:attribute name="displaySaveAlert" type="Boolean" default="false" access="public" description="to display save alert"/>
+    <aura:attribute name="loadNextWeekData" type="Boolean" default="false" access="public" description="load next week data on the end of current week"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="displaySuccessModal" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="successTitle" type="String" access="public"/>
+    <aura:attribute name="successMsg" type="String" access="public"/>
+    <aura:attribute name="displayEntryUpdate" type="Boolean" access="public"/>
+    
+    <!-- To handle lookup search cmp related event -->
+    <!--aura:handler name="getSelectedElementEvent" event="c:getSelectedElementEvent" action="{!c.handleLookupEvent}"/-->
+    <!-- To handle header cmp related event -->
+    <aura:handler name="clickEvent" event="c.childClickEvent" action="{!c.handleChildEvent}"/>
+    <!-- To handle week detail changes in child -->
+    <aura:handler name="change" value="{!v.specificWeekInfo}" action="{!c.doinit}"/>
+    <!-- To communicate with parent -->
+    <aura:registerEvent name="entryDetailEvent" type="c:childClickEvent"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    
+    <article aura:id="displayDetail" class="slds-card">
+        <div class="slds-card__header">
+            <c:HeaderComponent headerName="Daily View" subHeader="{!v.dateSelected}" previousIconDisplay="{!v.dailyPreviousIcon}" nextIconDisplay="{!v.dailyNextIcon}"/>
+        </div>
+        <ui:scrollerWrapper class="scrollerSize">
+            <div class="slds-card__body slds-card__body_inner detailscroll" aura:id="displayListBody">
+                <ul>
+                    <aura:iteration items="{!v.timeDayList}" var="day" indexVar="index">
+                        <li class="slds-nav-vertical__item slds-border_top slds-border_bottom">
+                            <span class="slds-nav-vertical__action" style="padding-top:5px !important;padding-bottom:1px !important;padding-left:2px !important;padding-right:2px !important;" aria-describedby="entity-header" aria-current="page">{!day.chargeCode}
+                                <span class="slds-p-left_x-small"><div style="width: 75px;" class="slds-p-top_small slds-p-bottom_small" onclick="{!c.updateTimeRec}" data-value="{!index}"><ui:inputNumber class="slds-input" value="{!day.hours}" format=".00" disabled="{!day.isHrsDisabled}"/></div></span>
+                            </span>
+                        </li>
+                    </aura:iteration>
+                </ul>
+            </div>
+        </ui:scrollerWrapper>
+        <footer class="slds-card__footer">
+            <div class="slds-grid slds-p-top_medium" >
+                <aura:if isTrue="{!v.showAllbuttons}">
+                    <div class="slds-col slds-order_1">
+                        <lightning:button variant="brand" label="Add Row" onclick="{!c.addRow}"/>
+                    </div>
+                    <div class="slds-col slds-order_2">
+                        <lightning:button variant="brand" label="Save" onclick="{!c.saveOperation}"/>
+                    </div>
+                </aura:if>
+                <div class="slds-col slds-order_3">
+                    <lightning:button variant="brand" label="Back" onclick="{!c.backClick}"/>
+                </div>
+            </div>
+        </footer>
+    </article>
+    
+    <!-- start of new row add modal -->
+    <aura:if isTrue="{!v.showAddModal}">
+        <c:sldsModal aura:id="addRowModal">
+            <aura:set attribute="header">New Timesheet Row</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-size_1-of-1" style="margin-top: 3%;">
+                        <lightning:select aura:id="project" name="Project" label="Select a Project" value="{!v.newDayRec.projectId}" onchange="{!c.populateProjectTask}">
+                            <option text="--Select--" value=""/>
+                            <aura:iteration items="{!v.specificWeekInfo.projectList}" var="pro">
+                                <option text="{!pro.Name}" value="{!pro.Id}"/>
+                            </aura:iteration>
+                        </lightning:select>
+                    </div>
+                    <div class="slds-size_1-of-1" style="margin-top: 3%;">
+                        <lightning:select aura:id="projectTask" name="Project Task" label="Select a Project Task" value="{!v.newDayRec.taskId}" onchange="{!c.taskvalidationFunction}">
+                            <option text="--Select--" value=""/>
+                            <aura:iteration items="{!v.taskList}" var="task">
+                                <option text="{!task.Name}" value="{!task.Id}"></option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </div>
+                    <div class="slds-size_1-of-1" style="margin-top: 3%;">
+                        <lightning:select aura:id="payroll" name="Payroll Item" label="Select a Payroll Item" value="{!v.newDayRec.payrollItem}" onchange="{!c.payrollChange}" disabled="{!v.newDayRec.disablePayRoll}">
+                            <aura:iteration items="{!v.newDayRec.PayRollItemList}" var="payroll">
+                                <option text="{!payroll}" value="{!payroll}"></option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </div>
+                    <div class="slds-size_1-of-1" style="margin-top: 3%;">
+                        <label class="slds-form-element__label">Location</label>
+                        <c:LookupSearch aura:id="lookup" selection="{!v.newDayRec.location}" onSearch="{!c.lookupSearch}" iconName="standard:location" objectName="MTT_Location__c" fieldName="Name" condition="" label="" placeholder="Select Location" isMultiEntry="false"/>
+                        <!--c:LookupSearch IconName="standard:location" placeHolder="Select Location" listOfSearchElements="{!v.locationList}" searchAs="Name" selectedObject="{!v.newDayRec.location}"/-->
+                    </div>
+                    <div class="slds-size_1-of-1" style="margin-top: 3%;">
+                        <aura:if isTrue="{!not(v.newDayRec.hidebillableSection)}">
+                            <lightning:input type="checkbox" label="billable" name="Billable" checked="{!v.newDayRec.isBillable}"/>
+                            <aura:set attribute="else">
+                                <lightning:input type="checkbox" label="billable" name="Billable" checked="{!v.newDayRec.isBillable}" disabled="true"/>
+                            </aura:set>
+                        </aura:if>
+                    </div>
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <div class="slds-button slds-button--neutral" style="cursor: pointer;" onclick="{!c.okayClickNewRow}">Okay</div>
+                <div class="slds-button slds-button--neutral" style="cursor: pointer;" onclick="{!c.NewRowcancel}">Cancel</div>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    <!-- End of new row add -->
+    
+    <!-- existing entry edit modal --> 
+    <aura:if isTrue="{!v.displayEntryUpdate}">
+        <c:sldsModal aura:id="entryUpdateModal">
+            <aura:set attribute="header">{!v.dayRecord.chargeCode}</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-size_1-of-1" style="margin-top: 3%;">
+                        <span>
+                            <ui:inputNumber aura:id="hrsUpdate" class="slds-input" label="Hours" value="{!v.dayRecord.hours}" format=".00" updateOn="keyup" keyup="{!c.hoursValidation}"/>
+                            <p style="color:red;">{!v.dayRecord.errMsg}</p>
+                        </span>
+                    </div>
+                    <div class="slds-size_1-of-1" style="margin-top: 3%;">
+                        <span><lightning:textarea aura:id="Daycmt" name="comments" value="{!v.dayRecord.comments}" 
+                                                  label="Enter Your Comments" maxlength="300" /></span>
+                    </div>
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.showAllbuttons}">
+                    <aura:if isTrue="{!v.dayRecord.dayId != null}">
+                        <lightning:button variant="brand" label="Delete" class="buttonCls" onclick="{!c.deleteClick}"/>
+                    </aura:if>
+                    <lightning:button variant="brand" label="Okay" class="buttonCls" onclick="{!c.okayOnUpdate}"/>
+                </aura:if>
+                <lightning:button variant="brand" label="Close" onclick="{!c.updateCancel}" class="buttonCls"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    <!-- end of existing entry edit -->
+    
+    <!-- Unsaved data validation Modal -->
+    <aura:if isTrue="{!v.displaySaveAlert}">
+        <c:sldsModal aura:id="saveAlertModal" closeAction="{!c.saveAlertClose}">
+            <aura:set attribute="header">Confirmation</aura:set>
+            <aura:set attribute="displayCloseImage" value="true">
+            </aura:set>
+            <aura:set attribute="content">
+                <p>Would you like to save changes?</p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Save" class="buttonCls" onclick="{!c.yesClickonAlert}"/>
+                <lightning:button variant="brand" label="Discard" class="buttonCls" onclick="{!c.discardonAlert}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    <!-- End of unsaved data validation modal -->
+    
+    <!-- Submit & Recall Action success/failer msg display -->
+    <aura:if isTrue="{!v.displaySuccessModal}">
+        <c:sldsModal aura:id="successModal">
+            <aura:set attribute="header">{!v.successTitle}</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <p>{!v.successMsg}</p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnSuccess}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    <!-- End of Submit &  Recall success/failer msg display-->
+    
+</aura:component>

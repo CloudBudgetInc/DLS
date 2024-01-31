@@ -1,0 +1,187 @@
+<!-- Created by Siva Prasanth on 2/25/2020 -->
+<!-- W-002989 - PVT Student Payment Receipts -->
+<apex:page showHeader="false"  renderAs="PDF" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false" controller="FundingListController" >
+    <html> 
+        <head>
+            
+            <style>
+                .alignCls{
+                float:right;
+                text-align: right;
+                }
+                .darkborder{
+                border-top: 4px solid #696969;
+                margin-top:-2px;
+                }
+                .borderGreyCls{
+                border-top: 30px solid rgb(229, 231, 233);
+                font-size: 19px !important;
+                }
+                .marginTopCls{
+                margin-top:-27px; 
+                }
+                .inlineLeftBlock{
+                float:left;
+                width:20%;
+                text-align:right;
+                font-family: "Microsoft Sans Serif",serif !important;
+                }
+                .inlineRightBlock{
+                float:left;
+                width:30%;
+                word-wrap:break-word;
+                font-weight:bold;
+                font-family: "Microsoft Sans Serif",serif !important;  
+                white-space: pre-wrap;
+                white-space:normal; 
+                }
+                .paddingCls{
+                padding:12px;
+                }
+                td,th{
+                border-right: 2px solid #D3D3D3;
+                }
+                td{
+                border-bottom: 2px solid #D3D3D3;
+                }
+                tr th{
+                border-bottom: 2px solid #D3D3D3;
+                font-family: "Microsoft Sans Serif",serif !important;
+                }
+                .borderLeftCls{
+                border-left: 2px solid #D3D3D3;
+                }
+                .totalCls{
+                float:right;
+                margin-right:2rem;
+                border-bottom: 2px solid #D3D3D3;
+                }
+                .totalRowCls{
+                border-bottom:white;
+                border-right:white;
+                }
+                .marginLeftCls{
+                margin-left: 95px;
+                }
+                @page{
+                size:landscape;
+                @bottom-right {
+                content: "Page " counter(page) " - " counter(pages);
+                font-family: 'Arial', 'Helvetica', sans-serif;
+                font-size:10px;
+                }
+                }
+            </style>
+        </head>
+        <div>
+            <div>
+                <div style="font-weight:bold;font-size:40px !important;text-align:center;">Payment Receipt</div><br/>
+            </div>
+            <div> 
+                <div class="darkborder"></div><br/>
+                <div style="float:left;width:40%;">
+                    <apex:image url="{!$Resource.DLS_Logo_v1}" width="40%" height="30%"/>
+                </div>
+            </div>
+            
+            <div class="alignCls">
+                <div>Diplomatic Language Services </div>
+                <div>1901 Fort Myer Drive, Suite 600</div>
+                <div>Arlington, VA 22209</div>
+            </div><br/><br/><br/><br/><br/>
+            
+            <div>                          
+                <div class="darkborder"></div>
+                <div class="borderGreyCls"><div class="marginTopCls">Payment Information</div> </div>
+                <div>
+                    <div class="paddingCls">
+                        <div class="inlineLeftBlock">Customer  Name : </div>
+                        <div class="inlineRightBlock">&nbsp;{!fundWholeInfo.fundingRecs.custName}</div>
+                        
+                        <div class="inlineLeftBlock">Transaction Date : </div>
+                        <div class="inlineRightBlock">&nbsp;{!fundWholeInfo.fundingRecs.transactionDt}</div>
+                    </div>
+                    <div class="paddingCls">
+                        <div class="inlineLeftBlock">Class Number : </div>
+                        <div class="inlineRightBlock">&nbsp;{!fundWholeInfo.fundingRecs.classNumber}</div>
+                        
+                        <div class="inlineLeftBlock">Method of Payment  :</div>
+                        <div class="inlineRightBlock">{!fundWholeInfo.fundingRecs.methodOfPayment}</div>
+                    </div>
+                </div>            
+                <div class="paddingCls">
+                    <div class="inlineLeftBlock">Transaction Notes :</div>
+                    <div class="inlineRightBlock">&nbsp;{!fundWholeInfo.fundingRecs.transactionNotes}</div>
+                    
+                    <div class="inlineLeftBlock">Card # : </div>
+                    <div class="inlineRightBlock">&nbsp;{!fundWholeInfo.fundingRecs.authorizeDigits}</div>
+                </div>
+            </div><br/>
+            
+            <div style="margin-top:{!((len(fundWholeInfo.fundingRecs.transactionNotes))/ 2)}px">
+                <div class="darkborder"></div>
+                <div class="borderGreyCls"><div class="marginTopCls">Payment Details</div> </div>
+                
+                <div> 
+                    <apex:outputPanel rendered="{!IF(AND(fundWholeInfo.fundingLTRecs != NULL, fundWholeInfo.fundingLTRecs.size > 0),true,false)}">
+                        <table width="100%" border="" cellspacing="0" cellpadding="6">
+                            <thead>
+                                <tr style="font-size:13px !important;">
+                                    <th style="word-wrap:break-word;" class="borderLeftCls">PROJECT TASK</th>
+                                    <th><center>QTY PAID</center></th>
+                                    <th><center>RATE PER QTY</center></th> 
+                                    <th><center>TOTAL AMOUNT PAID</center></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <apex:repeat value="{!fundWholeInfo.fundingLTRecs}" var="fundLT">
+                                    <tr>
+                                        <td class="borderLeftCls">{!fundLT.proTaskName}</td>
+                                        <td><center>{!fundLT.qtyPaid}</center></td>
+                                        <td><center>${!fundLT.ratePerQuantity}</center></td>
+                                        <td><center>${!fundLT.totalAmtPaid}</center></td>
+                                    </tr>
+                                </apex:repeat>
+                                <tr>
+                                    <td colSpan="2" class="totalRowCls"></td>
+                                    <td style="text-align:center;border-right:white;">Total:</td>
+                                    <td style="border-right:white;text-align:center;">${!fundWholeInfo.fundTotalAmtPaid}</td>
+                                </tr>
+                            </tbody>
+                        </table><br/>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!IF((fundWholeInfo.fundingLTRecs.size ==  null),true,false)}">
+                        <br/><br/><center>No records to display <br/><br/></center> 
+                    </apex:outputPanel><br/>
+                    
+                </div>
+            </div>
+            <div style="font-size:17px;">
+                
+                <div><b>PAYMENT POLICY</b>   
+                    <div>All program hours are prepaid and tracked. DLS requests payment when paid hours are not sufficient to complete the following</div>
+                    <div>week of scheduled classes. When a student's hourly balance reaches zero (0), the student will have five (5) business days to</div>
+                    <div>provide payment. After the five (5) days window, DLS will pause student's training until DLS receives payment.</div>
+                    <div></div>
+                </div><br/>
+                
+                <div ><b>STUDENT ABSENCES: 24‐HOUR/ONE BUSINESS DAY POLICY IN DLS ONLINE </b> 
+                    <div>If a student needs to be absent for an entire class, the student must notify the instructor and the Language Training Supervisor (LTS)</div>
+                    <div>24 hours (one business day, Friday in the case of a Monday class) in advance. An absence with more than 24 hours(one business day).</div>
+                    <div>advance notice is excused and the hours can be made up.</div><br/>
+                </div>
+                
+                 <div><b>LATE CANCELLATION </b> 
+                    <div>Absences, late arrival, or early dismissals without at least 24 hours (one business day) prior notification to DLS staff are considered </div>
+                    <div>scheduled (paid) hours and cannot be made up. Notice received over the weekend for Monday classes is a late cancellation.</div>
+                </div><br/>
+                
+                 <div><b>END OF TRAINING, EARLY TRAINING TERMINATION AND REFUND POLICY </b> 
+                    <div>If the student’s class end date changes, the student must inform the LTS at least 5 business days in advance. DLS will charge a penalty</div>
+                    <div>for every day short of five, up to a maximum of five days. Programs with remaining hours may be put on hold for a maximum of 2 years</div>
+                    <div>from the date of the last class.</div><br/>
+                </div>
+            </div>
+        </div>
+    </html>
+</apex:page>

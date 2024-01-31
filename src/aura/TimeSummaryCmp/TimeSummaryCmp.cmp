@@ -1,0 +1,178 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global" controller="TimeSummaryController">
+    <aura:attribute name="projectId" type="String" />
+    <aura:attribute name="weeklyTimeSummary" type="Object" default="{}"/>
+    <aura:attribute name="insSummary" type="Object" default="{}"/>
+    <aura:attribute name="showContent" type="Object" default="{}"/>
+    <aura:attribute name="isInstructor" type="Boolean" default="false" />
+    <aura:attribute name="periodId" type="String" default="" />
+    <aura:attribute name="showSpinner" type="Boolean" access="PUBLIC" default="false"/>
+    <aura:attribute name="timeCardId" type="String" access="PUBLIC" default=""/>
+    <aura:attribute name="insId" type="String" access="PUBLIC" default=""/>
+    <aura:attribute name="weekRange" type="String" access="PUBLIC" default=""/>
+    <aura:attribute name="instructor" type="String" access="PUBLIC" default=""/>
+    <aura:attribute name="daySummary" type="Object" access="PUBLIC" default="{}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.init}" />
+    
+    <!-- Add dependency to server side action service -->
+    <c:ApexService aura:id="server"/>    
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <div class="card-deck">
+        <div class="card">
+            <span class="card-body">
+                <h5 class="card-title">TIME SUMMARY</h5>
+                <div class="viewHistoryCls" align="right" style="margin-top: -3rem;">
+                    <lightning:button variant="brand" label="View History"  class="btn btn-primary" title="Timekeeping Activity" onclick="{!c.handleActivityClick}" />
+                </div>
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a  onclick="{!c.init}">All</a></li>
+                            <aura:if isTrue="{!or(v.weekRange, v.instructor)}">
+                                <li class="breadcrumb-item"><a onclick="{!c.getNextSummaryDetails}">{!v.weekRange}</a></li>
+                            </aura:if>
+                            <aura:if isTrue="{!v.instructor}">
+                                <li class="breadcrumb-item active" aria-current="page">{!v.instructor}</li>
+                            </aura:if>
+                        </ol>
+                    </nav>
+                    <!--lightning:breadcrumbs class="slds-p-top_small">
+                        <lightning:breadcrumb label="All" onclick="{!c.init}" />
+                        <aura:if isTrue="{!or(v.weekRange, v.instructor)}">
+                            <lightning:breadcrumb label="{!v.weekRange}" onclick="{!c.getNextSummaryDetails}"/>
+                        </aura:if>
+                        <aura:if isTrue="{!v.instructor}">
+                            <lightning:breadcrumb label="{!v.instructor}" href=""/>
+                        </aura:if>
+                    </lightning:breadcrumbs-->
+                </div>
+                <!-- Weekly Summary Table Start -->
+                <div>
+                    <aura:if isTrue="{!v.showContent.showWeekSummary}"> 
+                        <table class="table table-bordered table-striped responsive-card-table">
+                            <thead class="thead-light">
+                                <tr class="slds-text-title_caps">
+                                    <th class="">Time Card Period</th>
+                                    <th class="">Pending Hours</th>
+                                    <th class="">Approved Hours</th>                      
+                                </tr>
+                            </thead>
+                            <tbody>                        
+                                <aura:if isTrue="{!v.weeklyTimeSummary.WeeklySummary.length > 0}">
+                                    <aura:iteration items="{!v.weeklyTimeSummary.WeeklySummary}" var="time" indexVar="index">
+                                        <tr>
+                                            <td data-label="Time Card Period" class=""><a href="javascript:void(0);" onclick="{!c.getNextSummaryDetails}" name="{!index}">{!time.dateRange}</a></td>
+                                            <td data-label="Pending Hours" class="">{!time.pendingHours}</td>
+                                            <td data-label="Approved Hours" class="">{!time.approvedHours}</td>                                    
+                                        </tr>
+                                    </aura:iteration>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td>{!v.weeklyTimeSummary.totalPendingTime}</td>
+                                        <td>{!v.weeklyTimeSummary.totalApprovedTime}</td>
+                                    </tr>
+                                    <aura:set attribute="else">
+                                        <tr>
+                                            <td colspan="3" class="slds-text-align_center">No records to display</td>
+                                        </tr>
+                                    </aura:set>
+                                </aura:if>
+                            </tbody>
+                        </table>
+                    </aura:if>
+                    <!-- Weekly Summary Table End -->
+                    
+                    <!-- Instructor Summary Table Start -->
+                    <aura:if isTrue="{!v.showContent.showInsSummary}"> 
+                        <table class="table table-bordered table-striped responsive-card-table">
+                            <thead class="thead-light">
+                                <tr class="slds-text-title_caps">
+                                    <th class="">Instructor	</th>
+                                    <th class="">Pending Hours</th>
+                                    <th class="">Approved Hours</th>                      
+                                </tr>
+                            </thead>
+                            <tbody>                        
+                                <aura:if isTrue="{!v.insSummary.InstructorSummary.length > 0 }">
+                                    <aura:iteration items="{!v.insSummary.InstructorSummary}" var="ins" indexVar="index">
+                                        <tr>
+                                            <td data-label="Instructor" class=""><a href="javascript:void(0);" onclick="{!c.getDaySummaryData}" name="{!index}">{!ins.insName}</a></td>
+                                            <td data-label="Pending Hours" class="">{!ins.pendingHours}</td>
+                                            <td data-label="Approved Hours" class="">{!ins.approvedHours}</td>                                    
+                                        </tr>
+                                    </aura:iteration>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td>{!v.insSummary.totalPendingHours}</td>
+                                        <td>{!v.insSummary.totalApprovedHours}</td>
+                                    </tr>
+                                    <aura:set attribute="else">
+                                        <tr>
+                                            <td colspan="3" class="slds-text-align_center">No records to display</td>
+                                        </tr>
+                                    </aura:set>
+                                </aura:if>
+                            </tbody>
+                        </table>
+                    </aura:if>
+                    <!-- Instructor Summary Table End -->
+                    
+                    <!-- Day Summary Table Start -->                
+                    <aura:if isTrue="{!v.showContent.showDaySummary}"> 
+                        <table class="table table-bordered table-striped responsive-card-table">
+                            <thead class="thead-light">
+                                <tr class="slds-text-title_caps">
+                                    <th class="slds-truncate">Charge Code</th>
+                                    <aura:iteration items="{!v.daySummary.weekRangeValues}" var="week" indexVar="index">
+                                        <th class="">
+                                            <div>{!week.dateValue}</div>
+                                            <div class="slds-text-align_center">{!week.dayVal}</div>
+                                        </th>
+                                    </aura:iteration>
+                                    <th class="">Total Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody>                        
+                                <aura:if isTrue="{!v.daySummary.daySummary.length > 0}">
+                                    <aura:iteration items="{!v.daySummary.daySummary}" var="daySum">
+                                        <tr>
+                                            <td data-label="Charge Code" class="slds-hyphenate"><div style="white-space: pre-wrap">{!daySum.chargeCode}</div></td>
+                                            <aura:iteration items="{!daySum.dayRecords}" var="day">
+                                                <td data-label="Hours" class="slds-text-align_center">{!day.hours}</td>
+                                            </aura:iteration>
+                                            <td data-label="Total Hours" class="slds-text-align_center">{!daySum.totalHours}</td> 
+                                        </tr>
+                                    </aura:iteration>
+                                    <tr>
+                                        <td data-label="Total Hours">Total Hours</td>                                    
+                                        <td class="slds-text-align_center">{!v.daySummary.columnTotal.monTotal}</td>
+                                        <td class="slds-text-align_center">{!v.daySummary.columnTotal.tueTotal}</td>
+                                        <td class="slds-text-align_center">{!v.daySummary.columnTotal.wedTotal}</td>
+                                        <td class="slds-text-align_center">{!v.daySummary.columnTotal.thuTotal}</td>
+                                        <td class="slds-text-align_center">{!v.daySummary.columnTotal.friTotal}</td>
+                                        <td class="slds-text-align_center">{!v.daySummary.columnTotal.satTotal}</td>
+                                        <td class="slds-text-align_center">{!v.daySummary.columnTotal.sunTotal}</td>
+                                        <td class="slds-text-align_center">{!v.daySummary.overallSum}</td>                                    
+                                    </tr>
+                                    <aura:set attribute="else">
+                                        <tr>
+                                            <td colspan="9" class="slds-text-align_center">No records to display</td>
+                                        </tr>
+                                    </aura:set>
+                                </aura:if>
+                            </tbody>
+                        </table>
+                    </aura:if>
+                    <!-- Day Summary Table End -->
+                </div>
+            </span>
+        </div>
+    </div>
+    <div>
+    </div>
+</aura:component>

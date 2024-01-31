@@ -1,0 +1,87 @@
+<aura:component controller="AssessmentReport_Ctrl" implements="forceCommunity:availableForAllPageTypes" access="global" >
+    <aura:attribute name="tableColumns" type="List" access="PUBLIC"/>
+    <aura:attribute name="tableConfig" type="Map" access="PUBLIC"/>
+    <aura:attribute name="assessments" type="List" access="PUBLIC"/>
+    <aura:attribute name="communityType" type="String" access="PRIVATE"/>
+    <aura:attribute name="filterPicklistValues" type="Map" access="PUBLIC"/>   
+    <aura:attribute name="selectedFilterValues" type="Map" access="PUBLIC" default="{'status': 'Scheduled', 'reportType':'All', 'project':'All'}"/>
+    <aura:attribute name="showSpinner" type = "Boolean" access="Private" default="false"/>
+    <aura:attribute name="displayDevice" type="string" access="PUBLIC" default="false"/>
+    <aura:attribute name="projectId" type="string" access="PUBLIC"/>
+    <aura:attribute name="modal" type="Object"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="dtCellClick" event="ldt:clickedDtCell" action="{!c.tabActionClicked}"/>
+    
+    <c:ApexService aura:id="server"/>
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.projectId == ''}">
+        <br/> 
+        <center><h5 class="card-title" style="font-size:2rem;">My Training Reports</h5></center><br/>
+    </aura:if>
+    <div class="cardPadding">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">
+                    
+                    <lightning:layout>
+                        <lightning:layoutItem padding="around-small" size = "{!v.displayDevice == 'Mobile' ? '12': '3'}">  
+                            <aura:if isTrue="{!v.communityType != 'client'}">                                
+                                
+                                <lightning:select label="Type of Reports" value="{!v.selectedFilterValues.reportType}" onchange="{!c.handleFilterChange}">                                
+                                    <aura:iteration items="{!v.filterPicklistValues.typeOfReport}" var="typeOfReport">
+                                        <option value="{!typeOfReport}" selected="{!(v.selectedFilterValues.reportType == typeOfReport)}">{!typeOfReport}</option>                                            
+                                    </aura:iteration>
+                                </lightning:select>                               
+                                
+                                <aura:set attribute="else">
+                                    <lightning:select label="Class Number" value="{!v.selectedFilterValues.project}" onchange="{!c.handleFilterChange}">                                
+                                        <aura:iteration items="{!v.filterPicklistValues.project}" var="pro">
+                                            <option value="{!pro.value}" selected="{!(v.selectedFilterValues.project == pro.value)}">{!pro.label}</option>                                            
+                                        </aura:iteration>
+                                    </lightning:select> 
+                                </aura:set>                            
+                            </aura:if>
+                        </lightning:layoutItem>
+                        <aura:if isTrue="{!or(v.selectedFilterValues.reportType == 'Student Progress Reports',or(v.selectedFilterValues.reportType == 'Test Reports',or(v.selectedFilterValues.reportType == 'Student Self-Assessment',or( v.selectedFilterValues.reportType == 'Assessment by Instructor', v.selectedFilterValues.reportType == 'All'))))}">
+                            <lightning:layoutItem padding="around-small" size = "{!v.displayDevice == 'Mobile' ? '12': '3'}">
+                                <lightning:select label="Status" value="{!v.selectedFilterValues.status}" onchange="{!c.handleFilterChange}">                                
+                                    <aura:iteration items="{!v.filterPicklistValues.status}" var="status">
+                                        <option value="{!status.value}" selected="{!(v.selectedFilterValues.status == status.value)}">{!status.label}</option>                                                
+                                    </aura:iteration>
+                                </lightning:select>                                
+                            </lightning:layoutItem>
+                        </aura:if>
+                    </lightning:layout>
+                    
+                    <!-- Table For Instructor Assessment List -->
+                    <aura:if isTrue="{!v.assessments.length > 0}">
+                        <div class="ldtTableCls">
+                            <ldt:datatableDev aura:id="assessmentTable"
+                                              dataRows="{!v.assessments}" header="{!v.tableColumns}"
+                                              config="{!v.tableConfig}"/>
+                        </div>
+                        <aura:set attribute="else">
+                            <br/><center><h5 style="font-size :0.875rem;">No records to display</h5><br/></center>
+                        </aura:set>
+                    </aura:if>
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <c:sldsModal aura:id="msgModal" displayCloseImage="true" showFooter="false" closeAction="{!c.closeModal}" modelWidth="50%">
+        <aura:set attribute="header">
+            <center><h5 class="card-title">{!v.modal.header}</h5></center>
+        </aura:set>
+        <aura:set attribute="content">
+            <center>{!v.modal.message}</center>
+        </aura:set>        
+    </c:sldsModal>
+    
+</aura:component>

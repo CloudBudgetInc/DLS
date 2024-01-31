@@ -1,0 +1,669 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="LibrarySearchController">
+    
+    <aura:attribute name="recordId" type="String" default="" access="Public"/>
+    <aura:attribute name="userType" type="String" default="" access="Public"/>
+    <aura:attribute name="MaterialDetials" type="Map" default="{}"/>
+    <aura:attribute name="showFavouriteIcon" type="Boolean" default="false"/>
+    <aura:attribute name="showUnFavouriteIcon" type="Boolean" default="false"/>
+    <aura:attribute name="disableDescriptionEdit" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="showInventoryInfo" type="Boolean" default="false"/>
+    <aura:attribute name="displayDevice" type="String"/>
+    
+    
+    <!-- Review Section Attributes -->
+    <aura:attribute name="displayRatingInfo" type="Boolean" default="true"/>
+    <aura:attribute name="displayNewRatingSection" type="Boolean" default="false"/>
+    <aura:attribute name="displayUpdateRatingSection" type="Boolean" default="false"/>
+    <aura:attribute name="ratingObj" type="Map" default="{}"/>
+    
+    <!-- For New Loan & Order-->
+    <aura:attribute name="isNewLoan" type="Boolean" default="false"/>
+    <aura:attribute name="isNewRequest" type="Boolean" default="false"/>
+    <aura:attribute name="displayEdit" type="Boolean" default="false"/>
+    <aura:attribute name="materialRequestRecord" type="Map" default="{}"/>
+    
+    <!--For parent cmp usage -->
+    <aura:attribute name="displaySearchResult" type="Boolean" default="false" access="Public"/>
+    
+    <!--For Community Home Page -->
+    <aura:attribute name="displayCommunityHomeDetail" type="Boolean" default="false" access="Public"/>
+    
+    <!-- For Favouite Section -->
+    <aura:attribute name="displayfavoriteSection" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="fromType" type="String" access="public"/>
+    
+    <!-- For Top Rated -->
+    <aura:attribute name="displayTopRatedSection" type="Boolean" default="false" access="public"/>   
+    <aura:attribute name="tabName" type="String" default="Order"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:handler name="change" value="{!v.isNewRequest}" action="{!c.isNewRequestChanged}" />
+    <aura:handler name="change" value="{!v.isNewLoan}" action="{!c.isNewLoanChanged}" />
+    
+    <aura:handler name="onSaveSuccess" event="force:recordSaveSuccess" action="{!c.handleSaveSuccess}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" variant="brand" alternativeText="Loading..." size="medium" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div style="padding: 10px;">
+        <div>
+            <span class="backCls">
+                <div style="float: left;">
+                    <div class="slds-grid">
+                        <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.backToHomePage}" ></i></span>
+                        <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                    </div>
+                </div>
+            </span>
+            <aura:if isTrue="{!v.displayDevice  == 'Mobile'}">
+                <br/><br/>
+            </aura:if>
+            <center><h5 class="card-title" style="font-size:2rem;text-transform: uppercase !important;">Material Detail</h5></center>
+        </div>
+        
+        <div class="card-deck">
+            <div class="card">
+                <div class="card-body">
+                    <lightning:layout multipleRows="true">
+                        <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                            <lightning:layoutItem  size="12">
+                                <span style="float: right;">
+                                    <aura:if isTrue="{!v.showFavouriteIcon}">
+                                        <span ><span style="font-size: 1.25rem;">Favorite &nbsp;</span><i class="fas fa-heart heart bookCls" onclick="{!c.removeFavourite}" style="font-size: 1.5rem;"></i></span>
+                                        <!--img src="{!$Resource.Favourite_Icon}" class="favouriteCls" onclick="{!c.removeFavourite}"/-->
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.showUnFavouriteIcon}">
+                                        <span style="font-size: 1.25rem;">Favorite &nbsp; <i class="fas fa-heart bookCls" onclick="{!c.markAsFavourite}"></i></span>
+                                        <!--img src="{!$Resource.UnFavourite_Icon}" class="favouriteCls" onclick="{!c.markAsFavourite}"/-->
+                                    </aura:if>
+                                </span>
+                            </lightning:layoutItem>
+                        </aura:if>
+                        <lightning:layoutItem  size="12" largeDeviceSize="2" mediumDeviceSize="2" smallDeviceSize="12" padding="around-small">
+                            <div>
+                                <aura:if isTrue="{!v.MaterialDetials.materialDetail.Book_Cover__c != null}">
+                                    <lightning:formattedRichText value="{!v.MaterialDetials.materialDetail.Book_Cover__c}" class="imageClass"></lightning:formattedRichText>
+                                    <aura:set attribute="else">
+                                        <img src="{!$Resource.Cover_Not_Found_Image}" class="imageCls"></img><br/><br/><br/>
+                                    </aura:set>
+                                </aura:if>
+                            </div>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem  size="12" largeDeviceSize="10" mediumDeviceSize="10" smallDeviceSize="12">
+                            <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                                <lightning:layout multipleRows="true">
+                                    <lightning:layoutItem  size="12" largeDeviceSize="10" mediumDeviceSize="10" smallDeviceSize="12" padding="around-small">
+                                        <span style="font-weight: bold;font-size: 1.25em;">
+                                            {!v.MaterialDetials.materialDetail.Name}
+                                        </span>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                                
+                                <div class="containerTable table-responsive">
+                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                        <thead class="thead-light">
+                                            <tr class="slds-line-height_reset">
+                                                <th></th> 
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="slds-hint-parent">
+                                                <td class="wrap" data-label="Authors">{!v.MaterialDetials.materialDetail.Author__c}</td>
+                                                <td class="wrap" data-label="ISBN #">{!v.MaterialDetials.materialDetail.ISBN__c}</td>
+                                                <td class="wrap" data-label="Book Language">{!v.MaterialDetials.materialDetail.Google_Books_Language__r.Name}</td>
+                                                <td class="wrap" data-label="Total Times Ordered">{!v.MaterialDetials.materialDetail.Order_Request_Count__c}</td>
+                                                <td class="wrap" data-label="Publisher">{!v.MaterialDetials.materialDetail.Publisher__c}</td>
+                                                <td class="wrap" data-label="ILR Level">{!v.MaterialDetials.materialDetail.ILR_Level__c}</td>
+                                                <td class="wrap" data-label="Avg Rating">
+                                                    <aura:if isTrue="{!v.MaterialDetials.materialDetail}">
+                                                        <c:RatingCmp value="{!v.MaterialDetials.materialDetail.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                                    </aura:if>
+                                                    <span style="font-size: medium;"><ui:outputNumber value="{!v.MaterialDetials.materialDetail.Average_Rating__c}" format=".0"/></span>
+                                                </td>
+                                                <td class="wrap" data-label="Total Times Loaned">{!v.MaterialDetials.materialDetail.Loan_Request_Count__c}</td>
+                                                <td class="wrap" data-label="Published">{!v.MaterialDetials.materialDetail.Published_Date__c}</td>
+                                                <td class="wrap" data-label="Foreign Language">{!v.MaterialDetials.materialDetail.Language_LU__r.Name}</td>
+                                                <td class="wrap" data-label="Edition">{!v.MaterialDetials.materialDetail.Edition__c}</td>
+                                                <td class="wrap" data-label="Description">{!v.MaterialDetials.materialDetail.Description__c}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <aura:set attribute="else">
+                                    <lightning:layout multipleRows="true">
+                                        <lightning:layoutItem  size="12" largeDeviceSize="10" mediumDeviceSize="10" smallDeviceSize="12" padding="around-small">
+                                            <span style="font-weight: bold;font-size: 1.25em;">
+                                                {!v.MaterialDetials.materialDetail.Name}
+                                            </span>
+                                            <span style="float: right;margin-right: -2rem;margin-top: -2rem;">
+                                                <aura:if isTrue="{!v.showFavouriteIcon}">
+                                                    <span ><span style="font-size: 1.25rem;">Favorite &nbsp;</span><i class="fas fa-heart heart bookCls" onclick="{!c.removeFavourite}" style="font-size: 1.5rem;"></i></span>
+                                                    <!--img src="{!$Resource.Favourite_Icon}" class="favouriteCls" onclick="{!c.removeFavourite}"/-->
+                                                </aura:if>
+                                                <aura:if isTrue="{!v.showUnFavouriteIcon}">
+                                                    <span style="font-size: 1.5rem;">Favorite &nbsp; <i class="fas fa-heart bookCls" onclick="{!c.markAsFavourite}"></i></span>
+                                                    <!--img src="{!$Resource.UnFavourite_Icon}" class="favouriteCls" onclick="{!c.markAsFavourite}"/-->
+                                                </aura:if>
+                                            </span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Authors</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Author__c}</span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">ISBN #</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.ISBN__c}</span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Book Language</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Google_Books_Language__r.Name}</span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Total Times Ordered</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Order_Request_Count__c}</span>
+                                        </lightning:layoutItem>
+                                        
+                                        <!--2nd Row -->
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Publisher</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Publisher__c}</span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">ILR Level</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.ILR_Level__c}</span>
+                                        </lightning:layoutItem>
+                                        
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Avg Rating</label><br/>
+                                            <lightning:layout multipleRows="true">
+                                                <lightning:layoutItem size="6">
+                                                    <aura:if isTrue="{!v.MaterialDetials.materialDetail}">
+                                                        <c:RatingCmp value="{!v.MaterialDetials.materialDetail.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                                    </aura:if>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="3">
+                                                    <span style="font-size: medium;"><ui:outputNumber value="{!v.MaterialDetials.materialDetail.Average_Rating__c}" format=".0"/></span>
+                                                </lightning:layoutItem>
+                                            </lightning:layout>
+                                            
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Total Times Loaned</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Loan_Request_Count__c}</span>
+                                        </lightning:layoutItem>                            
+                                        
+                                        <!--3rd row -->
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Published Date</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Published_Date__c}</span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Foreign Language</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Language_LU__r.Name}</span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Edition</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Edition__c}</span>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3" padding="around-small">
+                                            <label class="slds-form-element__label">Description</label><br/>
+                                            <span class="contentCls">{!v.MaterialDetials.materialDetail.Description__c}</span>
+                                        </lightning:layoutItem>
+                                        
+                                        <!-- LTS description section -->
+                                        <aura:if isTrue="{!v.userType == 'Internal'}">
+                                            <lightning:layoutItem size="5" padding="around-small">
+                                                <lightning:textarea label="LTS Description" value="{!v.MaterialDetials.materialDetail.LTS_Description__c}" disabled="{!v.disableDescriptionEdit}"/>
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="3" padding="around-small">
+                                                <aura:if isTrue="{!not(v.disableDescriptionEdit)}">
+                                                    <lightning:button label="Save" variant="brand" class="btnClass" onclick="{!c.saveLTSDescription}"/>
+                                                </aura:if>
+                                            </lightning:layoutItem>
+                                        </aura:if>
+                                    </lightning:layout>
+                                </aura:set>
+                            </aura:if>
+                        </lightning:layoutItem>
+                        
+                    </lightning:layout>
+                </div>
+            </div>
+        </div>
+        
+        <!--Inventory Information -->
+        <div class="card-deck" style="margin-top: 2rem;">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Inventory</h5>
+                    
+                    <div class="containerTable table-responsive">
+                        <aura:if isTrue="{!v.userType == 'Internal'}">
+                            <aura:if isTrue="{!v.showInventoryInfo}">
+                                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col" class="wrap">Location</th>    
+                                            <th scope="col" class="wrap">Qty in Library</th>    
+                                            <th scope="col" class="wrap">Qty in Stock</th> 
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Location">Elkridge</td>
+                                            <td class="wrap" data-label="Qty in Library">{!v.MaterialDetials.materialDetail.Qty_Available_ELK_Library__c}</td>
+                                            <td class="wrap" data-label="Qty in Stock">{!v.MaterialDetials.materialDetail.Qty_Available_ELK_Stock__c}</td>
+                                        </tr>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Location">Herndon</td>
+                                            <td class="wrap" data-label="Qty in Library">{!v.MaterialDetials.materialDetail.Qty_Available_HRN_Library__c}</td>
+                                            <td class="wrap" data-label="Qty in Stock">{!v.MaterialDetials.materialDetail.Qty_Available_HRN_Stock__c}</td>
+                                        </tr>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Location">Arlington</td>
+                                            <td class="wrap" data-label="Qty in Library">{!v.MaterialDetials.materialDetail.Qty_Available_ARL_Library__c}</td>
+                                            <td class="wrap" data-label="Qty in Stock">{!v.MaterialDetials.materialDetail.Qty_Available_ARL_Stock__c}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </aura:if>
+                        </aura:if>
+                        
+                        <aura:if isTrue="{!v.userType != 'Internal'}">
+                            <aura:if isTrue="{!v.showInventoryInfo}">
+                                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col" class="wrap">Location</th> 
+                                            <th scope="col" class="wrap">Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Location">Elkridge Library</td>
+                                            <td class="wrap" data-label="Quantity">{!v.MaterialDetials.materialDetail.Qty_Available_ELK_Library__c}</td>
+                                        </tr>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Location">Herndon Library</td>
+                                            <td class="wrap" data-label="Quantity">{!v.MaterialDetials.materialDetail.Qty_Available_HRN_Library__c}</td>
+                                        </tr>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Location">Arlington Library</td>
+                                            <td class="wrap" data-label="Quantity">{!v.MaterialDetials.materialDetail.Qty_Available_ARL_Library__c}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </aura:if>
+                        </aura:if>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        
+        <!--lightning:card title="Related Digital Contents">
+            <p class="slds-p-horizontal_small">
+                <center>No Record To Display</center>
+            </p>
+        </lightning:card-->        
+        
+        <aura:if isTrue="{!v.displayRatingInfo}">
+            <div class="card-deck" style="margin-top: 2rem;">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            Reviews
+                            <aura:if isTrue="{!v.userType != 'Internal'}">
+                                <lightning:helptext content="Reviews will be visible to all DLS users including Staff, Instructors, and Students."/>
+                                <!--lightning:icon iconName="utility:info" alternativeText="" size="small" title="Reviews will be visible to all DLS users including Staff, Instructors, and Students"/-->
+                            </aura:if>
+                        </h5>
+                        <div style="float: right;margin-top: -3rem;margin-bottom: 1rem;">
+                            <aura:if isTrue="{!v.userType != 'Internal'}">
+                                <aura:if isTrue="{!v.MaterialDetials.displayNewReviewBtn}">
+                                    <lightning:button label="Add Review" class="btn btn-primary" onclick="{!c.addReviewBtnClick}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!not(v.MaterialDetials.displayNewReviewBtn)}">
+                                    <lightning:button label="Edit Review" class="btn btn-primary" onclick="{!c.updateReviewBtnClick}"/>
+                                </aura:if>
+                            </aura:if>
+                        </div>
+                        
+                        <aura:if isTrue="{!v.MaterialDetials.overAllRatings.length > 0}">
+                            <div class="containerTable table-responsive">
+                                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col" class="wrap">Commented By</th> 
+                                            <th scope="col" class="wrap">Comments</th>
+                                            <th scope="col" class="wrap">Rating</th> 
+                                            <th scope="col" class="wrap">Date</th>
+                                            <aura:if isTrue="{!v.userType == 'Internal'}">
+                                                <th scope="col">Action</th>
+                                            </aura:if>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <aura:iteration items="{!v.MaterialDetials.overAllRatings}" var="rating" indexVar="index">
+                                            <tr class="slds-hint-parent">
+                                                <td class="wrap" data-label="Commented By">{!rating.Contact__r.Name}</td>
+                                                <td class="wrap" data-label="Comments">{!rating.Review__c}</td>
+                                                <td data-label="Rating">
+                                                    <c:RatingCmp value="{!rating.Ratings__c}" readOnly="true"></c:RatingCmp>
+                                                </td>
+                                                <td data-label="Date">
+                                                    <ui:outputDate aura:id="oDate" value="{!rating.Date__c}" format="MM/DD/YYYY"/>
+                                                </td>
+                                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                                    <td data-label="Action">
+                                                        <aura:if isTrue="{!not(rating.Hide_to_Community__c)}">
+                                                            <a onclick="{!c.updateRatingByInternal}" data-index="{!index}" data-type="include">Include</a>
+                                                            
+                                                            <aura:set attribute="else">
+                                                                <a onclick="{!c.updateRatingByInternal}" data-index="{!index}" data-type="exclude">Exclude</a>
+                                                            </aura:set>
+                                                        </aura:if>
+                                                    </td>
+                                                </aura:if>
+                                            </tr>
+                                        </aura:iteration>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </aura:if>
+                        <aura:if isTrue="{!v.MaterialDetials.overAllRatings.length == 0}">
+                            <center><span>No Records To Display</span></center>
+                        </aura:if>
+                        
+                    </div>
+                </div>
+            </div>
+        </aura:if>
+        
+        <!-- Section for adding new reviews -->
+        <aura:if isTrue="{!v.displayNewRatingSection}">
+            
+            <div class="card-deck" style="margin-top: 2rem;">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            Reviews
+                            <aura:if isTrue="{!v.userType != 'Internal'}">
+                                <lightning:helptext content="Reviews will be visible to all DLS users including Staff, Instructors, and Students."/>
+                            </aura:if>
+                        </h5>
+                        <div style="{!v.displayDevice == 'Mobile'? 'float: right;margin-bottom: 1rem;' : 'float: right;margin-top: -3rem;margin-bottom: 1rem;'}">
+                            <lightning:button label="Save" class="btn btn-primary" onclick="{!c.saveNewRating}"/>
+                            <lightning:button label="Cancel" class="btn btn-primary" onclick="{!c.cancelNewRating}"/>
+                        </div>
+                        <aura:if isTrue="{!v.displayNewRatingSection}">
+                            
+                            <div class="containerTable table-responsive">
+                                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col">Comments</th>
+                                            <th scope="col">Rating</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent">
+                                            <td data-label="Comments">
+                                                <lightning:textarea label="" value="{!v.ratingObj.Review__c}"/>
+                                            </td>
+                                            <td data-label="Rating">
+                                                <c:RatingCmp value="{!v.ratingObj.Ratings__c}" readOnly="false"></c:RatingCmp>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </aura:if>
+                    </div>
+                </div>
+            </div>
+            
+        </aura:if>
+        
+        <!-- Section for Update Review -->
+        <aura:if isTrue="{!v.displayUpdateRatingSection}">
+            <div class="card-deck" style="margin-top: 2rem;">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            Update Review
+                            <aura:if isTrue="{!v.userType != 'Internal'}">
+                                <lightning:helptext content="Reviews will be visible to all DLS users including Staff, Instructors, and Students."/>
+                            </aura:if>
+                        </h5>
+                        <div style="{!v.displayDevice == 'Mobile'? 'float: right;margin-bottom: 1rem;' : 'float: right;margin-top: -3rem;margin-bottom: 1rem;'}">
+                            <lightning:button label="Save" class="btn btn-primary" onclick="{!c.updateRating}"/>
+                            <lightning:button label="Cancel" class="btn btn-primary" onclick="{!c.cancelUpdateRating}"/>
+                        </div>
+                        <aura:if isTrue="{!v.displayUpdateRatingSection}">
+                            <div class="containerTable table-responsive">
+                                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col">Comments</th>
+                                            <th scope="col">Rating</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent">
+                                            <td data-label="Comments">
+                                                <lightning:textarea label="" value="{!v.ratingObj.Review__c}"/>
+                                            </td>
+                                            <td data-label="Rating">
+                                                <c:RatingCmp value="{!v.ratingObj.Ratings__c}" readOnly="false"></c:RatingCmp>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </aura:if>
+                    </div>
+                </div>
+            </div>
+        </aura:if>
+        
+        <div class="card-deck" style="margin-top: 2rem;">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">My Materials Requests</h5>
+                    <aura:if isTrue="{!v.userType == 'Internal'}">
+                        <div style="float: right;">
+                            <lightning:button label="New Order" class="btn btn-primary" onclick="{!c.newOrderBtnClick}"/>
+                            <lightning:button label="New Loan" class="btn btn-primary" onclick="{!c.newLoanBtnClick}"/>
+                        </div>
+                        <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                            <br/><br/>
+                        </aura:if>
+                    </aura:if>
+                    
+                    <ul class="nav nav-tabs"  role="tablist">
+                        <br/>
+                        <li class="nav-item">
+                            <a class="{!v.tabName == 'Order' ? 'nav-link active' : 'nav-link'}"  data-toggle="tab" name="Order" onclick="{!c.tabClick}" role="tab">Order</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="{!v.tabName == 'Loan' ? 'nav-link active' : 'nav-link'}"  data-toggle="tab"  name="Loan" onclick="{!c.tabClick}" role="tab" >Loan</a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" style="padding-top:1rem;">
+                        <!-- Order Tab -->
+                        <aura:if isTrue="{!v.tabName == 'Order'}">
+                            <aura:if isTrue="{!v.MaterialDetials.orderMaterialRequests.length > 0}">
+                                <div class="containerTable table-responsive">
+                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                        <thead class="thead-light">
+                                            <tr class="slds-line-height_reset">
+                                                <th scope="col" class="wrap">Record Name</th>
+                                                <th scope="col" class="wrap">DLS Class #</th>
+                                                <th scope="col" class="wrap">Requested Date</th>
+                                                <th scope="col" class="wrap">Due Date</th>
+                                                <th scope="col" class="wrap">Ordered Date</th>
+                                                <th scope="col" class="wrap">Delivered Date</th>
+                                                <th scope="col" class="wrap">Status</th>
+                                                <th scope="col" class="wrap">Project End Date</th>
+                                                <th scope="col" class="wrap">Delivery Location</th>
+                                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                                    <th scope="col" class="wrap">Action</th>
+                                                </aura:if>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <aura:iteration items="{!v.MaterialDetials.orderMaterialRequests}" var="order" indexVar="index">
+                                                <tr class="slds-hint-parent">
+                                                    <td data-label="Record Name" class="wrap">
+                                                        {!order.Name}
+                                                    </td>
+                                                    <td data-label="DLS Class #" class="wrap">
+                                                        {!order.Project__r.DLS_Class__c}
+                                                    </td>
+                                                    <td data-label="Requested Date" class="wrap">
+                                                        <ui:outputDate value="{!order.CreatedDate}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Due Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Due_Date__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Ordered Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Date_Ordered__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Delivered Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Date_Delivered__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Status" class="wrap">
+                                                        {!order.Request_Status__c}
+                                                    </td>
+                                                    <td data-label="Project End Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Project__r.End_Date__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Delivery Location" class="wrap">
+                                                        {!order.Delivery_Location__c}
+                                                    </td>
+                                                    <aura:if isTrue="{!v.userType == 'Internal'}">
+                                                        <td data-label="Action" class="wrap">
+                                                            <i style="font-size: 1.5rem;" class="far fa-edit" data-name="{!index+'-Order'}" onclick="{!c.openEditRecord}"></i>
+                                                        </td>
+                                                    </aura:if>
+                                                </tr>
+                                            </aura:iteration>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <aura:set attribute="else">
+                                    <center><span>No Records To Display</span></center>
+                                </aura:set>
+                            </aura:if>
+                        </aura:if>
+                        
+                        <!--Loan Tab -->
+                        <aura:if isTrue="{!v.tabName == 'Loan'}">
+                            <aura:if isTrue="{!v.MaterialDetials.loanMaterialRequests.length > 0}">
+                                <div class="containerTable table-responsive">
+                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                        <thead class="thead-light">
+                                            <tr class="slds-line-height_reset">
+                                                <th scope="col" class="wrap">Record Name</th>
+                                                <th scope="col" class="wrap">DLS Class #</th>
+                                                <th scope="col" class="wrap">Contact Name</th>
+                                                <th scope="col" class="wrap">Date Loaned Out</th>
+                                                <th scope="col" class="wrap">Date Returned</th>
+                                                <th scope="col" class="wrap">Status</th>
+                                                <th scope="col" class="wrap">Project End Date</th>
+                                                <th scope="col" class="wrap">Library Location</th>
+                                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                                    <th scope="col" class="wrap">Action</th>
+                                                </aura:if>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <aura:iteration items="{!v.MaterialDetials.loanMaterialRequests}" var="loan" indexVar="index">
+                                                <tr class="slds-hint-parent">
+                                                    <td data-label="Record Name" class="wrap">
+                                                        {!loan.Name}
+                                                    </td>
+                                                    <td data-label="DLS Class #" class="wrap">
+                                                        {!loan.Project__r.DLS_Class__c}
+                                                    </td>
+                                                    <td data-label="Contact Name" class="wrap">
+                                                        {!loan.Contact__r.Name}
+                                                    </td>
+                                                    <td data-label="Date Loaned Out" class="wrap">
+                                                        <ui:outputDate value="{!loan.Date_Loaned_Out__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Date Returned" class="wrap">
+                                                        <ui:outputDate value="{!loan.Date_Returned__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Status" class="wrap">
+                                                        {!loan.Request_Status__c}
+                                                    </td>
+                                                    <td data-label="Project End Date" class="wrap">
+                                                        <ui:outputDate value="{!loan.Project__r.End_Date__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Library Location" class="wrap">
+                                                        {!loan.Location__r.Name}
+                                                    </td>
+                                                    <aura:if isTrue="{!v.userType == 'Internal'}">
+                                                        <td data-label="Action" class="wrap">
+                                                            <i style="font-size: 1.5rem;" class="far fa-edit" data-name="{!index+'-Loan'}" onclick="{!c.openEditRecord}"></i>
+                                                        </td>
+                                                    </aura:if>
+                                                </tr>
+                                            </aura:iteration>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <aura:set attribute="else">
+                                    <center><span>No Records To Display</span></center>
+                                </aura:set>
+                            </aura:if>
+                        </aura:if> 
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <aura:if isTrue="{!v.displayEdit}">
+        <c:sldsModal aura:id="editModal" header="{!v.materialRequestRecord.Name}" displayCloseImage="false" modelWidth="80%">
+            <aura:set attribute="content">
+                <force:recordEdit aura:id="edit" recordId="{!v.materialRequestRecord.Id}" />
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Save" onclick="{!c.saveEditedRecord}"/>
+                <lightning:button variant="brand" label="Cancel" onclick="{!c.closeEdit}"/>
+            </aura:set>       
+        </c:sldsModal>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.isNewLoan}">
+        <c:NewLoanCmp isNewLoan="{!v.isNewLoan}" materialId="{!v.recordId}"/>
+    </aura:if>
+    <aura:if isTrue="{!v.isNewRequest}">
+        <c:NewOrderCmp  isNewRequest="{!v.isNewRequest}" materialId="{!v.recordId}"/>
+    </aura:if>
+    
+</aura:component>

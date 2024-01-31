@@ -1,0 +1,146 @@
+<aura:component controller="ListViewController" implements="forceCommunity:availableForAllPageTypes,lightning:isUrlAddressable" access="global">
+    <aura:attribute name="scheduleRec" type="Map" access="PUBLIC"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.init}" />
+    
+    <br/>
+    <span class="bldCls" ><div><div style="float: left;"><i class="far fa-arrow-left" onclick="{!c.back}" ></i></div><span>&nbsp;&nbsp;Back</span></div></span>
+    
+    <center><h5 class="card-title" style="font-size:2rem;">Schedule</h5></center> <br/>
+    <div class="card">
+        <span class="card-body">
+            <lightning:layout multipleRows="true">
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' :'3'}" padding="around-small">
+                    <label class="labelClass">Name</label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.name}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Days </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.name}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Start Date </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.startDate}</span>
+                </lightning:layoutItem>   
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">End Date </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.endDate}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Start Time </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.startTime}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">End Time </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.endTime}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Project Task </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.projectTask}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Instructor </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.instructor}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Room </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.room}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Qty Per Session </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.totalHoursPerSession}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Total Scheduled Qty </label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.totalHoursPerSession}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Timezone</label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.totalHoursPerSession}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Unit</label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.unit}</span>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="detailClass" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}" padding="around-small">
+                    <label class="labelClass">Status</label>
+                    <span style="{!v.displayDevice == 'Mobile' ? 'display: none;' : 'display: block;'}"><div></div></span>
+                    <span class="{!v.displayDevice == 'Mobile' ? 'viewMobCls' : 'viewCls'}">{!v.scheduleRec.status}</span>
+                </lightning:layoutItem>
+            </lightning:layout>
+            
+            <!-- lightning:layout multipleRows="true">
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Name</label>
+                    <ui:outputText value="{!v.scheduleRec.name}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Days</label>
+                    <ui:outputText value="{!v.scheduleRec.days}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Start Date</label>
+                    <ui:outputText value="{!v.scheduleRec.startDate}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">End Date</label>
+                    <ui:outputText value="{!v.scheduleRec.endDate}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Start Time</label>
+                    <ui:outputText value="{!v.scheduleRec.startTime}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">End Time</label>
+                    <ui:outputText value="{!v.scheduleRec.endTime}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Project Task</label>
+                    <ui:outputText value="{!v.scheduleRec.projectTask}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Instructor</label>
+                    <ui:outputText value="{!v.scheduleRec.instructor}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Room</label>
+                    <ui:outputText value="{!v.scheduleRec.room}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Qty Per Session</label>
+                    <ui:outputText value="{!v.scheduleRec.totalHoursPerSession}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Total Scheduled Qty</label>
+                    <ui:outputText value="{!v.scheduleRec.totalHours}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Timezone</label>
+                    <ui:outputText value="{!v.scheduleRec.timezone}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Unit</label>
+                    <ui:outputText value="{!v.scheduleRec.unit}"/>
+                </lightning:layoutItem>
+                <lightning:layoutItem size = "6" padding="around-small">
+                    <div class="slds-p-bottom_X_small"><label class="slds-form-element__label">Status</label>
+                    <ui:outputText value="{!v.scheduleRec.status}"/>
+                </lightning:layoutItem>
+            </lightning:layout -->
+        </span>
+    </div>
+</aura:component>

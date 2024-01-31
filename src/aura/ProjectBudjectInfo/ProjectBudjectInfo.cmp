@@ -1,0 +1,415 @@
+<aura:component controller="OpportunityBudjectInfoController" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasSObjectName,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" >
+    
+    <ltng:require styles="{!$Resource.SLDS_2_1_3 + '/assets/styles/lightning-design-system-ltng.css'}"/>
+    
+    <!-- Attribute section -->  
+    <aura:attribute name="tabName" type="String"  access="private" Description="Used to store the tab Name" />
+    <aura:attribute name="subtabName" type="String"  access="private" Description="Used to store the tab Name" />
+    <aura:attribute name="isRecordLoaded" type="Boolean" default="false" access="private" Description="Used to store the the record is Loaded or not" />
+    <aura:attribute name="showFourTabView" type="Boolean" default="false" access="private" Description="Used to store the the record is Loaded or not" />
+    <aura:attribute name="isNewLoan" type="Boolean" default="false" access="public" Description="Used to store the the record is Loaded or not" />
+    <aura:attribute name="activityChecked" type="Boolean"  default="false" access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="parentRecordTypeName" type="String" access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="showMatDeleteIcon" type="Boolean" access="public" Default="false"/>
+
+    <aura:attribute name="pickListValues" type="list" default="[]" access="public" />
+    <aura:attribute name="projectList" type="list" default="[]" access="public" />
+    <aura:attribute name="showSpinner" type="boolean" default="false" access="public" />
+    
+    <aura:attribute name="materialRecord" type="Map"  default="{}" access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="materialRecordValues" type="list" default="[]" access="public" />
+    <aura:attribute name="editRecord" type="Map"  default="{}" access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="parentRecordName" type="String" default="" access="public" />
+    <aura:attribute name="deleteId" type="String"  access="public" />
+    
+    <!--Service Attribute Section -->
+    <aura:attribute name="serviceRecords" type="list" default="[]" access="public" />
+    <aura:attribute name="serviceColumns" type="list" default="[]" access="public" />
+    <aura:attribute name="serviceColumnConfig" type="Map" access="public" />
+    <aura:attribute name="isNewRequest" type="Boolean" default="false" access="public" Description="Used to store the the record is Loaded or not" />
+
+    <!--request Attribute Section -->
+    <aura:attribute name="requestRecords" type="list" default="[]" access="public" />
+    <aura:attribute name="requestColumns" type="list" default="[]" access="public" />
+    <aura:attribute name="requestColumnConfig" type="Map" access="public" />
+    
+    <!--loan Attribute Section -->
+    <aura:attribute name="loanRecords" type="list" default="[]" access="public" />
+    <aura:attribute name="loanColumns" type="list" default="[]" access="public" />
+    
+    <!--Regular Attribute Section -->
+    <aura:attribute name="regularHoursRecords" type="list" default="[]" access="public" />
+    <aura:attribute name="regularHoursColumns" type="list" default="[]" access="public" />
+    
+    <!--fringe Attribute Section -->
+    <aura:attribute name="fringeRecords" type="list" default="[]" access="public" />
+    <aura:attribute name="fringeColumns" type="list" default="[]" access="public" />
+    <aura:attribute name="fundingColumnConfig" type="Map" access="public" />
+
+    <!--Material Attribute Section -->
+    <aura:attribute name="materialRecords" type="list" access="public" />
+    <aura:attribute name="materialColumns" type="list" access="public" />
+    
+    <!--Funding Attribute Section -->
+    <aura:attribute name="fundingItemRecords" type="list" access="public" />
+    <aura:attribute name="fundingItemColumns" type="list" access="public" />
+    
+    <!--Material Attribute Section -->
+    <aura:attribute name="odcRecords" type="list" access="public" />
+    <aura:attribute name="odcColumns" type="list" access="public" />
+    
+    <!--Handler Section -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler name="change" value="{!v.activityChecked}" action="{!c.getActivityColumns}" />
+    <aura:handler name="change" value="{!v.isNewRequest}" action="{!c.changeIsNewRequest}" />
+    <aura:handler name="change" value="{!v.isNewLoan}" action="{!c.changeIsNewLoan}" />
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClicked}"/>
+    <aura:handler event="c:reloadEvent" action="{!c.doInit}"/>
+    
+    <div>
+        <aura:if isTrue="{!v.showSpinner}">
+            <div aura:id="spinnerHolder" >
+                <lightning:spinner alternativeText="Loading" size="medium" variant="brand" class="slds-is-fixed"/>
+            </div>
+         </aura:if>
+        
+        <!-- Tab Logic Begin -->
+        <aura:if isTrue="{!v.isRecordLoaded}" >
+            <lightning:card title = "Budget">
+                <div class="slds-tabs_scoped">
+                    
+                    <ul class="slds-tabs_scoped__nav" role="tablist" style="font-size: .85rem;">
+                        <aura:if isTrue="{!or(or(and(v.parentRecordTypeName == 'EFL_Projects',v.showFourTabView),
+                                         or(and(v.parentRecordTypeName == 'MTT_Projects',v.showFourTabView),and(v.sObjectName == 'Opportunity',v.showFourTabView))),!v.showFourTabView)}" >
+                            <li class="{!v.tabName == 'Services' ? 'slds-is-active slds-tabs_scoped__item' : 'slds-tabs_scoped__item'}" title="Services" role="presentation" style="width:15%; display:inline-flex;">
+                                <div style="width: 100%;">
+                                    <a class="slds-tabs_scoped__link" name="Services" onclick="{!c.showMyContent}" role="tab"> 
+                                        Services </a>
+                                </div>
+                            </li>
+                        </aura:if>
+                        <aura:if isTrue="{!and(v.parentRecordTypeName == 'Admin_Projects',and(v.showFourTabView,v.sObjectName != 'Opportunity'))}" >
+                            <li class="{! and(v.tabName == 'Regular Hours',v.showFourTabView) ? 'slds-is-active slds-tabs_scoped__item' : 'slds-tabs_scoped__item'}" title="Regular Hours" role="presentation" style="width:15%; display:inline-flex;">
+                                <div style="width: 100%;">   
+                                    <a class="slds-tabs_scoped__link" name="Regular Hours" onclick="{!c.showMyContent}" role="tab" >                     
+                                        Regular Hours </a>
+                                </div>
+                            </li>
+                        </aura:if>
+                        <aura:if isTrue="{!and(and(v.showFourTabView,v.sObjectName != 'Opportunity'),v.parentRecordTypeName != 'MTT_Projects')}" >
+                            <li class="{! and(v.tabName == 'Fringe',v.showFourTabView) ? 'slds-is-active slds-tabs_scoped__item' : 'slds-tabs_scoped__item'}" title="Fringe" role="presentation" style="width:15%; display:inline-flex;">
+                                <div style="width: 100%;">
+                                    <a class="slds-tabs_scoped__link" name="Fringe" onclick="{!c.showMyContent}" role="tab"> 
+                                        Fringe </a>
+                                </div>
+                            </li>
+                        </aura:if>
+                        
+                        <li class="{! v.tabName == 'Materials' ? 'slds-is-active slds-tabs_scoped__item' : 'slds-tabs_scoped__item'}" title="Materials" role="presentation" style="width:15%; display:inline-flex;">
+                            <div style="width: 100%;">
+                                <a class="slds-tabs_scoped__link" name="Materials" onclick="{!c.showMyContent}" role="tab"> 
+                                    Materials </a>
+                            </div>
+                        </li>
+                        <aura:if isTrue="{!v.showFourTabView}">
+                            <li class="{!and(v.tabName == 'Travel ODC',v.showFourTabView) ? 'slds-is-active slds-tabs_scoped__item' : 'slds-tabs_scoped__item'}" title="Travel &amp; ODCs" role="presentation" style="width:15%; display:inline-flex;">
+                                <div style="width: 100%;">
+                                    <a class="slds-tabs_scoped__link" name="Travel ODC" onclick="{!c.showMyContent}" role="tab" > 
+                                        Travel &amp; ODCs </a>
+                                </div>
+                            </li>
+                        </aura:if>
+                        <li style="position:absolute; right:0; display: flex;">
+                            <aura:if isTrue="{!v.sObjectName == 'Opportunity'}">
+                                
+                                <span class="{!v.tabName != 'Materials' ?'slds-text-align_right slds-p-around_small' : 'slds-text-align_right  slds-hide'}">
+                                    <c:toogle toogleLabel="Activity View" checked="{!v.activityChecked}"/>
+                                </span>
+                                
+                                <aura:if isTrue="{!!v.projectList.length}">
+                                    <span class="slds-text-align_right slds-p-right_x-small slds-p-left_x-small slds-p-top_xx-small">
+                                        <lightning:button variant="brand" label="Add Product" title="Add Product" onclick="{! c.addProduct }" />
+                                    </span>
+                                    <span class="slds-text-align_right slds-p-right_x-small slds-p-top_xx-small">
+                                        <lightning:button variant="brand" label="New Funding" title="New Funding" onclick="{! c.addFundingTask }" />
+                                    </span>
+                                    <aura:set attribute="else">
+                                        <span class="slds-text-align_right slds-p-around_small">
+                                            <a onclick="{!c.navigateToProject}">Go to Project  <lightning:helptext content="This opportunity already has Project."/></a>
+                                        </span>
+                                    </aura:set>
+                                </aura:if>
+                                <aura:set attribute="else">
+                                    <span class="slds-text-align_right slds-p-around_small">
+                                        <c:toogle toogleLabel="Activity View" checked="{!v.activityChecked}"/>
+                                    </span>
+                                    <aura:if isTrue="{!and(v.activityChecked,v.tabName == 'Materials')? false : true}">
+                                        <span class="slds-text-align_right slds-p-right_x-small slds-p-left_x-small slds-p-top_xx-small">
+                                            <lightning:button variant="brand" label="Add Project Task" title="Add Project Task" onclick="{! c.addProjectTask }" />
+                                        </span>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(v.activityChecked,v.tabName == 'Materials')}">
+                                        <span class="slds-text-align_right slds-p-right_x-small slds-p-left_x-small slds-p-top_xx-small">
+                                            <lightning:button variant="brand" label="New Request" title="New Request" onclick="{! c.addRequest }" />
+                                        </span>
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(v.activityChecked,v.tabName == 'Materials')}">
+                                        <span class="slds-text-align_right slds-p-right_x-small slds-p-left_x-small slds-p-top_xx-small">
+                                            <lightning:button variant="brand" label="New Loan" title="New Loan" onclick="{! c.addLoan }" />
+                                        </span>
+                                    </aura:if>
+                                    <span class="slds-text-align_right slds-p-right_x-small slds-p-top_xx-small">
+                                        <lightning:button variant="brand" label="New Funding" title="New Funding" onclick="{! c.addFundingTask }" />
+                                    </span>
+                                    <!--span class="slds-text-align_right slds-p-right_x-small  slds-p-top_xx-small">
+                                        <lightning:button variant="brand" label="Manage Hours" title="Manage Hours" onclick="{! c.handleClick }" />
+                                    </span-->
+                                </aura:set> 
+                                
+                            </aura:if>
+                        </li>
+                    </ul>
+                    <aura:if isTrue="{! v.tabName == 'Regular Hours'}">
+                        <div  class="slds-tabs_scoped__content tablecss tableProClass" role="tabpanel" > 
+                            <aura:if isTrue="{!v.regularHoursRecords.length == 0}">
+                                <div class="slds-text-align_center"> No Records Found </div>
+                            </aura:if>
+                            <aura:if isTrue="{!v.regularHoursRecords.length  > 0}">
+                                <div class="{!v.activityChecked == true ? 'boldClass alignClass':''}"> 
+                                    <ldt:datatableDev aura:id="ldtRegularHoursTable"  config="{!v.serviceColumnConfig}" header="{!v.regularHoursColumns}" dataRows="{!v.regularHoursRecords}" />
+                                </div>
+                            </aura:if>                
+                        </div>
+                    </aura:if>
+                    <aura:if isTrue="{! v.tabName == 'Fringe'}">
+                        <div  class="slds-tabs_scoped__content tablecss tableProClass" role="tabpanel" > 
+                            <aura:if isTrue="{!v.fringeRecords.length == 0}">
+                                <div class="slds-text-align_center"> No Records Found </div>
+                            </aura:if>
+                            <aura:if isTrue="{!v.fringeRecords.length  > 0}">
+                                <div class="{!v.activityChecked == true ? 'boldClass alignClass':''}">
+                                    <ldt:datatableDev aura:id="ldtFringeTable"  config="{!v.serviceColumnConfig}" header="{!v.fringeColumns}" dataRows="{!v.fringeRecords}" />
+                                </div>
+                            </aura:if>
+                        </div>
+                    </aura:if>
+                    <aura:if isTrue="{!v.tabName == 'Services'}">
+                        <div  class="slds-tabs_scoped__content tablecss" role="tabpanel" > 
+                           
+                            <aura:if isTrue="{!and(v.sObjectName == 'Opportunity',v.serviceRecords.length)}">
+                                
+                                <div class="{!v.activityChecked == true ? 'boldClass alignClass'  : (!v.projectList.length ? 'oppActionClass' : '' )}"> 
+                                    <ldt:datatableDev aura:id="ldtServiceTable"  config="{!v.serviceColumnConfig}" header="{!v.serviceColumns}" dataRows="{!v.serviceRecords}" />
+                                </div>
+                            </aura:if>
+                            <aura:if isTrue="{!and(v.sObjectName != 'Opportunity',v.serviceRecords.length)}">
+                                <div class="{v.activityChecked == false ?'headerClass activityOppClass tableProClass':'activityOppClass tableProClass'}">
+                                    <c:treeGrid gridData="{!v.serviceRecords}" gridColumns="{!v.serviceColumns}" activityChecked="{!v.activityChecked}"/>
+                                </div>
+                            </aura:if>
+                            <aura:if isTrue="{!v.serviceRecords.length == 0}">
+                                <div class="slds-text-align_center"> No Records Found </div>
+                            </aura:if>
+                        </div>
+                    </aura:if> 
+                    <aura:if isTrue="{! v.tabName == 'Materials'}">
+                        <aura:if isTrue="{!v.sObjectName == 'Opportunity'}">
+                            <aura:if isTrue="{!v.materialRecords.length == 0}">
+                                <div  class="slds-tabs_scoped__content tablecss" role="tabpanel" > 
+                                    <div class="slds-text-align_center"> No Records Found </div>
+                                </div>
+                            </aura:if>
+                            <aura:if isTrue="{!v.materialRecords.length > 0}">
+                                <div  class="{!!v.projectList.length ? 'oppActionClass slds-tabs_scoped__content tablecss' : 'slds-tabs_scoped__content tablecss' }" role="tabpanel" > 
+                                    <ldt:datatableDev aura:id="ldtMaterialTable"  config="{!v.serviceColumnConfig}" header="{!v.materialColumns}" dataRows="{!v.materialRecords}" />
+                                </div>
+                            </aura:if>
+                            <aura:set attribute="else">
+                                <aura:if isTrue="{!and(v.materialRecords.length == 0 ,!v.activityChecked)}">
+                                    <div  class="slds-tabs_scoped__content tablecss" role="tabpanel" > 
+                                        <div class="slds-text-align_center"> No Records Found </div>
+                                    </div>
+                                </aura:if>
+                                <aura:if isTrue="{!v.materialRecords.length > 0}">
+                                    <div  class="{!!v.activityChecked ? 'slds-tabs_scoped__content tablecss tableProClass' :  'tableProClass slds-tabs_scoped__content tablecss  slds-hide' }" role="tabpanel" > 
+                                        <ldt:datatableDev aura:id="ldtMaterialTable"  config="{!v.serviceColumnConfig}" header="{!v.materialColumns}" dataRows="{!v.materialRecords}" />
+                                    </div>
+                                </aura:if>
+                            </aura:set>
+                            
+                        </aura:if>
+                        
+                        <aura:if isTrue="{!and(v.activityChecked,v.sObjectName != 'Opportunity')}">
+                            <div class="slds-tabs_scoped" style="padding-left: 1rem;">
+                                <ul class="slds-tabs_scoped__nav" role="tablist" style="font-size: .85rem;">
+                                    <li class="{!v.subtabName == 'Request' ? 'slds-is-active slds-tabs_scoped__item' : 'slds-tabs_scoped__item'}" title="Services" role="presentation" style="width:15%; display:inline-flex;">
+                                        <div style="width: 100%;">
+                                            <a class="slds-tabs_scoped__link" name="Request" onclick="{!c.showMyContent}" role="tab"> 
+                                                REQUEST </a>
+                                        </div>
+                                    </li>
+                                    <li class="{! v.subtabName == 'Loan' ? 'slds-is-active slds-tabs_scoped__item' : 'slds-tabs_scoped__item'}" title="Regular Hours" role="presentation" style="width:15%; display:inline-flex;">
+                                        <div style="width: 100%;">   
+                                            <a class="slds-tabs_scoped__link" name="Loan" onclick="{!c.showMyContent}" role="tab" >                     
+                                                LOAN </a>
+                                        </div>
+                                    </li>
+                                    <li style="position:absolute; right:0; display: flex;">
+                                        <span class="slds-text-align_right slds-p-right_x-small slds-p-top_xx-small">
+                                            <lightning:button variant="brand" label="Download" onclick="{!c.exportMaterialRequestDataAsFile}" />
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </aura:if>
+                        
+                    </aura:if>
+                    
+                    <aura:if isTrue="{! v.subtabName == 'Request'}">
+                        <aura:if isTrue="{!v.requestRecords.length == 0}">
+                            <div  class="slds-tabs_scoped__content tablecss" role="tabpanel" > 
+                                <div class="slds-text-align_center"> No Records Found </div>
+                            </div>
+                        </aura:if>
+                        <aura:if isTrue="{!v.requestRecords.length > 0}">
+                            <div class="slds-tabs_scoped__content tablecss tableProClass reqLoanClass" role="tabpanel" > 
+                                <ldt:datatableDev aura:id="ldtRequestTable"  config="{!v.requestColumnConfig}" header="{!v.requestColumns}" dataRows="{!v.requestRecords}" />
+                            </div>
+                        </aura:if>
+                    </aura:if>
+                    <aura:if isTrue="{! v.subtabName == 'Loan'}">
+                        <aura:if isTrue="{!v.loanRecords.length == 0}">
+                            <div  class="slds-tabs_scoped__content tablecss tableProClass " role="tabpanel" > 
+                                <div class="slds-text-align_center"> No Records Found </div>
+                            </div>
+                        </aura:if>
+                        <aura:if isTrue="{!v.loanRecords.length > 0}">
+                            <div  class="slds-tabs_scoped__content tablecss tableProClass reqLoanClass" role="tabpanel" > 
+                                <ldt:datatableDev aura:id="ldtLoanTable"  config="{!v.requestColumnConfig}" header="{!v.loanColumns}" dataRows="{!v.loanRecords}" />
+                            </div>
+                        </aura:if>
+                    </aura:if>
+                    <aura:if isTrue="{!v.tabName == 'Travel ODC'}">
+                        <div  class="slds-tabs_scoped__content tablecss {v.sObjectName != 'Opportunity' ? tableProClass : '(!!v.projectList ? 'oppActionClass' :'')'}" role="tabpanel" > 
+                            <aura:if isTrue="{!v.odcRecords.length == 0}">
+                                <div class="slds-text-align_center"> No Records Found </div>
+                            </aura:if>
+                            <aura:if isTrue="{!v.odcRecords.length > 0}">
+                                <div class="{!v.activityChecked == true ? 'boldClass alignClass':''}"> 
+                                    <ldt:datatableDev aura:id="ldtOdcTable"  config="{!v.serviceColumnConfig}" header="{!v.odcColumns}" dataRows="{!v.odcRecords}" />
+                                </div>
+                            </aura:if>
+                        </div>
+                    </aura:if>
+                </div>
+            </lightning:card>
+        </aura:if>
+        <c:Modal aura:id="ModalComponent" closeAction="{!c.closeData}" hasCloseIcon="false" >
+            <aura:set attribute="header">
+                <h1>Funding Items</h1>
+                
+            </aura:set>
+            <aura:set attribute="content">
+                <div class="tablecss">
+                    <ldt:datatableDev aura:id="fundingTable"  config="{!v.fundingColumnConfig}" header="{!v.fundingItemColumns}" dataRows="{!v.fundingItemRecords}" />
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" onclick="{!c.closeData}" />
+            </aura:set>
+            
+            
+        </c:Modal>
+        <c:Modal aura:id="deleteModalComponent" closeAction="{!c.closeDeleteData}" hasCloseIcon="false">
+            <aura:set attribute="header">
+                <h1>Confirmation</h1>
+                
+            </aura:set>
+            <aura:set attribute="content">
+                Are you sure you want to delete this record?
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Yes" onclick="{!c.deleteRecord}" />
+                <lightning:button label="No" onclick="{!c.closeDeleteData}" />
+            </aura:set>
+            
+            
+        </c:Modal>
+        <c:Modal aura:id="addProductComponent" closeAction="{!c.closeProductData}" hasCloseIcon="false" modelWidth="10rem">
+            <aura:set attribute="header">
+                <h1>Message</h1>
+            </aura:set>
+            <aura:set attribute="content">
+                Please use the standard product related list to create new product
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Cancel" onclick="{!c.closeProductData}" />
+            </aura:set>        
+        </c:Modal>
+        <c:Modal aura:id="recTypeComponent" closeAction="{!c.closeRecTypeData}" hasCloseIcon="true">
+            <aura:set attribute="header">
+                <h1>Choose Record Type</h1>
+                
+            </aura:set>
+            <aura:set attribute="content">
+                <lightning:combobox aura:id="comboRecordType" name="progress" label="Choose Record Type" value="" placeholder="Select Record Type" options="{! v.pickListValues }" />
+                <br></br><br></br><br></br><br></br><br></br>
+                <br></br>
+                <br></br>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Next" onclick="{!c.createTask}" />
+                <lightning:button label="Close" onclick="{!c.closeRecTypeData}" />
+            </aura:set>
+        </c:Modal>
+        <c:Modal aura:id="requestTypeComponent" closeAction="{!c.closeReqTypeData}" hasCloseIcon="true" modelWidth="12rem">
+            <aura:set attribute="header">
+                <h1>Message</h1>
+                
+            </aura:set>
+            <aura:set attribute="content">
+                <aura:if isTrue="{!v.materialRecords.length == 0}">
+                    There is no Material Budget Project Task Record
+                </aura:if>
+                <aura:if isTrue="{!v.materialRecords.length == 2}">
+                    Materials Budget Paid Remaining: {!v.materialRecord.totalPaidRemaining > 0 ? v.materialRecord.totalPaidRemaining : '$0.00'}
+                </aura:if>
+                <aura:if isTrue="{!v.materialRecords.length > 2}">
+                    <lightning:combobox aura:id="reqRecords" name="progress" label="Choose Material Budget" value="" placeholder="Choose Material Budget" options="{! v.materialRecordValues }" />
+                    <br></br><br></br><br></br><br></br><br></br>
+                    <br></br>
+                    <br></br>
+                </aura:if>
+                <!-- aura:if isTrue="{!and(v.materialRecords.length >= 2,v.materialRecord.totalAmountPaid)}">
+                    Materials Budget Paid Remaining: {!v.materialRecord.totalPaidRemaining}
+                </aura:if -->
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="{!v.materialRecords.length == 0 ? 'slds-hide':''}" label="{!v.materialRecords.length >= 2 ? 'Next' : 'Proceed'}" onclick="{!c.createRequest}" />
+                <lightning:button label="Close" onclick="{!c.closeReqTypeData}" />
+            </aura:set>
+        </c:Modal>
+        <aura:if isTrue="{!v.isNewLoan}">
+            <c:NewLoanCmp isNewLoan="{!v.isNewLoan}" projectId="{!v.recordId}"/>
+        </aura:if>
+        <aura:if isTrue="{!v.isNewRequest}">
+            <c:NewOrderCmp  isNewRequest="{!v.isNewRequest}" projectTaskId="{!v.materialRecord.Id}" projectId="{!v.recordId}"/>
+        </aura:if>
+        <aura:if isTrue="{!v.editRecord.Id}">
+            <c:Modal aura:id="editRecordComponent" closeAction="{!c.cancelEditRecord}" hasCloseIcon="true">
+                <aura:set attribute="header">
+                    <h1>Edit {!v.editRecord.productName}</h1>
+                    
+                </aura:set>
+                <aura:set attribute="content">
+                    <force:recordEdit aura:id="edit" recordId="{!v.editRecord.Id}" onSaveSuccess="{!c.onSaveSuccess}" />
+                    
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button  label="Save" onclick="{!c.saveEditRecord}" />
+                    <lightning:button label="Cancel" onclick="{!c.cancelEditRecord}" />
+                </aura:set>
+            </c:Modal>
+        </aura:if>
+    </div>
+</aura:component>

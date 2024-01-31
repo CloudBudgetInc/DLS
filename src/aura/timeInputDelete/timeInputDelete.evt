@@ -1,0 +1,3 @@
+<aura:event type="COMPONENT" description="delete Time Input line notification from TimeInput to top level app" >
+    <aura:attribute name="lineToDelete" type="Integer"/>
+</aura:event>

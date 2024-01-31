@@ -1,0 +1,20 @@
+<apex:page standardController="AcctSeed__Cash_Receipt__c" extensions="box.DisplayWidget" showheader="false" sidebar="false" action="{!GetLoginToken}" standardStylesheets="false">
+    
+    <apex:stylesheet value="{!URLFOR($Resource.box__BoxEmbed, 'BoxEmbed/style.css')}"/> 
+    
+    <!--<apex:iframe src="/apex/box__BOXSection?id={!AcctSeed__Cash_Receipt__c.Id}&param=Custom_Object_Box_Section" rendered="{!DisplayBoxSection}"/>
+    <apex:iframe src="{!folderShareLink}" rendered="{!DisplayBoxWidget}" width="100%" height="100%" frameborder="0" scrolling="NO"/>-->
+    
+    <apex:variable var="isClassic" value="{!AND($User.UIThemeDisplayed != 'Theme4d', $User.UIThemeDisplayed != 'Theme4t')}" />
+    
+    <!-- LOGIN or CREATE FOLDER or JOIN FOLDER -->
+    <apex:iframe id="classicBoxSection" src="/apex/box__BOXSection?id={!AcctSeed__Cash_Receipt__c.Id}&param=Custom_Object_Box_Section" rendered="{!AND(displayBoxSection, isClassic)}" html-allowfullscreen="true" html-webkitallowfullscreen="true" html-msallowfullscreen="true" />
+    <apex:iframe id="lightningBoxSection" src="/apex/box__BOXSection?id={!AcctSeed__Cash_Receipt__c.Id}&param=Custom_Object_Box_Section" rendered="{!AND(displayBoxSection, NOT(isClassic))}" html-allowfullscreen="true" html-webkitallowfullscreen="true" html-msallowfullscreen="true" />
+    <!-- /LOGIN or CREATE FOLDER or JOIN FOLDER -->
+
+    <!-- BOX EMBED WIDGET -->
+    <apex:iframe id="classicBoxWidget" src="{!folderShareLink}" rendered="{!AND(displayBoxWidget, isClassic)}" html-allowfullscreen="true" html-webkitallowfullscreen="true" html-msallowfullscreen="true" />
+    <apex:iframe id="lightningBoxWidget" src="{!folderShareLink}" rendered="{!AND(displayBoxWidget, NOT(isClassic))}" html-allowfullscreen="true" html-webkitallowfullscreen="true" html-msallowfullscreen="true" />
+    <!-- /BOX EMBED WIDGET -->
+    
+</apex:page>

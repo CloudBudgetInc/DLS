@@ -1,0 +1,107 @@
+<aura:component implements="force:lightningQuickAction" controller="NewClassAnnouncementController">
+    <aura:attribute name="contentInput" type="Map" default="{}"/>
+    <aura:attribute name="type" type="String"/>
+    <aura:attribute name="message" type="String"/>
+    <aura:attribute name="fileName" type="String"/>
+    <aura:attribute name="buttonType" type="String"/>
+    
+    <div id = "topscrollable" >
+    <div aura:id="toast" class="slds-hide">
+        <div aura:id="toastTheme" class="slds-notify slds-notify--toast" role="alert">
+            <span class="slds-assistive-text">Info</span>
+            <a class="slds-button slds-button--icon-inverse slds-notify__close" onclick="{!c.closeToast}">
+                <lightning:icon aura:id="closeIcon" iconName="utility:close" size="small" />
+            </a>
+            
+            <div class="slds-notify__content">
+                <a class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                    <lightning:icon aura:id="actionIcon" iconName="{!v.type == 'success' ? 'utility:success' : 'utility:error' }" size="small" />
+                </a>
+                <h2 class="slds-text-heading--small" style="margin-left: 29px;margin-top: -22px;">{!v.message}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <lightning:layout multipleRows="true" >
+        <lightning:layoutItem size="6" padding="around-small">
+            <aura:if isTrue="{!v.buttonType == 'New Class Announcement'}">
+                <lightning:select aura:id="fromVal" name="" label="From" value="{!v.contentInput.fromAddress}" required="true">
+                    <aura:iteration items="{!v.contentInput.orgWideEmailAddress}" var="org">
+                        <option text="{!org.DisplayName}" value="{!org.Id}"></option>
+                    </aura:iteration>
+                </lightning:select>    
+            </aura:if>
+            <aura:if isTrue="{!or(v.buttonType == 'Translator Payment Email Confirmation' , or(v.buttonType == 'Student Payment Remainder',or(v.buttonType == 'Send Materials Ordered Email', v.buttonType == 'Student On Hold Quarterly Reminder')))}">
+                <lightning:input type="text" value="{!v.contentInput.fromAddress}" label="From" disabled="true"/>
+            </aura:if>
+        </lightning:layoutItem>
+        
+        <lightning:layoutItem size="6" padding="around-small">
+            <lightning:input type="text" value="{!v.contentInput.relatedRecordName}" label="Project" disabled="true"/>
+        </lightning:layoutItem>
+        
+        <lightning:layoutItem size="6" padding="around-small">
+            <aura:if isTrue="{!v.buttonType == 'New Class Announcement'}">
+                <c:LookupSearch aura:id="lookup" selection="{!v.contentInput.toAddressContacts}" onSearch="{!c.lookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" label="To" placeholder="" isMultiEntry="false"/>
+                <lightning:input type="email" name="" value="{!v.contentInput.toEmailIds}" label="To" />
+            </aura:if>
+            <aura:if isTrue="{!or(v.buttonType == 'Translator Payment Email Confirmation' , or(v.buttonType == 'Student Payment Remainder',or(v.buttonType == 'Send Materials Ordered Email', v.buttonType == 'Student On Hold Quarterly Reminder')))}">
+                <c:LookupSearch aura:id="lookup" selection="{!v.contentInput.toAddressContacts}" onSearch="{!c.lookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" label="To" placeholder="" isMultiEntry="true"/>
+            </aura:if>
+        </lightning:layoutItem>
+        
+        <aura:if isTrue="{!v.buttonType == 'New Class Announcement'}">
+            <lightning:layoutItem size="6" padding="around-small">
+                <lightning:input type="email" name="email1" value="{!v.contentInput.additionalEmailIds}" label="Additional To" />
+            </lightning:layoutItem>
+        </aura:if>
+        
+        <lightning:layoutItem size="6" padding="around-small">
+            <lightning:input type="email" name="" value="{!v.contentInput.ccEmailIds}" label="CC" />
+        </lightning:layoutItem>
+        
+        <aura:if isTrue="{!v.buttonType == 'New Class Announcement'}">
+            <lightning:layoutItem size="6" padding="around-small">
+                <lightning:input type="email" name="" value="{!v.contentInput.bccEmailIds}" label="BCC" />
+            </lightning:layoutItem>
+        </aura:if>
+        
+        
+        <lightning:layoutItem size="12" padding="around-small">
+            <lightning:input aura:id="subject" type="text" name="" value="{!v.contentInput.subject}" label="Subject" required="true"/>
+        </lightning:layoutItem>
+        
+        
+        <lightning:layoutItem size="12" padding="around-small">
+            <lightning:inputRichText  aura:id = "richText" value="{!v.contentInput.htmlBodyContent}"/>
+        </lightning:layoutItem>
+        <aura:if isTrue="{!v.buttonType == 'New Class Announcement'}">
+            <lightning:layoutItem size="12" padding="around-small">
+                <div class="slds-form-element">
+                    <div class="slds-form-element">
+                        <span class="slds-form-element__label" id="file-selector-primary-label"></span>
+                        <div class="slds-form-element__control">
+                            <div class="slds-file-selector slds-file-selector_files">
+                                <div class="slds-file-selector__dropzone">
+                                    
+                                    <input aura:id="fileId" onchange="{!c.handleFilesChange}" name="file" multiple="false" type="file" class="slds-file-selector__input slds-assistive-text slds-hide"/>
+                                    <label class="slds-file-selector__body" id="file-selector-secondary-label">
+                                        <span class="slds-file-selector__button slds-button slds-button_neutral" onclick="{!c.uploadIconclick}">
+                                            <lightning:icon iconName="utility:upload" variant="brand" size="x-small" /> Upload
+                                        </span>
+                                    </label>
+                                    <div class="slds-text-body_small slds-text-color_error">{!v.fileName} </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </lightning:layoutItem>
+        </aura:if>
+        
+        <lightning:layoutItem size="12" padding="around-small">
+            <center><lightning:button variant="brand" label="Send Email" onclick="{!c.validateInput}" /></center>
+        </lightning:layoutItem>
+    </lightning:layout>
+    </div>
+</aura:component>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <assignments>
+        <name>Update_Fringe_Rate_Value</name>
+        <label>Update Fringe Rate Value</label>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Fringe_Rate__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Fringe_Rate_Value</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <decisions>
+        <name>Check_Condition_for_Fringe_Rate_Value_Population</name>
+        <label>Check Condition for Fringe Rate Value Population</label>
+        <locationX>182</locationX>
+        <locationY>311</locationY>
+        <defaultConnectorLabel>Is not Update Fringe Rate</defaultConnectorLabel>
+        <rules>
+            <name>Is_Update_Fringe_Rate</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Is_Valid_Record_for_Fringe_Rate_Population</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Fringe_Rate_Value</targetReference>
+            </connector>
+            <label>Is Update Fringe Rate</label>
+        </rules>
+    </decisions>
+    <description>- To update Labor Cost Rate&apos;s Fringe_Rate__c field value (Logic moved from process builder to flow)</description>
+    <formulas>
+        <name>Fringe_Rate_Value</name>
+        <dataType>Number</dataType>
+        <expression>IF(AND(OR(TEXT({!$Record.Rate_Type__c}) == &apos;DLI-21 SCA LT&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;DLI-21 SCA LT +5&apos;, 
+TEXT({!$Record.Rate_Type__c}) == &apos;DLI-21 SCA CD&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;DLI-21 SCA CD +5&apos;), 
+OR({!$Record.Fringe_Rate__c} != {!LCR_Fringe_Rate_DLI_16_20_21_SCA_LT_LT_5_CD_CD_5}, ISBLANK({!$Record.Fringe_Rate__c}))), {!LCR_Fringe_Rate_DLI_16_20_21_SCA_LT_LT_5_CD_CD_5}, 
+IF(AND(OR(TEXT({!$Record.Rate_Type__c}) == &apos;LT with Prep&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;LT without Prep&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;Non-SCA CD&apos;, 
+TEXT({!$Record.Rate_Type__c}) == &apos;PT Hourly (OH &amp; G&amp;A)&apos;), OR({!$Record.Fringe_Rate__c} != {!LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly}, ISBLANK({!$Record.Fringe_Rate__c}))), 
+{!LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly}, IF(AND(OR(TEXT({!$Record.Rate_Type__c}) == &apos;FT Salary &amp; Benefits&apos;, 
+TEXT({!$Record.Rate_Type__c}) == &apos;FT Hourly &amp; Benefits&apos;), OR({!$Record.Fringe_Rate__c} != {!LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits}, ISBLANK({!$Record.Fringe_Rate__c}))),
+{!LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits}, IF(AND(OR(TEXT({!$Record.Rate_Type__c}) == &apos;DLI-16 SCA MTT&apos;, 
+TEXT({!$Record.Rate_Type__c}) == &apos;DLI-16 SCA MTT +5&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;DLI-20 SCA MTT&apos;,
+TEXT({!$Record.Rate_Type__c}) == &apos;DLI-20 SCA MTT +5&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;DLI-21 SCA MTT&apos;, 
+TEXT({!$Record.Rate_Type__c}) == &apos;DLI-21 SCA MTT +5&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;International Salary&apos;, 
+TEXT({!$Record.Rate_Type__c}) == &apos;Non-SCA Testing&apos;, TEXT({!$Record.Rate_Type__c}) == &apos;Non-SCA Translation (Per Hour)&apos;, 
+TEXT({!$Record.Rate_Type__c}) == &apos;Non-SCA Interpretation (Per Hour)&apos;, ISBLANK({!$Record.Fringe_Rate__c})), 
+OR({!$Record.Fringe_Rate__c} != 0, ISBLANK({!$Record.Fringe_Rate__c}))), 0, {!$Record.Fringe_Rate__c}))))</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <name>Is_Valid_Record_for_Fringe_Rate_Population</name>
+        <dataType>Boolean</dataType>
+        <expression>IF({!ISNEW}, True, IF(AND(NOT({!ISNEW}), ISCHANGED({!$Record.Rate_Type__c})), True, False))</expression>
+    </formulas>
+    <formulas>
+        <name>ISNEW</name>
+        <dataType>Boolean</dataType>
+        <expression>ISNEW()</expression>
+    </formulas>
+    <formulas>
+        <name>LCR_Fringe_Rate_DLI_16_20_21_SCA_LT_LT_5_CD_CD_5</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_DLI_16_SCA_LT_CD_LT_5_CD_5})</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <name>LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits})</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <name>LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly})</expression>
+        <scale>2</scale>
+    </formulas>
+    <interviewLabel>Labor Cost Rate Before Trigger Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Labor Cost Rate Before Trigger Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Condition_for_Fringe_Rate_Value_Population</targetReference>
+        </connector>
+        <object>AcctSeed__Cost_Rates__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

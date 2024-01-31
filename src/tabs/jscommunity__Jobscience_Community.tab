@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Bullhorn Help &amp; Training Community, Participate in ideas, solutions, training and more</description>
+    <frameHeight>600</frameHeight>
+    <hasSidebar>true</hasSidebar>
+    <icon>jscommunity__Jobscience_Community_Graphics/jscommunity__Jobscience.ico</icon>
+    <label>BH Community</label>
+    <motif>Custom217: TV Widescreen</motif>
+    <url>/apex/jscommunity__jshelp_and_training_2</url>
+    <urlEncodingKey>UTF-8</urlEncodingKey>
+</CustomTab>

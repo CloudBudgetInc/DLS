@@ -1,0 +1,38 @@
+<aura:component controller="ContactChildUpdateController">
+    
+    <aura:attribute name="selectedRec" type="Map" description="selected record to edit in table"/>
+    <aura:attribute name="fieldsList" type="List" description="objects values with key value"  default="[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="PUBLIC"/>
+    <aura:attribute name="isRowUpdated" type="boolean" default="false" description="check whether fields are changed or not " />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" Description="Initial action of this component"/>
+    <div class="cclass1">
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+        <thead>
+            <tr class="slds-line-height_reset">
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Opportunity Name">Field Name</div>
+                </th>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Account Name">Old Value</div>
+                </th>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Close Date">New Value</div>
+                </th>
+                <th class="" scope="col">
+                    <div class="slds-truncate" title="Stage">Manual Value</div>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <aura:iteration items="{!v.fieldsList}" var="field" indexVar="index">
+                <c:ContactChildUpdateTableRowCmp isRowUpdated = "{!v.isRowUpdated}"  fieldInfo="{!field}"/>
+            </aura:iteration>
+        </tbody>
+    </table>
+        </div>
+     <c:ApexService aura:id="server"/>
+     <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+</aura:component>

@@ -1,0 +1,3 @@
+<aura:event type="APPLICATION" description="Used to close the generate certificate modal in Manage Project status VF page">
+    <aura:attribute name="caList" type="LIST"></aura:attribute>
+</aura:event>

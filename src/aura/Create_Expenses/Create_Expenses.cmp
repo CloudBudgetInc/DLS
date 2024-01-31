@@ -1,0 +1,178 @@
+<aura:component controller="CreateExpenses_Ctrl" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="loading" type="Boolean" default="false"/>
+    <aura:attribute name="startDate" type="string" access="PUBLIC"/>
+    <aura:attribute name="endDate" type="string" access="PUBLIC"/>
+    <aura:attribute name="expenses" type="List" access="PUBLIC"/>
+    <aura:attribute name="selectAll" type="Boolean" default="false"/>
+    <aura:attribute name="selectedExpenses" type="List"/>
+	<aura:attribute name="payable" type="Object"/>
+    <aura:attribute name="creditCardIdWithVendorNameMap" type="Map" default="{}"/>
+    <aura:attribute name="tableHeaders" type="LIST"/>
+    <aura:attribute name="sortingDetails" type="Object"/>
+    <aura:attribute name="mouseStart" type="string" />
+    <aura:attribute name="oldWidth" type="string" />
+    <aura:attribute name="payableSelection" type="Boolean" default="false"/>
+    
+    <ltng:require scripts="{!$Resource.moment}"                                             
+                  afterScriptsLoaded="{!c.doInit}" />
+    
+    <c:ApexService aura:id="server"/>
+    
+    <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
+    
+    <aura:if isTrue="{!v.loading}">
+        <div class="slds-spinner_container" style="z-index: 9010;">
+            <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+    </aura:if>
+    
+    <lightning:card title="Create Expenses">
+        <p class="slds-p-horizontal_small">
+            <div class="slds-box">
+                <lightning:layout  horizontalAlign="spread" >
+                    <lightning:layoutItem size="3" padding="around-small">
+                        <lightning:input type="date" label="Start Date" name="date" value="{!v.startDate}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="3" padding="around-small">
+                        <lightning:input type="date" label="End Date" name="date" value="{!v.endDate}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="3" padding="around-small">
+                        <lightning:button variant="brand" label="Get Expenses" title="Get Expenses" onclick="{! c.getExpenseReports }" class="slds-m-top_medium"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="2" padding="around-small">
+                        <lightning:button variant="brand" label="Save Expenses" onclick="{! c.saveExpenses }" class="slds-m-top_medium"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="1" padding="around-small">
+                        <div class="slds-m-top_large">
+                        	<lightning:helptext content="Already synced expenses will not be listed in the table."/>
+                        </div>
+                    </lightning:layoutItem>
+                </lightning:layout>                                          
+            </div>            
+            
+            <div class="slds-box">
+                <aura:if isTrue="{!v.expenses.length > 0}">
+                    <table class="slds-table slds-table_bordered slds-table_fixed-layout slds-box slds-max-medium-table_stacked-horizontal">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col" class="wrap" style="width: 2.5rem !important;">
+                                    <lightning:input type="checkbox" label="" checked="{!v.selectAll}" onchange="{!c.selectAllExpenses}"/>
+                                </th>                                
+                                <aura:iteration items="{!v.tableHeaders}" var="header">                                                                
+                                    <th class="slds-is-sortable slds-is-resizable slds-text-title--caps" style="{!header.style}" name="{!header.name}" data-sortable="{!header.isSortable}" onclick="{!c.sortExpenses}">
+                                        <div>
+                                            <span class="slds-truncate" title="{!header.label}">{!header.label}</span>
+                                            <span><lightning:icon class="{!and(v.sortingDetails.column == header.name, header.isSortable) ? 'slds-show' : 'slds-hide'}" iconName="{!v.sortingDetails.isASC ? 'utility:arrowup' : 'utility:arrowdown'}" size="xx-small"/></span>
+                                        </div>                                        
+                                    </th>                                    
+                                </aura:iteration>                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!v.expenses}" var="line">
+                                
+                                <c:expenseRowCmp aura:id="expenseRowCmp" expense="{!line}"/>                           
+                            </aura:iteration>
+                        </tbody>
+                    </table>
+                    <aura:set attribute="else">
+                        <center><p>No records to display</p></center>
+                    </aura:set>
+                </aura:if>
+            </div>
+        </p>    
+    </lightning:card>
+    
+    <c:sldsModal aura:id="openPayableDetail" displayCloseImage="false" modelWidth="90%">
+        <aura:set attribute="header">
+            <lightning:layout>
+                <lightning:layoutItem size='4'>
+                           	
+                </lightning:layoutItem>
+                <lightning:layoutItem  size='4'>
+                    <div>Payable Detail</div>        	
+                </lightning:layoutItem>
+                <lightning:layoutItem alignmentBump="left">
+                    <a onclick="{!c.selectPayableRec}">{!v.payableSelection ? 'Create new Record' : 'Select Existing Record'}</a>
+                </lightning:layoutItem>
+            </lightning:layout>            
+        </aura:set>
+        <aura:set attribute="content">
+            <p class="slds-p-horizontal_small">
+                <lightning:card>
+                    <aura:if isTrue="{!not(v.payableSelection)}">
+                    
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem padding="around-small" size="3">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Accounting Period</label>
+                                    <div class="slds-form-element__control" style="margin-top: -1rem;">
+                                        <c:LookupSearch aura:id="periodInput" selection="{!v.payable.accountingPeriod}" onSearch="{!c.lookupSearch}" iconName="custom:custom3" objectName="AcctSeed__Accounting_Period__c" fieldName="Name" label="" placeholder="Search Period" isMultiEntry="false" isRequired="true"/>                                    
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="3">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Vendor</label>
+                                    <div class="slds-form-element__control"  style="margin-top: -1rem;">
+                                        <c:LookupSearch  aura:id="vendorInput" selection="{!v.payable.vendor}" onSearch="{!c.lookupSearch}" iconName="standard:account" objectName="Account" fieldName="Name" label="" placeholder="Search Vendor" isMultiEntry="false"/>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                            <!--<lightning:layoutItem padding="around-small" size="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">AP Approval Status</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">Approved</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>-->
+                            <lightning:layoutItem padding="around-small" size="3">
+                                <div class="slds-form-element">                                
+                                    <lightning:input aura:id="dateInput" type="text" label="Payee Reference" value="{!v.payable.payeeReference}" required="true"/>      
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="3">
+                                <div class="slds-form-element">                                
+                                    <lightning:input aura:id="dateInput" type="date" label="Date" value="{!v.payable.dateVal}" required="true"/>      
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem padding="around-small" size="3">
+                                <div class="slds-form-element">
+                                    <lightning:input aura:id="dateInput" type="date" label="Due Date" value="{!v.payable.dueDate}" required="true"/>                                                                   
+                                </div>
+                            </lightning:layoutItem>                                             
+                            <lightning:layoutItem padding="around-small" size="3">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Total</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">${!v.payable.totalAmount}</span>                                       
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                        
+                        <aura:set attribute="else">
+                            <lightning:layoutItem padding="around-small" size="3">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Payable</label>
+                                    <div class="slds-form-element__control"  style="margin-top: -1rem;">
+                                        <c:LookupSearch  aura:id="payableInput" selection="{!v.payable}" onSearch="{!c.lookupSearch}" iconName="" objectName="AcctSeed__Account_Payable__c" fieldName="AcctSeed__Payee_Reference__c" label="" placeholder="Enter Payee Reference" isMultiEntry="false"/>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </aura:set>
+                    </aura:if>
+                </lightning:card>
+            </p>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button variant="brand" label="Create" onclick="{!c.payableCreationInputValidations}"/>          
+            <lightning:button variant="brand" label="Cancel" onclick="{!c.closeDetail}" />
+        </aura:set>
+    </c:sldsModal>
+</aura:component>

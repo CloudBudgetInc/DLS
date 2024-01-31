@@ -1,0 +1,28 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" controller="ExportListViewController">
+    <aura:attribute name="listViewOptions" type="List" default="[]"/>
+    <aura:attribute name="selectedListView" type="String" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Add dependency to server side action service -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" style="background-color: rgba(0, 0, 0, 0.10);" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.listViewOptions.length > 0}">
+    	<lightning:layout>
+            <lightning:layoutItem padding="around-small" size="7">
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="4">
+                <lightning:combobox name="" label="List View" value="{!v.selectedListView}" options="{!v.listViewOptions}"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="1" class="btnClass">
+                <lightning:button variant="brand" label="Export" onclick="{!c.listOptionChange}" />
+            </lightning:layoutItem>
+        </lightning:layout>
+    </aura:if>
+    
+</aura:component>

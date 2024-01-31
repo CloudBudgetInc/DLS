@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_an_Email_To_Recruiting_Team</name>
+        <label>Send an Email To Recruiting Team</label>
+        <locationX>50</locationX>
+        <locationY>575</locationY>
+        <actionName>AcctSeed__Project__c.Staffing_Status_Email_Notification</actionName>
+        <actionType>emailAlert</actionType>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <decisions>
+        <name>Check_Staffing_Status_Email_Condition</name>
+        <label>Check Staffing Status Email Condition</label>
+        <locationX>182</locationX>
+        <locationY>455</locationY>
+        <defaultConnectorLabel>Is Not Send Staffing Status Email</defaultConnectorLabel>
+        <rules>
+            <name>Is_Send_Staffing_Status_Email</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.AcctSeed__Status__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.AcctSeed__Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Staffing</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_an_Email_To_Recruiting_Team</targetReference>
+            </connector>
+            <label>Is Send Staffing Status Email</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Is_Update_action</name>
+        <label>Is Update action</label>
+        <locationX>336</locationX>
+        <locationY>335</locationY>
+        <defaultConnectorLabel>Is Not Update</defaultConnectorLabel>
+        <rules>
+            <name>Is_Update</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>IsNew</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Check_Staffing_Status_Email_Condition</targetReference>
+            </connector>
+            <label>Is Update</label>
+        </rules>
+    </decisions>
+    <formulas>
+        <name>IsNew</name>
+        <dataType>Boolean</dataType>
+        <expression>ISNEW()</expression>
+    </formulas>
+    <interviewLabel>Project Trigger Flow - After {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Project Trigger Flow - After</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>210</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Is_Update_action</targetReference>
+        </connector>
+        <object>AcctSeed__Project__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

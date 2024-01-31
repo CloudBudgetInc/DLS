@@ -1,0 +1,65 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" controller="ContactPlanned_DaysoffCtrl" >
+    <aura:attribute name="plannedOffdayRecord" type="Map"  default="{}"/>
+    <aura:attribute name="selectedContact" type="List"  default="[]"/>
+    <aura:attribute name="leaveType" type="List" default="[]"/>
+    <aura:attribute name="typeValues" type="List" default="[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="plannedOffRTNameIdMap" type="Map"  default="{}"/>
+    <aura:attribute name="contactRec" type="Map"  default="{}"/>
+    <aura:attribute name="requestPDORec" type="Map" default="{}"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.searchPlannedOffRecords}"/>
+    
+    <aura:handler name="change" value="{!v.selectedContact}" action="{!c.filterChange}"/>
+
+    
+    <ltng:require scripts="{!join(',',
+                           $Resource.MomentjsResource,
+                           $Resource.MomentTimezone_Data)}"/>
+    
+    
+    <aura:if isTrue ="{!v.showSpinner}">                                
+        <lightning:spinner alternativeText="Loading" variant="brand" size="small" class="slds-is-fixed"/>
+    </aura:if>   
+    
+	<lightning:recordEditForm 
+                              objectApiName="Planned_Days_Off__c">
+        <lightning:messages />
+        
+        <lightning:layout class="slds-wrap" multipleRows="true">
+            <lightning:layoutItem size="4" padding="around-small" >                                                     
+                <c:LookupSearch aura:id="ContactLookup" selection="{!v.selectedContact}" onSearch="{!c.ContactLookupSearch}"
+                                        iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" 
+                                        label="Contact" placeholder="Contact" isMultiEntry="false" isRequired="true"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem size="4" padding="around-small" >                                                     
+                <ui:inputDate aura:id="dateInputField" label="From Date" required="true" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.Date__c}"/>  
+            </lightning:layoutItem>
+            <lightning:layoutItem size="4" padding="around-small" >                                                     
+                <ui:inputDate label="To Date" aura:id="dateInputField"  displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.To_Date__c}"/>  
+            </lightning:layoutItem>
+            <lightning:layoutItem size="4" padding="around-small" >
+                <lightning:select  label="Type"    value="{!v.plannedOffdayRecord.Type__c}">  
+                    <option value="">--None--</option>
+                    <aura:iteration items="{!v.typeValues}" var="i">
+                        <option  value="{!i}">{!i}</option>
+                    </aura:iteration>
+                </lightning:select>
+            </lightning:layoutItem>
+            <lightning:layoutItem size="4" padding="around-small" >
+                <lightning:select  label="Leave Type"  value="{!v.plannedOffdayRecord.Leave_Type__c}">  
+                    <option value="">--None--</option>
+                    <aura:iteration items="{!v.leaveType}" var="i">
+                        <option  value="{!i}">{!i}</option>
+                    </aura:iteration>
+                </lightning:select>
+            </lightning:layoutItem>
+            <lightning:layoutItem size="4" padding="around-small"  >
+                <lightning:textarea label="Description" required="true" aura:id="otherInputField"  value="{!v.plannedOffdayRecord.Description__c}"/>  
+            </lightning:layoutItem>
+        </lightning:layout>         
+    </lightning:recordEditForm>
+    
+    <center><lightning:button variant="brand" label="Save" class="buttonCls" onclick="{!c.planOffAddEditSave}"/>
+    <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.closeAction}"/></center>
+</aura:component>

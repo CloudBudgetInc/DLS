@@ -1,0 +1,49 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global"  Controller="CommunityCaseListView_Controller">
+    <aura:attribute name="filterCasePicklist" type="List" access="PUBLIC"/>
+    <aura:attribute name="selectedCaseFilter" type="String" access="PUBLIC" default="Open Cases"/>
+    <aura:attribute name="communityName" type="String" access="PUBLIC" default=""/>
+    <aura:attribute name="caseTableConfig" type="map" default="{}"/>
+    <aura:attribute name="caseRowList" type="List" default="[]"/>
+    <aura:attribute name="dummyCaseList" type="List" default="[]"/>
+    <aura:attribute name="caseTableColumns" type="List" default="[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="displayDevice" type="String" default=""/> 
+    
+    
+    <aura:handler name="dtCellClick" event="ldt:clickedDtCell" action="{!c.tabActionClicked}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" access="PUBLIC"/>
+  
+    <div class = "slds-p-top_small slds-p-bottom_small">
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner variant="brand"  size="medium" alternativeText="Loading" />
+        </aura:if>
+        <br/><center><h5 class="card-title" style="font-size:2rem;">MY CASES</h5></center><br/>
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">            
+                    <lightning:layout  multipleRows="true">
+                        <lightning:layoutItem padding="around-small" size = "{!v.displayDevice == 'Mobile' ? '12' : '3'}">
+                            <lightning:select label="List View:" class="viewSelectClass" value="{!v.selectedCaseFilter}" onchange="{!c.handleFilterChange}">
+                                <aura:iteration items="{!v.filterCasePicklist}" var="caseFilter">
+                                    <option value="{!caseFilter}" selected="{!(v.selectedCaseFilter == caseFilter)}">{!caseFilter}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size = "{!v.displayDevice == 'Mobile' ? '12' : '9'}">
+                            <div class="submitCls" align="right">
+                                <lightning:button label="Submit Case" variant="brand" class="btn btn-primary" onclick="{!c.navigateSubmitCase}"/>
+                            </div>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                    <!-- Table For Case List -->
+                    <div class = "slds-p-left_small slds-p-right_small ldtTableCls">
+                        <ldt:datatableDev aura:id="caseTable"
+                                          dataRows="{!v.caseRowList}" header="{!v.caseTableColumns}"
+                                          config="{!v.caseTableConfig}"/>
+                    </div>
+                </span>
+            </div>
+        </div>
+    </div>
+</aura:component>

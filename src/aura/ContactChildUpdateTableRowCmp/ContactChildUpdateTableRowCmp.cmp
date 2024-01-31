@@ -1,0 +1,57 @@
+<aura:component controller="ContactChildUpdateController" >
+    
+    <aura:attribute name="fieldInfo" type="Object"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="PUBLIC"/>
+    <aura:attribute name="isRowUpdated" type="boolean" description="check whether fields are changed or not" default="false"/>
+    
+    <tr class="slds-hint-parent">
+        <td>
+            <div class="slds-truncate" >{!v.fieldInfo.fieldName}</div>
+        </td>
+        <aura:if isTrue="{!v.fieldInfo.fieldType == 'DATE'}">
+            <td>
+                <lightning:input type="radio" label="" name="{!v.fieldInfo.fieldName}" value="{!v.fieldInfo.oldValue}" onchange="{!c.valueChange}"/>
+                <ui:outputDate value="{!v.fieldInfo.oldValue}"  />
+            </td>
+            <td>
+                <lightning:input type="radio" label="" checked="true"   name="{!v.fieldInfo.fieldName}" value="{!v.fieldInfo.newValue}" onchange="{!c.valueChange}" />
+                <ui:outputDate value="{!v.fieldInfo.newValue}"  />
+            </td>
+            <td>
+                <!-- lightning:input  type="date" label="" value="{!v.fieldInfo.selectedValue}" / -->
+                <ui:inputDate  label="" format="MM/DD/YYYY" value="{!v.fieldInfo.selectedValue}" change="{!c.inputChange}" displayDatePicker="true" />
+            </td>
+        </aura:if>
+        <aura:if isTrue="{!and(v.fieldInfo.fieldType == 'REFERENCE',v.fieldInfo.apiName == 'Language__c')}">
+        
+         <td>
+                            <lightning:input type="radio" label="{!v.fieldInfo.oldlookUpList[0].Name}" name="{!v.fieldInfo.fieldName}" value="{!v.fieldInfo.oldlookUpList}" onchange="{!c.valueChange}"/>
+                        </td>
+                        <td>
+                            <lightning:input type="radio"  checked="true" label="{!v.fieldInfo.newlookUpList[0].Name}" name="{!v.fieldInfo.fieldName}" value="{!v.fieldInfo.newlookUpList}" onchange="{!c.valueChange}"/>
+                        </td>
+                        <td>
+                        <c:LookupSearch aura:id="lookup" selection="{!v.fieldInfo.lookUpList}" onSearch="{!c.lookupSearch}"  objectName="Language__c" fieldName="Name" condition="" label="" placeholder="" isMultiEntry="false" isRequired="true"/>
+                       </td>
+        
+        
+        </aura:if>
+         <aura:if isTrue="{!and(v.fieldInfo.fieldType != 'REFERENCE',v.fieldInfo.fieldType != 'DATE')}">
+             
+              <td>
+                                <lightning:input type="radio" label="{!v.fieldInfo.oldValue}" name="{!v.fieldInfo.fieldName}" value="{!v.fieldInfo.oldValue}" onchange="{!c.valueChange}"/>
+                            </td>
+                            <td>
+                                <lightning:input type="radio"  checked="true" label="{!v.fieldInfo.newValue}" name="{!v.fieldInfo.fieldName}" value="{!v.fieldInfo.newValue}" onchange="{!c.valueChange}"/>
+                            </td>
+                             <td>
+                            <lightning:input   label="" value="{!v.fieldInfo.selectedValue}" onchange="{!c.inputChange}" />
+                       		 </td>
+        </aura:if>
+           
+    </tr>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+</aura:component>

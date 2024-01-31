@@ -1,0 +1,9 @@
+.THIS .wrap {
+    white-space:normal !important;
+}
+.THIS .toggleClass .slds-form-element__label{
+    font-size: medium !important;
+}
+.THIS .thead-light th {
+   border: 1px solid #055E89 !important;
+}

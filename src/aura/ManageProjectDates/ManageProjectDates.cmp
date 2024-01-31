@@ -1,0 +1,21 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="ManageProjectDatescontroller">
+	<aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:attribute name="card" type="Map" default="{'title' : '', 'message' : '', 'buttonName' : '','showErrorMsg' : false}"/>
+    
+    <!-- To display the message -->
+    
+    <aura:if isTrue="{!v.showErrorMsg}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">{!v.card.title}</p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="slds-float_right"
+                                  variant="brand"
+                                  label="{!v.card.buttonName}"
+                                  onclick="{!c.closeAction}"/>
+            </aura:set>
+            {!v.card.message}
+        </lightning:card>
+    </aura:if>    
+</aura:component>

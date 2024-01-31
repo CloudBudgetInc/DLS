@@ -1,0 +1,31 @@
+.THIS .approvedclass{
+    color: green;
+    font-weight: bolder;
+}
+.THIS .rejectedclass {
+    color: red;
+    font-weight: bolder;
+}
+.THIS .headingCls {
+    display: inline-block;
+}
+
+.THIS .btnApprove {
+    background-color : green !important;
+    color: white !important;
+}
+.THIS .btnReject {
+    background-color : red !important;
+    color: white !important;
+}
+
+.THIS .normalBtn {
+    background-color: rgb(255, 255, 255) !important;
+    color: rgb(0, 112, 210) !important;
+}
+.THIS .slds-card__footer {
+    text-align: left;
+}
+.THIS .scrollerSize {
+    height: 400px;
+}

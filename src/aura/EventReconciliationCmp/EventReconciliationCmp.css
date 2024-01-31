@@ -1,0 +1,135 @@
+.THIS .datePickerCls {
+    width: 90% !important;
+}
+.THIS .notesCls{
+    white-space:normal;
+    font-size:0.875rem !important;
+    word-wrap:break-word;
+}
+.THIS .btnClass {
+    margin-top: 1.25rem;
+}
+.THIS .slds-table--bordered tbody td {
+    white-space: normal !important;
+}
+
+.THIS .slds-checkbox_faux {
+    border: 1px solid darkgray !important;
+}
+.THIS .lookupFilterCls {
+    margin-top: 0rem;
+}
+
+.THIS .tcdTableCls {
+    margin-top: 0.25rem;
+}
+
+.THIS .nowrapStyle {
+    white-space: normal !important;
+}
+
+.THIS .rowHighlight {
+    background-color: yellow;
+}
+
+/*.THIS .fixed_header tbody{
+  display:block;
+  width: 100%;
+  overflow: auto;
+  max-height:400px;
+}
+
+.THIS .fixed_header thead tr {
+   display: block;
+    width: 100%;
+}
+.THIS table.fixed_header thead tr th:last-child { 
+   border-right: 1px solid rgb(221, 219, 218);
+}*/
+
+/*.THIS .scrollable-table {
+    height: 500px;
+    overflow-y: auto;
+}
+
+.THIS .scrollable-table table {
+    position: relative;
+}
+
+.THIS .scrollable-table thead {
+    background-color: #00FFFF;
+    position: relative;
+}
+
+.THIS ._scrollable-table thead::after {
+    background-color: #FF00FF;
+    position: absolute;
+    content: '';
+    height: 50px;
+    width: 100%;
+    top: 0;
+    z-index: 9000;
+    opacity: 1;
+    
+}
+
+.THIS .scrollable-table thead {
+    background-color: #00FFFF;
+}*/
+
+.THIS .slds-icon {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+.THIS .trainingClass{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #039BE5 !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #039BE5 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+}
+.THIS .prepClass {
+     width: 1rem !important;
+    height: 1rem !important;
+    background: #8E24AA !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #8E24AA !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+}
+.THIS .trainingPlaceHolderClass{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #039BE5 !important;
+    /*border-radius: 50% !important;*/
+    content: "" !important;
+    color: #039BE5 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+}
+.THIS .prepPlaceHolderClass {
+     width: 1rem !important;
+    height: 1rem !important;
+    background: #8E24AA !important;
+    /*border-radius: 50% !important;*/
+    content: "" !important;
+    color: #8E24AA !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+}
+.THIS .buttonBorderCls {
+    border: 2px solid #055E89;
+}
+
+.THIS .approvedCls .slds-input {
+    background-color: green;
+    color: white;
+}
+.THIS .rejectCls .slds-input {
+    background-color: red;
+    color: white;
+}

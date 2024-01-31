@@ -1,0 +1,33 @@
+<aura:component implements="force:hasRecordId,force:lightningQuickAction" access="global" controller="NewClassAnnouncementController">
+    <aura:attribute name="initialValues" type="Map" default="{}"/>
+    <aura:attribute name="showContent" type="Boolean" default="false"/>
+    <aura:attribute name="projectTaskRecords" type="List" default="[]"/>
+    <aura:attribute name="selectedProjectTask" type="string" default=""/>
+    
+    <ltng:require styles="{!$Resource.SldsModelCss}" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <aura:if isTrue="{!not(v.showContent)}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p class="slds-text-align_center"></p>
+            </aura:set>
+            <p class="slds-p-horizontal_small">
+                <lightning:select aura:id="taskSelect" name="select" label="Select Project Task" value="{!v.selectedProjectTask}" required="true">
+                    <option value="--None--">--None--</option>
+                    <aura:iteration items="{!v.projectTaskRecords}" var="task">
+                        <option text="{!task.Name}" value="{!task.Id}"></option>
+                    </aura:iteration>
+                </lightning:select>
+            </p>
+            
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Next" onclick="{!c.nextBtnClick}"/>
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+    <aura:if isTrue="{!v.showContent}">
+        <c:SendEmailCmp contentInput="{!v.initialValues}" buttonType="Student Payment Remainder"/>
+    </aura:if>
+</aura:component>

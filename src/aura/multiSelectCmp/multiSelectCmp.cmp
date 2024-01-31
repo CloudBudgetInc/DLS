@@ -1,0 +1,60 @@
+<aura:component >
+    <aura:attribute name="label" type="String" default=""/>
+    <aura:attribute name="options" type="List" access="PRIVATE" default="[]"/>
+    <aura:attribute name="optionsList" type="List"  access="PUBLIC" default="[]"/>
+    <aura:attribute name="selectedvalue" type="List" default="[]"  access="PUBLIC"/>
+    <aura:attribute name="handleChange" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="ischevrondownIcon" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="required" type="Boolean" default="false"/>
+    <aura:attribute name="hideLabel" type="Boolean" default="false"/>
+    <aura:attribute name="helpText" type="String"/>
+    <aura:attribute name="isForCommunity" type="Boolean" default="true"/>
+    <aura:attribute name="inputClass" type="String" default=""/>
+    <aura:attribute name="showError" type="Boolean" default="false"/>
+
+    <aura:handler name="change" value="{!v.selectedvalue}" action="{!c.doInit}"/>
+    
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    <aura:method name="checkForValues" action="{!c.checkForValue}"/> 
+    <aura:method name="reLoadPickList" action="{!c.doInit}"/> 
+    
+    <div Style="position:relative;">            
+        <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+            <aura:if isTrue="{! not(v.hideLabel)}">
+                <div class="slds-form-element__label">
+                    <aura:if isTrue="{!v.required}"><abbr class="slds-required" title="required">* </abbr></aura:if>
+                    {!v.label} <span class="slds-p-left_x-small"><aura:if isTrue="{!v.helpText}"><lightning:helptext content="{!v.helpText}"/></aura:if></span>
+                </div>
+            </aura:if>
+            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                <aura:if isTrue="{!v.ischevrondownIcon}">
+                    <lightning:icon iconName="utility:switch" size="x-small" class="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default" />                    
+                    <aura:set attribute="else">
+                        <lightning:icon iconName="utility:down" size="xx-small" class="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default" />
+                    </aura:set>
+                </aura:if>
+                <input aura:id="multiSelectInput" type="text" readonly="readonly" class="{! v.inputClass}" value="{!v.selectedvalue.length + ' selected'}" onclick="{!c.showList}"/>
+                <aura:if isTrue="{!v.showError}">
+                	<div class="helpText">Please complete this field.</div>
+                </aura:if>
+            </div>            
+        </div>
+        <div aura:id="optionList" class="slds-hide" role="listbox" style="top:-1.5rem;position:relative;">
+            <ul class="scrollbar slds-listbox slds-listbox_vertical slds-dropdown slds-dropdown_fluid" style="max-height: 150px;overflow-y: scroll;margin-top:1.72rem!important;">
+                <aura:iteration items="{!v.options}" var="opt" indexVar="index">
+                    <li role="presentation" data-index="{!index}" class="slds-listbox__item" onclick="{!c.selectOption}">
+                        <span id="listbox-option-unique-id-01" class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small slds-media_center slds-is-selected" role="option">
+                            <span class="slds-media__figure">
+                                <lightning:icon iconName="{!opt.selected == true ? 'utility:check' : ''}" size="x-small"/>
+                            </span>
+                            <span class="slds-media__body">
+                                <span class="slds-truncate" title="{!opt.label}">
+                                    <span class="slds-assistive-text">Current Selection:</span> {!opt.label}</span>
+                            </span>
+                        </span>
+                    </li>
+                </aura:iteration>
+            </ul>
+        </div>
+    </div>
+</aura:component>

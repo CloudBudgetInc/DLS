@@ -1,0 +1,17 @@
+.THIS .detailClass {
+    padding-left: 7%;
+}
+
+.THIS .labelClass {
+    font-weight: bold;
+    font-size: 14px;
+}
+.THIS .fa-arrow-left{
+    font-size:2rem !important;
+    cursor:pointer;
+    color: #055e89 !important;
+}
+.THIS.bldCls{
+    color: #055e89 !important;
+    font-weight:bold;
+}

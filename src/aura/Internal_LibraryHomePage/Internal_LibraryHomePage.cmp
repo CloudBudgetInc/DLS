@@ -1,0 +1,8 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global" controller="LibrarySearchController">
+    
+    <ltng:require scripts="{!join(',', 
+                           $Resource.DLS_Communites_CSS + '/Communites_CSS/script/jquery-3.2.1.slim.min.js')}"
+                  styles="{!join(',', 
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/font-awesome/css/all.css')}"/>
+    <c:LibrarySearchCmp/>
+</aura:component>

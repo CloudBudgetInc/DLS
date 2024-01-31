@@ -1,0 +1,49 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" extends="c:CommunityComponentVisibilityUtil">
+    
+    <aura:attribute name="displayDevice" type="string" default=""/>
+    <aura:attribute name="homeCmpVisibility" type="Map"/>
+    
+    <aura:handler name="change" value="{!v.communityCmpVisibilities}" action="{!c.handleCommunityCmpVisibilitiesChange}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>  
+    
+    <aura:if isTrue="{!v.homeCmpVisibility}">
+        <lightning:layout multipleRows="true">
+            <aura:if isTrue="{!v.homeCmpVisibility.Zoom_tutorials}">
+                <lightning:layoutItem size="12"  padding="{!v.displayDevice == 'Mobile' ? '' : 'around-small'}">
+                    <div class="card-deck">
+                        <div class="card">
+                            <div class="card-body">
+                                <center>
+                                    <h5 style="font-size:1.25rem;">
+                                        Need help with Zoom? Watch video tutorials here: <a href="https://www2.dlsdc.com/ZoomTrainingVideos" target="_blank">Click Here</a>
+                                    </h5>
+                                </center>      
+                            </div>
+                        </div>
+                    </div>
+                </lightning:layoutItem>
+            </aura:if>
+            <lightning:layoutItem size="{!or(v.displayDevice == 'Mobile', not(v.homeCmpVisibility.To_Do_Items)) ? '12' : '7'}"  padding="{!v.displayDevice == 'Mobile' ? '' : 'around-small'}">
+                <c:WelcomeCmp displayDevice="{!v.displayDevice}"/>
+            </lightning:layoutItem>
+            <aura:if isTrue="{!v.homeCmpVisibility.To_Do_Items}">
+                <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12' : '5'}" padding="{!v.displayDevice == 'Mobile' ? '' : 'around-small'}">
+                    <c:OnBoardingCmp/>
+                </lightning:layoutItem>
+            </aura:if>
+            <aura:if isTrue="{!v.homeCmpVisibility.Upcoming_Events}">
+                <lightning:layoutItem size="12"  padding="{!v.displayDevice == 'Mobile' ? '' : 'around-small'}">
+                    <div style="{!v.displayDevice == 'Mobile' ? 'display:block;' : 'display:none'}"><br/></div>
+                    <c:UpcomingEventsCmp displayDevice="{!v.displayDevice}"/>
+                </lightning:layoutItem>
+            </aura:if>
+            <aura:if isTrue="{!v.homeCmpVisibility.Upcoming_PlannedDaysOff}">
+                <lightning:layoutItem size="12"  padding="{!v.displayDevice == 'Mobile' ? '' : 'around-small'}">
+                    <div style="{!v.displayDevice == 'Mobile' ? 'display:block;' : 'display:none'}"><br/></div>
+                    <c:UpcomingPlannedDaysOffCmp/>
+                </lightning:layoutItem>
+            </aura:if>
+        </lightning:layout>
+    </aura:if>
+</aura:component>

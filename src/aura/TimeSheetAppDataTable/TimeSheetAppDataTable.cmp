@@ -1,0 +1,132 @@
+<aura:component controller="TimeSheetAppApexController" implements="forceCommunity:availableForAllPageTypes">
+    <!-- attributes -->
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="data" type="Object"/>
+    <aura:attribute name="columns" type="List"/>
+    <aura:attribute name="timePeriod" type="String" default="Today"/>
+    <aura:attribute name="recId" type="String"/>
+    <aura:attribute name="EditTimeItem" type="MBA_Timesheet__c"/>
+    <aura:attribute name="workItems" type="agf__ADM_Work__c[]" access="global"/>
+    <aura:attribute name="sortedBy" type="String" />
+	<aura:attribute name="sortedDirection" type="Boolean" default="true" />
+    
+    <aura:attribute name="allData" type="List"/>
+    <aura:attribute name="currentPageNumber" type="Integer" default="1"/>
+    <aura:attribute name="pageSize" type="Integer" default="10"/>
+    <aura:attribute name="totalPages" type="Integer" default="false"/>
+    <aura:attribute name="pageList" type="List" default="false"/>
+    <aura:attribute name="errMsg" type="String" default=""/>
+
+    <!-- handlers-->
+    <aura:handler name="init" value="{! this }" action="{! c.init }"/>
+    <aura:handler event="c:dataTableUpdate" action="{!c.handleUpdateDataTable}"/>
+    
+    <!-- Register Events -->
+	<aura:registerEvent name="updateChart" type="c:chartUpdate"/>
+    
+    <lightning:card title="{!v.timePeriod}" class="slds-m-around_xxx-small">
+        <!-- the container element determine the height of the datatable -->
+        <lightning:layout multipleRows="true" horizontalAlign="center" verticalAlign="start">
+            <lightning:layoutItem padding="around-small" size="12">
+                <lightning:datatable
+                                     aura:id = "timeheetDataTable"
+                                     columns="{! v.columns }"
+                                     data="{! v.data }"
+                                     keyField="id"
+                                     onrowaction="{! c.handleRowAction }"
+                                     onsort="{!c.updateColumnSorting}"
+                                     hideCheckboxColumn="true"
+                                     sortedBy="{!v.sortedBy}"
+                                     sortedDirection="{!v.sortedDirection}"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" flexibility="auto">
+                <lightning:button label="First" iconName="utility:left" iconPosition="left"
+                                  onclick="{!c.onFirst}" disabled="{! v.currentPageNumber == 1}"/>
+                <lightning:button iconName="utility:chevronleft" iconPosition="left"
+                                  onclick="{!c.onPrev}" disabled="{! v.currentPageNumber == 1}"/>
+                <span class="slds-p-horizontal_x-small">
+                    <a onclick="{!c.processMe}" name="1" 
+                       class="{! (v.currentPageNumber == 1) ? 'selected' : ''}">1</a>
+                </span>
+                <span class="slds-p-horizontal_xxx-small">
+                    <a>...</a>
+                </span>
+                
+                <aura:iteration items="{!v.pageList}" var="item">
+                    <span class="slds-p-horizontal_x-small">
+                        <a onclick="{!c.processMe}" name="{!item}"
+                           class="{! (v.currentPageNumber == item) ? 'selected' : ''}">{!item}</a>
+                    </span>
+                </aura:iteration>
+                
+                <span class="slds-p-horizontal_xxx-small">
+                    <a>...</a>
+                </span>
+                <span class="slds-p-horizontal_x-small">
+                    <a onclick="{!c.processMe}" name="{!v.totalPages}"
+                       class="{! (v.currentPageNumber == v.totalPages) ? 'selected' : ''}">{!v.totalPages}</a>
+                </span>
+                <lightning:button iconName="utility:chevronright" iconPosition="right" 
+                                  disabled="{! v.currentPageNumber == v.totalPages}" onclick="{!c.onNext}"/>
+                <lightning:button label="Last" iconName="utility:right" iconPosition="right" 
+                                  disabled="{! v.currentPageNumber == v.totalPages}" onclick="{!c.onLast}"/>
+            </lightning:layoutItem>
+        </lightning:layout>   
+    </lightning:card>
+    
+    <div role="dialog" tabindex="-1" aura:id="editDialog" class="slds-modal" data-action-type="" data-modal="editDialog">
+        <div class="slds-modal__container">
+            <div class="slds-modal__header">
+                <h2 id="header" class="slds-text-heading--medium">Edit TimeSheet Item</h2>
+            </div>
+            <div class="slds-modal__content slds-p-around--medium" aura:id="recordFieldContainer">                                  
+                
+                <div class="slds-form-element">
+                    <div class="slds-form-element__control">     
+                        
+                        <lightning:select name="timeEntryWorkItem" label = "Work Item" 
+                                          value="{!v.EditTimeItem.MBA_Work_Item_Lookup__c}"
+                                          required="true"  aura:id="dataTableEditSelect"
+                                          messageWhenValueMissing="Choose a work item!">
+                            <option value="">-- None --</option>
+                            <aura:iteration items="{!v.workItems}" var="workItem">
+                                <option text="{!workItem.agf__Subject__c}" value="{!workItem.Id}"/>
+                            </aura:iteration>
+                        </lightning:select>
+                        
+						<lightning:input type="number" label="Hours" name="timeEntryHours" min = "0.1" step = "0.01" 
+                                 value="{!v.EditTimeItem.Hours_Manual__c}" required="true" onchange="{!c.hoursValidation}"/>
+                        <p style="color:red;">{!v.errMsg}</p>
+                        
+                        <lightning:input type="date" name="timeEntryDate" value="{!v.EditTimeItem.Date_of_Work__c}"
+                                 label="Actual Completed Date"
+                                 class="slds-datepicker slds-day" required="true"/>
+                        
+                        <!--lightning:input name="timeEntryDesc" maxlength="80" value="{!v.EditTimeItem.Description__c}"
+                                 label="Description" required="true"/-->
+                        <lightning:textarea aura:id="comments" label="Description" value="{!v.EditTimeItem.Description__c}" 
+                                            rows="2" onchange="{!c.calculateLength}"
+                                    onfocus="{!c.validateDescription}" onblur="{!c.validateDescription}"/>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            <div class="slds-modal__footer">
+                <lightning:button label="Cancel" name="editDialog" onclick="{!c.closeEditModal}" />
+                <lightning:button variant="brand" label="Save" name="confirmEditRecord" onclick="{!c.saveEditModal}" />                                
+            </div>
+        </div>
+    </div>
+	<div class="slds-backdrop " aura:id="dialogBack"></div>  
+    
+    <aura:if isTrue="{!v.showSpinner}">
+       <div class="slds-spinner_container spinnerFixed">
+           <div role="status" class="slds-spinner slds-spinner--medium slds-spinner--brand">
+               <span class="slds-assistive-text">Loading</span>
+               <div class="slds-spinner__dot-a"></div>
+               <div class="slds-spinner__dot-b"></div>
+           </div>
+       </div>
+   </aura:if>    
+</aura:component>

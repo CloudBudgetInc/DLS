@@ -1,0 +1,7 @@
+.THIS .wrap {
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+.THIS th{
+    cursor: pointer !important;
+}

@@ -1,0 +1,57 @@
+<template>
+    <template if:true={showToast}>
+        <c-modal-cmp header={toastMsg.header} show-header show-footer show={toastMsg.show}>
+            <div slot="footer">
+                <button class="slds-button slds-button_neutral btn btn-secondary" onclick={closeToastMsg}
+                    name="OK">OK</button>
+            </div>
+            <div slot="body">
+                <p class="slds-align_absolute-center slds-p-around_large">{toastMsg.message}</p>
+            </div>
+        </c-modal-cmp>
+    </template>
+    <template if:true={showDeleteModal}>
+        <c-delete-uploaded-files box-folder-id={folderId} onshowspinner={handleShowSpinner}
+        onhidespinner={handleHideSpinner} onrefresh={handleRefresh} onclosemodal={handleCloseDeleteModal}>
+
+    </c-delete-uploaded-files>
+    </template>
+    <div class="cardPadding">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size='8'>
+                            <lightning-input type="file" onchange={handleFilesChange} multiple variant="label-hidden">
+                            </lightning-input>
+
+                            <template if:true={isFilesEmpty}>
+                                <template for:each={filesDetails} for:item="item" for:index="index">
+                                    <lightning-pill label={item.fileName} name={item.fileName} data-id={index}
+                                        onremove={handleFilesRemoveInside} key={item.Id}>
+                                    </lightning-pill>
+                                </template>
+                            </template>
+
+                        </lightning-layout-item>
+                        <lightning-layout-item size='4'>
+                            <template if:true={showDeleteButton}>
+                                <div class="slds-text-align_right">
+                                    <button class="btn btn-primary" label='Delete Uploaded Files'
+                                        name="Delete Uploaded Files" onclick={handleDeleteModal}>Delete Uploaded
+                                        Files</button>
+                                </div>
+                            </template>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <div class='slds-p-top_small'>
+                        <button class="slds-button slds-button_neutral btn btn-primary" name="Upload To Box"
+                            onclick={handleUpload}>
+                            Upload To Box
+                        </button>
+                    </div>
+                </span>
+            </div>
+        </div>
+    </div>
+</template>

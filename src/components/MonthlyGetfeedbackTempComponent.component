@@ -1,0 +1,25 @@
+<apex:component controller="WeeklyGetfeedbackCompController" access="global">
+    
+    <apex:attribute name="contactId" description="" type="String" assignTo="{!conId}"/>
+    <apex:attribute name="parentId" description="" type="String" assignTo="{!proId}"/>
+    
+    <center>
+        <img src="https://dlsdc--c.na61.content.force.com/servlet/servlet.ImageServer?id=01532000001YDsU&oid=00DRT0000006o6z&lastMod=1435434744000" alt="Company Logo" height="50px" width="100px"/>
+    </center>
+    <!--<p>Dear {!opp.Student_Name__r.Name} {!conAssign.Candidate_Name__r.Name},</p><br/>-->
+    <!--<apex:outputPanel rendered="{!IF(conAssign.Candidate_Name__r.Name != null)}">
+    
+    </apex:outputPanel>-->
+    <p>Dear&nbsp;<apex:outputText value="{!IF(conAssign.Candidate_Name__r.Name != null,conAssign.Candidate_Name__r.Name,'')}"></apex:outputText>, </p><br/>
+    
+    <p>  Your feedback is really important to us, so we would love to hear how things have gone for you so far.</p>
+    <br/>
+    <p>  Please help us by filling out this very short survey. The feedback will ONLY be shared with your language training supervisor.</p>
+    <br/>
+    <!-- Commented by Shalini to send Feedback from Pro<p><a href="https://www.getfeedback.com/r/PW3oCJut?ContactID={!opp.Student_Name_ID__c}&OPPORTUNITY_ID={!opp.Id}&User_ID={!opp.Supervisor__c}&Contact_ID={!conAssign.Candidate_Name__c}">Please click here to fill feedback</a></p><br/> -->
+    <p><a href="https://www.getfeedback.com/r/PW3oCJut?ContactID={!conAssign.Candidate_Name__c}&OPPORTUNITY_ID={!pro.Acctseed__Opportunity__c}&PROJECT_ID={!pro.Id}&CONASSIGN_ID={!conAssign.Id}">Please click here to fill feedback</a></p><br/>
+    <br/>
+    <p>Thank you again for taking the time to fill this out!</p>
+    <br/>
+    <p>- DLS Administration</p>
+</apex:component>

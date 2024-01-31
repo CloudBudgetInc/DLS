@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Instructor_Email_Notification</name>
+        <label>Instructor Email Notification</label>
+        <locationX>437</locationX>
+        <locationY>324</locationY>
+        <actionName>AssessmentReportEmailToInstructor</actionName>
+        <actionType>apex</actionType>
+    </actionCalls>
+    <interviewLabel>Assessment Report Instructor Email Notification {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Assessment Report Instructor Email Notification</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>311</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>Instructor_Email_Notification</targetReference>
+        </connector>
+        <schedule>
+            <frequency>Daily</frequency>
+            <startDate>2021-07-13</startDate>
+            <startTime>08:00:00.000Z</startTime>
+        </schedule>
+        <triggerType>Scheduled</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

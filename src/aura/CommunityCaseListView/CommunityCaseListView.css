@@ -1,0 +1,25 @@
+.THIS .slds-spinner_container {
+    position:fixed !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+    z-index: 1000000 !important;
+}
+.THIS .cardPadding{
+    padding:2rem;
+}
+.THIS .ldtdev .select {
+    background-image: none !important;
+}
+.THIS .itemMenuContainer{
+    display: none !important;
+}
+.THIS .submitCls{
+    margin-top: 1.8rem;
+    align:right;
+}
+@media (max-width:48em){
+    .THIS .submitCls{
+        margin-top: 0rem;
+        text-align: -webkit-center;
+    }
+    
+}

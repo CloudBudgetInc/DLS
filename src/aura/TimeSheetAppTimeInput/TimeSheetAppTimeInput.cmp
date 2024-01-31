@@ -1,0 +1,81 @@
+<aura:component controller="TimeSheetAppApexController" implements="forceCommunity:availableForAllPageTypes">
+    <!--Attributes-->
+    <aura:attribute name="workItems" type="agf__ADM_Work__c[]" access="public"/>
+    <aura:attribute name="lineNumber" type="Integer"/>
+    <aura:attribute name="timeInput" type="MBA_Timesheet__c" access="public"
+                    default="{'sobjectType': 'MBA_Timesheet__c',
+                               'Name': '',
+                               'MBA_Work_Item_Lookup__c':'',
+                               'Hours_Manual__c':'',
+                               'Date_of_Work__c':'',
+                             	'Description__c': ''
+                              }"/>
+    <aura:attribute name="columns" type="List"/>
+    <aura:attribute name="checkShowHide" type="Boolean" default="true"/>
+    <aura:attribute name="editShowHide" type="Boolean" default="false"/>
+    <aura:attribute name="errMsg" type="String" default=""/>
+    
+    <!--Handlers-->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>    
+    
+    <!--Registered Events-->
+    <aura:registerEvent name="updateTimeInput" type="c:timeInputUpdate"/>
+    <aura:registerEvent name="deleteTimeInput" type="c:timeInputDelete"/>
+    
+    <tr>
+        <td data-label="Work Item" class="slds-size_2-of-12">
+            <div>
+                <lightning:select name="timeEntryWorkItem" label = "Work Item" class = "label-hidden"
+                                  value="{!v.timeInput.MBA_Work_Item_Lookup__c}"
+                                  required="true" 
+                                  messageWhenValueMissing="Choose a work item!">
+                    <option value="">-- None --</option>
+                    <aura:iteration items="{!v.workItems}" var="workItem">
+                        <option text="{!workItem.agf__Subject__c}" value="{!workItem.Id}"/>
+                    </aura:iteration>
+                </lightning:select>
+            </div>
+        </td>
+        <td data-label="Hours" class="slds-size_1-of-12">
+            <div >
+                <lightning:input type="number" label="Hours" name="timeEntryHours" min = "0.1" step = "0.01" 
+                                 variant = "label-hidden" value="{!v.timeInput.Hours_Manual__c}"
+                                 required="true" onchange="{!c.hoursValidation}"/>
+                <p style="color:red;">{!v.errMsg}</p>
+            </div>
+        </td>
+        <td data-label="Actual Completed Date" class="slds-size_2-of-12">
+            <div>
+            	<lightning:input type="date" name="timeEntryDate" value="{!v.timeInput.Date_of_Work__c}"
+                                 label="Actual Completed Date" variant = "label-hidden"
+                                 class="slds-datepicker slds-day slds-is-today" required="true"/>
+        	</div>
+        </td>
+        <td data-label="Description" class="slds-size_5-of-12">
+            <div>
+                <lightning:textarea aura:id="comments" label="" value="{!v.timeInput.Description__c}" rows="2" 
+                                    onchange="{!c.calculateLength}"
+                                    onfocus="{!c.validateDescription}" onblur="{!c.validateDescription}"/>
+            	<!--lightning:input name="timeEntryDesc" maxlength="500" value="{!v.timeInput.Description__c}"
+                                 label="Description" variant = "label-hidden" required="true"/--> 
+            </div>    
+        </td>  
+        <td data-label="Action" class="slds-size_1-of-12">
+            <div>
+                <aura:if isTrue="{!v.checkShowHide}">
+                    <lightning:icon iconName="action:check" alternativeText="Click When Done Line" 
+                                    title="Click When Done Line" size="xx-small"
+                                    onclick="{!c.addLineToParentOrEdit}" class="slds-m-right_xx-small"/>
+                </aura:if>
+                <aura:if isTrue="{!v.editShowHide}">
+                    <lightning:icon iconName="action:edit" alternativeText="Click To Edit Line" 
+                                    title="Click To Edit Line" size="xx-small"
+                                    onclick="{!c.editLineInArray}" class="slds-m-right_xx-small"/>
+                </aura:if>
+            	<lightning:icon iconName="action:delete" alternativeText="Click to Delete Line" 
+                                title="Click to Delete Line" size="xx-small"
+                                onclick="{!c.deleteLine}" class="slds-m-left_xx-small"/>
+            </div>
+        </td>
+    </tr>    
+</aura:component>

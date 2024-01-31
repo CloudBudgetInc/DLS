@@ -1,0 +1,1 @@
+<aura:event type="APPLICATION" description="Event fired from other components to update the chart component"/>

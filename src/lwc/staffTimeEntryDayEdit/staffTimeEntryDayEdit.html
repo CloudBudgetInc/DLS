@@ -1,0 +1,31 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 11-03-2023
+  @last modified by  : Vasanthram
+-->
+<template>
+    <c-modal-cmp header={editModal.title} show-header show-footer show>
+        <div slot="body">
+            <lightning-layout multiple-rows>
+                <lightning-layout-item class="slds-p-around--small" size="4" small-device-size="12"
+                    medium-device-size="4" large-device-size="4">
+                    <lightning-input type="number" label="Hours" name={editModal.day.dateVal} value={editModal.day.dayHours}
+                        formatter="decimal" step="0.01" onchange={handleChange} required></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item class="slds-p-around--small" size="6" small-device-size="12"
+                    medium-device-size="6" large-device-size="8">
+                    <lightning-textarea name="Comments" label="Comments" value={comment} onchange={handleChange}
+                        required></lightning-textarea>
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+        <div slot="footer">
+            <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleDelete} name="Delete">Delete</button>
+            <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleOk} name="OK">OK</button>
+            <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleCancel}
+                name="Cancel">Cancel</button>
+        </div>
+    </c-modal-cmp>
+</template>

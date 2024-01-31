@@ -1,0 +1,23 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="MoodleLoginCtrl">
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="message" type="string" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."  size="medium" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.message != null}">
+        <div class="card-deck">
+            <div class="card">
+                <div class="card-body">
+                    <center><p>{!v.message}</p></center>
+                </div>
+            </div>
+        </div>
+    </aura:if>
+</aura:component>

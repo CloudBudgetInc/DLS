@@ -1,0 +1,23 @@
+@media (min-width: 48em){
+    .linewrap{
+        margin-top: -0.25rem !important;
+    }
+}
+
+
+.medium-font{
+    font-size: 0.8rem;
+}
+
+.boxTitle {
+    font-size: 13px;
+    position: absolute;
+    top: -10px;
+    background-color: #fff;
+    padding: 0 5px;
+    font-weight: bold;
+}
+
+.slds-box {
+    position: relative;
+}

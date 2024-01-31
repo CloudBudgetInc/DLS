@@ -1,0 +1,21 @@
+<apex:page StandardController="AcctSeed__Project__c">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+    <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+    <script src="{!URLFOR($Resource.Filter)}"/>
+    <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+    <script src="{!URLFOR($Resource.moment)}"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.map"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"/>
+        
+    <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+
+    <!-- <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" /> commented for showing toggle checkbox --> 
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS_2_1_3, 'assets/styles/salesforce-lightning-design-system.css')}" />
+
+    <c:Hybrid_TimeCard_InlineComp parentType="AcctSeed__Project__c" parentId="{!Id}" />
+</apex:page>

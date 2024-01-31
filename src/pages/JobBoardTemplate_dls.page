@@ -1,0 +1,72 @@
+<apex:page standardStyleSheets="false" showHeader="false" sidebar="false" cache="false">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Diplomatic Language Services</title>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="shortcut icon" href="{!URLFOR($Resource.html_template_dls, 'img/favicon.ico')}" type="image/gif"/>
+<apex:stylesheet value="{!URLFOR($Resource.html_template_dls, 'css/styles.css')}" />
+<apex:stylesheet value="{!URLFOR($Resource.html_template_dls, 'css/jobboard.css')}" />
+<style>body { 
+background-color:#FFFFFF !important; 
+color: #606b6c !important; 
+font-size: 14px;
+line-height: 18px;}
+body a, body a:link, body a:active, body a:visited {
+    color: #a0c062 !important;
+    text-decoration: none !important;}
+body a:hover {
+    color: #728c40 !important;}
+body, td {
+color: #606b6c !important; 
+font-size: 14px;
+line-height: 18px;}
+.b-content {
+color: #606b6c !important; 
+font-size: 14px;
+line-height: 18px;}
+.atsFormTdTitle {
+font-family: CrimsonText,serif;
+font-weight: 900;
+font-size: 18px;
+line-height: 24px;
+color: #045394!important;}
+.atsJobDetailsAlreadyLogin {
+font-family: CrimsonText,serif;
+font-weight: 900;
+font-size: 18px;
+line-height: 24px;
+color: #045394!important;}
+.atsJobDetailsAlreadyLogin a {
+font-family: Arial, Helvetica, sans-serif !important;
+font-weight: 400 !important;
+font-size: 14px !important;}
+.atsJobDetailsTdLeft {
+font-family: CrimsonText,serif;
+font-weight: 900;
+font-size: 18px;
+line-height: 24px;
+color: #045394!important;}
+#atsSearchTitle {
+font-family: CrimsonText,serif;
+font-weight: 900;
+font-size: 18px;
+line-height: 24px;
+color: #045394!important;}
+#atsSearchResultsTitle {
+font-family: CrimsonText,serif;
+font-weight: 900;
+font-size: 18px;
+line-height: 24px;
+color: #045394!important;}</style>
+</head>
+<body>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF">
+  <tr>
+    <td colspan="2" class="b-content">
+      <apex:insert name="body" /></td>
+  </tr>
+</table>
+</body>
+</html>
+</apex:page>

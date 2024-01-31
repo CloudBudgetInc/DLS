@@ -1,0 +1,62 @@
+.THIS .imageClass img{
+    width: 30% !important;
+    height: 30% !important;
+}
+.THIS .imageCls{
+    width: 30% !important;
+    height: 30% !important;
+}
+.THIS .wrap {
+    white-space:pre-line !important;
+}
+.THIS .itemMenuContainer{
+    display: none;
+}
+.THIS .ldtdev .slds-truncate {
+   /* overflow: visible !important;*/
+    white-space:normal !important;
+}
+.THIS .ldtdev .slds-table_resizable-cols thead th {
+    height:auto !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(2){
+    width: 20% !important;
+}
+.THIS .ldtdev .slds-th__action {
+    height: auto !important;
+}
+
+.THIS .orderTableCls  .ldtdev .slds-table_cell-buffer  th:nth-child(2){
+    width: 15% !important;
+}
+.THIS .orderTableCls  .ldtdev .slds-table_cell-buffer  th:nth-child(3){
+    width: 11% !important;
+}
+.THIS .orderTableCls  .ldtdev .slds-table_cell-buffer  th:nth-child(4){
+    width: 12% !important;
+}
+.THIS .orderTableCls  .ldtdev .slds-table_cell-buffer  th:nth-child(5){
+    width: 11% !important;
+}
+.THIS .orderTableCls  .ldtdev .slds-table_cell-buffer  th:nth-child(6){
+    width: 11% !important;
+}
+.THIS .orderTableCls  .ldtdev .slds-table_cell-buffer  th:nth-child(8){
+    width: 11% !important;
+}
+.THIS .orderTableCls .ldtdev .slds-table_cell-buffer  th:nth-child(9){
+    width: 11% !important;
+}
+.THIS .loanTableCls .ldtdev .slds-table_cell-buffer  th:nth-child(3){
+    width: 14% !important;
+}
+.THIS .loanTableCls .ldtdev .slds-table_cell-buffer  th:nth-child(4){
+    width: 14% !important;
+}
+.THIS .loanTableCls .ldtdev .slds-table_cell-buffer  th:nth-child(5){
+    width: 14% !important;
+}
+
+.THIS .ldtTableCls thead th {
+    font-size: 0.875rem !important;
+}

@@ -1,0 +1,77 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="aeWrap" type="AmortizationEntryDomain.AEWrapperClass" access="public" />
+    <aura:attribute name="showAE" type="Boolean" access="public" default="true"/>
+    <aura:attribute name="faSort" type="Map" default="{'fieldToSort':'assetId','arrowDirection':'arrowdown','sortingOrder':''}"/>
+    <aura:attribute name="headerColumns" type="List" default="[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+
+    <div style="padding:1em;">
+        <aura:if isTrue="{!v.showAE}">
+            <lightning:buttonIcon iconName="utility:chevrondown" variant="bare" alternativeText="Down" iconClass="dark" onclick="{!c.hideAESection}"/>
+            <aura:set attribute="else">
+                <lightning:buttonIcon iconName="utility:chevronright" variant="bare" alternativeText="Right" iconClass="dark" onclick="{!c.showAESection}"/>                	
+            </aura:set>
+        </aura:if>
+        {!v.aeWrap.locationFARTGroupBy}
+        <div style="float:right;">
+            Count: {!v.aeWrap.count} <br/>
+            Total Amount: <ui:outputCurrency value="{!v.aeWrap.amountSum}"/><br/>
+        </div>
+        
+    </div>
+    <aura:if isTrue="{!v.showAE}">
+        <table class="slds-table slds-table--bordered slds-table--striped">
+            <thead>
+                <tr>
+                    <aura:if isTrue="{!v.headerColumns.length > 0}">
+                        <aura:iteration items="{!v.headerColumns}" var="i">
+                            <th scope="col" style="{!i.width}" class="slds-truncate wrap" onclick="{!c.tableSort}" data-name="{!i.fieldSort}">
+                                <aura:if isTrue="{! and(v.faSort.arrowDirection == 'arrowdown', v.faSort.fieldToSort == i.fieldSort) }">
+                                    <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="" />
+                                </aura:if>  
+                                <aura:if isTrue="{! and(v.faSort.arrowDirection != 'arrowdown', v.faSort.fieldToSort == i.fieldSort)}">
+                                    <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="" />
+                                </aura:if> 
+                                {!i.Name}</th>  
+                        </aura:iteration>
+                    </aura:if>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:if isTrue="{!not(empty(v.aeWrap.aeList))}">
+                    <aura:iteration items="{!v.aeWrap.aeList}" var="ae">
+                        <tr>
+                            <td class="wrap">{!ae.assetId}</td>
+                            <td class="wrap">{!ae.serviceTag}</td>
+                            <td class="wrap"><a href="{!'/' + ae.equipId}" target="_blank">{!ae.equipName}</a></td>
+                            <td class="wrap"><a href="{!'/' + ae.fAId}" target="_blank">{!ae.fAName}</a></td>
+                            <td class="wrap"><ui:outputCurrency value="{!ae.amount}"/></td>
+                            <td class="wrap"><a href="{! '/' + ae.gLVar1Id}" target="_blank">{!ae.gLVar1Name}</a></td>
+                            <td class="wrap"><a href="{! '/' + ae.periodId}" target="_blank">{!ae.periodName}</a></td>
+                            <td class="wrap"><a href="{! '/' + ae.creditGLAccId}" target="_blank">{!ae.creditGLAccName}</a></td>
+                            <td class="wrap"><a href="{! '/' + ae.debitGLAcctId}" target="_blank">{!ae.debitGLAcctName}</a></td>
+                            <td class="wrap">Posted</td>
+                        </tr>
+                    </aura:iteration>
+                    <tr>
+                        <td></td>
+                        <td><b>Total:{!v.aeWrap.count}</b></td>
+                        <td><b><ui:outputCurrency value="{!v.aeWrap.amountSum}"/></b></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <aura:set attribute="else">
+                        No records found
+                    </aura:set>
+                </aura:if>
+            </tbody>
+        </table>
+    </aura:if>
+</aura:component>

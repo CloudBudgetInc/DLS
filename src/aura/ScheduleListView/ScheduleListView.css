@@ -1,0 +1,74 @@
+.THIS .toggleClass .slds-form-element__label{
+    font-size: medium !important;
+    padding-top: 0rem !important;
+}
+.THIS .viewSelectClass {
+    width: 11.5rem !important;
+}
+
+.THIS .training .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .testing .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+
+.THIS .preparation .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+
+.THIS .slds-checkbox [type=checkbox]:checked+.THIS .slds-checkbox_faux:after,
+.THIS .slds-checkbox [type=checkbox]:checked+.THIS .slds-checkbox--faux:after
+{
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;  
+}
+.THIS .training .slds-checkbox_faux{
+    background-color: #1D4588 !important;
+}
+.THIS .testing .slds-checkbox_faux{
+    background-color: #ABD25A !important;
+}
+.THIS .preparation .slds-checkbox_faux{
+    background-color: #8E24AA !important;
+}
+.THIS .holiday .slds-checkbox_faux{
+    background-color: #4D4D4D !important;
+}
+.THIS .PlannedDayOff .slds-checkbox_faux{
+    background-color: #F37321 !important;
+}
+.THIS.schedule .ldtdev .select {
+    background-image: none !important;
+}
+.THIS thead th{
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+.THIS tbody td{
+    white-space: normal !important;
+}
+.THIS .slds-truncate {
+    white-space: normal !important;
+}
+.THIS .itemMenuContainer{
+    display: none !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(8){
+   width: 10rem !important;
+}
+.THIS .labelCls{
+    margin-left: -0.5rem !important;
+    font-size:0.875rem;
+    margin-top: 0.25rem;
+
+}
+@media (max-width: 48em) {
+    
+    .THIS .ldtDatatableDev table tbody tr>td:first-child {
+        padding-left: 0.75rem !important;
+    }
+}

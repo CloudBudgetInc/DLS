@@ -1,0 +1,77 @@
+<aura:component >
+    
+    <aura:attribute name="showConflict" type="Boolean" default="false"/>
+    <aura:attribute name="stuInsConflictList" type="List" default="[]"/>
+    <aura:attribute name="roomConflictList" type="List" default="[]"/>
+    <aura:attribute name="parent" type="Aura.Component" required="true"/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+    
+    <!-- Instructor Conflict check  modelWidth="53rem"-->
+    <aura:if isTrue="{!v.showConflict}">
+        <c:sldsModal aura:id="showConflictModal" displayCloseImage="false" modalZIndexValue="9999" backdropZIndexValue="9005">
+            <aura:set attribute="header">
+                Event Conflict
+            </aura:set>
+            <aura:set attribute="content">
+                <aura:if isTrue="{!v.stuInsConflictList.length > 0}">
+                    You have the below <aura:if isTrue="{!v.stuInsConflictList.length > 0}">Time Conflicts</aura:if> <aura:if isTrue="{!and(v.stuInsConflictList.length > 0, v.roomConflictList.length > 0)}"> and </aura:if><aura:if isTrue="{!v.roomConflictList.length > 0}">Room Conflicts</aura:if> with this reschedule request. Would you like to proceed? <br/><br/>
+                    <div class="containerTable table-responsive">
+                        <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                            <thead class="thead-light">
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col" class="wrap">Date</th>  
+                                    <th scope="col" class="wrap">Start Time</th>
+                                    <th scope="col" class="wrap">End Time</th>
+                                    <th scope="col" class="wrap">Student / Instructor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.stuInsConflictList}" var="info">
+                                    <tr class="slds-hint-parent">
+                                        <td data-label="Date" class="wrap">{!info.eventDate}</td>
+                                        <td data-label="Start Time" class="wrap">{!info.startTime}</td>
+                                        <td data-label="End Time" class="wrap">{!info.endTime}</td>
+                                        <td data-label="Student/Instructor" class="wrap">{!info.personName}</td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>	
+                    </div>
+                </aura:if>
+                
+                <aura:if isTrue="{!v.roomConflictList.length > 0}">
+                    <!--Time Conflict with Room: --><br/><br/>
+                    <div class="containerTable table-responsive">
+                        <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                            <thead class="thead-light">
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col" class="wrap">Date</th>  
+                                    <th scope="col" class="wrap">Start Time</th>
+                                    <th scope="col" class="wrap">End Time</th>
+                                    <th scope="col" class="wrap">Room</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.roomConflictList}" var="info">
+                                    <tr class="slds-hint-parent">
+                                        <td data-label="Date" class="wrap">{!info.eventDate}</td>
+                                        <td data-label="Start Time" class="wrap">{!info.startTime}</td>
+                                        <td data-label="End Time" class="wrap">{!info.endTime}</td> 
+                                        <td data-label="Room" class="wrap">{!info.roomName}</td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>	
+                    </div>
+                </aura:if>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Proceed" class="btn btn-primary" onclick="{!c.approveEventWithConflictCheck}"/>
+                <lightning:button variant="brand" label="Cancel" class="btn btn-secondary" onclick="{!c.cancelConflictClk}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+</aura:component>

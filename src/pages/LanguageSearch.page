@@ -1,0 +1,55 @@
+<apex:page showHeader="false" id="page1">
+    
+    <style>
+    
+        .div1{
+        
+            background: #1797c0;
+            border-radius: 5px;
+            height: 25px;
+        
+        }
+        
+        .div2{
+        
+            margin-top: 1%;
+            background: #CFEEF8;
+            border-radius: 5px;
+            padding: 5px;
+            min-height: 100px;
+        
+        }
+        
+        .button{
+        
+            margin-top: 5%;
+            border-radius: 4px;
+            background: whitesmoke;
+            color: #333333;
+            font-size: 12px;
+            font-family: sans-serif;
+        
+        }
+    
+    </style>
+    
+    <body>
+        <c:ContactSearch />
+    </body>
+    
+    <script>
+    
+        function searchVal(){
+            var val=document.getElementById(selctOptionId).value;
+            console.log('val:::',val);
+            
+            if(val != null && val != ''){
+                console.log('val:::',val);
+                search();
+            
+            }
+        
+        }
+    </script>
+  
+</apex:page>

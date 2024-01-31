@@ -1,0 +1,328 @@
+<aura:component controller="ScheduleCmpLightningController">
+    <aura:attribute name="schOpli" type="ScheduleDomain.SchOpliWrapper"/>
+    <aura:attribute name="parentType" type="String"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="parentRecordType" type="String"/>
+    <aura:attribute name="selection" type = "List" access = "PUBLIC" default ="[]"/>
+    <aura:attribute name="instructorList" type = "Contact_Assignments__c[]" access = "PUBLIC"/>
+    <aura:attribute name="index" type = "Integer" access = "PUBLIC"/> 
+    <aura:attribute name="warningMessage" type = "String" access = "PUBLIC" />
+    <aura:attribute name="currentUsrProfileName" type="String" access="public"/>
+    <aura:attribute name="showConflictInfo" type="Boolean" default="false"/>
+    <aura:attribute name="scheduleConflictMap" type="Map" default="{}"/>
+    <aura:attribute name="isProjectExist" type="Boolean" default="false"/>
+    <aura:attribute name="statusSelected" type="String" default=""/>
+    <aura:attribute name="displayWarning" type="Boolean" default="false"/>
+    <aura:attribute name="showSuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    <aura:attribute name="completionDate" type="Date" default="null"/>
+    <aura:attribute name="onlineRoomId" type="String"/>
+    <aura:attribute name="roomCondition" type="String"/>
+    <aura:attribute name="isDLSOnlineProject" type="Boolean"/>
+    <aura:attribute name="scheduleActionPermissionMap" type="Map"/>
+    
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!--Register the event -->
+    <aura:registerEvent name = "deleteEvent" type = "c:DeleteScheduleEvent" />
+    
+    <!-- Spinner -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <div style="position:fixed;z-index: 9900000000;">
+            <lightning:spinner alternativeText="Loading" variant="brand" size="large" class="slds-is-fixed"/>
+        </div>
+    </aura:if>
+    
+    <tr>
+        <td>
+            <div onclick="{!c.openRecord}" data-value="{!v.schOpli.sch.Id}">
+                <forceCommunity:routeLink label="{!v.schOpli.sch.Name}"/>
+            </div>
+        </td>
+        <td>{!v.schOpli.sch.days}</td>
+        
+        <!-- Opportunity -->
+        <aura:if isTrue="{!or(v.parentRecordType == 'MTT_Projects', v.parentRecordType == 'MTT_Opportunities', v.parentRecordType == 'DLI_W_TO_Opportunities')}">
+            <td class="wrap slds-text-align_center">{!v.schOpli.travelIn +' - '+ v.schOpli.travelOut}</td>
+        </aura:if>
+        <!-- Opportunity -->
+        
+        <td class="wrap slds-text-align_center">{!v.schOpli.stDt +' - '+ v.schOpli.endDt}</td>
+        <td class="wrap slds-text-align_center">{!v.schOpli.sch.Start_Time__c +' - '+ v.schOpli.sch.End_Time__c}</td>
+        
+        <!-- Opportunity -->
+        <aura:if isTrue="{!v.parentType == 'Opportunity'}">
+            <td class="slds-text-align_center">{!v.schOpli.opli.Product2.Name}</td>
+        </aura:if>
+        <!-- Opportunity -->
+        
+        <!-- Project -->
+        <aura:if isTrue="{!v.parentType != 'Opportunity'}">
+            <td class="wrap">{!v.schOpli.sch.Project_Task__r.Name}</td>
+            <td>
+                <aura:if isTrue="{!not(empty(v.schOpli.sch.Instructor__c))}">
+                    <forceCommunity:routeLink label="{!v.schOpli.sch.Instructor__r.Name}" class = "slds-p-right_small" onClick="{!c.redirectToContact}"/>
+                    <aura:if isTrue = "{!v.schOpli.sch.Status__c == 'Drafted'}">
+                        <lightning:buttonIcon iconName="utility:edit" variant="bare" onclick = "{!c.assignInstructor}"/>
+                    </aura:if>
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!v.parentRecordType == 'Admin_Projects'}">
+                            <forceCommunity:routeLink label="Assign Contact" onClick="{!c.assignInstructor}"/>
+                            <aura:set attribute="else">
+                                <forceCommunity:routeLink label="Assign Instructor" class="slds-p-right_small" onClick="{!c.assignInstructor}"/>
+                            </aura:set>
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+            </td>
+            <td>
+                <aura:if isTrue="{!not(empty(v.schOpli.sch.Room__c))}">
+                    <!--aura:if isTrue="{!not(v.schOpli.isZoomRoom)}"-->
+                    	<forceCommunity:routeLink class = "slds-p-right_small" label="{!v.schOpli.sch.Room__r.Name}" onClick="{!c.redirectToRoom}"/>
+                    <!--/aura:if-->	
+                    <!--aura:if isTrue="{!v.schOpli.isZoomRoom}">
+                        <aura:if isTrue="{!not(empty(v.schOpli.sch.Meeting_URL__c))}">
+                        	<forceCommunity:routeLink class="slds-p-right_small" label="{!v.schOpli.sch.Room__r.Name}" onClick="{!c.redirectToZoom}"/>
+                        	<aura:set attribute="else">
+                            	<span>{!v.schOpli.sch.Room__r.Name}</span>
+                            </aura:set>
+                        </aura:if>
+                    </aura:if-->
+                     
+                    <aura:if isTrue="{!and(v.schOpli.allowRoomEdit,and(not(v.schOpli.isZoomRoom),v.schOpli.sch.Status__c == 'Drafted'))}">
+                        <lightning:buttonIcon iconName="utility:edit" class = "slds-p-left_small" variant="bare" onclick="{!c.openRoomModal}"/>
+                    </aura:if>
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!and(not(v.schOpli.isZoomRoom), or(v.schOpli.sch.Status__c == 'Drafted',and(v.schOpli.sch.Status__c == 'Active',not(v.schOpli.sch.Room__c))))}">
+                            <forceCommunity:routeLink class = "slds-p-right_small" label="Assign Room" onClick="{!c.redirectToRoomPage}"/> 
+                            <aura:if isTrue="{!v.schOpli.allowRoomEdit}">
+                            	<lightning:buttonIcon iconName="utility:edit" variant="bare" onclick="{!c.openRoomModal}"/>
+                            </aura:if>
+                            <aura:if isTrue="{!not(v.scheduleActionPermissionMap.Exclude_Room_Search)}">
+                            	<lightning:buttonIcon iconName="utility:search" variant="bare" iconClass="dark" onclick="{!c.redirectToRoomPage}"/>
+                            </aura:if>
+                    	</aura:if>
+                    </aura:set>
+                </aura:if>
+            </td>
+        </aura:if>
+        <!-- Project -->
+        
+        <td class="slds-text-align_center">{!v.schOpli.sch.Hours_Planned__c}</td>
+        <!--  td class="slds-text-align_center">{!v.schOpli.sch.Project_Task__r.Total_Qty_Planned__c}</td>-->
+        <aura:if isTrue="{!v.parentType == 'Opportunity'}">
+            <td class="slds-text-align_center">{!v.schOpli.opli.Quantity}</td>
+            <aura:set attribute="else">
+                <td class="slds-text-align_center">{!v.schOpli.sch.Total_Hours__c}</td>
+            </aura:set>
+        </aura:if>
+        <td>{!v.schOpli.sch.Project_Task__r.Unit__c}</td>
+        <td>{!v.schOpli.sch.Timezone__c}</td>
+        
+        <!-- Canceled Status related td -->
+        <aura:if isTrue="{!v.statusSelected == 'Canceled'}">
+            <td>{!v.schOpli.sch.Cancellation_Reason__c}</td>
+            <td>{!v.schOpli.sch.Cancellation_Date__c}</td>,
+        </aura:if>
+        
+        <aura:if isTrue="{!or(v.parentType != 'Opportunity',and(v.parentType == 'Opportunity',not(v.isProjectExist)))}">
+            <aura:if isTrue="{!not(or(v.statusSelected == 'Canceled',or(v.statusSelected == 'Completed',v.statusSelected == 'On Hold')))}">
+                <td>
+                    <aura:if isTrue="{!and(v.schOpli.sch.Status__c != 'Completed',and(v.schOpli.sch.Status__c != 'Canceled',v.schOpli.sch.Status__c != 'On Hold'))}">
+                        <aura:if isTrue="{!or(v.schOpli.sch.Status__c == 'Drafted',v.schOpli.sch.Schedule_Type__c == 'Substitute')}">
+                            <lightning:buttonIcon iconName="utility:edit" variant="bare" title="Edit" onclick="{!c.editIconclick}"/>
+                        </aura:if>
+                        <aura:if isTrue="{!v.schOpli.sch.Status__c == 'Drafted'}">
+                            <lightning:buttonIcon iconName="utility:delete" variant="bare" title="Delete" name="{!order}" onclick="{!c.openDeleteModal}"/>
+                        </aura:if>
+                        <lightning:buttonIcon iconName="utility:event" variant="bare" title="Manage Events" onclick="{!c.manageEvents}"/>&nbsp;
+                        <aura:if isTrue="{!and(v.schOpli.sch.Status__c == 'Active',v.parentType != 'Opportunity')}">
+                            <lightning:buttonIcon iconName="utility:close" variant="bare" title="Cancel" onclick="{!c.openCancelModal}"/>&nbsp;
+                        </aura:if>
+                        
+                        <!--Option to complete the schedule -->
+                        <aura:if isTrue="{!and(v.scheduleActionPermissionMap.Complete,and(v.schOpli.sch.Status__c == 'Active',v.parentType != 'Opportunity'))}">
+                            <lightning:buttonIcon iconName="utility:check" variant="bare" title="Complete" onclick="{!c.openCompleteModal}"/>&nbsp;
+                        </aura:if>
+                        
+                        <!--Zoom related conditions -->
+                        <!--aura:if isTrue="{!and(not(empty(v.schOpli.sch.Room__c)),and(v.schOpli.isZoomRoom,empty(v.schOpli.sch.Meeting_URL__c)))}">
+                        	<img src="{!$Resource.Zoom_Image}" style="width: 7%;" onclick="{!c.createMeeting}"/>&nbsp;
+                        </aura:if-->                        
+                        <!-- Project -->
+                        <aura:if isTrue="{!v.parentType != 'Opportunity'}">
+                            <aura:if isTrue="{!v.schOpli.sch.Status__c == 'Active'}">
+                                <lightning:buttonMenu variant="container" iconName="utility:add" title="More Actions" class="iconDisable iconRightAlign" onselect="{!c.handleMenuSelect}">
+                                   	<aura:if isTrue="{!and(v.scheduleActionPermissionMap.Substitute, v.schOpli.sch.Project_Task_Stage__c != 'Preparation time')}">
+                                        <lightning:menuItem label="Substitute" value="Substitute"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.scheduleActionPermissionMap.Schedule_Change}">
+                                        <lightning:menuItem label="Schedule Change" value="Schedule Change" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!and(v.scheduleActionPermissionMap.Replace_Instructor, v.schOpli.sch.Project_Task_Stage__c != 'Preparation time')}">
+                                        <lightning:menuItem label="Replace Instructor" value="Replace Instructor" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.scheduleActionPermissionMap.Tester}">
+                                        <lightning:menuItem label="Tester" value="Tester" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.scheduleActionPermissionMap.Room_Change}">
+                                        <lightning:menuItem label="Room Change" value="Room Change" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.scheduleActionPermissionMap.Extend_End_Date}">
+                                        <lightning:menuItem label="Extend End Date" value="Extend End Date" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!and((or(empty(v.schOpli.sch.Room__c), v.schOpli.sch.Room__r.Name != 'Zoom - Online'))  ,v.scheduleActionPermissionMap.Move_Online)}">
+                                        <lightning:menuItem label="Move Online" value="Move Online" />
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.schOpli.sch.Project_Task_Stage__c != 'Preparation time'}">
+                                        <lightning:menuItem label="Notify FEO" value="Notify FEO" />
+                                    </aura:if>
+                                </lightning:buttonMenu>
+                                <aura:set attribute="else">
+                                    <lightning:button variant="Neutral" label="Activate" onclick="{!c.activateSchedule}" value="{!order}"/>
+                                </aura:set>
+                            </aura:if>
+                        </aura:if>
+                    </aura:if>
+                    <!-- Project -->
+                </td>
+            </aura:if>
+        </aura:if>
+    </tr>
+    
+    <!-- Assign Instructor -->
+    <c:sldsModal aura:id="assignInstructor">
+        <aura:set attribute="header">
+            Choose to assign an instructor for this schedule
+        </aura:set>
+        <aura:set attribute="content">
+            <lightning:select aura:id="insSelect" label="Instructors">
+                <option value = "" text = ""/>
+                <aura:iteration items="{!v.instructorList}" var="instructor">
+                    <option value="{!instructor.Candidate_Name__c}">{!instructor.Candidate_Name__r.Name}</option>
+                </aura:iteration>
+            </lightning:select>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Assign" variant="brand" onclick="{!c.saveInstructor}"/>
+            <lightning:button label="Cancel" variant="brand" onclick="{!c.closeAssignIns}"/>
+            
+        </aura:set>
+    </c:sldsModal>
+    
+    <!-- slds modal component -->
+    <c:sldsModal aura:id="modalSlds">
+        <aura:set attribute="header">
+            Assign a Room
+        </aura:set>
+        <aura:set attribute="content">
+            <div style="height:10rem;">
+            	<c:LookupSearch objectName = "Room__c" fieldName = "Name" aura:id="lookup" selection="{!v.selection}" onSearch="{!c.lookupSearch}" condition="{!v.roomCondition}" label="Search" placeholder="Search Rooms" isMultiEntry="false"/>
+            </div>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Okay" variant="brand" onclick="{!c.updateRoom}"/>
+            <lightning:button label="Cancel" variant="brand" onclick="{!c.closeRoomModal}"/>
+            
+        </aura:set>
+    </c:sldsModal>
+    
+    <c:sldsModal aura:id="deleteModal">
+        <aura:set attribute="header">
+            Confirmation
+        </aura:set>
+        <aura:set attribute="content">
+            <center><p style="font-size: 17px;">Do you want to delete this schedule?</p></center>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Yes" variant="brand" onclick="{!c.deleteScheduleRec}"/>
+            <lightning:button label="No" variant="brand" onclick="{!c.closedeleteModal}"/>
+            
+        </aura:set>
+    </c:sldsModal>
+    
+    <!-- slds modal component -->
+    <c:sldsModal aura:id="cancelModal">
+        <aura:set attribute="header">
+            Confirmation
+        </aura:set>
+        <aura:set attribute="content">
+            Once this Schedule is canceled it cannot be activated again.
+            If you still want to continue, enter the Cancellation reason 
+            and click 'Okay' or to go back click 'Cancel'
+            
+            <ui:inputText label="Cancellation Reason" aura:id = "cancelInput" value = "{!v.schOpli.sch.Cancellation_Reason__c}" required = "true"/>
+            <!--lightning:input type = "text" aura:id = "cancelInput" label = "Cancelation Reason" value = "{!v.schOpli.sch.Cancellation_Reason__c}" required = "true"/-->
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Okay" variant="brand" onclick="{!c.updateCancelSchedule}"/>
+            <lightning:button label="Cancel" variant="brand" onclick="{!c.closeCancelModal}"/>
+            
+        </aura:set>
+    </c:sldsModal>
+    
+    <c:sldsModal aura:id="warningModal">
+        <aura:set attribute="header">
+            Warning
+        </aura:set>
+        <aura:set attribute="content">
+            <center><p style="font-size: 17px;">{!v.warningMessage}</p></center> 
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Okay" variant="brand" onclick="{!c.closeWarning}"/>
+        </aura:set>
+    </c:sldsModal>
+    
+    <!-- Conflict details display modal -->
+    <aura:if isTrue="{!v.showConflictInfo}">
+        <c:sldsModal aura:id="conflictModel" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="header">
+                Schedule Conflict Check
+            </aura:set>
+            <aura:set attribute="content">
+                <div>Holidays Excluded: {!v.scheduleConflictMap.Holiday}</div>
+                <div>Student Planned Days Off Excluded: {!v.scheduleConflictMap.StudentPlannedDaysOff}</div>
+                <div>Instructor Scheduled Event Conflicts: {!v.scheduleConflictMap.InstructorEvent} </div>
+                <div>Instructor Planned Days Off Event Conflicts: {!v.scheduleConflictMap.InstructorPlannedDaysOff} </div>
+                <div>Room Scheduled Event Conflicts: {!v.scheduleConflictMap.RoomEvent}</div>
+                
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Okay"  variant="brand" onclick="{!c.conflictYesClick}"/>
+                <lightning:button label="Cancel"  variant="brand" onclick="{!c.closeConlfictModel}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showSuccessModal}">
+        <c:sldsModal aura:id="successModel">
+                <aura:set attribute="header">
+                    {!v.successTitle}
+                </aura:set>
+                <aura:set attribute="content">
+                    <center><p style="font-size: 17px;">{!v.successMsg}</p></center>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Close"  variant="brand" onclick="{!c.closeSuccessModel}"/>
+                 </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Model to capture the Completion Date -->
+    <c:sldsModal aura:id="completeModal">
+        <aura:set attribute="header">
+            Complete Schedule
+        </aura:set>
+        <aura:set attribute="content">
+            <ui:inputDate aura:id="completionInput" label="Completion Date" class="slds-input" value="{!v.completionDate}" displayDatePicker="true" format="MM/DD/YYYY" required="true"/>      
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Okay" variant="brand" onclick="{!c.updateCompleteSchedule}"/>
+            <lightning:button label="Cancel" variant="brand" onclick="{!c.closeCompleteModal}"/>
+        </aura:set>
+    </c:sldsModal>
+    
+</aura:component>

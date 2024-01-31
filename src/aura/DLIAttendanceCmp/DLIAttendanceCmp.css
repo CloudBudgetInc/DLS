@@ -1,0 +1,13 @@
+.THIS .CmtClass{
+    margin-left: -10rem !important;
+    margin-right: 5rem;
+}
+
+.THIS .radioClass .slds-form-element__control {
+    display: flex;
+}
+.THIS .fa-arrow-left{
+    font-size:2rem !important;
+    cursor:pointer;
+    color: #055e89 !important;
+}

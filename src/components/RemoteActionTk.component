@@ -1,0 +1,193 @@
+<apex:component controller="RemoteActionTkController">
+    <script>
+var remotetk = window.remotetk;
+
+if (remotetk === undefined) {
+    remotetk = {};
+}
+
+if (remotetk.Client === undefined) {
+    function handleResult(result, callback, error, nullok) {
+        if (result) {
+            result = JSON.parse(result);
+            if ( Array.isArray(result) && result[0].message && result[0].errorCode ) {
+                if ( typeof error === 'function' ) {
+                    error(result);
+                }
+            } else {
+                callback(result);
+            }
+        } else if (typeof nullok !== 'undefined' && nullok) {
+            callback();
+        } else {
+            error([{ message : "Null return from action method","errorCode":"NULL_RETURN"}]);
+        }        
+    }
+        
+    /**
+     * The Client provides a convenient abstraction similar to the Force.com 
+     * REST API, allowing JavaScript in Visualforce pages access to data 
+     * without consuming API calls.
+     * @constructor
+     */
+    remotetk.Client = function(){
+    }
+
+    /** NOOP: for compatibility with forcetk
+    */
+    remotetk.Client.prototype.setSessionToken = function() {}
+    remotetk.Client.prototype.setRefreshToken = function() {}
+    remotetk.Client.prototype.setUserAgentString = function() {}
+        
+    /*
+     * Completely describes the individual metadata at all levels for the 
+     * specified object.
+     * @param objtype object type; e.g. "Account"
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.describe = function(objtype, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.describe}', objtype, function(result){
+            handleResult(result, callback, error);
+        }, { 
+            escape: false
+        });
+    }
+        
+    /*
+     * Creates a new record of the given type.
+     * @param objtype object type; e.g. "Account"
+     * @param fields an object containing initial field names and values for 
+     *               the record, e.g. {Name: "salesforce.com", TickerSymbol: 
+     *               "CRM"}
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.create = function(objtype, fields, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.create}', objtype, JSON.stringify(fields), function(result){
+            handleResult(result, callback, error);
+        }, { 
+            escape: false
+        });
+    }
+        
+    /*
+     * Retrieves field values for a record of the given type.
+     * @param objtype object type; e.g. "Account"
+     * @param id the record's object ID
+     * @param [fields=null] optional comma-separated list of fields for which 
+     *               to return values; e.g. Name,Industry,TickerSymbol
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.retrieve = function(objtype, id, fieldlist, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.retrieve}', objtype, id, fieldlist, function(result){
+            handleResult(result, callback, error);
+        }, { 
+            escape: false
+        });
+    }
+    
+    /* 
+     * Upsert - creates or updates record of the given type, based on the 
+     * given external Id.
+     * @param objtype object type; e.g. "Account"
+     * @param externalIdField external ID field name; e.g. "accountMaster__c"
+     * @param externalId the record's external ID value
+     * @param fields an object containing field names and values for 
+     *               the record, e.g. {Name: "salesforce.com", TickerSymbol: 
+     *               "CRM"}
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.upsert = function(objtype, externalIdField, externalId, fields, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.upser}', objtype, externalIdField, externalId, JSON.stringify(fields), function(result){
+            handleResult(result, callback, error, true);
+        }, { 
+               
+                escape: false
+        });
+        
+    }
+        
+    /*
+     * Updates field values on a record of the given type.
+     * @param objtype object type; e.g. "Account"
+     * @param id the record's object ID
+     * @param fields an object containing initial field names and values for 
+     *               the record, e.g. {Name: "salesforce.com", TickerSymbol: 
+     *               "CRM"}
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.update = function(objtype, id, fields, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.updat}', objtype, id, JSON.stringify(fields), function(result){
+            handleResult(result, callback, error, true);
+        }, { 
+            escape: false
+        });
+    }
+
+    /*
+     * Deletes a record of the given type. Unfortunately, 'delete' is a 
+     * reserved word in JavaScript.
+     * @param objtype object type; e.g. "Account"
+     * @param id the record's object ID
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.del = function(objtype, id, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.del}', objtype, id, function(result){
+            handleResult(result, callback, error, true);
+        }, { 
+            escape: false
+        });
+    }
+
+    /*
+     * Executes the specified SOQL query.
+     * @param soql a string containing the query to execute - e.g. "SELECT Id, 
+     *             Name from Account ORDER BY Name LIMIT 20"
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.query = function(soql, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.query}', soql, function(result){
+            handleResult(result, callback, error);
+        }, { 
+            escape: false
+        });
+    }        
+
+    /*
+     * Executes the specified SOSL search.
+     * @param sosl a string containing the search to execute - e.g. "FIND 
+     *             {needle}"
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.search = function(sosl, callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.search}', sosl, function(result){
+            handleResult(result, callback, error);
+        }, { 
+            escape: false
+        });
+    }
+    
+    /*
+     * Completely describes the picklist values for the given object and field
+     * @param objName object type; e.g. "Account"
+     * @param fieldName field API name; e.g. "Name"
+     * @param callback function to which response will be passed
+     * @param [error=null] function to which jqXHR will be passed in case of error
+     */
+    remotetk.Client.prototype.describePicklistVal = function(objName ,fieldName , callback, error) {
+        Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.RemoteActionTkController.getPicklistValues}', objName ,fieldName , function(result){
+            handleResult(result, callback, error);
+        }, { 
+            escape: false
+        });
+    }
+}
+    </script>
+</apex:component>

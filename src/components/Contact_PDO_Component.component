@@ -1,0 +1,805 @@
+<apex:component controller="ContactPlanned_DaysoffCtrl">
+    
+    <apex:attribute name="contactId" description="Contact Id" type="String"/>
+    <!-- below attribute to use this component in schedule section tab -->
+    <apex:attribute name="parentId" description="Parent Id" type="String"/>
+    <apex:attribute name="parentType" description="Parent Type" type="String"/>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    
+    <style>
+        /**
+         * Hide when Angular is not yet loaded and initialized
+         */
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+          display: none !important;
+        }
+        
+        //Loader Screen
+        .loader {
+            position:   absolute;
+            z-index:    25000;
+            top:        0;
+            left:       0;
+            height:     100%;
+            width:      100%;
+            background: rgba(230, 233, 239, 0.91)
+                        url('{!URLFOR($Resource.SLDS091,'/assets/images/spinners/slds_spinner_brand.gif')}')
+                        50% 50%
+                        no-repeat;
+            background-size: 60px 60px;
+        }
+        
+         ._720kb-datepicker-calendar-header:nth-child(even) {
+            background: #e0e5ee;
+        }
+        
+        ._720kb-datepicker-calendar-header:nth-child(odd) {
+            background: #7BC6FC;
+        }
+        ._720kb-datepicker-calendar {
+            width: 300px !important;
+            position: fixed;
+        }
+        
+        .datePickerCommonClass {
+            width: 100% !important;
+            position: absolute !important;
+        }
+        
+        .buttonImg {
+            max-width: 33px !important ;
+            height: auto;
+        }
+    
+        
+    </style>
+    
+    <div class="slds ng-cloak" ng-controller="contactDaysOff_controller">
+        <div ng-hide="spinner">
+            <c:slds_Loading />
+        </div>
+        
+        <div class="slds-card">
+             <div class="slds-card__header slds-grid">
+                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                    <div class="slds-media__body">
+                        <h2 class="slds-text-heading--small slds-truncate" ng-if="showContactSelection">Planned Days Off</h2>
+                        
+                        <div class="slds-grid slds-wrap">
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" ng-if="showContactSelection">
+                                <div class="slds-form-element" style="margin-top: 1%;"> 
+                                    <label class="slds-form-element__label">Contact</label>
+                                    <div class="slds-form-element__control">
+                                        <lookup ng-if="showContactSelection" data="offRec.ContactRecord" object="'Contact'" placeholder="'Contact Name'"></lookup>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">From Date: </label>
+                                     <datepicker date-format="MM/dd/yyyy" datepicker-class="">
+                                        <input class="slds-input" ng-model="fromDate" type="text"/>
+                                    </datepicker> 
+                                </div>
+                            </div>
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">To Date: </label>
+                                     <datepicker date-format="MM/dd/yyyy">
+                                        <input class="slds-input" ng-model="toDate" type="text"/>
+                                    </datepicker> 
+                                </div>
+                            </div>
+                            
+                             <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="margin-top: 1.25rem;">
+                                <div class="slds-form-element"> 
+                                    <div class="slds-form-element__control">
+                                        <span><input type="button" class="slds-button slds-button--neutral" style="cursor: pointer;" value="Search" ng-click="ContactSelection()"/></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                     </div>
+                 </div>
+                
+                 <div class="slds-col slds-no-flex slds-align-bottom">
+                     <input type="button" class="slds-button slds-button--neutral" style="cursor: pointer;" value="New" ng-click="newDaysOff()"/>
+                </div>
+                
+            </div>
+             <div class="slds-card__body">
+                 <div ng-hide="daysOffList.length > 0" style="text-align:center">No Records To Display</div>
+                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" ng-show="daysOffList.length > 0">
+                    <thead>
+                        <th scope="col">
+                            <span class="slds-truncate">Name</span>
+                        </th>
+                        <th scope="col">
+                            <span class="slds-truncate">Contact</span>
+                        </th>
+                        <th scope="col">
+                            <span class="slds-truncate">Date</span>
+                         </th>
+                        <th scope="col">
+                            <span class="slds-truncate">Description</span>
+                        </th>
+                        <th scope="col">
+                            <span class="slds-truncate">Type</span>
+                        </th>
+                        <th scope="col">
+                            <span class="slds-truncate">Leave Type</span>
+                        </th>
+                        <th scope="col">
+                            <span class="slds-truncate">Status</span>
+                        </th>
+                        <th scope="col">
+                            <span class="slds-truncate">Action</span>
+                        </th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="daysOff in daysOffList" class="slds-hint-parent">
+                            <td data-label="Name">
+                                <!--<span class="slds-truncate">{{lang.Language_Name__c}}</span>-->
+                                <a href="{!$Site.Prefix}/{{daysOff.Id}}" target="_blank">{{daysOff.Name}}</a>
+                            </td>
+                            <td data-label="Contact">
+                                <!--<span class="slds-truncate">{{lang.Language_Name__c}}</span>-->
+                                <a href="{!$Site.Prefix}/{{daysOff.Contact__c}}" target="_blank">{{daysOff.Contact__r.Name}}</a>
+                            </td>
+                            <td data-label="Date">
+                                <span class="slds-truncate" ng-bind="millisecondsToString(daysOff.Date__c)" ng-if="daysOff.RecordType.DeveloperName != 'Request'"></span>
+                                <span class="slds-truncate" ng-bind="millisecondsToString(daysOff.From_Date__c)" ng-if="daysOff.RecordType.DeveloperName == 'Request'"></span>
+                                <span ng-if="daysOff.RecordType.DeveloperName == 'Request' && daysOff.To_Date__c != null"> - <span class="slds-truncate" ng-bind="millisecondsToString(daysOff.To_Date__c)"></span></span>
+                            </td>
+                            <td data-label="Description">
+                                <span class="slds-truncate" ng-bind="decodeHTML(daysOff.Description__c)"></span>
+                            </td>
+                            <td data-label="Type">
+                                <span class="slds-truncate">{{daysOff.Type__c}}</span>
+                            </td>
+                            <td data-label="Leave Type">
+                                <span class="slds-truncate">{{daysOff.Leave_Type__c}}</span>
+                            </td>
+                            <td data-label="Status">
+                                <span class="slds-truncate">{{daysOff.Status__c}}</span>
+                            </td>
+                            <td data-label="Action">
+                                <button class="slds-button slds-button--icon" title="Edit" ng-click="editClick(daysOff)" type="button" ng-show="daysOff.RecordType.DeveloperName != 'Request'">                                                                            
+                                    <apex:image url="{!URLFOR($Resource.Edit_Icon)}" StyleClass="buttonImg"/>
+                                </button>                                                                       
+                                <button class="slds-button slds-button--icon" title="Delete" ng-click="deleteClick(daysOff)" type="button" ng-show="daysOff.RecordType.DeveloperName != 'Request'">                                                                            
+                                    <apex:image url="{!URLFOR($Resource.Delete_Icon)}" StyleClass="buttonImg"/>
+                                </button>
+                                <!--<div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="editClick(daysOff)">Edit</div>
+                                <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="deleteClick(daysOff)">Delete</div>-->
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        
+        <!-- start of Days off new / update section -->
+                
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateFordaysEdit}}">
+                <div class="slds-modal__container" style="width: 100%;max-width: 800px !important;margin-top: -8%;">
+                      <div class="slds-modal__header" style="background-color: rgb(22, 50, 92);color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;" ng-if="daysOffRec.Id == null">New Planned Days Off</h2>
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;" ng-if="daysOffRec.Id != null">{{daysOffRec.Name}}</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                      
+                          <div class="slds-grid slds-wrap">
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" ng-show="displayRTSelection">
+                                <div class="slds-form-element {{isRTRequired}}">
+                                    <label class="slds-form-element__label">Record Type: </label>
+                                     <select ng-model="daysOffRec.RecordTypeId" class="slds-select" ng-options="key as value for (key,value) in PdoRTValues" ng-change="getRelatedContacts()">
+                                     </select>
+                                </div> 
+                            </div>
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" ng-show="displayNewContactSelection">
+                                <div class="slds-form-element {{isContactRequired}}">
+                                    <label class="slds-form-element__label">Contact: </label>
+                                     <select ng-model="daysOffRec.Contact__c" class="slds-select" ng-options="i.Id as i.Name for i in contactDetails">
+                                     </select>
+                                </div> 
+                            </div>
+                            
+                           <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                <div class="slds-form-element {{isDateRequired}}">
+                                    <label class="slds-form-element__label">From Date: </label>
+                                     <datepicker date-format="MM/dd/yyyy">
+                                        <input class="slds-input" ng-model="daysOffRec.Date__c" type="text"/>
+                                    </datepicker> 
+                                </div> 
+                            </div>
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                <div class="slds-form-element {{toDateError}}">
+                                    <label class="slds-form-element__label">To Date: </label>
+                                     <datepicker date-format="MM/dd/yyyy">
+                                        <input class="slds-input" ng-model="daysOffRec.toDate" type="text" ng-change="dateValidation()"/>
+                                    </datepicker> 
+                                    <p style="color:red;" ng-if="toDateError != null">{{ErrorMsg}}</p>
+                                </div> 
+                            </div>
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                <div class="slds-form-element {{isTypeRequired}}">
+                                    <label class="slds-form-element__label">Type</label>
+                                     <div class="slds-form-element__control">
+                                       <select ng-model="daysOffRec.Type__c" class="slds-select" ng-options="i as i for i in TypeValue">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Leave Type</label>
+                                     <div class="slds-form-element__control">
+                                       <select ng-model="daysOffRec.Leave_Type__c" class="slds-select" ng-options="i as i for i in LeaveType">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                           <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                 <div class="slds-form-element {{isDescRequired}}">
+                                    <label class="slds-form-element__label">Description</label>
+                                    <div class="slds-form-element__control">
+                                        <input class="slds-input" ng-model="daysOffRec.Description__c" type="text"/>
+                                    </div>
+                                </div>   
+                            </div>
+                            
+                            
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                            </div>
+                            
+                         </div>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Save" ng-click="saveClick();"></input>
+                        <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="modalStateFordaysEdit = '';modalBackdropStateFordaysEdit = '';cancelClick();"></input>
+                        
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateFordaysEdit}}"></div>
+          <!-- End of new / update Code -->
+          
+          
+          <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForError}}">
+                <div class="slds-modal__container" style="width: 100%;max-width: 800px !important;">
+                      <div class="slds-modal__header" style="background-color: rgb(22, 50, 92);color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                          <p>{{ErrorMessage}}</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="modalStateForError = '';modalBackdropStateForError = '';"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForError}}"></div>
+          
+          <!-- Start of delete popup -->
+              <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForDelete}}">
+                    <div class="slds-modal__container" style="width: 100%;max-width: 800px !important;">
+                          <div class="slds-modal__header" style="background-color: rgb(22, 50, 92);color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;"></h2>
+                          </div>
+                          <div class="slds-modal__content">
+                              <p>Are you sure want to delete?</p>
+                         </div>
+                         <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Yes" ng-click="YesclickForDelete()"></input>
+                            <input type="button" class="slds-button slds-button--neutral" value="No" ng-click="modalStateForDelete = '';modalBackdropStateForDelete = '';"></input>
+                         </div>
+                   </div>
+              </div>
+              <div class="slds-modal-backdrop {{modalBackdropStateForDelete}}"></div>
+            <!-- end of delete lan -->
+        
+        
+       
+    </div>
+    </html>
+    <script>
+        app.controller('contactDaysOff_controller',function($scope,$timeout){
+            
+            $scope.contactId = '{!contactId}';
+            $scope.showContactSelection = false;
+            
+            // For Schdule inline section usage
+            // Added by NS on Sep 14 2018
+            $scope.parentId = '{!parentId}';
+            $scope.parentType = '{!parentType}';
+            
+            console.log(':::::$scope.contactId::::',$scope.contactId,$scope.parentId);
+            
+            if(!$scope.contactId && !$scope.parentId) {
+                $scope.showContactSelection = true;
+            }
+            
+            $scope.displayNewContactSelection = false;
+            
+            if($scope.parentId){
+                $scope.displayRTSelection = true;
+                $scope.fromScheduleSection = true;
+            }else {
+                $scope.displayRTSelection = false;
+                $scope.fromScheduleSection = false;
+            }
+            
+            console.log('enter');
+            $scope.spinner = true;
+            $scope.daysOffList = [];
+            $scope.contact = {};
+            $scope.TypeValue = [];
+            $scope.LeaveType = [];
+            $scope.contactRTValues = {};
+            $scope.OffRTValues = {};
+            $scope.PdoRTValues = {};
+            $scope.offRec = {};
+            $scope.offRec.ContactRecord = {};
+            var recordTypeMap = {};
+            
+            
+            $scope.modalStateFordaysEdit = '';
+            $scope.modalBackdropStateFordaysEdit = '';
+            
+            $scope.modalStateForError = '';
+            $scope.modalBackdropStateForError = '';
+            
+            $scope.modalStateForDelete = '';
+            $scope.modalBackdropStateForDelete = '';
+          
+            $scope.isDateRequired = '';
+            $scope.isTypeRequired = '';
+            $scope.isDescRequired = '';
+            $scope.isRTRequired = '';
+            $scope.isContactRequired = '';
+            $scope.toDateError = '';
+            $scope.fromDate = null;
+            $scope.toDate = null;
+            
+            function getInitialValues() {
+                $scope.spinner = false;
+                var Id = '';
+                if($scope.contactId)
+                    Id = $scope.contactId;
+                else if(Object.keys($scope.offRec.ContactRecord).length > 0)
+                    Id = $scope.offRec.ContactRecord.Id;
+                
+                var proId = '';
+                var oppId = '';
+                
+                if($scope.parentType && $scope.parentType == 'PROJECT')
+                    proId = $scope.parentId;
+                else if($scope.parentType && $scope.parentType == 'OPPORTUNITY')
+                    oppId = $scope.parentId;
+                    
+                console.log('::::::::::id:::::',Id);
+                console.log(':::from::::to::::::',$scope.fromDate,$scope.toDate);
+                var dt1 = null;
+                var dt2 = null;
+                
+                if($scope.fromDate)
+                    dt1 = $scope.fromDate.split('/')[2]+'-'+$scope.fromDate.split('/')[0]+'-'+$scope.fromDate.split('/')[1];
+                
+                if($scope.toDate)
+                    dt2 = $scope.toDate.split('/')[2]+'-'+$scope.toDate.split('/')[0]+'-'+$scope.toDate.split('/')[1];
+                  
+                Visualforce.remoting.Manager.invokeAction(
+                      '{!$RemoteAction.ContactPlanned_DaysoffCtrl.plannedDaysOffInfo}',
+                      Id,proId,oppId,dt1,dt2,
+                      function(response, ev) {
+                          if(ev.status) {
+                              console.log(':::::response::::',response);
+                              $scope.daysOffList = response.existingOff;
+                              $scope.contact = response.contactRec;
+                              $scope.TypeValue = response.typeValues;
+                              $scope.LeaveType = response.leaveType;
+                              $scope.contactRTValues = response.conRTNameIdMap;
+                              $scope.OffRTValues = response.plannedOffRTNameIdMap;
+                                                           
+                              for(var key in $scope.OffRTValues){
+                                  recordTypeMap[$scope.OffRTValues[key]] = key;
+                                  
+                                  if(key != 'Staff_Planned_Days_Off' && key != 'Request') {
+                                      $scope.PdoRTValues[$scope.OffRTValues[key]] = key;
+                                  }
+                              }
+                              
+                              if($scope.showContactSelection && !$scope.displayRTSelection)
+                                  $scope.offRec.ContactRecord = {Id : $scope.contact.Id,Name : $scope.contact.Name};
+                              
+                              if(response.startDate)
+                                  $scope.fromDate = response.startDate.split('-')[1]+'/'+response.startDate.split('-')[2]+'/'+response.startDate.split('-')[0];
+                              
+                              $scope.spinner = true;
+                          } else {
+                              $scope.spinner = true;
+                              $scope.ErrorMessage = ev.message;
+                              $scope.modalStateForError = 'slds-fade-in-open';
+                              $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                          }
+                          $scope.$apply();
+                      },
+                      {escape: true}
+                  );
+            }
+            
+            $scope.newDaysOff = function() {
+                $scope.daysOffRec = {};
+                
+                if($scope.showContactSelection) {
+                    $scope.daysOffRec.ContactRecord = $scope.offRec.ContactRecord;
+                    
+                    if(!$scope.fromScheduleSection) {
+                        if($scope.contact.RecordType.DeveloperName == 'Candidate') {
+                            $scope.daysOffRec.Type__c = 'Instructor';
+                        }
+                        if($scope.contact.RecordType.DeveloperName == 'Student'){
+                            $scope.daysOffRec.Type__c = 'Student';
+                        }
+                        if($scope.contact.RecordType.DeveloperName == 'DLS_Employee'){
+                            $scope.daysOffRec.Type__c = 'Staff';
+                        }
+                    }
+                }
+                
+                $scope.modalStateFordaysEdit = 'slds-fade-in-open';
+                $scope.modalBackdropStateFordaysEdit = 'slds-modal-backdrop--open';
+            }
+            
+            $scope.editClick = function(record) {
+                $scope.daysOffRec = record;
+                
+                $scope.daysOffRec.Date__c = moment($scope.daysOffRec.Date__c).format('MM/DD/YYYY');
+                
+                $scope.modalStateFordaysEdit = 'slds-fade-in-open';
+                $scope.modalBackdropStateFordaysEdit = 'slds-modal-backdrop--open';
+            }
+            
+            $scope.saveClick = function() {
+                if(!$scope.daysOffRec.Date__c ){
+                    $scope.isDateRequired = "slds-is-required slds-has-error";
+                } else {
+                    $scope.isDateRequired = '';
+                }
+                
+                if(!$scope.daysOffRec.Description__c){
+                    $scope.isDescRequired = "slds-is-required slds-has-error";
+                }else {
+                    $scope.isDescRequired = '';
+                }
+                
+                if(!$scope.daysOffRec.RecordTypeId && $scope.displayRTSelection){
+                    $scope.isRTRequired = "slds-is-required slds-has-error";
+                }else {
+                    $scope.isRTRequired = '';
+                }
+                console.log(':::***:::$scope.fromScheduleSection:::'+$scope.fromScheduleSection);
+                if(!$scope.daysOffRec.Contact__c && $scope.displayNewContactSelection && $scope.fromScheduleSection){ //&& ($scope.daysOffRec.RecordTypeId == $scope.OffRTValues['Instructor_Planned_Days_Off'] || $scope.daysOffRec.RecordTypeId == $scope.OffRTValues['Student_Planned_Days_Off'])
+                    $scope.isContactRequired = "slds-is-required slds-has-error";
+                }else {
+                    $scope.isContactRequired = '';
+                }
+                
+                if($scope.isDateRequired == "" && $scope.isRTRequired == "" && $scope.isContactRequired == "" && $scope.isTypeRequired == "" && $scope.isDescRequired == "" && $scope.toDateError == "") {
+                    $scope.modalStateFordaysEdit = '';
+                    $scope.modalBackdropStateFordaysEdit = '';
+                    $scope.spinner = false;
+                    var daysArray = [];
+                    
+                    var requestPDORec = {};
+                    var requestRecArray = [];
+                    
+                    $scope.daysOffRec.Date__c = moment($scope.daysOffRec.Date__c).format('YYYY-MM-DD');
+                    
+                    if($scope.daysOffRec.Contact__c && $scope.contactMap[$scope.daysOffRec.Contact__c])
+                        $scope.contact = $scope.contactMap[$scope.daysOffRec.Contact__c];
+                    
+                    if(!$scope.daysOffRec.Id) {
+                        if(!$scope.fromScheduleSection) {
+                            if($scope.contact.RecordType.DeveloperName == 'Candidate') {
+                                $scope.daysOffRec.RecordTypeId = $scope.OffRTValues['Instructor_Planned_Days_Off'];
+                            }
+                            if($scope.contact.RecordType.DeveloperName == 'Student'){
+                                $scope.daysOffRec.RecordTypeId = $scope.OffRTValues['Student_Planned_Days_Off'];
+                            }
+                            if($scope.contact.RecordType.DeveloperName == 'DLS_Employee'){
+                                $scope.daysOffRec.RecordTypeId = $scope.OffRTValues['Staff_Planned_Days_Off'];
+                            }
+                        }
+                        
+                        if($scope.contact && !$scope.displayNewContactSelection)
+                            $scope.daysOffRec.Contact__c = $scope.contact.Id;
+                        else if(!$scope.displayRTSelection)
+                            $scope.daysOffRec.Contact__c = $scope.daysOffRec.ContactRecord.Id;
+                        
+                        
+                        if($scope.contact && $scope.contact.RecordType.DeveloperName == 'DLS_Employee')
+                            $scope.daysOffRec.Status__c = 'Draft';
+                        else
+                            $scope.daysOffRec.Status__c = 'Approved';
+                            
+                        //Project/Opportunity value population
+                        if($scope.parentId){
+                            if($scope.parentType == 'OPPORTUNITY')
+                                $scope.daysOffRec.Opportunity__c = $scope.parentId;
+                                
+                            if($scope.parentType == 'PROJECT')
+                                $scope.daysOffRec.Project__c = $scope.parentId;
+                        }
+                        
+                        if(!$scope.fromScheduleSection && $scope.contact.RecordType.DeveloperName == 'DLS_Employee') {
+                            requestPDORec.From_Date__c = $scope.daysOffRec.Date__c;
+                            requestPDORec.Contact__c = $scope.daysOffRec.Contact__c;
+                            requestPDORec.Status__c = 'Draft';
+                            requestPDORec.Type__c = $scope.daysOffRec.Type__c;
+                            requestPDORec.Leave_Type__c = $scope.daysOffRec.Leave_Type__c;
+                            requestPDORec.Description__c = $scope.daysOffRec.Description__c;
+                            requestPDORec.Opportunity__c = $scope.daysOffRec.Opportunity__c;
+                            requestPDORec.Project__c = $scope.daysOffRec.Project__c;
+                            
+                            if($scope.contact.RecordType.DeveloperName == 'DLS_Employee')
+                                requestPDORec.RecordTypeId = $scope.OffRTValues['Request'];
+                        }
+                        delete $scope.daysOffRec.ContactRecord;
+                    }else {
+                        if($scope.contact && $scope.contact.RecordType.DeveloperName == 'DLS_Employee')
+                            $scope.daysOffRec.Status__c = 'Draft';
+                        else
+                            $scope.daysOffRec.Status__c = 'Approved';
+                    }
+                    console.log('::::::$scope.daysOffRec:::',$scope.daysOffRec);
+                    
+                    
+                    // push records in between from & to date
+                    if($scope.daysOffRec.toDate){
+                        var startDate = moment($scope.daysOffRec.Date__c).add(1,'days');
+                        var endDate = moment($scope.daysOffRec.toDate).format('YYYY-MM-DD');
+                        var datesArrary = [];
+                        while(startDate.isBefore(endDate) || startDate.isSame(endDate)){
+                            if(moment(startDate).weekday() != 6 && moment(startDate).weekday() != 0) {
+                                datesArrary.push(moment(startDate).format('YYYY-MM-DD'));
+                            }
+                                
+                            startDate = moment(startDate).add(1,'days');
+                        }
+                        
+                        // For request records
+                        if($scope.contact && $scope.contact.RecordType.DeveloperName == 'DLS_Employee')
+                            requestPDORec.To_Date__c = endDate;
+                        
+                        delete $scope.daysOffRec.toDate;
+                        
+                        for(var i = 0;i < datesArrary.length;i++){
+                            daysArray.push({
+                                Date__c : datesArrary[i],
+                                Description__c : $scope.daysOffRec.Description__c,
+                                RecordTypeId : $scope.daysOffRec.RecordTypeId,
+                                Contact__c : $scope.daysOffRec.Contact__c,
+                                Leave_Type__c : $scope.daysOffRec.Leave_Type__c,
+                                Type__c : $scope.daysOffRec.Type__c, 
+                                Status__c : $scope.daysOffRec.Status__c,
+                                Opportunity__c : $scope.daysOffRec.Opportunity__c,
+                                Project__c : $scope.daysOffRec.Project__c
+                                });
+                        }
+                    }
+                    
+                    daysArray.push($scope.daysOffRec);
+                    
+                    if($scope.contact && $scope.contact.RecordType.DeveloperName == 'DLS_Employee')
+                        requestRecArray.push(requestPDORec);
+                    
+                    console.log(':::::::daysArray:::::',daysArray);
+                    console.log(':::::::requestRecArray:::::',requestRecArray);
+                    
+                    if(daysArray.length > 0) {
+                        
+                        var contId = '';
+                        if($scope.contact) {
+                            contId = $scope.contact.Id;
+                        } 
+                        
+                       Visualforce.remoting.Manager.invokeAction(
+                          '{!$RemoteAction.ContactPlanned_DaysoffCtrl.create_updatemethod}',
+                          JSON.stringify(daysArray),contId,JSON.stringify(requestRecArray),false,
+                          function(response, ev) {
+                              if(ev.status) {
+                                  console.log(':::::response::::',response);
+                                  //$scope.daysOffList = response;
+                                  getInitialValues();
+                                  $scope.spinner = true;
+                              } else {
+                                  $scope.spinner = true;
+                                  $scope.ErrorMessage = ev.message;
+                                  $scope.modalStateForError = 'slds-fade-in-open';
+                                  $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                              }
+                              $scope.$apply();
+                          },
+                          {escape: true}
+                      );
+                    }
+                }
+            }
+            
+            $scope.cancelClick = function() {
+                $scope.isDateRequired = '';
+                $scope.isDescRequired = '';
+                $scope.isRTRequired = '';
+                $scope.isContactRequired = '';
+            }
+            
+            $scope.deleteClick = function(record) {
+                $scope.deleteRec = record;
+                $scope.modalStateForDelete = 'slds-fade-in-open';
+                $scope.modalBackdropStateForDelete = 'slds-modal-backdrop--open';
+            }
+            
+            $scope.YesclickForDelete = function() {
+                $scope.modalStateForDelete = '';
+                $scope.modalBackdropStateForDelete = '';
+                $scope.spinner = false;
+                
+                $scope.deleteRec.Date__c = moment($scope.deleteRec.Date__c).format('YYYY-MM-DD');
+               
+                var isStaff = false;
+                
+                if($scope.contact && $scope.contact.RecordType.DeveloperName == 'DLS_Employee') {
+                    $scope.deleteRec.Status__c = 'Delete';
+                    isStaff = true;
+                } else {
+                    isStaff = false;
+                }
+                
+                var deleteArr = [];
+                deleteArr.push($scope.deleteRec);
+                
+                if(deleteArr.length > 0) {
+                   Visualforce.remoting.Manager.invokeAction(
+                      '{!$RemoteAction.ContactPlanned_DaysoffCtrl.deleteDaysOff}',
+                      JSON.stringify(deleteArr),isStaff,
+                      function(response, ev) {
+                          if(ev.status) {
+                              //$scope.daysOffList = response;
+                              getInitialValues();
+                              $scope.spinner = true;
+                              
+                          } else {
+                              $scope.spinner = true;
+                              $scope.ErrorMessage = ev.message;
+                              
+                              $scope.modalStateForError = 'slds-fade-in-open';
+                              $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                              
+                              
+                          }
+                          $scope.$apply();
+                      },
+                      {escape: true}
+                  );
+                }
+            }
+            
+             $scope.decodeHTML = function(encodedStr){
+                var parser = new DOMParser;
+                var dom = parser.parseFromString(
+                    '<!doctype html><body>' + encodedStr,
+                    'text/html');
+                var decodedString = dom.body.textContent;
+                
+                //console.log(decodedString);
+                return decodedString;
+            }
+            
+            $scope.millisecondsToString = function(millisecond){
+                if(millisecond) {
+                    var date = new Date(millisecond);            
+                    date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    if(day < 10) {
+                        day = '0' + day;
+                    }
+                    if(month < 10) {
+                        month = '0' + month;
+                    }
+                    return month + '/' + day +'/'+date.getFullYear() ;
+                }
+            }
+            
+            $scope.dateValidation = function() {
+                if(moment($scope.daysOffRec.toDate).isBefore($scope.daysOffRec.Date__c)){
+                    $scope.toDateError = 'slds-has-error';
+                    $scope.ErrorMsg = 'To Date should be greater than From Date';
+                }else {
+                    $scope.toDateError = '';
+                    $scope.ErrorMsg = '';
+                }
+            }
+            
+            // Get the selected contact related PDO information
+            $scope.ContactSelection = function() {
+                getInitialValues();
+            }
+            
+            //Get the Record Type based contact information from Contact Assignments
+            $scope.getRelatedContacts = function(){
+                console.log('::$scope.daysOffRec:::',recordTypeMap[$scope.daysOffRec.RecordTypeId]);
+                
+                var type = '';
+                var rType = recordTypeMap[$scope.daysOffRec.RecordTypeId];
+                
+                if(rType == 'Instructor_Planned_Days_Off'){
+                    type = 'Instructor';
+                }else if(rType == 'Staff_Planned_Days_Off') {
+                    type = 'Staff';
+                }else if(rType == 'Student_Planned_Days_Off'){
+                    type = 'Student';
+                }
+                
+                if(type){
+                     Visualforce.remoting.Manager.invokeAction(
+                      '{!$RemoteAction.ContactPlanned_DaysoffCtrl.getRelatedContacts}',
+                      $scope.parentId,$scope.parentType,type,
+                      function(response, ev) {
+                          if(ev.status) {
+                              $scope.contactDetails = response;
+                              $scope.contactMap = {};
+                              
+                              for(var i = 0;i < $scope.contactDetails.length;i++){
+                                  if(!$scope.contactMap[$scope.contactDetails[i].Id]){
+                                      $scope.contactMap[$scope.contactDetails[i].Id] = $scope.contactDetails[i];
+                                  }
+                              }
+                              
+                              $scope.displayNewContactSelection = true;
+                          } else {
+                              $scope.spinner = true;
+                              $scope.ErrorMessage = ev.message;
+                              
+                              $scope.modalStateForError = 'slds-fade-in-open';
+                              $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                              
+                              
+                          }
+                          $scope.$apply();
+                      },
+                      {escape: true}
+                  );
+                }else {
+                    $scope.displayNewContactSelection = false;
+                }
+                
+            }
+          
+            getInitialValues();
+            
+        });
+        
+    </script>
+  
+</apex:component>

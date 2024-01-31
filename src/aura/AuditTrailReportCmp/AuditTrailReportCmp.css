@@ -1,0 +1,10 @@
+.THIS {
+}
+.THIS .btn{
+    margin-top: 1.25rem;
+}
+.THIS .customIcon svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-top: 0.3rem
+}

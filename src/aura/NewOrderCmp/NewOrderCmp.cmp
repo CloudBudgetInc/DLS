@@ -1,0 +1,285 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="NewOrderLoanController">
+    <aura:attribute name="newOrderObj" type="Map" description="To hold the new MR record values"/>
+    <aura:attribute name="materialSourceTypes" type="List" default="['DLS Stock','Vendor Purchase']"/>
+    <aura:attribute name="displayNewOrderModel" type="Boolean" default="false"/>
+    <aura:attribute name="searchByField" type="String" default=""/>
+    <aura:attribute name="radioOptions" type="List" default="[{'label': 'Material Name', 'value': 'Name'},
+                                                             {'label': 'ISBN', 'value': 'ISBN__c'}]"/>
+    
+    <aura:attribute name="requestTypes" type="List" default="['Library','Student','Stock']"/>
+    <aura:attribute name="projectTaskDetails" type="List" default="[]"/>
+    <aura:attribute name="placeHolderName" type="String" default="Material Name"/>
+    <aura:attribute name="showinputDetails" type="Boolean" default="true"/>
+    <aura:attribute name="materialsDetails" type="List" default="[]"/>   
+    <aura:attribute name="qtyEntered" type="Boolean" default="false"/>
+    <aura:attribute name="displaySuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    <aura:attribute name="taskErroMsg" type="String" default=""/>
+    <aura:attribute name="allowApexCall" type="Boolean" default="true" description="to avoid n number of call for project tasks"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="isNewRequest" type="Boolean" access="public" description="Used to store the the record is Loaded or not" />
+    <aura:attribute name="displayQty" type="Boolean" default="true" description="to display the qty and notes input"/>
+    <aura:attribute name="displayContentInLMS" type="Boolean" default="false" description="to display the qty and notes input"/>
+    <aura:attribute name="displayLMSOnly" type="Boolean" default="false" description="to display the lms only input"/>
+    <aura:attribute name="notesEntered" type="Boolean" default="false"/>
+    <aura:attribute name="LMSonlyEntered" type="Boolean" default="false"/>
+    <aura:attribute name="contentInLMSEntered" type="Boolean" default="false"/>
+    <aura:attribute name="fromType" type="String" default="Qty" description="To identify which apply option is clicked Qty or notes"/>
+    <aura:attribute name="matReqIds" type="List" default="[]"/>
+    <aura:attribute name="showStudentCAOptions" type="Boolean" default="false"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    <aura:attribute name="contentInLMSOption" type="List" default="['Put in LMS','Not available','Added to LMS']"/>
+    <aura:attribute name="studentCondition" type="String"/>
+
+    <!-- Attributes passed from other components -->
+    
+    <aura:attribute name="projectId" type="String" default="" access="global" description="project value population when launching from project budget section"/>
+    <aura:attribute name="materialId" type="String" default="" access="global" description="material value population when launching from library material detail page"/>
+    <aura:attribute name="projectTaskId" type="String" default="" access="global" description="task value population when launching from project budget section"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:handler name="change" value="{!v.newOrderObj.selectedProject}" action="{!c.getRelatedTasks}"/>
+    <aura:handler name="change" value="{!v.newOrderObj.selectedLocation}" action="{!c.getRelatedCAStudents}"/>
+    
+    <!-- W-007578 Added by Dinesh on 30.09.2022 -->
+    <aura:handler name="change" value="{!v.newOrderObj.isReimbursement}" action="{!c.getRelatedCAStudents}"/>
+    
+    
+    <aura:registerEvent name="reloadEvent" type="c:reloadEvent"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div>
+        <!--lightning:button variant="brand" label="New Order" onclick="{!c.openNewOrderModel}" /-->
+        
+        <aura:if isTrue="{!v.displayNewOrderModel}">
+            
+            <c:sldsModal aura:id="newOrderModel" modelWidth="{!v.displayDevice == 'Mobile' ? '' : '68%'}">
+                <aura:set attribute="header">New Order</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!v.showinputDetails}">
+                        <lightning:layout multipleRows="true">
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12" class="lookup-IconClass">
+                                <c:LookupSearch aura:id="projectLookup" selection="{!v.newOrderObj.selectedProject}" onSearch="{!c.projectLookupSearch}" iconName="standard:record" objectName="AcctSeed__Project__c" fieldName="Name" condition="" label="Select Project" placeholder="Project Name" isMultiEntry="false" isRequired="true"/>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                <lightning:select aura:id="requestType" label="Request Type" class="selectReq" value="{!v.newOrderObj.requestType}">
+                                    <option text="-- Select--" value=""/>
+                                    <aura:iteration items="{!v.requestTypes}" var="req">
+                                        <option text="{!req}" value="{!req}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12" class="lookup-IconClass">
+                                <aura:if isTrue="{!not(v.newOrderObj.materialDisabled)}">
+                                    <c:LookupSearch aura:id="materialLookup" selection="{!v.newOrderObj.selectedMaterials}" onSearch="{!c.materialLookupSearch}" iconName="standard:record" objectName="Materials__c" fieldName="{!v.searchByField}" condition="Inactive__c = false" label="Select Material" placeholder="{!v.placeHolderName}" isMultiEntry="true" allowMultiSelect="true" isRequired="true"/>
+                                    <aura:set attribute="else">
+                                        <lightning:input type="text" label="Select Material" value="{!v.newOrderObj.selectedMaterials[0].Name}" disabled="{!v.newOrderObj.materialDisabled}"/>
+                                    </aura:set>
+                                </aura:if>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                <lightning:layout  multipleRows="true">
+                                    <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                        <div class="outerGroup" style="margin-top: 1%;">
+                                            <lightning:radioGroup name="radioGroup" label="Search By" options="{! v.radioOptions }" value="{!v.searchByField}" type="radio" onchange="{!c.changeSearchByField}"/>
+                                        </div>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                        <div style="{!v.displayDevice == 'Mobile' ? '' : 'margin-top: 1rem;'}"><a onclick="{!c.goToMaterialCreate}">Create New Material</a></div>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12" class="lookup-IconClass">
+                                <c:LookupSearch aura:id="locationLookup" selection="{!v.newOrderObj.selectedLocation}" onSearch="{!c.locationLookupSearch}" iconName="standard:location" objectName="MTT_Location__c" fieldName="Name" condition="" label="Select Location" placeholder="Location Name" isMultiEntry="false" isRequired="true"/>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                <lightning:select aura:id="materialSource" label="Material Source" class="selectReq" value="{!v.newOrderObj.materialSource}">
+                                    <option text="-- Select--" value=""/>
+                                    <aura:iteration items="{!v.materialSourceTypes}" var="source">
+                                        <option text="{!source}" value="{!source}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                <aura:if isTrue="{!not(v.qtyEntered)}">
+                                    <lightning:input aura:id="qtyVal" type="number" label="Qty" value="{!v.newOrderObj.Qty}" class="selectReq"/><br/>
+                                    <aura:set attribute="else">
+                                        <lightning:input type="text" label="Qty" value="Varied" disabled="true"/>
+                                    </aura:set>
+                                </aura:if>
+                                <div><a onclick="{!c.getQtyValues}">Apply Different Qty</a></div>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                <lightning:layout  multipleRows="true">
+                                    <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="9" mediumDeviceSize="9" smallDeviceSize="12">
+                                        <ui:inputDate aura:id="dueDate" label="Due Date" class="slds-input datePickerClass requiredClass" value="{!v.newOrderObj.dueDate}" displayDatePicker="true" format="MM-DD-YYYY"/>      
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12">
+                                        <div style="{!v.displayDevice == 'Mobile' ? '' : 'margin-top: 1.5rem;'}"><a onclick="{!c.applyStartDate}">Use Start Date</a></div>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="4" mediumDeviceSize="4" smallDeviceSize="12">
+                                <aura:if isTrue="{!not(v.notesEntered)}">
+                                	<lightning:textarea label="Request Notes" value="{!v.newOrderObj.requestNotes}"/>
+                                    <aura:set attribute="else">
+                                    	<lightning:textarea label="Request Notes" value="Varied" disabled="true"/>
+                                    </aura:set>
+                                </aura:if>
+                                <a onclick="{!c.getNotesValues}">Apply Request Notes</a>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="2" mediumDeviceSize="2" smallDeviceSize="12">
+                                <lightning:input type="checkbox" class="checkboxClass" label="Rush?" checked="{!v.newOrderObj.rush}"/>
+                            </lightning:layoutItem>
+                            
+                            <!-- W-006432 Add "Put In LMS" Option when Creating Material Request-->
+                             <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                <aura:if isTrue="{!not(v.contentInLMSEntered)}">
+                                    <lightning:select aura:id="contentInLMS" label="Content In LMS"  value="{!v.newOrderObj.contentInLms}">
+                                        <option text="-- Select--" value=""/>
+                                        <aura:iteration items="{!v.contentInLMSOption}" var="lms">
+                                            <option text="{!lms}" value="{!lms}"/>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                    <aura:set attribute="else">
+                                        <lightning:select label="Content In LMS" value="varied" disabled="true">
+                                            <option text="Varied" value="varied"/>
+                                        </lightning:select>
+                                    </aura:set>
+                                </aura:if>
+                                 
+                                <a onclick="{!c.getContentInLMSValues}">Apply Content In LMS</a>
+                            </lightning:layoutItem>
+                            
+                            <!-- W-007578 Added by Dinesh on 30.09.2022 -->
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize= "6" mediumDeviceSize= "6" smallDeviceSize="12">
+                                  <lightning:input type="checkbox" class="checkboxClass" label="Reimbursement" checked="{!v.newOrderObj.isReimbursement}"/>
+                            </lightning:layoutItem>
+
+                            <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize= "6" smallDeviceSize="12">
+                              <aura:if isTrue="{!not(v.LMSonlyEntered)}">
+                                  <lightning:input type="checkbox" class="checkboxClass" label="LMS Only" checked="{!v.newOrderObj.lmsOnly}"/>
+                                    <aura:set attribute="else">
+                                        <lightning:input type="checkbox" class="checkboxClass" label="LMS Only Varied" disabled="true"/>
+                                    </aura:set>
+                                </aura:if>
+                                
+                               
+                                <div><a onclick="{!c.getLMSValues}">Apply LMS Only</a></div>
+                            </lightning:layoutItem>
+                            
+                             <!-- W-005442 - Materials Request - Delivery Location Autofill -->                            
+                            <aura:if isTrue="{!or(v.showStudentCAOptions,v.newOrderObj.isReimbursement)}">
+                                <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                    <c:LookupSearch aura:id="studentCALookup" selection="{!v.newOrderObj.selectedStudentCA}" onSearch="{!c.studentLookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="{!v.studentCondition}" label="Student" placeholder="Select Student" isMultiEntry="true" allowMultiSelect="true"/>                                            
+                                </lightning:layoutItem>
+                            </aura:if>
+                            
+                        </lightning:layout>
+                        
+                        <aura:set attribute="else">
+                            <table class="slds-table slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-1">
+                                <thead>
+                                    <tr>
+                                        <th>Material Name</th>
+                                        <aura:if isTrue="{!v.displayQty}">
+                                        	<th>Quantity</th>
+                                            <aura:set attribute="else">
+                                                <aura:if isTrue="{!v.displayContentInLMS}">
+                                                    <th>Content In LMS</th>
+                                                    <aura:set attribute="else">
+                                                        <aura:if isTrue="{!v.displayLMSOnly}">
+                                                            <th>LMS Only</th>
+                                                            <aura:set attribute="else">
+                                                                <th>Notes</th>
+                                                            </aura:set>
+                                                        </aura:if>
+                                                    </aura:set>
+                                                </aura:if>                                                
+                                            </aura:set>
+                                        </aura:if>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <aura:iteration items="{!v.materialsDetails}" var="material">
+                                        <tr>
+                                            <td>
+                                                <span>{!material.Name}</span>
+                                            </td>
+                                            <td>
+                                                <aura:if isTrue="{!v.displayQty}">
+                                                    <lightning:input aura:id="qtyInput" type="number" label="" value="{!material.qty}"/>
+                                                    <aura:set attribute="else">
+                                                        <aura:if isTrue="{!v.displayContentInLMS}">                                                            
+                                                            <lightning:select aura:id="contentInLMSInput" label=""  value="{!material.contentInLms}">
+                                                                <option text="-- Select--" value=""/>
+                                                                <aura:iteration items="{!v.contentInLMSOption}" var="lms">
+                                                                    <option text="{!lms}" value="{!lms}"/>
+                                                                </aura:iteration>
+                                                            </lightning:select>
+                                                            <aura:set attribute="else">
+                                                                <aura:if isTrue="{!v.displayLMSOnly}"> 
+                                                                    <lightning:input type="checkbox" aura:id="lmsInput"  class="checkboxClass" label="" checked="{!material.lmsOnly}"/>
+                                                                    <aura:set attribute="else">
+                                                                        <lightning:textarea aura:id="notesInput" class="notesClass" label="" value="{!material.notes}"/>
+                                                                    </aura:set>
+                                                                </aura:if>
+                                                            </aura:set>
+                                                        </aura:if>                                                    	
+                                                    </aura:set>
+                                                </aura:if>
+                                            </td>
+                                        </tr>
+                                    </aura:iteration>           
+                                </tbody>
+                            </table>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <aura:if isTrue="{!v.showinputDetails}">
+                        <p style="color: red;text-align: left;">{!v.taskErroMsg}</p>
+                        <lightning:button variant="brand" label="Submit" class="buttonCls" onclick="{!c.submitClick}"/>
+                        <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.cancelBtnClick}"/>
+                        <aura:set attribute="else">
+                            <lightning:button variant="brand" label="Okay" class="buttonCls" onclick="{!c.okayClickOnQty}"/>
+                            <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.cancelBtnOnQty}"/>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+        <aura:if isTrue="{!v.displaySuccessModal}">
+            <c:sldsModal aura:id="successModal">
+                <aura:set attribute="header">{!v.successTitle}</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <p>{!v.successMsg}</p>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnSuccess}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+    </div>
+    
+</aura:component>

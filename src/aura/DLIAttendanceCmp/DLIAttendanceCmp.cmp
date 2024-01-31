@@ -1,0 +1,162 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="OnBoardingController">
+    
+    <aura:attribute name="proId" type="String" default=""/>
+    <aura:attribute name="instructorId" type="String" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="detailMap" type="Map" default="{}"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    <aura:attribute name="options" type="List" default="[{'label': 'Yes', 'value': 'yes'},{'label': 'No', 'value': 'no'}]"/>
+    <aura:attribute name="displaySuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    <aura:attribute name="displayConfirmation" type="Boolean" default="false"/>
+    <aura:attribute name="displayErrorModal" type="Boolean" default="false"/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <div>
+        <div>
+            <span class="backCls">
+                <div style="float: left;">
+                    <div class="slds-grid">
+                        <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.back}" ></i></span>
+                        <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                    </div>
+                </div>
+            </span>
+            <center><h5 class="card-title" style=" font-size:2rem !important;">DLI Attendance</h5></center>
+            
+            <span style="float: right;margin-top: -4rem;">
+                <lightning:button label="Save" class="btn btn-primary" onclick="{!c.saveBtnClick}"/>
+            </span>
+            <br/>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '4'}" padding="around-small">
+                        <lightning:input name="" label="Project Name" value="{!v.detailMap.projectName}" disabled="true"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '4'}" padding="around-small">
+                        <lightning:input name="" label="Instructor Name" value="{!v.detailMap.instructorName}" disabled="true"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '4'}" padding="around-small">
+                        <!--lightning:input type="date" name="input1" label="Date" value="{!v.detailMap.dateVal}" disabled="true" format="MM/DD/YYYY"/-->
+                        <lightning:input name="" label="Date" value="{!v.detailMap.dateVal}" disabled="true"/>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem size="1" padding="around-small">
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '10'}" padding="around-small">
+                        <div class="containerTable table-responsive">
+                            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout" style="margin-top: 1rem;">
+                                <thead class="thead-light">
+                                    <tr class="slds-line-height_reset">
+                                        <th>Student Name</th>
+                                        <th>Attendance</th>
+                                        <th>Comments</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <aura:iteration items="{!v.detailMap.allStudentDetails}" var="stu">
+                                        <tr>
+                                            <td data-label="Student Name">{!stu.studentName}</td>
+                                            <td data-label="Attendance">
+                                                <lightning:radioGroup class="{!v.displayDevice != 'Mobile' ? 'radioClass' : ''}" label="" options="{!stu.options}" value="{!stu.studentPresent}" type="radio"/>
+                                            </td>
+                                            <td data-label="Comments">
+                                                <aura:if isTrue="{!or(stu.studentPresent == 'yes',stu.studentPresent == 'no')}">
+                                                    <lightning:textarea aura:id="attendanceCmt" label="" value="{!stu.attendanceComment}"/>
+                                                </aura:if>
+                                            </td>
+                                        </tr>
+                                    </aura:iteration>
+                                </tbody>
+                            </table>
+                        </div>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="1" padding="around-small">
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem size="1" padding="around-small">
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '3'}" padding="around-small">
+                        <lightning:input type="checkbox" aura:id="technical" label="Technical Issue?" checked="{!v.detailMap.technicalIssue}"/>
+                    </lightning:layoutItem>
+                    
+                    <aura:if isTrue="{!v.detailMap.technicalIssue}">
+                        <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '2'}" padding="around-small" class="{!v.displayDevice != 'Mobile' ? 'CmtClass':''}">
+                            <lightning:textarea aura:id="techComment" label="Comments" value="{!v.detailMap.technicalIssueComment}" rows="4"/>
+                        </lightning:layoutItem>
+                    </aura:if>
+                    
+                    <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '3'}" padding="around-small">
+                        <lightning:input type="checkbox" aura:id="acadamic" label="Academic Issue?" checked="{!v.detailMap.academicIssue}"/>
+                    </lightning:layoutItem>
+                    
+                    <aura:if isTrue="{!v.detailMap.academicIssue}">
+                        <lightning:layoutItem size="{!v.displayDevice == 'Mobile' ? '12': '2'}" padding="around-small" class="{!v.displayDevice != 'Mobile' ? 'CmtClass':''}">
+                            <lightning:textarea aura:id="acadamicComment" label="Comments" value="{!v.detailMap.academicIssueComment}" rows="4"/>
+                        </lightning:layoutItem>
+                    </aura:if>	
+                    <lightning:layoutItem size="1" padding="around-small">
+                    </lightning:layoutItem>
+                    
+                </lightning:layout>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- confirmation modal-->
+    <aura:if isTrue="{!v.displayConfirmation}">
+        <c:sldsModal aura:id="confirmationModal" header="Confirmation" displayCloseImage="false">
+            <aura:set attribute="content">
+                <center><p>Would you like to save the changes?</p></center>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Okay" class="btn btn-primary" onclick="{!c.okayClick}"/>
+                <lightning:button label="Cancel" class="btn btn-secondary" onclick="{!c.cancelClick}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!--Submit, Save & Recall action success /  error modal -->
+    <aura:if isTrue="{!v.displaySuccessModal}">
+        <c:sldsModal aura:id="successModal">
+            <aura:set attribute="header">{!v.successTitle}</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <center><p style="font-size: medium;">{!v.successMsg}</p></center>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeClickOnSuccess}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.displayErrorModal}">
+        <c:sldsModal aura:id="errorModal">
+            <aura:set attribute="header">Error</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <center><p style="font-size: medium;">Please select Yes or No for your Attendance</p></center>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeErrorModal}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+</aura:component>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>E2Excel Configuration</label>
+    <motif>Custom67: Gears</motif>
+    <page>E2Ex__Configuration</page>
+</CustomTab>

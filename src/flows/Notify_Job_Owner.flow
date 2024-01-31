@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <description>You may change the body and title as needed by editing the Text Templates on the sidebar.</description>
+        <name>Send_Notification</name>
+        <label>Send Notification</label>
+        <locationX>176</locationX>
+        <locationY>518</locationY>
+        <actionName>customNotificationAction</actionName>
+        <actionType>customNotificationAction</actionType>
+        <inputParameters>
+            <name>customNotifTypeId</name>
+            <value>
+                <elementReference>Get_Notification_Type.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>body</name>
+            <value>
+                <elementReference>Body</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>title</name>
+            <value>
+                <elementReference>Title</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientIds</name>
+            <value>
+                <elementReference>NotificationRecipients</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>targetId</name>
+            <value>
+                <elementReference>Get_one_record.bpats__Job__c</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <assignments>
+        <description>Custom notification actions will only accept collection variables of type text, where the text is User Ids.  More recipient users can be added to this assignment as needed, or the one recipient can be changed from owner to another job field.</description>
+        <name>Add_to_collection</name>
+        <label>Add to collection</label>
+        <locationX>176</locationX>
+        <locationY>278</locationY>
+        <assignmentItems>
+            <assignToReference>NotificationRecipients</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Get_one_record.bpats__Job__r.OwnerId</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Get_Notification_Type</targetReference>
+        </connector>
+    </assignments>
+    <description>Notifies the job owner that there are new candidates to review through a custom notification in Salesforce (bell icon).  This flow is created with a collection variable to ensure that only one notification is sent out, even if multiple candidates are moved together.</description>
+    <interviewLabel>Notify Job Owner {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Notify Job Owner</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <description>The unmanaged package includes the Job Notification record for the Custom Notification Type object.  This is configured in setup and can be adjusted if needed.  This flow element is getting its record Id.</description>
+        <name>Get_Notification_Type</name>
+        <label>Get Notification Type</label>
+        <locationX>176</locationX>
+        <locationY>398</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Send_Notification</targetReference>
+        </connector>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Job_Notification</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>CustomNotificationType</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <description>In order to pull fields from the job, we need to separate a single record from the input collection variable.  It can be any record, since they share the same job.</description>
+        <name>Get_one_record</name>
+        <label>Get one record</label>
+        <locationX>176</locationX>
+        <locationY>158</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Add_to_collection</targetReference>
+        </connector>
+        <filters>
+            <field>Id</field>
+            <operator>In</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>bpats__ATS_Applicant__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_one_record</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>Body</name>
+        <text>Job: {!Get_one_record.bpats__Job__r.Name}
+
+Click here to view</text>
+    </textTemplates>
+    <textTemplates>
+        <name>Title</name>
+        <text>You have new candidates to review</text>
+    </textTemplates>
+    <variables>
+        <name>NotificationRecipients</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

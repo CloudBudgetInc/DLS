@@ -1,0 +1,37 @@
+<aura:component controller="NewClassAnnouncementController" implements="force:hasRecordId,force:lightningQuickAction" >
+	<aura:attribute name="initialValues" type="Map" default="{}"/>
+    <aura:attribute name="showContent" type="Boolean" default="false"/>
+    <aura:attribute name="contactAssignmentRecord" type="Object"/>
+    <aura:attribute name="userRecord" type="Object"/>
+    <aura:attribute name="userId" type="String" />
+    <aura:attribute name="showError" type="Boolean" default="false"/>
+    
+    <ltng:require styles="{!$Resource.SldsModelCss}" />
+    
+    <!--<aura:handler name="init" value="{!this}" action="{!c.doinit}"/>-->
+    
+    <force:recordData aura:id="recordLoader"
+    recordId="{!v.recordId}"
+    fields="Name, Linguist_Paid__c, Project__c, Project__r.RecordType.DeveloperName, RecordType.DeveloperName"
+    targetFields="{!v.contactAssignmentRecord}"
+    recordUpdated="{!c.doinit}" 
+    />
+    
+    <aura:if isTrue="{!v.userId}">
+        <force:recordData
+        recordId="{!v.userId}"
+        fields="Name, Profile.Name"
+        targetFields="{!v.userRecord}"
+        recordUpdated="{!c.validateProfileAndConAssignmentRecToShowContent}" 
+        />
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showContent}">
+        <c:SendEmailCmp contentInput="{!v.initialValues}" buttonType="Translator Payment Email Confirmation"/>        
+    </aura:if>
+    <aura:if isTrue="{!v.showError}">
+        <div class="slds-align_absolute-center">
+            You don't have access to perform this action.
+        </div>
+    </aura:if>
+</aura:component>

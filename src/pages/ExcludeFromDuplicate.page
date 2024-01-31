@@ -1,0 +1,16 @@
+<apex:page controller="ExcludeFromDuplicateCtrl">
+    <apex:includeLightning />
+ 
+    <div id="lightningCmp" />
+
+    <script>
+    
+    $Lightning.use("c:ExcludeFromDuplicateApp", function() {
+               $Lightning.createComponent("c:ExcludeFromDuplicate", {query: "{!JSENCODE(query)}"},
+                                          "lightningCmp",
+                                          function(cmp) {
+                                              
+               });
+           });
+    </script>
+</apex:page>

@@ -1,0 +1,34 @@
+<aura:component controller="ListViewController">
+	<aura:attribute name="projectId" type="string" access="PUBLIC"/>
+    <aura:attribute name="tableColumns" type="List" access="PRIVATE"/>
+    <aura:attribute name="tableConfig" type="Map" access="PRIVATE"/>
+    <aura:attribute name="testingRecs" type="List" access="PRIVATE"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>    
+    
+    <c:ApexService aura:id="server"/>
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div class="cardPadding">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">                    
+                    <aura:if isTrue="{!v.testingRecs.length > 0}">
+                        <div class="ldtTableCls">
+                            <ldt:datatableDev aura:id="devTable"
+                                              dataRows="{!v.testingRecs}" header="{!v.tableColumns}"
+                                              config="{!v.tableConfig}"/>
+                        </div>
+                        <aura:set attribute="else">
+                            <br/><center><h5 style="font-size :0.875rem;">No records to display</h5><br/></center>
+                        </aura:set>
+                    </aura:if>
+                </span>
+            </div>
+        </div>
+    </div>
+</aura:component>

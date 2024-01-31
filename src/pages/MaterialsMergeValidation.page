@@ -1,0 +1,31 @@
+<apex:page standardController="Materials__c" recordSetVar="materials" tabStyle="Materials__c" extensions="MaterialsMergeValidation">
+  
+  <script>
+      
+      console.log('::::::::msg:::::',{!showMsg});
+      var showValidationMsg = {!showMsg};
+      var ids = '{!idsJson}';
+      console.log('::::::ids:::::',ids);
+      
+      var materialIds = [];
+      
+      if(ids){
+          materialIds = JSON.parse(ids);
+      }
+      
+      console.log(materialIds);
+      
+      if(showValidationMsg){
+          alert('Please select 2 or 3 records');
+          window.location.href = '/a1Y?';
+      }else {
+          if(materialIds.length == 2) {
+              window.location.href = '/apex/MergeRecords?RecordOneId='+materialIds[0].Id+'&RecordTwoId='+materialIds[1].Id;
+          }else if(materialIds.length == 3) {
+              window.location.href = '/apex/MergeRecords?RecordOneId='+materialIds[0].Id+'&RecordTwoId='+materialIds[1].Id+'&RecordThreeId='+materialIds[2].Id;
+          }
+      }
+      
+  </script>
+  
+</apex:page>

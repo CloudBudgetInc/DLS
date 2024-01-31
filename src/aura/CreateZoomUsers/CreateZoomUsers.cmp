@@ -1,0 +1,38 @@
+<aura:component controller="ZoomUtil" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="selectedInstructors" type="List" default="[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    <br/>
+    <br/>
+    <div class="slds-grid slds-wrap">
+        <div class="slds-size_1-of-4"></div>
+        <div class="slds-size_2-of-4">
+            <c:LookupSearch aura:id="instructorLookup" selection="{!v.selectedInstructors}" onSearch="{!c.instructorLookupSearch}"  isRequired="true" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" label="Instructors" placeholder="Select Instructors to create zoom users" isMultiEntry="true" allowMultiSelect="true"/>
+        </div>
+        <div class="slds-size_1-of-4"></div>
+    </div>
+    <br/>
+    <br/>
+    <div class="slds-align_absolute-center">
+        <lightning:button label="Create Zoom Users" variant="brand" onclick="{!c.createZoomUsers}"/>
+    </div>    
+    <br/>
+    <br/>
+    <c:sldsModal aura:id="successModal">
+        <aura:set attribute="header">{!v.successTitle}</aura:set>
+        <aura:set attribute="displayCloseImage" value="false">
+        </aura:set>
+        <aura:set attribute="content">
+            <p>{!v.successMsg}</p>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnSuccess}"/>
+        </aura:set>
+    </c:sldsModal>
+    
+</aura:component>

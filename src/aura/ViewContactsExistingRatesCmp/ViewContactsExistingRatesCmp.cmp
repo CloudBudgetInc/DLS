@@ -1,0 +1,33 @@
+<aura:component >
+    <aura:attribute name="conCRHeader" type="List"/>
+    <aura:attribute name="conCRRows" type="List"/>
+    <table class="slds-table slds-table_bordered slds-table_fixed-layout slds-table_resizable-cols" role="grid">
+        <thead>
+            <tr class="slds-line-height_reset">
+                <aura:iteration items="{!v.conCRHeader}" var="i">
+                    <th class="slds-text-title_caps" scope="col">
+                        <div class="slds-truncate" title="">{!i.label}</div>
+                    </th>
+                </aura:iteration >
+            </tr>
+        </thead>
+        <tbody>
+            <aura:iteration items="{!v.conCRRows}" var="j">
+                <tr class="slds-hint-parent">
+                    <td data-label="Name" scope="row">
+                        <div class="slds-truncate" >{!j.Rate_Type__c}</div>
+                    </td>
+                    <td data-label="Name" scope="row">
+                        <div class="slds-truncate" >{!j.Fully_Loaded_Rate__c}</div>
+                    </td>
+                    <td data-label="Name" scope="row">
+                        <div class="slds-truncate" >{!j.Effective_Date__c}</div>
+                    </td>
+                    <td data-label="Name" scope="row">
+                        <div class="slds-truncate">{!j.Status__c}</div>
+                    </td>
+                </tr>
+            </aura:iteration>
+        </tbody>
+    </table>
+</aura:component>

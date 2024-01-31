@@ -1,0 +1,169 @@
+<aura:component controller="ContactAssignmentLightningCtrl" implements="force:appHostable" >
+    <aura:attribute name="conAssignId" type="string" default=""/>
+    <aura:attribute name="recordType" type="string" default=""/>
+    <aura:attribute name="contactAssignmentRecord" type="List" default="[]"/>
+    <aura:attribute name="parentRecordType" type="String" default=""/>
+    <aura:attribute name="selectTabName" type="String" default="SUMMARY"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:registerEvent name="updateCAEvent" type="c:childClickEvent"/>
+    
+    <c:Modal modelWidth="65%" aura:id="EditRecord"  hasCloseIcon="false">    
+        <aura:set attribute="header">
+            <h1> {!v.recordType} Assignment</h1>     
+        </aura:set>
+        <aura:set attribute="content">
+            <lightning:tabset onselect="{!c.getContactAssignmentRecord}" variant="default" selectedTabId="{!v.selectTabName}">
+                <lightning:tab label="SUMMARY" id="SUMMARY">    
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="6">
+                            <label class="slds-form-element__label" for="text-input-01">Contact</label>
+                            <a name="{!v.contactAssignmentRecord[0].Candidate_Name__c}"  onclick="{!c.navigateToRecord}"> <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Candidate_Name__r.Name}"/></a>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="6">
+                            <label class="slds-form-element__label" for="text-input-02">Status</label>
+                            <ui:outputText class="uiValue"  value="{!v.contactAssignmentRecord[0].Status__c}"/>	
+                        </lightning:layoutItem>
+                        <aura:if isTrue="{!or(v.parentRecordType == 'Testing_Opportunities',v.parentRecordType == 'Testing_Projects') }">
+                            <lightning:layoutItem size="6" >
+                                <label class="slds-form-element__label" for="text-input-03">Oral Exam Date &amp; Time</label>
+                                <ui:outputDate  class="uiValue" value="{!v.contactAssignmentRecord[0].Oral_Exam_Date_Time__c}" format="MM/DD/YYYY HH:mm A"/>	
+                            </lightning:layoutItem>
+                            <aura:set attribute="else">
+                                <lightning:layoutItem size="6" >
+                                    <label class="slds-form-element__label" for="text-input-03">Start Date</label>
+                                    <ui:outputDate  class="uiValue" value="{!v.contactAssignmentRecord[0].Start_Date__c}" format="MM/DD/YYYY"/>	
+                                </lightning:layoutItem>
+                            </aura:set>
+                        </aura:if>
+                        <lightning:layoutItem size="6">
+                            <label class="slds-form-element__label" for="text-input-04">End Date</label>
+                            <ui:outputDate class="uiValue" value="{!v.contactAssignmentRecord[0].End_Date__c}" format="MM/DD/YYYY"/>	
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="6">
+                            <label class="slds-form-element__label" for="text-input-05">Position</label>
+                            <ui:outputText class="uiValue"  value="{!v.contactAssignmentRecord[0].Assignment_Position__c}"/>	
+                        </lightning:layoutItem>
+                        <aura:if isTrue="{!v.recordType == 'Student'}">
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-06">Mobile</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Mobile__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-07">Phone</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Candidate_Name__r.Phone}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-11">L Score - Goal</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].L_Score_Final__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-08">Email</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Email__c}"/>	
+                            </lightning:layoutItem>
+                            <!--lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-12">L Score Initial</label>
+                                <ui:outputText class="uiValue"  value="{!v.contactAssignmentRecord[0].L_Score_Initial__c}"/>	
+                            </lightning:layoutItem-->
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-13">R Score - Goal</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].R_Score_Final__c}"/>	
+                            </lightning:layoutItem>
+                            <!--lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-14">R Score Initial</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].R_Score_Initial__c}"/>	
+                            </lightning:layoutItem-->
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-10">Secondary Email </label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Candidate_Name__r.Personal_E_mail__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-15">S Score - Goal</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].S_Score_Final__c}"/>	
+                            </lightning:layoutItem>
+                            <!--lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-16">S  Score Initial</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].S_Score_Initial__c}"/>	
+                            </lightning:layoutItem-->
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-09">Training Location</label>
+                                <a name="{!v.contactAssignmentRecord[0].Location__c}" onclick="{!c.navigateToRecord}"> <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Training_Location__c}"/></a>
+                            </lightning:layoutItem>
+                             <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input-15">W Score - Goal</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].W_Score_Goal__c}"/>	
+                            </lightning:layoutItem>
+                        </aura:if>
+                        <aura:if isTrue="{!v.recordType == 'Staff'}">
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input6">EE Pay Status</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].EE_Pay_Status__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input7">Labor Pay Rate</label>
+                                <ui:outputText class="uiValue" value="{!'$'+v.contactAssignmentRecord[0].Labor_Pay_Rate__c+'0'}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input8">Payroll Item</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Payroll_Item__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input9">PC EE ID</label>
+                                <ui:outputText class="uiValue"  value="{!v.contactAssignmentRecord[0].PC_EE_ID__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input10">Email</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Email__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input11">Mobile</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Mobile__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input12">Notes</label>
+                                <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Notes__c}"/>	
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size='6'>
+                                <label class="slds-form-element__label" for="text-input13">Project Task</label>
+                                <a name="{!v.contactAssignmentRecord[0].Project_Task__c}" onclick="{!c.navigateToRecord}" >   <ui:outputText class="uiValue" value="{!v.contactAssignmentRecord[0].Project_Task__r.Name}"/>	</a>
+                            </lightning:layoutItem> 
+                        </aura:if>
+                    </lightning:layout>
+                </lightning:tab> 
+                <lightning:tab label="PROJECT TRACKING" id="PROJECT TRACKING">    
+                    <div class="slds-form-element slds-has-divider--bottom">
+                        <label class="slds-form-element__label" for="text-input-01">W-9 on file</label>
+                        <div class="slds-form-element__control"><br/>
+                            <span class="slds-form-element__static">{!v.contactAssignmentRecord[0].W_9_on_file__c}</span>
+                        </div>
+                    </div>
+                    <div class="slds-form-element slds-has-divider--bottom">
+                        <label class="slds-form-element__label" for="text-input-02">ACH Set up</label>
+                        <div class="slds-form-element__control"><br/>
+                            <span class="slds-form-element__static">{!v.contactAssignmentRecord[0].ACH_set_up__c}</span>
+                        </div>
+                    </div>
+                    <div class="slds-form-element slds-has-divider--bottom">
+                        <label class="slds-form-element__label" for="text-input-03">Code of Conduct Received</label>
+                        <div class="slds-form-element__control"><br/>
+                            <span class="slds-form-element__static">{!v.contactAssignmentRecord[0].Code_of_Conduct_Received__c}</span>
+                        </div>
+                    </div>
+                </lightning:tab> 
+                
+            </lightning:tabset>
+        </aura:set>
+        <aura:set attribute="footer">
+            <center> <aura:if isTrue="{!v.selectTabName == 'SUMMARY'}">
+                <lightning:button label="Edit"  onclick="{!c.cAEditAction}" />
+                <lightning:button label="Delete" onclick="{!c.cADeleteAction}" />
+                </aura:if>
+                <aura:if isTrue="{!v.selectTabName == 'SUMMARY'}">
+                    <lightning:button label="Cancel" onclick="{!c.closeActiontab}"  />
+                </aura:if>
+                <aura:if isTrue="{!v.selectTabName == 'PROJECT TRACKING'}">
+                    <lightning:button label="Close" onclick="{!c.closeActiontab}" />
+                </aura:if>
+            </center> 
+        </aura:set>       
+    </c:Modal> 
+</aura:component>

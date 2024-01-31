@@ -1,0 +1,14 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes"  access="global" >
+    
+    <!-- Back Arrow Section -->
+    <div>
+        <div class="backCls">
+            <div style="display: inline-block;">
+                <div class="slds-grid">
+                    <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.backToProjectDetail}" ></i></span>
+                    <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                </div>
+            </div>
+        </div>
+    </div><br/>
+</aura:component>

@@ -1,0 +1,48 @@
+<aura:component controller="ArticleDetailController" implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global">
+
+    <!-- Aura attributes  -->
+    <aura:attribute name="recordId" type="String" description="Article Id" />
+    <aura:attribute name="votesInfo" type="Map" />
+
+    <!-- Aura handlers -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server" />
+    
+    <h1>{!v.votesInfo.title}</h1>
+    <aura:if isTrue="{!v.votesInfo.body != null}">
+        <p><lightning:formattedRichText value="{!v.votesInfo.body}"/></p>
+    <aura:set attribute="else">
+        <br/><br/>
+        </aura:set>
+    </aura:if>
+    
+    
+	<article class="voting selfServiceArticleLayout" data-aura-rendered-by="85:101;a" data-aura-class="selfServiceArticleLayout">
+    <article class="slds-card forceKnowledgeArticleThumbVote" data-aura-rendered-by="10:176;a" data-aura-class="forceKnowledgeArticleThumbVote">
+        <div class="slds-box--x-small" data-aura-rendered-by="11:176;a">
+            <div class="slds-card__body slds-m-left--xx-small slds-m-top--xx-small slds-m-bottom--xx-small" data-aura-rendered-by="13:176;a">
+                <div class="slds-media__body slds-truncate" data-aura-rendered-by="14:176;a">
+                    Was this article helpful?
+                </div>
+            </div>
+            <div class="slds-card__body slds-text-align--center" data-aura-rendered-by="16:176;a">
+                <div class="slds-clearfix slds-m-bottom--xx-small slds-m-right--large slds-m-left--x-small" data-aura-rendered-by="17:176;a">
+                    <div class="slds-float--left slds-m-right--x-small" id="upVoteButton" data-aura-rendered-by="18:176;a">
+                        <lightning:buttonIconStateful iconName="utility:like" selected="{!v.votesInfo.currentStatus == 'Like'}" onclick="{!c.handleLikeResponse}" alternativeText="Like" />
+                    </div>
+                    <div class="slds-float--left slds-m-right--medium slds-p-top--xx-small" aria-live="assertive" id="upVoteCount" data-aura-rendered-by="31:176;a">
+                        <span data-aura-rendered-by="34:176;a" class="uiOutputText" data-aura-class="uiOutputText">{!v.votesInfo.upvotesCount}</span>
+                        <span class="slds-assistive-text" data-aura-rendered-by="35:176;a">Likes</span></div>
+                    <div class="slds-float--left slds-m-right--x-small" id="downVoteButton" data-aura-rendered-by="37:176;a">
+                        <lightning:buttonIconStateful iconName="utility:dislike" selected="{!v.votesInfo.currentStatus == 'DisLike'}" onclick="{!c.handleDisLikeResponse}" alternativeText="Like" />
+                    </div>
+                    <div class="slds-float--left slds-p-top--xx-small" aria-live="assertive" id="downVoteCount" data-aura-rendered-by="50:176;a">
+                        <span data-aura-rendered-by="53:176;a" class="uiOutputText" data-aura-class="uiOutputText">{!v.votesInfo.downVotes}</span>
+                        <span class="slds-assistive-text" data-aura-rendered-by="54:176;a">Dislikes</span></div>
+                </div>
+            </div>
+        </div>
+    </article>
+    </article>
+</aura:component>

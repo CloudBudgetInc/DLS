@@ -1,0 +1,31 @@
+.THIS  tr {
+    /*line-height:3;*/
+}
+.THIS  th {
+    padding-left: 2px !important;
+    padding-right: 0px !important;
+       /*font-size: 14px !important;*/
+    
+}
+.THIS .slds-truncate{ 
+    overflow: visible  !important;
+    white-space: initial  !important;  
+}
+
+
+.THIS .slds-table td {
+    white-space: initial  !important;
+    position: relative;
+    /*font-size: 14px !important;*/
+}
+.THIS .slds-card{
+  margin-top:-15px !important;
+    border: 0px !important;
+}
+
+.THIS .imgAction2{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.8rem!important;
+    max-height: 2rem!important;
+}

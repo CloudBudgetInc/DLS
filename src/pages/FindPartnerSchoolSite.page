@@ -1,0 +1,41 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <style>
+    .slds-input {
+        float: right;
+    }
+    
+    </style>
+     
+    <div class="slds">
+       <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+              <div class="slds-grid">
+                  <div class="slds-media__figure">
+                      <img src="{!URLFOR($Resource.FindSchools_PackageIcon)}" style="width:60px;height:50px;"></img>
+                  </div>
+                  <div class="slds-media__body">
+                       <p class="slds-text-heading--label" style="color: #f8f8f8;">Resources</p>
+                       <div class="slds-grid">
+                           <h1 class="slds-text-heading--medium slds-m-right--small slds-truncate slds-align-middle" title="Projects">Find Schools</h1>
+                       </div>
+                   </div>
+                   <div class="slds-col slds-no-flex slds-align-bottom">
+                      
+                       <div style="width: 100%;padding-top: 20px;text-align: center;">
+                          <input type="button" value="Find Nearby Schools" class="slds-button slds-button--neutral" ng-click="searchDistance()" ng-disabled="button_clicked" style="border: 1px solid #d8dde6;background-color: #fff;"/>
+                          <input type="button" ng-if="isSitepage" value="Back" class="slds-button slds-button--neutral" ng-click="goToResourceTab()" ng-disabled="button_clicked" style="border: 1px solid #d8dde6;background-color: #fff;"/>
+                       </div>
+                   </div>
+              </div>
+         </div>
+        
+        <div class="slds-grid slds-m-top--medium slds-p-horizontal--large">
+            <a href="javascript:;" ng-click="showContinentView()" >Globe View</a>
+        </div>
+        <div class="slds-grid slds-m-top--medium">
+               <div class="slds-p-horizontal--large" id="geochart-colors" style="width: 1000px; height: 500px;"></div>
+        </div>
+     </div>
+    </html>   
+</apex:page>

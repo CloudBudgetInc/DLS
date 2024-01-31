@@ -1,0 +1,6 @@
+<apex:component controller="GetApproval_RejectionCommentsCtrl" access="global">
+
+    <apex:attribute name="plannedDaysOffId" description="" type="String" assignTo="{!pdoId}"/>
+    
+    {!IF(stepStatus == 'Approved', 'Approval Comments:', 'Not Approved Reason:')} {!comments}
+</apex:component>

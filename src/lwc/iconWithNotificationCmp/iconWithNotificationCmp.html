@@ -1,0 +1,26 @@
+<template>
+
+    
+    <lightning-button-icon icon-name= {iconName} size = {iconSize} class = {cssClass} variant = {iconVariant} alternative-text = {alternativeText}
+    onclick = {handleIconClick}
+    >
+
+    </lightning-button-icon>
+
+    <template if:true = {isSingleDigit}>
+        <span class="badgeSingleDigit">{pendingCount}</span>
+    </template>
+    <template if:true = {isTwoDigit}>
+        <span class="badgeTwoDigit">{pendingCount}</span>
+    </template>
+
+    <!--
+    <lightning-button-icon icon-name="utility:task" size = 'large' icon-class = 'taskClass' variant="bare"></lightning-button-icon>
+    
+    <div class = 'circle'>
+        <svg>
+            <circle cx="15" cy="15" r="8" stroke-width="2" fill="red" />
+        </svg>
+    </div>
+    <p class = 'count'>5</p>-->
+</template>

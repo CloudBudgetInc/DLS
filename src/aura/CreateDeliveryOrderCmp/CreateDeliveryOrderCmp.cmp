@@ -1,0 +1,61 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="CreateDeliveryOrderController">
+    <aura:attribute name="newContract" type="Contract" default="{}"/>
+    <aura:attribute name="selectedLanguages" type="List" default="[]"/>
+    <aura:attribute name="recordId" type="String" default=""/>
+    <aura:attribute name="isContractLevelParent" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="visibleError" type="String" default="slds-hide"/> 
+    <aura:attribute name="showErrorMsg" type="String" default=""/>
+    <aura:attribute name="showValidationMsg" type="String" default=""/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <!--W-002025 Create button: “Create Delivery Order” Child Contract record from an Existing Parent Contract record-->
+    
+    <div>
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner variant="brand"  size="medium" alternativeText="Loading" />
+        </aura:if>
+        <div class="slds-col modal-header slds-modal__header">
+            <h1 style='font-weight: bold;  font-size: 150%;'>Create Delivery Order</h1>
+        </div>
+        <aura:if isTrue="{!v.isContractLevelParent}">
+            <c:ToastCmp visibleError = "{!v.visibleError}" showErrorMsg = "{!v.showErrorMsg}"/>
+            <div  style="height:15rem;">
+                <lightning:layout  multipleRows="true">
+                    <lightning:layoutItem padding="around-small" size="6">
+                        <lightning:input aura:id="otherInput" label="Task Order #" name="Task Order #" value="{!v.newContract.Task_Order__c}" required="true" /> 
+                    </lightning:layoutItem>
+                    <lightning:layoutItem padding="around-small" size="6">
+                        <lightning:input aura:id="otherInput" label="TOR #" name="TOR #" value="{!v.newContract.TOR__c}" required="true" /> 
+                    </lightning:layoutItem>
+                    <lightning:layoutItem padding="around-small" size="6">
+                        <div class="inputClass">
+                            <c:LookupSearch aura:id="languageLookup" selection="{!v.selectedLanguages}" onSearch="{!c.languageLookupSearch}" iconName="" objectName="Language__c" fieldName="Name" condition="" label="Select Language" placeholder="Search Languages...." isMultiEntry="false" isRequired="true"/>
+                        </div>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem padding="around-small" size="6" class="inputClass">
+                        <ui:inputDate aura:id="dateInput"   label="Contract Start Date:"  displayDatePicker="true" required="true" format="MM/DD/yyyy" value="{!v.newContract.StartDate}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem padding="around-small" size="6" class="inputClass">
+                        <ui:inputDate aura:id="dateInput"  label="Contract End Date:"  displayDatePicker="true" required="true" format="MM/DD/yyyy" value="{!v.newContract.EndDate}"/>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+            <aura:set attribute="else">
+                <div  style="height:15rem;">
+                    <br/><br/><br/><br/><br/><br/>
+                    <aura:if isTrue="{!not(empty(v.showValidationMsg))}">
+                        <center><h1 style="font-size: 130%;">{!v.showValidationMsg}</h1></center>
+                    </aura:if>
+                </div>
+            </aura:set>
+        </aura:if><br/>
+        <aura:if isTrue="{!v.isContractLevelParent}">
+            <div class="slds-col modal-footer slds-modal__footer">
+                <lightning:button variant="neutral" label="Proceed" onclick="{!c.proceedClk}" />
+                <lightning:button variant="neutral" label="Close" onclick="{!c.closeClk}" />
+            </div>
+        </aura:if>
+    </div>  
+</aura:component>

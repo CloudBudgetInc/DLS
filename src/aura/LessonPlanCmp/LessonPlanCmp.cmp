@@ -1,0 +1,444 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 01-20-2023
+  @last modified by  : Dhinesh Kumar
+-->
+<aura:component implements="forceCommunity:availableForAllPageTypes" controller="LessonPlanCmp_Ctrl">
+    <aura:attribute name="lessonPlanStr" type="String" />
+    <aura:attribute name="lessonPlan" type="Object" />
+    <aura:attribute name="lessonPlanHrs" type="List" />
+    <aura:attribute name="modalHeader" type="String" />
+    <aura:attribute name="lessonPlanHrsToDelete" type="List" />
+    <aura:attribute name="eventId" type="String" />
+    <aura:attribute name="showLessonPlan" type="Boolean" default="false" />
+    <aura:attribute name="filterValuesMap" type="Map" />
+    <aura:attribute name="showSpinner" type="Boolean" default="false" />
+    <aura:attribute name="viewMode" type="Boolean" default="true" />
+    <aura:attribute name="init" type="Boolean" default="true" />
+    <aura:attribute name="communityName" type="String" default="" />
+    <aura:attribute name="toast" type="Object" />
+    <aura:attribute name="allowEdit" type="Boolean" default="true" />
+    <aura:attribute name="files" type="List" default="[]" />
+
+    <aura:attribute name="tabName" type="String" />
+    <aura:attribute name="showBoxCmp" type="Boolean" default="false" />
+    <aura:attribute name="sharedLinkId" type="String" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler name="deleteLessonHrs" event="c:childClickEvent" action="{!c.handleDeleteLessonPlanHrs}" />
+
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server" />
+
+    <div>
+        <center>
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="{!v.tabName == v.modalHeader ? 'nav-link active' : 'nav-link'}" data-toggle="tab"
+                        role="tab" data-tab="{!v.modalHeader}" onclick="{!c.toggleTab}">{!v.modalHeader}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="{!v.tabName == 'Attachments' ? 'nav-link active' : 'nav-link'}" data-toggle="tab"
+                        role="tab" data-tab="Attachments" onclick="{!c.toggleTab}">Attachments</a>
+                </li>
+            </ul>
+        </center>
+    </div>
+
+    <lightning:layout>
+        <lightning:layoutItem size="6">
+            <aura:if isTrue="{!v.communityName != 'internal'}">
+                <div class="slds-float_left">
+                    <span class="backCls">
+                        <div style="float: left;" class="slds-p-vertical_medium">
+                            <div class="slds-grid">
+                                <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.back}"></i></span>
+                                <span class="slds-col"
+                                    style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                            </div>
+                        </div>
+                    </span>
+                </div>
+            </aura:if>
+        </lightning:layoutItem>
+        <!--<lightning:layoutItem size="4">
+            <center><h1 class="card-title" style="font-size:2rem;">{!v.modalHeader}</h1></center>
+        </lightning:layoutItem> -->
+        <aura:if isTrue="{!v.tabName == v.modalHeader}">
+            <lightning:layoutItem size="6">
+                <aura:if isTrue="{!v.lessonPlan.Status__c == 'Completed'}">
+                    <div class="slds-float_right" title="Download Weekly Lesson Plans">
+                        <button name="lead" class="slds-button">
+                            <span onclick="{!c.downloadLessonPlan}">
+                                <lightning:icon iconName="action:download" class="btnColor" size="small" />
+                            </span>
+                        </button>
+                        <!--<lightning:button variant="brand" class="btn btn-primary" label="Download Weekly Lesson Plans" title="Download Weekly Lesson Plans" onclick="{!c.downloadLessonPlan}" />-->
+                    </div>
+                </aura:if>
+            </lightning:layoutItem>
+        </aura:if>
+    </lightning:layout>
+    <aura:if isTrue="{!v.tabName == v.modalHeader}">
+        <div class="cardPadding">
+            <div class="card-deck">
+                <div class="card">
+                    <span class="card-body">
+                        <div class="slds-p-right_medium">
+                            <aura:if isTrue="{!v.allowEdit}">
+                                <aura:if isTrue="{!v.viewMode}">
+                                    <lightning:layout>
+                                        <lightning:layoutItem padding="around-small" size="12">
+                                            <div class="slds-float_right">
+                                                <lightning:button label="Edit" class="btn btn-primary" title="Edit"
+                                                    onclick="{! c.toggleMode }" />
+                                                <!-- <aura:if isTrue="{!v.lessonPlan.Status__c == 'Completed'}">
+                                                <div class="slds-float_right" title="Download Weekly Lesson Plans">
+                                                    <button name="lead" class="slds-button">
+                                                        <span onclick="{!c.downloadLessonPlan}">
+                                                            <lightning:icon iconName="action:download" class="btnColor" size="small"/>
+                                                        </span>
+                                                    </button>                        
+                    <lightning:button variant="brand" class="btn btn-primary" label="Download Weekly Lesson Plans" title="Download Weekly Lesson Plans" onclick="{!c.downloadLessonPlan}" />
+                </div>
+            </aura:if>-->
+                                            </div>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                    <aura:set attribute="else">
+                                        <lightning:layout>
+                                            <lightning:layoutItem padding="around-small" size="3">
+                                                <div class="slds-float_left">
+                                                    <lightning:button label="Copy from previous day"
+                                                        class="btn btn-secondary" title="Copy from previous day"
+                                                        onclick="{! c.getPreviousDayRec }" />
+                                                </div>
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem alignmentBump="left" padding="around-small" size="9">
+                                                <div class="slds-float_right">
+                                                    <lightning:button variant="brand" class="btn btn-primary"
+                                                        label="Save" title="Save"
+                                                        onclick="{! c.validateFieldsAndSave }" />
+                                                    <lightning:button label="Cancel" class="btn btn-secondary"
+                                                        title="Cancel" onclick="{! c.toggleMode }" />
+                                                </div>
+                                            </lightning:layoutItem>
+                                        </lightning:layout>
+                                    </aura:set>
+                                </aura:if>
+                            </aura:if>
+                        </div>
+                        <p class="slds-p-horizontal_small">
+                        <div class="slds-box">
+                            <lightning:layout>
+                                <lightning:layoutItem padding="around-small" size="4">
+                                    <div>
+                                        <lightning:input label="Class #" disabled="true"
+                                            value="{!v.lessonPlan.Class__c}" />
+                                    </div>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small" size="4">
+                                    <div>
+                                        <lightning:input label="Student Name(s)" disabled="true"
+                                            value="{!v.lessonPlan.Student_Name__c}" />
+                                    </div>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small" size="4">
+                                    <div>
+                                        <lightning:input label="Instructor Name" disabled="true"
+                                            value="{!v.lessonPlan.Instructor__r.Name}" />
+                                    </div>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                        </div>
+                        <div class="slds-box">
+                            <div class="slds-p-around_small">
+                                <lightning:layout multipleRows="true">
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <lightning:input aura:id="input" onchange="{!c.onInputChange}"
+                                            onfocus="{!c.removeHideMessageClass}" class="requiredClass" required="true"
+                                            fieldLevelHelp="What do you want students to be able to do by the end of the lesson? 
+                                                                                                                                                                                                   The following are suggestions on how to write objectives:
+                                                                                                                                                                                                   Use ACTION verbs 
+                                                                                                                                                                                                   •	Talk about a past vacation (narrate in the past) 
+                                                                                                                                                                                                   •	Introduce yourself to new people 
+                                                                                                                                                                                                   •	Give gist of an ILR L2 audio about US currency strength  
+                                                                                                                                                                                                   Have a SPECIFIC topic 
+                                                                                                                                                                                                   •	Describe your family members’ physical appearances 
+                                                                                                                                                                                                   •	Compare and contrast the US election process and Gambia’s election process 
+                                                                                                                                                                                                   •	Give details of an ILR L2+ audio about the election results in Gambia "
+                                            disabled="{!v.viewMode}" label="Objective(s)"
+                                            value="{!v.lessonPlan.Objectives__c}" name="255" />
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <lightning:input aura:id="input" onchange="{!c.onInputChange}"
+                                            onfocus="{!c.removeHideMessageClass}" class="requiredClass" required="true"
+                                            fieldLevelHelp="What topic and sub-topic will you focus on during the lesson?
+                                                                                                                                                                                                   The following are examples of potential topics: 
+                                                                                                                                                                                                   Example: L1
+                                                                                                                                                                                                   •	Family: immediate family, physical descriptions
+                                                                                                                                                                                                   •	Houses: furniture and appliances, rooms in the house
+                                                                                                                                                                                                   •	Travel: future vacation plans
+                                                                                                                                                                                                   Example: L2 / L3
+                                                                                                                                                                                                   •	Economy: Effect of inflation on US economy
+                                                                                                                                                                                                   •	Economy: Economic recovery from COVID-19
+                                                                                                                                                                                                   •	Politics: Recent election in Argentina 
+                                                                                                                                                                                                   •	Politics: Republican Party vs Democratic Party"
+                                            disabled="{!v.viewMode}" label="Topic(s)" name="255"
+                                            value="{!v.lessonPlan.Topics__c}" />
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="12">
+                                        <label class="slds-form-element__label">
+                                            <abbr class="slds-required" title="required">* </abbr>
+                                            Materials
+                                            <span class="slds-p-left_xx-small" style="position:relative; top:-3.5px;">
+                                                <lightning:helptext
+                                                    content="What materials will you use in the class?
+                                                                             The following are examples:
+                                                                             •	Textbooks (include book name and chapters or page numbers)
+                                                                             •	Supplemental textbooks (include book name and chapters or page numbers)
+                                                                             •	Authentic materials (include website, link and/or article title)
+                                                                             •	Instructor-created materials (include topic and material type)
+                                                                             •	Web application (example: GLOSS, Quizlet, NFLC Portal, etc)" />
+                                            </span>
+                                        </label>
+                                        <aura:if isTrue="{!v.viewMode}">
+                                            <lightning:formattedRichText value="{!v.lessonPlan.Materials__c}" />
+                                            <aura:set attribute="else">
+                                                <lightning:inputRichText onfocus="{!c.clearErrorMsg}"
+                                                    onblur="{!c.onRichTextInputChange}" class="requiredClass"
+                                                    aura:id="inputRichText" required="true"
+                                                    formats="['font', 'size', 'bold', 'italic', 'underline',
+                                                                                                                                                                                                                  'strike', 'list', 'indent', 'align',
+                                                                                                                                                                                                                  'clean', 'table', 'header', 'color']"
+                                                    disabled="{!v.viewMode}" label="32768"
+                                                    value="{!v.lessonPlan.Materials__c}" />
+                                            </aura:set>
+                                        </aura:if>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                            </div>
+                            <aura:if isTrue="{! not(v.viewMode) }">
+                                <div class="slds-p-around_small">
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="11">
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="1">
+                                            <lightning:button variant="brand" class="btn btn-primary" label="Add"
+                                                title="Add Lesson Plan Hours" onclick="{!c.addLessonPlanHrs}" />
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </div>
+                            </aura:if>
+                            <div class="slds-p-around_small">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered"
+                                    aria-labelledby="element-with-table-label other-element-with-table-label">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col">
+                                                <div class="slds-truncate" title=""></div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Skill Focus">
+                                                    Skill Focus
+                                                    <span class="slds-p-left_xx-small"
+                                                        style="position:relative; top:-3.5px;">
+                                                        <lightning:helptext
+                                                            content="What skills will you focus on in the lesson? You can select multiple skills." />
+                                                    </span>
+                                                </div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Activities">
+                                                    Activities
+                                                    <span class="slds-p-left_xx-small"
+                                                        style="position:relative; top:-3.5px;">
+                                                        <lightning:helptext
+                                                            content="What type of activities will you do in the lesson? You can select multiple activities. If you do not see your activity, choose OTHER and describe the activity in the ACTIVITY DETAILS section." />
+                                                    </span>
+                                                </div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Activity Details">
+                                                    Activity Details
+                                                    <span class="slds-p-left_xx-small"
+                                                        style="position:relative; top:-3.5px;">
+                                                        <lightning:helptext
+                                                            content="This section is to describe in detail the activities in the lesson.
+                                                                                     Examples: 
+                                                                                     •	prepare questions for your instructor; interview instructor about travel experiences. 
+                                                                                     •	listen to an interview with an expert on US-Russia relations; debate from a US perspective on new sanctions against Russia.
+                                                                                     •	create a timeline of the presidential election; rewatch video/re-read article as needed. 
+                                                                                     •	watch a video clip of news story; complete comprehension exercise." />
+                                                    </span>
+                                                </div>
+                                            </th>
+                                            <aura:if isTrue="{! not(v.viewMode) }">
+                                                <th scope="col">
+                                                    <div class="slds-truncate" title="Action">Action</div>
+                                                </th>
+                                            </aura:if>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <aura:iteration items="{!v.lessonPlanHrs}" var="lph" indexVar="index">
+                                            <tr>
+                                                <c:LessonPlanHrsCmp aura:id="lphrs" lessonPlanHrs="{!lph}"
+                                                    viewMode="{!v.viewMode}" index="{!index}"
+                                                    filterValuesMap="{!v.filterValuesMap}" />
+                                            </tr>
+                                        </aura:iteration>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="slds-p-around_small">
+                                <lightning:layout multipleRows="true">
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <label class="slds-form-element__label">
+                                            <aura:if isTrue="{!v.lessonPlan.RecordType.DeveloperName == 'DLI'}"><abbr
+                                                    class="slds-required" title="required">* </abbr></aura:if>
+                                            Assessment Type
+                                            <span class="slds-p-left_xx-small" style="position:relative; top:-3.5px;">
+                                                <lightning:helptext
+                                                    content="How will you determine if the student met the objective? What type of assessment? 
+                                                                                                                                                   This can be a formal or informal assessment. It can be any task on which you provided feedback to the student about meeting the objective." />
+                                            </span>
+                                        </label>
+                                        <lightning:select
+                                            class="{! (v.lessonPlan.RecordType.DeveloperName == 'DLI') ? 'label-hidden requiredClass' : 'label-hidden'}"
+                                            value="{!v.lessonPlan.Assessment_Type__c}"
+                                            required="{!v.lessonPlan.RecordType.DeveloperName == 'DLI'}"
+                                            disabled="{!v.viewMode}">
+                                            <aura:iteration items="{! v.filterValuesMap.Assessment_Type__c }" var="at">
+                                                <option value="{!at.value}"
+                                                    selected="{!(v.lessonPlan.Assessment_Type__c == at.value)}">
+                                                    {!at.label}</option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <lightning:input aura:id="input" onchange="{!c.onInputChange}"
+                                            class="{! (v.lessonPlan.RecordType.DeveloperName == 'DLI') ? 'requiredClass' : ''}"
+                                            fieldLevelHelp="How will you determine if the student met the objective? What type of assessment? This section is to provide more details on the assessment for the student."
+                                            required="{!v.lessonPlan.RecordType.DeveloperName == 'DLI'}"
+                                            disabled="{!v.viewMode}" label="Assessment" name="255"
+                                            value="{!v.lessonPlan.Assessment__c}" />
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <label class="slds-form-element__label">
+                                            Homework
+                                            <span class="slds-p-left_xx-small" style="position:relative; top:-3.5px;">
+                                                <lightning:helptext
+                                                    content="What homework will you assign?
+                                                                             Examples: 
+                                                                             •	record yourself for 1 minute talking about your family
+                                                                             •	do exercises in text, page 73-75 on past tense
+                                                                             •	make flashcards in Quizlet from today’s lesson
+                                                                             •	write a paragraph about what you did on your last vacation" />
+                                            </span>
+                                        </label><br />
+                                        <aura:if isTrue="{!v.viewMode}">
+                                            <lightning:formattedRichText value="{!v.lessonPlan.Homework__c}" />
+                                            <aura:set attribute="else">
+                                                <lightning:inputRichText onblur="{!c.onRichTextInputChange}"
+                                                    class="{! (v.lessonPlan.RecordType.DeveloperName == 'DLI') ? 'requiredClass' : ''}"
+                                                    aura:id="inputRichText"
+                                                    required="{!v.lessonPlan.RecordType.DeveloperName == 'DLI'}"
+                                                    disabled="{!v.viewMode}" value="{!v.lessonPlan.Homework__c}"
+                                                    label="1000" />
+                                            </aura:set>
+                                        </aura:if>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem padding="around-small" size="6">
+                                        <aura:if isTrue="{!v.allowEdit}">
+                                            <lightning:input aura:id="input"
+                                                fieldLevelHelp="Share this lesson plan with your student(s)"
+                                                type="checkbox" label="Share to Student" variant="label-stacked"
+                                                disabled="{!v.viewMode}"
+                                                checked="{!v.lessonPlan.Share_with_my_student_s__c}" />
+                                        </aura:if>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                            </div>
+                        </div>
+                        </p>
+
+                        <div class="slds-p-top_medium slds-p-right_medium">
+                            <aura:if isTrue="{!v.allowEdit}">
+                                <aura:if isTrue="{!v.viewMode}">
+                                    <div class="slds-float_right">
+                                        <lightning:button label="Edit" class="btn btn-primary" title="Edit"
+                                            onclick="{! c.toggleMode }" />
+                                    </div>
+                                    <aura:set attribute="else">
+                                        <lightning:layout>
+                                            <lightning:layoutItem padding="around-small" size="5">
+                                                <lightning:layout>
+                                                    <lightning:layoutItem padding="around-small" size="5">
+                                                        <lightning:button label="Copy from previous day"
+                                                            class="btn btn-secondary" title="Copy from previous day"
+                                                            onclick="{! c.getPreviousDayRec }" />
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem padding="around-small" size="7">
+                                                        <!-- <lightning:input type="file" accept=".jpg, .jpeg, .png, .pdf, .word" variant="label-hidden" onchange="{!c.handleFileUpload}" multiple="true"/>
+                                                    <aura:iteration items="{!v.files}" var="file">
+                                                    	<lightning:pill label="{!file.filename}" onremove="{! c.handleRemove }"/>
+                                                    </aura:iteration> -->
+                                                    </lightning:layoutItem>
+                                                </lightning:layout>
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem alignmentBump="left" padding="around-small" size="7">
+                                                <div class="slds-float_right">
+                                                    <lightning:button variant="brand" class="btn btn-primary"
+                                                        label="Save" title="Save"
+                                                        onclick="{! c.validateFieldsAndSave }" />
+                                                    <lightning:button label="Cancel" class="btn btn-secondary"
+                                                        title="Cancel" onclick="{! c.toggleMode }" />
+                                                </div>
+                                            </lightning:layoutItem>
+                                        </lightning:layout>
+                                    </aura:set>
+                                </aura:if>
+                            </aura:if>
+                        </div>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </aura:if>
+
+    <aura:if isTrue="{!v.tabName == 'Attachments'}">
+        <aura:if isTrue="{!v.communityName == 'instructor'}">
+            <c:lessonPlanFileUploadCmp aura:id = 'fileUploadCmp' lessonPlan="{!v.lessonPlanStr}" onshowspinner="{!c.handleShowSpinner}"
+                onhidespinner="{!c.handleHideSpinner}" onrefresh="{!c.handleRefresh}">
+            </c:lessonPlanFileUploadCmp>
+        </aura:if>
+
+        <aura:if isTrue="{!v.showBoxCmp}">
+            <div class="slds-p-top_x-small">
+                <box_lightning:Box_File_Embed sharedLinkId="{!v.sharedLinkId}"></box_lightning:Box_File_Embed>
+            </div>
+        </aura:if>
+
+    </aura:if>
+
+
+    <c:sldsModal aura:id="toastModal" displayCloseImage="true" closeAction="{!c.closeToast}" modelWidth="30%">
+        <aura:set attribute="header">
+            {!v.toast.type}
+        </aura:set>
+        <aura:set attribute="content">
+            <center>{!v.toast.msg}</center>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Close" class="btn btn-secondary" title="Close" onclick="{! c.closeToast }" />
+        </aura:set>
+    </c:sldsModal>
+</aura:component>

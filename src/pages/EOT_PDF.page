@@ -1,0 +1,117 @@
+<apex:page renderAs="pdf" standardController="End_of_Training_Feedback_Form__c" showHeader="false" sidebar="false">
+    <html>
+        <head>
+            <style>
+            </style>
+        </head>
+        <h1>Feedback Form Name: {!End_of_Training_Feedback_Form__c.Name}</h1>
+        <body>
+        <table id="Feedback Form" cellpadding="3" width="100%" column-width="50%">
+        <tr>
+        <td>
+            Student Name: {!End_of_Training_Feedback_Form__c.Student_Name_lookup__r.Name}
+            </td><td>
+            Class Name: {!End_of_Training_Feedback_Form__c.Class_Name__r.Name}
+            </td></tr>
+        <tr>
+        <td>
+            Instructor Name: {!End_of_Training_Feedback_Form__c.Instructor_Name__r.Name}
+            </td><td>
+            Language: {!End_of_Training_Feedback_Form__c.Language__c}
+            </td></tr>
+        <tr>
+        <td>
+            Training Start Date: {!Month(End_of_Training_Feedback_Form__c.Training_Start_Date__c)}/{!Day(End_of_Training_Feedback_Form__c.Training_Start_Date__c)}/{!Year(End_of_Training_Feedback_Form__c.Training_Start_Date__c)}
+            </td><td>
+            Section: {!End_of_Training_Feedback_Form__c.Section__c}
+            </td></tr>
+        <tr>
+        <td>
+            Training End Date: {!Month(End_of_Training_Feedback_Form__c.Training_End_Date__c)}/{!Day(End_of_Training_Feedback_Form__c.Training_End_Date__c)}/{!Year(End_of_Training_Feedback_Form__c.Training_End_Date__c)}
+            </td><td>
+            Account: {!End_of_Training_Feedback_Form__c.Account__c}
+            </td></tr>
+        <tr>
+        <th>
+            Instructor 2 Rating
+            </th></tr>
+        <tr>
+        <td>
+            Name: {!End_of_Training_Feedback_Form__c.Instructor_2__c}
+            </td><td>
+            Homework: {!End_of_Training_Feedback_Form__c.X2_6_Homework__c}
+            </td></tr>
+        <tr>
+        <td>
+            Subject Knowledge: {!End_of_Training_Feedback_Form__c.X2_1_Subject_Knowledge__c}
+            </td><td>
+            Professionalism: {!End_of_Training_Feedback_Form__c.X2_7_Professionalism__c}
+            </td></tr>
+        <tr>
+        <td>
+            Preparation: {!End_of_Training_Feedback_Form__c.X2_2_Preparation__c}
+            </td><td>
+            Use of language: {!End_of_Training_Feedback_Form__c.X2_8_use_of_language__c}
+            </td></tr>
+        <tr>
+        <td>
+            Punctuality: {!End_of_Training_Feedback_Form__c.X2_3_Punctuality__c}
+            </td><td>
+            English: {!End_of_Training_Feedback_Form__c.X2_9_English__c}
+            </td></tr>
+        <tr>
+        <td>
+            Classroom atmosphere and involvement: {!End_of_Training_Feedback_Form__c.X2_4_classroom_atmosphere_and_involvemen__c}
+            </td><td>
+            Material presented effectively: {!End_of_Training_Feedback_Form__c.X2_10_Material_presented_effectively__c}
+            </td></tr>
+        <tr>
+        <td>
+            Responsive to student's needs: {!End_of_Training_Feedback_Form__c.X2_5_Responsive_to_student_s_needs__c}
+            </td><td>
+            Overall Instructor Rating: {!End_of_Training_Feedback_Form__c.X2_11_Overall_Instructor_Rating__c}
+            </td></tr>
+        <tr>
+        <th>
+            Instructor 3 Rating
+            </th></tr>
+        <tr>
+        <td>
+            Name: {!End_of_Training_Feedback_Form__c.Instructor_3__c}
+            </td><td>
+            Homework: {!End_of_Training_Feedback_Form__c.X3_6_Homework__c}
+            </td></tr>
+        <tr>
+        <td>
+            Subject Knowledge: {!End_of_Training_Feedback_Form__c.X3_1_Subject_Knowledge__c}
+            </td><td>
+            Professionalism: {!End_of_Training_Feedback_Form__c.X3_7_Professionalism__c}
+            </td></tr>
+        <tr>
+        <td>
+            Preparation: {!End_of_Training_Feedback_Form__c.X3_2_Preparation__c}
+            </td><td>
+            Use of language: {!End_of_Training_Feedback_Form__c.X3_8_Use_of_language__c}
+            </td></tr>
+        <tr>
+        <td>
+            Punctuality: {!End_of_Training_Feedback_Form__c.X3_3_Punctuality__c}
+            </td><td>
+            English: {!End_of_Training_Feedback_Form__c.X3_9_English__c}
+            </td></tr>
+        <tr>
+        <td>
+            Classroom atmosphere and involvement: {!End_of_Training_Feedback_Form__c.X3_4_Classroom_atmosphere_and_involvemen__c}
+            </td><td>
+            Material presented effectively: {!End_of_Training_Feedback_Form__c.X3_10_Material_presented_effectively__c}
+            </td></tr>
+        <tr>
+        <td>
+            Responsive to student's needs: {!End_of_Training_Feedback_Form__c.X3_5_Responsive_to_student_s_needs__c}
+            </td><td>
+            Overall Instructor Rating: {!End_of_Training_Feedback_Form__c.X3_11_Overall_Instructor_Rating__c}
+            </td></tr>
+        </table>
+        </body>
+    </html>
+</apex:page>

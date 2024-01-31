@@ -1,0 +1,18 @@
+.THIS .neutral {
+    
+    position:absolute;
+    right:0;
+}
+.THIS .slds-modal__container {
+    max-width: 80rem !important;
+    width:40% !important;
+    
+} 
+.THIS  .slds-text-heading--medium {
+    font-weight: 300;
+    font-size: 1.25rem;
+    line-height:0.95;
+}
+.THIS .slds-checkbox_faux:after {
+    border-color:#006dcc !important;
+}

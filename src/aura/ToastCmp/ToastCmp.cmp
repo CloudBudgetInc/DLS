@@ -1,0 +1,18 @@
+<aura:component >
+    <aura:attribute name ="visibleError" type="String" default="slds-hide"/>
+    <aura:attribute name ="showErrorMsg" type="String" default=""/>
+    
+    <!-- To Display Toast Message-->
+    <div class="{!'slds-notify isVisible = '+(v.visibleError)+' slds-notify_toast slds-theme_error'}">      
+        <span class="slds-assistive-text">Error</span>
+        <a class="slds-button slds-button--icon-inverse slds-notify__close" onclick="{!c.closeToast}">
+            <lightning:icon aura:id="closeIcon" variant = 'inverse' iconName="utility:close" size="small" />
+        </a>
+        <div class="slds-notify__content">
+            <a class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                <lightning:icon aura:id="actionIcon"  variant = 'inverse' iconName="utility:error" size="small" />
+            </a>
+            <h2 class="slds-text-heading--small" style="margin-left: 29px;margin-top: -22px;">{!v.showErrorMsg}</h2>
+        </div>
+    </div>
+</aura:component>

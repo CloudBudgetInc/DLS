@@ -1,0 +1,225 @@
+.THIS .holiday .slds-checkbox_faux{
+    background-color: #4D4D4D !important;
+}
+.THIS .preparation .slds-checkbox_faux{
+    background-color: #8E24AA !important;
+}
+.THIS .instructorDaysOff .slds-checkbox_faux{
+    background-color: #F37321 !important;
+}
+.THIS .studentDaysOff .slds-checkbox_faux{
+    background-color: #8B0000 !important;
+}
+.THIS .training .slds-checkbox_faux{
+    background-color:#1D4588 !important;
+}
+.THIS .testing .slds-checkbox_faux{
+    background-color: #ABD25A !important;
+}
+.THIS .pendingApproval .slds-checkbox_faux{
+    background-color: #6c757d !important;
+}
+.THIS .slds-table_bordered{
+    border:1px solid #d4d4d4 !important;
+}
+
+.THIS .training .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .testing .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .holiday .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .preparation .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .studentDaysOff .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .instructorDaysOff .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .pendingApproval .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+
+.THIS .slds-checkbox [type=checkbox]:checked+.THIS .slds-checkbox_faux:after,
+.THIS .slds-checkbox [type=checkbox]:checked+.THIS .slds-checkbox--faux:after
+{
+   border-bottom: 2px solid rgb(250, 250, 249) !important;
+   border-left: 2px solid rgb(250, 250, 249)!important;  
+}
+
+@media (max-width: 600px){
+    .THIS .fc .fc-toolbar>*>:first-child {
+        margin-left: 0;
+        margin-bottom: 22px;
+    }
+}
+.THIS .eventNameClass{
+    text-decoration: line-through;
+}
+
+.THIS .ldtdev .select {
+    background-image: none !important;
+}
+.THIS .ldtdev .slds-input {
+display: block;
+    width: 100%;
+    height: calc(1.5em + 1.5rem + 2px);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.THIS .ltCheckBox {
+    margin-left: 1.5rem;
+}
+.THIS .viewSelectCls .slds-select{
+    width: 222% !important;
+}
+.THIS .labelCls{
+    margin-left: -0.5rem !important;
+    font-size:0.875rem;
+    margin-top: 0.25rem;
+}
+.THIS .slds-icon-action-approval {
+    background-color: #ABD25A !important;
+}
+.THIS .approvePillCls .slds-pill__action {
+    background-color:#ABD25A;
+    border-radius:0rem !important;
+    width: 6rem!important;
+}
+.THIS .rejectPillCls .slds-pill__action {
+    background-color:#FA8072;
+    border-radius:0rem !important;
+    width: 6rem!important;
+    
+}
+.THIS .slds-pill__remove svg {
+    fill:black !important;
+}
+.THIS.btnIconCls {
+    padding-right: .5rem;
+}
+.THIS .btnIconSize svg {
+    height: 17px;
+}
+.THIS .pad-left {
+    padding-left: 10px;
+}
+.THIS .pad-right {
+    padding-right: 10px;
+}
+.THIS.info-window {
+    background-color:#fff;
+    position: absolute; 
+    width: 300px; 
+    z-index: 9999;
+    height:auto;
+    display: none;
+}
+.THIS .dot {
+    height: 20px;
+    width: 20px;
+    background-color: #1ea4e7;
+    border-radius: 50%;
+    display: inline-block;
+}
+.THIS .titleCls {
+    font-size: 20px;
+    color: #1ea4e7;
+}
+.THIS .strike-word {
+    text-decoration: line-through;
+}
+.THIS .approveIconCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS .rejectIconCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS .trainingClass svg{
+    fill : #1D4588;
+}
+.THIS .preparationClass svg{
+    fill : #8E24AA;
+}
+.THIS .testingClass svg{
+    fill : #ABD25A;
+}
+.THIS .pendingApproval {
+    color: #6c757d;
+}
+.THIS .rescheduleCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS.popOverCls {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: fixed;
+    z-index: 8010;
+}
+.THIS .footerCls {
+    border-bottom: 1px solid #ddd;
+}
+.THIS .popOverBodyCls {
+    height: auto;
+    max-height: 450px;
+    overflow: auto;
+    border-bottom: 1px solid #ddd;
+}
+.THIS .popOverCloseIcon {
+    float: right;    
+    cursor: pointer;
+}
+.THIS .info-window-body {
+    max-height: 350px;
+    overflow:auto;
+}
+.THIS .fc-row table thead tr th {
+    white-space: inherit !important;
+    word-break: initial !important;
+    font-size: 0.875rem !important;
+}
+
+.THIS .fc-row table thead tr th a{
+   color: rgb(37, 116, 169);
+}
+
+.THIS.app-modal {
+    width: 350px;
+}
+.THIS.app-modal-mobile {
+    width: 300px;
+}
+.THIS.backdrop{
+    z-index: 8000 !important;
+}
+.THIS .eventWithBlueBackground{
+    background-color: #055E89;
+}
+/*.THIS .slds-button_icon-bare{
+    color: white !important;
+}*/

@@ -1,0 +1,9 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes">
+	<lightning:card title="Timesheet Notes" class="slds-m-around_xxx-small">
+        <ul class="slds-list--dotted">
+        	<li>Only work items that have you as the assignee or the QA will show up on the drop down.</li>
+        	<li>Press 'Add' to add a new time entry. If 'Add' and 'Save' are not displayed below the line items, make sure you have clicked the check on previous line.</li>
+        	<li>If you have any ideas or features that will make it easier to track time, let me know!</li>
+   		</ul>
+    </lightning:card>
+</aura:component>

@@ -1,0 +1,76 @@
+.slds-grid {
+    display: grid;
+}
+
+.mainDiv{
+    background-color: #00438a;
+    height: 21rem;
+}
+
+.imgPadding{
+    padding-top: 0.75rem;
+}
+
+.innerDiv{
+    text-align: justify;
+}
+
+.titleAlignment{
+    color: #fff;
+    font-size: 1.125rem;
+}
+
+.innerH2{
+    font-family: Lato,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color emoji;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+img{
+    width: 18% !important;
+}
+@media only screen and (max-width: 48em) {
+    img{
+        width: 40% !important;
+    }
+    .mainDiv{
+        background-color: #00438a;
+        height: 17rem !important;
+    }
+
+}
+
+.careerAlignment{
+    font-size: calc(1.40625rem + 1.875vw); 
+    color: #fff;
+    letter-spacing: 2px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.logoStyle{
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+    padding-top: 0.75rem;
+}
+
+.hero__content{
+    transform: translateX(-100%) translateX(-15px) translateY(-100%) translateY(0.6rem);
+    width: 80px;
+    content: "";
+    height: 2px;
+    background-color: #057db8;
+    position: absolute;
+    display: inline-block;
+}
+
+h2{
+    font-size: 1.1rem;
+}
+
+.slds-grid{
+    display: grid;
+}

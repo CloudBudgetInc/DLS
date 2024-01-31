@@ -1,0 +1,908 @@
+<!-- Developed by Shalini on June 22 2017 to manage CLIN records. -->
+
+<apex:page showHeader="true" sidebar="false" standardController="CLIN__c" extensions="ManageCLINcontroller">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-sanitize.js"></script>
+        <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+        <script src="{!URLFOR($Resource.Filter)}"/>
+        <link rel="stylesheet" href="{!URLFOR($Resource.datePickerCss)}"/>
+        <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+        <script src="{!URLFOR($Resource.moment)}"></script>
+        <script src="{!URLFOR($Resource.jquery)}"></script>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS_2_1_3, 'assets/styles/salesforce-lightning-design-system.css')}" />
+        
+        <apex:form >
+            <div class="slds" ng-app="CLINapp" ng-controller="CLIN_Controller"> 
+                <!-- <div style="display: none; background-color: rgba(222, 230, 230, 0.6);width: 100%; height: 100%; z-index: 1000; position: fixed; left: 0; top: 0; overflow: hidden; text-align: center; vertical-align: middle;" id="spinner">
+                    <img alt="Loading..." src="{!URLFOR($Resource.SLDS_2_1_3,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+                </div> -->
+                <div ng-hide="isLoaded" class="{{styleClass}}">
+                     <c:slds_Loading />
+                </div>
+                <style>
+                    
+                    ._720kb-datepicker-calendar {
+                        position: absolute;
+                    }
+                    .deleteColour {
+                        background-color: red !important;
+                    }
+                    select:disabled {
+                        color: #333;
+                    }
+                    .ReqClass{
+                    border: 1px solid red !important;
+                    }
+                </style>
+                <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                    <div class="slds-grid">                    
+                        <div class="slds-media__body">
+                            <div class="slds-grid">
+                                <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="Manage Project CLIN">Manage CLINs</h1>
+                            </div>
+                        </div>                   
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                            <div style="width: 100%;text-align: center;">                                
+                                <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="saveCLIN();">Save</div>                               
+                            </div>                        
+                        </div> &nbsp;                   
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                            <div style="width: 100%;text-align: center;">
+                                
+                                <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="cancelPage();">Cancel</div> 
+                            </div>                        
+                        </div>                         
+                    </div> 
+                </div>
+                
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span ng-hide="contractRec.APXT_Redlining__Contract_Family_Parent__c" class="slds-text-heading--small">Parent Contract:</span>
+                                        <span ng-show="contractRec.APXT_Redlining__Contract_Family_Parent__c" class="slds-text-heading--small">Delivery Order:</span>
+                                    </a>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                 
+                    <div class="slds-card__body">                                
+                         <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-col--padded slds-size--1-of-2 " style="padding-top: 1%;padding-left: 40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Name: </label> {{contractRec.Name}} 
+                             </div>
+                             <div class="slds-col--padded slds-size--1-of-2" style="padding-top: 1%;padding-left: 40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Contract Type: </label>{{contractRec.Contract_Type__c}}  
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-2 " style="padding-top: 1%;padding-left: 40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Contract Start Date: </label>{{contractRec.StartDate | date:'MM/dd/yyyy'}}  
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-2" style="padding-top: 1%;padding-left: 40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Contract End Date: </label>{{contractRec.EndDate | date:'MM/dd/yyyy'}}  
+                            </div>
+                            
+                            <div class="slds-col--padded slds-size--1-of-2" style="padding-top: 1%;padding-left: 40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Total Amount Funded (All CLINs):</label>  {{contractRec.Total_Amount_Funded_All_CLINs__c | currency}} 
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-2" style="padding-top: 1%;padding-left: 40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Amount Funded:</label>  {{contractRec.Amount_Funded__c | currency}} 
+                            </div>
+                         
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Existing CLIN records</span>
+                                    </a>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    
+                    <div ng-show="!clinList.length > 0 && !newClinList.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                        <div class="slds-card__body">
+                            <div class="slds-text-align--center"> No CLIN records found. </div>
+                        </div>
+                    </div> 
+                    
+                    <div class="slds-card__body" >
+                                                        
+                         <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                             <thead ng-show="clinList.length > 0 || newClinList.length > 0">
+                                <th scope="col">
+                                    <div class="slds-hyphenate">CLIN #</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-hyphenate"><abbr lightning-input_input="" title="" class="slds-required">*</abbr>CLIN Name</div>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Parent CLIN</span>                                        
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate"><abbr lightning-input_input="" title="" class="slds-required">*</abbr>CLIN Max Quantity</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate"><abbr lightning-input_input="" title="" class="slds-required">*</abbr>CLIN Type</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate"><abbr lightning-input_input="" title="" class="slds-required">*</abbr>CLIN Unit</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">CLIN Unit Price</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">CLIN Start Date</span>                                        
+                                </th> 
+                                <th scope="col">
+                                    <span class="slds-truncate">CLIN End Date</span>                                        
+                                </th> 
+                                <th scope="col">
+                                    <span class="slds-truncate">Amount Funded</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Total Amount Invoiced</span>                                
+                                </th>
+                            </thead>  
+                            <tbody>
+                                <tr ng-repeat="clin in clinList">
+                                 
+                                    <td data-label="Name">
+                                        
+                                        <div class="slds-col slds-no-flex " style="position:absolute;margin-left:-5px;width:9rem;" >
+                                            <div style="width: 100%;text-align: left;">
+                                                <a href="" ng-click="oldClinsToDelete(clin);">                                
+                                                    <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:16px;height:16px;">
+                                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#delete')}"></use>
+                                                    </svg>
+                                                </a>
+                                            </div>                        
+                                        </div>
+                                        
+                                        <span style="margin-left:20px;" ng-bind="clin.Name "/>                                            
+                                    </td>
+                                    <td data-label="CLIN Name" style="width:200px;">
+                                        <!--<span ng-bind="clin.CLIN_Name__c" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c"/>-->
+                                        <textarea class="slds-input slds-required slds-align--absolute-center" rows="2" cols="20" name="options" ng-model="clin.CLIN_Name__c" ng-change="clinsToUpdate(clin);"  ng-class="clin.isRequired == true ? 'ReqClass':''" />
+                                        <span ng-show="clin.isRequired" style="color:red;">This is required</span>
+                                    </td>
+                                    <td data-label="Parent CLIN" style="width:150px;">
+                                        <a href="/clin.Id" ><span ng-bind="clin.Parent_CLIN__r.Name" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c" ng-show="contractRec.APXT_Redlining__Contract_Family_Parent__c"/></a>
+                                        <select ng-model="clin.Parent_CLIN__c" ng-options="item.Id as item.Name for item in filteredParentClins[clin.Id]" class="slds-select" ng-change="clinsToUpdate(clin);" ng-hide="contractRec.APXT_Redlining__Contract_Family_Parent__c"></select>
+                                    </td>
+                                    <td data-label="CLIN max quantity" style="width:100px;">
+                                        <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="clin.CLIN_Max_Quantity__c" ng-change="clinsToUpdate(clin);" ng-class="clin.isMaxQtyRequired == true ? 'ReqClass':''"/>
+                                        <div ng-show="clin.isMaxQtyRequired" style="color:red;">This is required</div>
+                                    </td>
+                                    <td data-label="CLIN Type">
+                                        <select class="slds-select" ng-model="clin.CLIN_Type__c" ng-options="item for item in clinTypes" ng-change="clinsToUpdate(clin);" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c"  ng-class="clin.isTypeRequired == true ? 'ReqClass':''" />
+                                        <div ng-show="clin.isTypeRequired" style="color:red;">This is required</div>
+                                    </td>
+                                    <td data-label="CLIN unit">
+                                        <select class="slds-select" ng-model="clin.CLIN_Unit__c" ng-options="item for item in clinUnits" ng-change="clinsToUpdate(clin);" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c"  ng-class="clin.isUnitRequired == true ? 'ReqClass':''" />
+                                        <div ng-show="clin.isUnitRequired" style="color:red;">This is required</div>
+                                    </td>
+                                    <td data-label="CLIN unit price" style="width:100px;">
+                                        <input class="slds-input slds-align--absolute-center" type="text" name="options" ng-model="clin.CLIN_Unit_Price__c"  ng-change="clinsToUpdate(clin);"/>
+                                    </td>
+                                    <td data-label="CLIN Start Date"  style="width:120px;">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" date='dd-MM-yyyy' ng-model="clin.CLIN_Start_Date__c" class="slds-input" ng-change="clinsToUpdate(clin);"/>
+                                        </datepicker>                                  
+                                    </td>
+                                    <td data-label="CLIN End Date"  style="width:120px;">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" ng-model="clin.CLIN_End_Date__c" class="slds-input" ng-change="clinsToUpdate(clin);"/>
+                                        </datepicker>                                   
+                                    </td>
+                                    <td data-label="Amount Funded" style="width:100px;">
+                                        <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="clin.Amount_Funded__c" ng-change="clinsToUpdate(clin);"/>
+                                    </td> 
+                                    <td data-label="Total Amount Invoiced" style="width:100px;">
+                                        <input class="slds-input slds-align--absolute-center" type="text" name="options" ng-model="clin.Total_Amount_Invoiced_rollup__c"  ng-change="clinsToUpdate(clin);"/>
+                                    </td>                                  
+                                </tr>
+                                <tr ng-repeat="newClin in newClinList"> 
+                                  
+                                    <td data-label="Name">
+                                        <div class="slds-col slds-no-flex " style="margin-left:-5px;width:9rem;">
+                                            <div style="width: 100%;text-align: left;">                                
+                                                <a href="" ng-click="deleteNewClinRows(newClin);">
+                                                    <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:16px;height:16px;">
+                                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#delete')}"></use>
+                                                    </svg>
+                                                </a>                                           
+                                            </div>                        
+                                        </div>
+                                        <select ng-show="contractRec.APXT_Redlining__Contract_Family_Parent__c" style="margin-left:20px;margin-top: -15px;width: 170px !important;" ng-model="newClin.name" ng-options="item.Name as item.Name for item in allClinList" class="slds-select" ng-change="updateMaxQtyField(); newClinsToInsert(newClin);"></select>
+                                        <input ng-hide="contractRec.APXT_Redlining__Contract_Family_Parent__c" style="margin-left:20px; width: 170px;margin-top: -15px;" class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="newClin.name" ng-change="newClinsToInsert(newClin);" />                                           
+                                    </td>
+                                    <td data-label="CLIN Name" style="width:200px;">
+                                        <textarea class="slds-input slds-required slds-align--absolute-center" type="text" name="options" ng-model="newClin.clinName" ng-change="newClinsToInsert(newClin);" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c"  ng-class="newClin.isRequired == true ? 'ReqClass':''" />
+                                         <span ng-show="newClin.isRequired" style="color:red;">This is required</span>
+                                       </td>
+                                    <td data-label="Parent CLIN" style="width:150px;">
+                                        <select ng-hide="contractRec.APXT_Redlining__Contract_Family_Parent__c"  ng-model="newClin.parentClinId" ng-options="clin.Id as clin.Name for clin in allClins" class="slds-select" ng-change="newClinsToInsert(newClin);"></select>
+                                        <input ng-show="contractRec.APXT_Redlining__Contract_Family_Parent__c" class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="newClin.parentClinName" ng-change="newClinsToInsert(newClin);" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c"/>
+                                    </td> 
+                                    <td data-label="CLIN max quantity" style="width:100px;">
+                                        <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="newClin.clinMaxQty" ng-change="newClinsToInsert(newClin);" ng-class="newClin.isMaxQtyRequired == true ? 'ReqClass':''"/>
+                                        <div ng-show="newClin.isMaxQtyRequired" style="color:red;">This is required</div>
+                                    </td>
+                                    <td data-label="CLIN Type">
+                                        <select ng-model="newClin.clinType" ng-options="item for item in clinTypes" ng-change="newClinsToInsert(newClin);" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c" ng-class="newClin.isTypeRequired == true ? 'ReqClass':''" class="slds-select"/>
+                                        <div ng-show="newClin.isTypeRequired" style="color:red;">This is required</div>
+                                    </td>
+                                    <td data-label="CLIN unit"  >
+                                        <select class="slds-select" ng-model="newClin.clinUnit" ng-options="item for item in clinUnits" ng-change="newClinsToInsert(newClin);" ng-disabled="contractRec.APXT_Redlining__Contract_Family_Parent__c"  ng-class="newClin.isUnitRequired == true ? 'ReqClass':''" />
+                                        <div ng-show="newClin.isUnitRequired" style="color:red;">This is required</div>
+                                    </td>
+                                    <td data-label="CLIN unit price" style="width:100px;">
+                                        <input class="slds-input slds-align--absolute-center" type="text" name="options" ng-model="newClin.clinUnitPrice" ng-change="newClinsToInsert(newClin);"/>
+                                    </td>
+                                    <td data-label="CLIN Start Date" style="width:120px;">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" date='dd-MM-yyyy' ng-model="newClin.clinStartDate" class="slds-input" ng-change="newClinsToInsert(newClin);"/>
+                                        </datepicker>                                  
+                                    </td>
+                                    <td data-label="CLIN End Date"  style="width:120px;">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" ng-model="newClin.clinEndDate" class="slds-input" ng-change="newClinsToInsert(newClin);"/>
+                                        </datepicker>                                   
+                                    </td>
+                                     <td data-label="Amount Funded" style="width:100px;">
+                                        <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="newClin.amountFunded" ng-change="newClinsToInsert(newClin);"/>
+                                    </td>
+                                    <td data-label="Total Amount Invoiced" style="width:100px;">
+                                        <input class="slds-input slds-align--absolute-center" type="text" name="options" ng-model="clin.clinTotalAmountInvoiced"  ng-change="clinsToUpdate(clin);"/>
+                                    </td>                                   
+                                </tr> 
+                                <tr>
+                                    <td data-label="CLIN Name">
+                                        <div class="slds-col slds-no-flex ">
+                                            <div style="width: 110%;text-align: left;">                                
+                                                <input type="button" class="slds-button slds-button--brand" style="cursor: pointer; width: 100px;" value="Add CLIN" ng-click="showNewCLINrow();"/>                               
+                                            </div>                        
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td> 
+                                    <td></td>
+                                    <td></td>   
+                                </tr>
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="slds-modal {{modalStateForDeleteConfirmation}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Confirmation </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <span>Do you want to delete?</span>
+   
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="deleteFun();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Yes</div>
+                            <div ng-click="modalStateForDeleteConfirmation='';modalBackdropStateForDeleteConfirmation='';" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">No</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForDeleteConfirmation}}"></div>
+                
+                <div class="slds-modal {{modalStateForSuccess}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Confirmation </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <span>CLIN changes are saved successfully. Would do you like to stay on the same view?</span>
+   
+                        </div>
+                        <div class="slds-modal__footer">
+                            
+                            <div ng-click="modalStateForSuccess='';modalBackdropStateForSuccess='';" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Yes</div>
+                            <div ng-click="cancelPage();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">No</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForSuccess}}"></div>       
+                
+               
+                <div class="slds-modal {{modalStateForError}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Error </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                             <div style="font-size:0.900rem;" ng-bind-html="displayErrorMessage"></div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="closePage();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForError}}"></div>
+                
+                <div class="slds-modal {{modalStateForSelectContract}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 40%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Select Contract </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                            <span>Contract:</span>&nbsp;&nbsp;
+                            <div>
+                                <select ng-model="selectedContract" ng-options="item.Id as item.Name for item in contractsList" class="slds-select" ng-change="clinsToUpdate(clin);"></select>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="closeContractModal();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Proceed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForSelectContract}}"></div>
+                
+                 
+            </div>
+        </apex:form>
+    </html>
+    <script>
+        var app = angular.module('CLINapp', ['ngSanitize','720kb.datepicker','ngRoute']);
+        app.controller('CLIN_Controller', function($scope,$timeout,$routeParams,$location,$route,$window) {
+            //$scope.contractId = $location.absUrl().split('Id=')[1];
+            $scope.contractId = '{!contractId}';
+            console.log('::contractId:',$scope.contractId);
+            $scope.clinList = [];
+            $scope.contractsList = [];
+            $scope.selectedContract;
+            $scope.updateClinsList = [];
+            $scope.deleteClinsList = [];
+            $scope.filteredParentClins = {};
+            $scope.newClinList = [];
+            $scope.modalStateForDeleteConfirmation = '';
+            $scope.modalBackdropStateForDeleteConfirmation = '';
+            $scope.modalStateForSelectContract = '';
+            $scope.modalBackdropStateForSelectContract = '';
+            $scope.isLoaded = false;
+            $scope.contractRec = {};
+            $scope.clinTypes = [];
+            $scope.clinUnits = [];
+            $scope.modalStateForSuccess = '';
+            $scope.modalBackdropStateForSuccess = '';
+            $scope.displayErrorMessage = '';
+            $scope.isParentCLINChanged = false;
+            
+            if($scope.contractId == undefined || $scope.contractId == ''){
+                $scope.isLoaded = false;
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageCLINcontroller.getAllContracts}',
+                    function(records, ev) {
+                        if(ev.status) {
+                           $scope.contractsList = records; 
+                           $scope.isLoaded = true;
+                           $scope.modalStateForSelectContract = 'slds-fade-in-open';
+                           $scope.modalBackdropStateForSelectContract = 'slds-modal-backdrop--open';              
+                           console.log('::$scope.clinTypes:::',$scope.contractsList);
+                           $scope.$apply();
+                        } else {
+                            console.log('::::ev::::',ev);
+                        }
+                    },
+                    {escape: true}
+                ); 
+                
+            } else {
+                init();
+            }
+            
+            $scope.closeContractModal = function(){
+                $scope.contractId = $scope.selectedContract;
+                if($scope.contractId != undefined && $scope.contractId != ''){
+                    $scope.modalStateForSelectContract = '';
+                    $scope.modalBackdropStateForSelectContract = '';
+                    console.log('::$scope.contractId:::',$scope.contractId);
+                    init(); 
+                } 
+            }
+            
+            $scope.saveCLIN = function() {
+                $scope.isLoaded = false;
+                $scope.hasError = false;
+                
+                /*if($scope.clinName != undefined ){
+                    $scope.CLINrec = {
+                        clinName: $scope.clinName,
+                        clinMaxQty: $scope.clinMaxQty,
+                        clinType: $scope.clinType,
+                        clinUnit: $scope.clinUnit,
+                        clinUnitPrice: $scope.clinUnitPrice,
+                        clinStartDate: moment($scope.clinStartDate).format('YYYY-MM-DD'),
+                        clinEndDate: moment($scope.clinEndDate).format('YYYY-MM-DD'),
+                        parentClinId: $scope.parentClinId,
+                        contractId: $scope.contractId 
+                    }
+                } else {
+                    $scope.CLINrec = {};
+                }
+                
+                console.log('::CLINrec:',$scope.CLINrec);*/
+                console.log(':$scope.updateClinsList:::',$scope.updateClinsList);
+                console.log(':$scope.newClinList:::',$scope.newClinList);
+                for(var i=0; i<$scope.newClinList.length; i++){
+                    if(!$scope.newClinList[i].clinName) {
+                        $scope.hasError = true;
+                        $scope.newClinList[i].isRequired = true;
+                    } else {
+                        $scope.newClinList[i].isRequired = false;
+                    }
+                    
+                    if(!$scope.newClinList[i].clinMaxQty) {
+                        $scope.hasError = true;
+                        $scope.newClinList[i].isMaxQtyRequired = true;
+                    } else {
+                        $scope.newClinList[i].isMaxQtyRequired = false;
+                    } 
+                    
+                    if(!$scope.newClinList[i].clinType) {
+                        $scope.hasError = true;
+                        $scope.newClinList[i].isTypeRequired = true;
+                    } else {
+                        $scope.newClinList[i].isTypeRequired = false;
+                    }      
+                    
+                    if(!$scope.newClinList[i].clinUnit) {
+                        $scope.hasError = true;
+                        $scope.newClinList[i].isUnitRequired = true;
+                    } else {
+                        $scope.newClinList[i].isUnitRequired = false;
+                    }      
+                    
+                    
+                    if($scope.newClinList[i].clinStartDate != undefined && $scope.newClinList[i].clinEndDate != undefined){
+                        $scope.newClinList[i].clinStartDate = moment($scope.newClinList[i].clinStartDate).format('YYYY-MM-DD');
+                        $scope.newClinList[i].clinEndDate = moment($scope.newClinList[i].clinEndDate).format('YYYY-MM-DD');
+                    }   
+                }
+                for(var i=0; i<$scope.updateClinsList.length; i++){
+                    
+                    if(!$scope.updateClinsList[i].CLIN_Name__c) {
+                        $scope.updateClinsList[i].isRequired = true;
+                        $scope.hasError = true;
+                    } else {
+                        $scope.updateClinsList[i].isRequired = false;
+                    }
+                    
+                    if(!$scope.updateClinsList[i].CLIN_Max_Quantity__c) {
+                        $scope.hasError = true;
+                        $scope.updateClinsList[i].isMaxQtyRequired = true;
+                    } else {
+                        $scope.updateClinsList[i].isMaxQtyRequired = false;
+                    }
+                    
+                    if(!$scope.updateClinsList[i].CLIN_Type__c) {
+                        $scope.hasError = true;
+                        $scope.updateClinsList[i].isTypeRequired = true;
+                    } else {
+                        $scope.updateClinsList[i].isTypeRequired = false;
+                    }      
+                    
+                    if(!$scope.updateClinsList[i].CLIN_Unit__c) {
+                        $scope.hasError = true;
+                        $scope.updateClinsList[i].isUnitRequired = true;
+                    } else {
+                        $scope.updateClinsList[i].isUnitRequired = false;
+                    }     
+                    
+                    if($scope.updateClinsList[i].CLIN_Start_Date__c != undefined && $scope.updateClinsList[i].CLIN_End_Date__c != undefined) {
+                        $scope.updateClinsList[i].CLIN_Start_Date__c = moment($scope.updateClinsList[i].CLIN_Start_Date__c).format('YYYY-MM-DD');
+                        $scope.updateClinsList[i].CLIN_End_Date__c = moment($scope.updateClinsList[i].CLIN_End_Date__c).format('YYYY-MM-DD');
+                    }
+                }
+                
+                var newClinList = angular.copy($scope.newClinList);
+                for(var x=0; x < newClinList.length; x++) {
+                    delete newClinList[x].$$hashKey;
+                }
+                
+                var updateList = angular.copy($scope.updateClinsList);
+                for(var x=0; x < updateList.length; x++) {
+                    delete updateList[x].$$hashKey;
+                }
+                if($scope.hasError == false) {
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ManageCLINcontroller.createCLIN}',
+                        JSON.stringify(newClinList),
+                        JSON.stringify(updateList),
+                        function(records, ev) {
+                          
+                            if(ev.status) {
+                                console.log('::records:::',records);
+                                $scope.newClinList = [];
+                                $scope.updateClinsList = [];
+                                $scope.isLoaded = true;
+                                init();
+                                $scope.modalStateForSuccess = 'slds-fade-in-open';
+                                $scope.modalBackdropStateForSuccess = 'slds-modal-backdrop--open';
+                                
+                            } else {
+                                $scope.displayErrorMessage = '<h1>'+ev.message+'</h1>';
+                                console.log($scope.displayErrorMessage);
+                                
+                                    $timeout(function() {
+                                        console.log('::::ev::::',ev.message);
+                                        $scope.displayErrorMessage = $scope.displayErrorMessage.replace("CLIN record for the same Contract must have unique CLIN #'s","<b>CLIN record for the same Contract must have unique CLIN #'s</b>");
+                                        $scope.isLoaded = true;
+                                        $scope.modalStateForError = 'slds-fade-in-open';
+                                        $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                                    });
+                            }
+                        },
+                        {escape: true}
+                    );
+                } else {
+                    $scope.isLoaded = true;
+                    //$scope.$apply();
+                }
+                
+            }
+            
+            function decode(encodedStr){
+                var parser = new DOMParser;
+                var dom = parser.parseFromString(
+                    '<!doctype html><body>' + encodedStr,
+                    'text/html');
+                var decodedString = dom.body.textContent;
+                
+                console.log(decodedString);
+                return decodedString;
+            }
+            
+            function millisecondToString(millisecond) {            
+                var date = new Date(millisecond);                        
+                date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); 
+                
+                // To fix the time zone issue.from 2012/6/31 to 2012/7/1             
+                var day = date.getDate();            
+                var month = date.getMonth() + 1;            
+                if(day < 10) {                
+                    day = '0' + day;            
+                }            
+                if(month < 10) {                
+                    month = '0' + month;            
+                }            
+                return month + '/' + day + '/' + date.getFullYear();         
+            }
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ManageCLINcontroller.picklistvalues}',
+                'CLIN__c',
+                'CLIN_Type__c',
+                function(records, ev) {
+                    if(ev.status) {
+                       $scope.clinTypes = records; 
+                       $scope.clinTypes[3] = $scope.clinTypes[3].replace(/\&amp;/g, "&");
+                       for(var i = 0; i< $scope.clinTypes.length; i++){
+                           $scope.clinTypes[i] = decode($scope.clinTypes[i]);
+                           console.log(':$scope.clinTypes[i]:::',$scope.clinTypes[i]);
+                       }  
+                       console.log('::$scope.clinTypes:::',$scope.clinTypes);
+                       $scope.$apply();
+                    } else {
+                        console.log('::::ev::::',ev);
+                    }
+                },
+                {escape: true}
+            );
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ManageCLINcontroller.picklistvalues}',
+                'CLIN__c',
+                'CLIN_Unit__c',
+                function(records, ev) {
+                    if(ev.status) {
+                        $scope.clinUnits = records;                          
+                        console.log('::$scope.clinUnits:::',$scope.clinUnits);
+                        $scope.$apply();
+                    } else {
+                        console.log('::::ev::::',ev);
+                    }                       
+                    
+                },
+                {escape: true}
+            );
+            
+            function getParentClins(){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageCLINcontroller.getCLINrecs}',
+                    $scope.parentContractId,
+                    function(records, ev) {
+                        console.log(':::records',records);                
+                        if(records.length > 0){                        
+                            if(ev.status) {
+                                $timeout(function() {
+                                    $scope.allClinList = records;
+                                    console.log(':$scope.allClinList::',$scope.allClinList);
+                                    $scope.isLoaded = true; 
+                                },0 );  
+                            } else {
+                                console.log('::::ev::::',ev);
+                            }
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+            
+            function getChildContractClins(){
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageCLINcontroller.getAllCLINs}',
+                    $scope.contractId,
+                    function(records, ev) {
+                        console.log(':::records',records);                
+                        if(records.length > 0){                        
+                            if(ev.status) {
+                                $timeout(function() {
+                                    $scope.allClins = records;
+                                    console.log(':$scope.allClins::',$scope.allClins);
+                                    $scope.isLoaded = true; 
+                                },0 );  
+                            } else {
+                                console.log('::::ev::::',ev);
+                            }
+                        }
+                    },
+                    {escape: true}
+                );
+           }
+           
+           function getExistingCLINs(){     
+                console.log(':$scope.contractId:::',$scope.contractId);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageCLINcontroller.getCLINrecs}',
+                    $scope.contractId,
+                    function(records, ev) {
+                        console.log(':::records',records);                
+                        if(records.length > 0){                        
+                            if(ev.status) {
+                                $timeout(function() {
+                                    $scope.clinList = records;
+                                    console.log('::$scope.clinList::',$scope.clinList);
+                                    for(var i=0; i<$scope.clinList.length; i++){
+                                        for(var j=0; j<$scope.allClins.length; j++) {
+                                            if($scope.clinList[i].Id != $scope.allClins[j].Id){
+                                                if($scope.filteredParentClins[$scope.clinList[i].Id] == undefined){
+                                                    $scope.filteredParentClins[$scope.clinList[i].Id] = [];
+                                                }
+                                                $scope.filteredParentClins[$scope.clinList[i].Id].push($scope.allClins[j]);
+                                            }
+                                        }
+                                        if($scope.clinList[i].CLIN_Type__c != undefined) { 
+                                                $scope.clinList[i].CLIN_Type__c = decode($scope.clinList[i].CLIN_Type__c);
+                                        }
+                                        if($scope.clinList[i].CLIN_Name__c != undefined) { 
+                                            $scope.clinList[i].CLIN_Name__c = decode($scope.clinList[i].CLIN_Name__c);
+                                        }
+                                        if($scope.clinList[i].CLIN_Start_Date__c != undefined) {
+                                            $scope.clinList[i].CLIN_Start_Date__c = millisecondToString($scope.clinList[i].CLIN_Start_Date__c);
+                                        }else{
+                                            $scope.clinList[i].CLIN_Start_Date__c = millisecondToString($scope.contractRec.StartDate);
+                                        }
+                                        if($scope.clinList[i].CLIN_End_Date__c != undefined) {
+                                            $scope.clinList[i].CLIN_End_Date__c = millisecondToString($scope.clinList[i].CLIN_End_Date__c);
+                                        }else{
+                                            $scope.clinList[i].CLIN_End_Date__c = millisecondToString($scope.contractRec.EndDate);
+                                        }
+                                    }
+                                    console.log('::$scope.filteredParentClins::',$scope.filteredParentClins);
+                                    console.log('::$scope.clinList::',$scope.clinList);
+                                    $scope.updateClinsList = [];
+                                    console.log('::$scope.updateClinsList::',$scope.updateClinsList);
+                                    
+                                    $scope.isLoaded = true; 
+                                },0 );  
+                            } else {
+                                console.log('::::ev::::',ev);
+                            } 
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+            
+            function init() {
+                $scope.isLoaded = false;
+                $scope.filteredParentClins = {};
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageCLINcontroller.getContractInfo}',
+                    $scope.contractId,
+                    function(records, ev) {
+                        if(ev.status) {
+                            console.log(':::records',records); 
+                            $timeout(function() {
+                                $scope.contractRec = records[0];
+                                $scope.clinList = [];
+                                if($scope.contractRec.hasOwnProperty('APXT_Redlining__Contract_Family_Parent__c')){
+                                    $scope.parentContractId = $scope.contractRec.APXT_Redlining__Contract_Family_Parent__c;
+                                    console.log('::$scope.parentContractId::',$scope.parentContractId);
+                                } else {
+                                    $scope.parentContractId = $scope.contractRec.Id;
+                                }
+                                console.log('::$scope.contractRec::',$scope.contractRec);
+                                console.log('::$scope.clinList::',$scope.clinList);
+                                getParentClins();
+                                getChildContractClins();
+                                getExistingCLINs();
+                                $scope.isLoaded = true; 
+                            });  
+                        } else {
+                            console.log('::::ev::::',ev);
+                        }
+                    },
+                    {escape: true}
+                ); 
+                
+                
+            }
+            
+            $scope.showNewCLINrow = function() {
+                var CLINrec = {
+                    name: undefined,
+                    clinName: undefined,
+                    amountFunded: undefined,
+                    clinMaxQty: undefined,
+                    clinType:undefined,
+                    clinUnit:undefined,
+                    clinUnitPrice: undefined,
+                    clinTotalAmountInvoiced:undefined,
+                    clinStartDate: millisecondToString($scope.contractRec.StartDate),
+                    clinEndDate: millisecondToString($scope.contractRec.EndDate),
+                    parentClinId: undefined,
+                    parentClinName: undefined,
+                    contractId: $scope.contractId 
+                }               
+                $scope.newClinList.push(CLINrec);
+                console.log(':$scope.newClinListu::',$scope.newClinList);
+            }
+            
+            $scope.clinsToUpdate = function(clin) {
+                
+                if(clin.CLIN_Max_Quantity__c != undefined && clin.CLIN_Unit_Price__c != undefined){
+                    clin.Amount_Funded__c = clin.CLIN_Max_Quantity__c * clin.CLIN_Unit_Price__c;
+                }
+                                
+                if($scope.updateClinsList.indexOf(clin) == -1){
+                    $scope.updateClinsList.push(clin);
+                }
+            }
+            
+            $scope.oldClinsToDelete = function(clin) {
+                $scope.deleteClinsList = [];
+                if(clin.CLIN_Start_Date__c != undefined && clin.CLIN_End_Date__c != undefined) {
+                    clin.CLIN_Start_Date__c = moment(clin.CLIN_Start_Date__c).format('YYYY-MM-DD');
+                    clin.CLIN_End_Date__c = moment(clin.CLIN_End_Date__c).format('YYYY-MM-DD');
+                }
+                if($scope.deleteClinsList.indexOf(clin) == -1){
+                    $scope.deleteClinsList.push(clin);
+                }
+                console.log('::$scope.deleteClinsList::',$scope.deleteClinsList);
+                $scope.modalStateForDeleteConfirmation = 'slds-fade-in-open';
+                $scope.modalBackdropStateForDeleteConfirmation = 'slds-modal-backdrop--open';
+            }
+            
+            $scope.newClinsToInsert = function(newclin) {
+                console.log('::newclin::',newclin);
+                
+                if($scope.contractRec.APXT_Redlining__Contract_Family_Parent__c){ 
+                    if(newclin.name){
+                        for(var i=0;i<$scope.allClinList.length;i++){
+                            if($scope.allClinList[i].Name == newclin.name){
+                                newclin.clinName = decode($scope.allClinList[i].CLIN_Name__c);
+                                if($scope.isParentCLINChanged == true){
+                                    newclin.clinMaxQty = decode($scope.allClinList[i].CLIN_Max_Quantity__c);
+                                    $scope.isParentCLINChanged = false;
+                                }
+                                newclin.clinType = decode($scope.allClinList[i].CLIN_Type__c);
+                                newclin.clinUnit = $scope.allClinList[i].CLIN_Unit__c;
+                                newclin.parentClinId = $scope.allClinList[i].Parent_CLIN__c;
+                                if($scope.allClinList[i].Parent_CLIN__c != undefined){
+                                    newclin.parentClinName = $scope.allClinList[i].Parent_CLIN__r.Name;
+                                } else {
+                                    newclin.parentClinName = undefined;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if(newclin.clinMaxQty != undefined && newclin.clinUnitPrice != undefined){
+                    newclin.amountFunded = newclin.clinMaxQty * newclin.clinUnitPrice;
+                }else{
+                    newclin.amountFunded = undefined;
+                }
+                
+                if($scope.newClinList.indexOf(newclin) == -1){
+                    $scope.newClinList.push(newclin);
+                }
+                
+                console.log(':$scope.newClinList::',$scope.newClinList);
+            }
+            
+            $scope.updateMaxQtyField = function(){
+
+                console.log('::::::Method called');
+                $scope.isParentCLINChanged = true;
+            }
+
+            $scope.deleteNewClinRows = function(newClin){
+                console.log('::newClin::',newClin);
+                if($scope.newClinList.indexOf(newClin) > -1){
+                    $scope.newClinList.splice($scope.newClinList.indexOf(newClin), 1);
+                    console.log('::$scope.newClinList::',$scope.newClinList);
+                }
+            }            
+            $scope.deleteFun = function() {
+                $scope.isLoaded = false;
+                var deleteClinsList = angular.copy($scope.deleteClinsList);
+                
+                for(var x=0; x < deleteClinsList.length; x++) {
+                    delete deleteClinsList[x].$$hashKey;
+                }
+                
+                if($scope.deleteClinsList) {
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ManageCLINcontroller.deleteCLIN}',
+                        JSON.stringify(deleteClinsList),
+                        function(records, ev) {
+                            if(ev.status) {
+                                console.log('::records:::',records);
+                                init();
+                                $scope.$apply();
+                            } else {
+                                console.log('::::ev::::',ev);
+                            }                       
+                            
+                        },
+                        {escape: true}
+                    );
+                }
+                $scope.modalStateForDeleteConfirmation = '';
+                $scope.modalBackdropStateForDeleteConfirmation = '';
+                
+            }
+            
+            $scope.cancelPage = function(){
+                console.log(':$scope.contractId:::',$scope.contractId);
+                window.location.assign("/"+$scope.contractId);
+            }
+            $scope.closePage = function(){
+                $scope.modalStateForError = '';
+                $scope.modalBackdropStateForError = '';
+            }
+            
+        });
+        
+    </script>
+</apex:page>

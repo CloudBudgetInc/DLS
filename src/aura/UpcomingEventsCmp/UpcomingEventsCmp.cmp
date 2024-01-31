@@ -1,0 +1,219 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="EventListViewController" >
+    
+    <aura:attribute name="evtList" type="List" default="[]"/>
+    <aura:attribute name="pendingApprovalEvtList" type="List" default="[]"/>
+    <aura:attribute name="showRescheduleModel" type="Boolean" default="false"/>
+    <aura:attribute name="showApprovalModel" type="Boolean" default="false"/>
+    <aura:attribute name="selectedRecord" type="Map" default="{}"/>
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="displayDevice" type="string"/>
+    <aura:attribute name="conflictIndex" type="string"/>   
+    <aura:attribute name="showConflict" type="Boolean" default="false"/>
+    <aura:attribute name="stuInsConflictList" type="List" default="[]"/>
+    <aura:attribute name="roomConflictList" type="List" default="[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="projectRefWithNewReqEvent" type="Map"/>
+    <aura:attribute name="showRequestEvent" type="Boolean" default="false"/>
+    <aura:attribute name="modal" type="Object"/>
+    
+    <aura:handler name="change" value="{!v.showRescheduleModel}" action="{!c.hideRescheduleModel}"/>
+    <aura:handler name="change" value="{!v.showApprovalModel}" action="{!c.hideApprovalModel}"/>
+
+    <ltng:require scripts="{!join(',', 
+                           $Resource.FullCalendar + '/fullcalendar-3.10.0/fullCalendar/moment.js',
+                           $Resource.moment_timezone_data)}"
+                  
+                  afterScriptsLoaded="{!c.doInit}" /> 
+    
+    <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>   -->
+    
+    <aura:method name="toggleConflictModal" action="{!c.toggleConflictModal}" > 
+        <aura:attribute name="index" type="string"/>
+    </aura:method>
+    <aura:method name="closePendingEventsModal" action="{!c.closePendingEventsModal}" /> 
+    <aura:method name="approveConflictModal" action="{!c.approveEventWithConflictCheck}" /> 
+    <aura:method name="cancelConflictModal" action="{!c.cancelConflictClk}" />        
+    
+    <ltng:require scripts="{!join(',', 
+                            $Resource.FullCalendar + '/fullcalendar-3.10.0/fullCalendar/moment.js',
+                            $Resource.moment_timezone_data)}"/>
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div class="card-deck">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Upcoming Events</h5>
+                <aura:if isTrue="{!or(v.communityName == 'instructor',v.communityName == 'student')}">
+                    <div style="{!v.displayDevice == 'Mobile' ? 'display:block;' : 'display:none'}"><br/></div>
+                    <div  align="right" style="margin-top: -2.5rem;">
+
+                        <aura:if isTrue="{!and(v.communityName == 'instructor',v.pendingApprovalEvtList.length > 0)}">
+                            <span class="labelCls" onclick="{!c.pendingApprovalClick}" style="cursor:pointer;">
+                                Events Pending Your Approval 
+                                <lightning:icon iconName="action:new_event" alternativeText="New Event" size="xx-small"  class="eventWithBlueBackground"/>
+                            </span> 
+                        </aura:if>    
+                        
+                        <aura:if isTrue="{!and(v.communityName == 'student', v.showRequestEvent)}">
+                            <lightning:button label="Request Event"  variant="Brand" class="btn btn-primary" onclick="{!c.handleRequestEvent}"/>
+                        </aura:if>
+                    </div><br/>
+                    
+                </aura:if>
+               
+                <aura:if isTrue="{!v.evtList.length > 0}">
+                    <div class="containerTable table-responsive">
+                        <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                            <thead class="thead-light">
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col" class="">DLS Class #</th>    
+                                    <th scope="col" class="smallWidthTh">Date</th>    
+                                    <th scope="col" class="smallWidthTh">Start Time</th>    
+                                    <th scope="col" class="smallWidthTh">End Time</th>    
+                                    <th scope="col" class="mediumWidthTh">TimeZone</th>    
+                                    <th scope="col" class="smallWidthTh">Duration</th>    
+                                    <th scope="col" class="smallWidthTh">Room</th>  
+                                    <th scope="col" class="mediumWidthTh">Action</th>   
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.evtList}" var="row"  indexVar="index">
+                                    <tr class="slds-hint-parent">
+                                        <td class="wrap" data-label="DLS Class#"><a name="{!row.projectId}" onclick="{!c.goToProjectDetailPage}">{!(v.communityName == 'student' ? row.project+'/'+row.instructorName : row.project+'/'+row.studentNames)}</a></td>
+                                        <td class="wrap" data-label="Date"><ui:outputDate format="MM/DD/YYYY" value="{!row.eventDate}"/></td>
+                                        <td class="wrap" data-label="Start Time">{!row.startTime}</td>
+                                        <td class="wrap" data-label="End Time">{!row.endTime}</td>
+                                        <td class="wrap" data-label="TimeZone" style="">{!row.timezone}</td>
+                                        <td class="wrap" data-label="Duration"><lightning:formattedNumber value="{!row.duration}" minimumFractionDigits="2"/></td>
+                                        <td class="wrap" data-label="Room" >{!row.room}</td>
+                                        <td class="wrap" data-label="Action">
+                                            <div class="slds-grid slds-wrap">
+                                                <aura:if isTrue="{!row.status == 'Draft'}">
+                                                    <p style="color: #696969;font-weight: bold;" class="slds-p-horizontal_xx-small slds-p-top_xx-small slds-col">{!row.approvalStatus}</p>
+                                                </aura:if>
+                                                <aura:if isTrue="{!row.showRescheduleBtn}">
+                                                    <div class="slds-p-horizontal_xx-small slds-col">
+                                                        <a  name="{!index}" onclick="{!c.rescheduleClick}" title="Reschedule">
+                                                            <lightning:icon size="medium" iconName="standard:recent" alternativeText="Reschedule"/>                                                    
+                                                        </a>
+                                                    </div>                                                	
+                                                </aura:if>
+                                                <aura:if isTrue="{! and (row.eventType != 'Preparation time', row.showLessonPlan)}">
+                                                    <div class="slds-p-horizontal_xx-small slds-col">
+                                                        <a  name="{!index}" onclick="{!c.showLessonPlan}" title="Lesson Plan">
+                                                            <lightning:icon size="medium" iconName="standard:work_plan" class="eventWithBlueBackground" alternativeText="Lesson Plan"/>                                                    
+                                                        </a>
+                                                    </div>                                                	
+                                                </aura:if>
+                                                
+                                                    <aura:if isTrue="{!row.meetingUrl}">
+                                                        <div class="slds-p-horizontal_xx-small slds-col" style="{!row.showRescheduleBtn ? 'margin-left: -2rem;' : ''}">
+                                                            <a  name="{!index}" onclick="{!c.handleJoinMeetClick}" title="Join Meeting">
+                                                                <img  style="width:32px;height:32px" src="{!$Resource.zoom_logo}"/>                                                                                                       
+                                                            </a>
+                                                        </div>
+                                                        <aura:set attribute="else">                                                            
+                                                                <aura:if isTrue="{!and(row.showMeetingIcons , v.communityName == 'instructor' ,not(and(or(row.room == 'Zoom - Online', row.isHybridRoom), row.eventType == 'Preparation time')))}">
+                                                                    <div class="slds-p-horizontal_xx-small slds-p-top_xx-small slds-col">
+                                                                        <a  name="{!index}" onclick="{!c.handleMoveOnlineClick}" style="font-size: smaller !important;" title="{! or(row.room == 'Zoom - Online', row.isHybridRoom) ? 'Create Zoom Meeting' : 'Move Online'}">
+                                                                            <!--img  style="width:32px;height:32px" src="{! row.room == 'Zoom - Online' ? $Resource.schedulebutton : $Resource.zoom_logo}"/-->
+                                                                            {! or(row.room == 'Zoom - Online', row.isHybridRoom) ? 'Create Zoom Meeting' : 'Move Online'}
+                                                                        </a>
+                                                                    </div>
+                                                                </aura:if>                                                            
+                                                        </aura:set>
+                                                    </aura:if>                                                
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                    </div>
+                    <aura:set attribute="else">
+                        <center><p>No records to display</p></center>
+                    </aura:set>
+                </aura:if>
+                
+                <aura:if isTrue="{!or(v.communityName == 'instructor',v.communityName == 'student')}"><br/><br/>
+                    <div  align="left" style="margin-top: -2.5rem;">
+                        <!-- W-007656 - Add a link on the Upcoming events to take them to the My Schedules page "View all past and future events"-->
+                        <a onclick="{!c.goToMySchedulePage}" style="cursor:pointer;margin-left:0.5rem;">
+                            View all past and future events
+                        </a>
+                    </div>
+                </aura:if>
+                
+            </div>
+        </div>
+    </div>
+    
+    <aura:if isTrue="{!v.showRescheduleModel}">
+        <c:EventRescheduleCmp showRescheduleModel="{!v.showRescheduleModel}" existingEventRec="{!v.selectedRecord}" communityName="{!v.communityName}" projectRefWithNewReqEvent="{!v.projectRefWithNewReqEvent}"/>
+    </aura:if>
+    
+    <!-- <aura:if isTrue="{!v.showApprovalModel}">
+        <c:EventApprovalCmp showApprovalModel="{!v.showApprovalModel}" eventList="{!v.pendingApprovalEvtList}" communityName="{!v.communityName}" isMultiApproval="true"/>
+    </aura:if> -->
+
+
+    <aura:if isTrue="{!v.showApprovalModel}">                                
+        <section role="dialog" class="{!v.displayDevice != 'Mobile' ? 'slds-popover popOverCls app-modal' : 'slds-popover popOverCls app-modal-mobile'}" style="{!v.showConflict == true ? 'z-index: 9000;' : 'z-index: 9999;'}">            
+            <header class="slds-popover__header slds-p-vertical_medium" style="height: auto;">
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_10-of-12">
+                        <h2 class="slds-text-heading_medium" style="text-align: center;">Pending Approval Events</h2>
+                    </div>
+                    <div class="slds-col slds-size_2-of-12">
+                        <span><lightning:icon class="popOverCloseIcon" onclick="{!c.closeApprovalModal}" iconName="utility:close" size="x-small" alternativeText="Close" title="Close"/></span>
+                    </div>
+                </div>
+            </header>
+            <div class="popOverBodyCls">
+                <aura:iteration items="{!v.pendingApprovalEvtList }" var="pendingApproval" indexVar="index">
+                     <c:CalendarInfoWindowCmp 
+                                aura:id="calenderInfoCmp"
+                                selectedRecord="{!pendingApproval.selectedEvent}"
+                                parentEventInfo="{!pendingApproval.parentEvent}"
+                                showParentInfo="true"
+                                bodyCls="slds-popover__body"
+                                footerCls="slds-card__footer footerCls"
+                                handleApproveClick="{!c.newEventApproveClk}"
+                                handleRejectClick="{!c.newEventRejectionClk}"
+                                removeApproveRejectClick="{!c.removeApproveRejectClick}"
+                                viewRejectionReasonClk="{!c.viewRejectionReasonClk}"
+                                communityName="{!v.communityName}"
+                                parent="{!this}"
+                                showConflict="{!v.showConflict}"
+                                stuInsConflictList="{!v.stuInsConflictList}"
+                                roomConflictList="{!v.roomConflictList}"
+                                index="{!index}"
+                            />
+                </aura:iteration>
+            </div>    
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+    
+    <!-- Instructor Conflict check  modelWidth="53rem"-->
+    <aura:if isTrue="{!v.showConflict}">
+        <c:CommunityEventConflictCmp stuInsConflictList="{!v.stuInsConflictList}" roomConflictList="{!v.roomConflictList}" showConflict="{!v.showConflict}"  parent="{!this}"/>
+    </aura:if>        
+    
+    <c:sldsModal aura:id="msgModal" displayCloseImage="true" showFooter="false" closeAction="{!c.closeModal}" modelWidth="80%">
+        <aura:set attribute="header">
+            <center><h5 class="card-title">{!v.modal.header}</h5></center>
+        </aura:set>
+        <aura:set attribute="content">
+            <center>{!v.modal.message}</center>
+        </aura:set>        
+    </c:sldsModal>
+</aura:component>

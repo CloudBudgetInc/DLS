@@ -1,0 +1,13 @@
+<aura:event type="COMPONENT" description="Event template">
+    <aura:attribute name="typeOfAction" type="String" access="public"/>
+    <aura:attribute name="updatedTCDs" type="List" access="public" default="[]"/>
+    <aura:attribute name="udpatedWeekInfo" type="Object" access="public"/>
+    <aura:attribute name="index1" type="Integer" access="public"/>
+    <aura:attribute name="index2" type="Integer" access="public"/>
+    <aura:attribute name="fieldName" type="String" access="public"/>
+    <aura:attribute name="notesInfo" type="Object" access="public"/>
+    <aura:attribute name="oldValue" type="String" access="public"/>
+    <aura:attribute name="errorMsg" type="String" access="public"/>
+    <aura:attribute name="recordId" type="String" access="public" description="to use in library search"/>
+    <aura:attribute name="costRateInfo" type="Object" access="public" description="used in cost rate creation"/>
+</aura:event>

@@ -1,0 +1,219 @@
+<apex:page controller="TimeLog_Locking_Date_Ctrl">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+    <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <style>
+            /**
+             * Hide when Angular is not yet loaded and initialized
+             */
+            [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+              display: none !important;
+            }
+            .errorimp{
+                border: 1px solid red  !important;
+            }
+            .slds-spinner--small  {
+                z-index: 999;
+                    //width: 100%;
+                    //height: 100%;
+                    top: 0;
+                    left: 0;
+                   // display: none;
+                    position:fixed;             
+                    background-color: #cccccc;
+                    color: #aaaaaa;
+                    opacity: .4;
+                    filter: alpha(opacity = 50);
+                 
+            }
+            .img{
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                //height: 10%;
+                -webkit-transform: translate(-50%,-50%);
+                -ms-transform: translate(-50%,-50%);
+                transform: translate(-50%,-50%);
+            }
+        </style>
+        <div class="slds ng-cloak" ng-app="myApp" ng-controller="timeLogLockControl">
+            <div class="slds-spinner--small" style="display:none;width:100%;height:100%;" id="spinner">
+                <img alt="Loading..." src="{!URLFOR($Resource.SLDS091,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+            </div>
+            <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                <div class="slds-grid">
+                    
+                    <div class="slds-media__body">
+                        <div class="slds-grid">
+                            <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="TimeLog Lock Form">Lock Time Log</h1>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-no-flex slds-align-bottom">
+                        <div ng-show="OnlyForTimeSheet">
+                             <input type="submit" ng-click="UpdateTimeLogLockDate();" value="Submit" class="slds-button slds-button--neutral"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-card" ng-show="OnlyForTimeSheet">
+                <div class="slds-card__header slds-grid">
+                   
+                </div>
+                <div class="slds-card__body">
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-size--1-of-2">
+                            <div class="slds-form-element slds-col--padded">
+                                <label class="slds-form-element__label" for="text-input-01">Please select date to Lock Time Log Entry. User cannot enter or alter Time Log older than selected date: </label>
+                                
+                            </div>
+                        </div>
+                        <div class="slds-size--1-of-2">
+                            <div class="slds-form-element slds-col--padded">
+                                <div class="slds-form-element__control">
+                                    <datepicker date-format="yyyy-MM-dd" style="float:none;">
+                                        <input name="lockDateField" ng-model="lockDate" type="text" class="slds-input" ng-class ="(isLockDateEmpty)?'errorimp':false" required=""/>
+                                    </datepicker>
+                                    <div ng-show="isStartDateEmpty">
+                                        <span style="color:red">Please select a date.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slds-card" ng-show="!OnlyForTimeSheet">
+                <div class="slds-card__header slds-grid">
+                   
+                </div>
+                <div class="slds-card__body">
+                    <center><p>Insufficient Privilege</p></center>
+                </div>
+            </div>
+            
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalState}}">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__header" style="background-color: rgb(22, 50, 92);color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                    </div>
+                    <div class="slds-modal__content">
+                        <div>
+                            <p>{{messageVal}}</p>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Ok" ng-click="cancelMsg()"></input> 
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropState}}"></div>
+        </div>
+    </html>
+    <script>
+        var app = angular.module('myApp', ['720kb.datepicker']);
+        app.controller('timeLogLockControl', function($scope){
+            $scope.lockDate = '';
+            $scope.messageVal = '';
+            $scope.isLockDateEmpty = false;
+            $scope.OnlyForTimeSheet = false;
+            var tempDate = '';
+            var canEdit = false;
+            document.getElementById("spinner").style.display = 'block';
+            var profId = '{!$Profile.Id}';
+            //console.log('profId :::',profId );
+            var AdminProf = '{!JSENCODE($Label.TimeLog_Admin_ProfileIds)}';
+            var AdminProfArray = AdminProf.split(',');
+                //console.log('AdminProfArray :::',AdminProfArray );
+                //console.log('AdminProf :::',AdminProf );
+            for (var i=0;i<AdminProfArray.length;i++) {
+                //if(profId == AdminProfArray[i].trim()) {
+                //console.log('Trim::',AdminProfArray[i].trim());
+                //console.log('Result::',profId.indexOf(AdminProfArray[i].trim()));
+                
+                if(profId == AdminProfArray[i].trim() || profId.indexOf(AdminProfArray[i].trim()) >= 0) {
+                    canEdit = true;
+                }
+            }
+            if (canEdit) {
+                $scope.OnlyForTimeSheet = true;
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.TimeLog_Locking_Date_Ctrl.queryTimeLogLockVal}',
+                    function(response, ev) {
+                        if(ev.status) {                          
+                            console.log('Success',response);
+                            $scope.lockDate = response;
+                            tempDate = response;
+                            $scope.$apply();
+                            document.getElementById("spinner").style.display = 'none';
+                        } else {
+                            console.log(':::::::error:::::::',ev);
+                            document.getElementById("spinner").style.display = 'none';
+                        }
+                      },
+                      {escape: true}
+                );
+                
+                console.log(new Date());
+                //console.log('Profile Name','{!$Profile.Name}');
+               
+            } else {
+                
+                $scope.OnlyForTimeSheet = false;
+                document.getElementById("spinner").style.display = 'none';
+            }
+            
+            $scope.cancelMsg = function() {
+                $scope.modalState = '';
+                $scope.modalBackdropState = '';
+            }
+            
+            $scope.UpdateTimeLogLockDate = function() {
+                    document.getElementById("spinner").style.display = 'block';
+                    if (!$scope.lockDate) {
+                        $scope.isLockDateEmpty = true;
+                    } else {
+                        var DatVal = new Date($scope.lockDate);
+                        var todayDat = new Date();
+                        console.log('DatVal::',DatVal);
+                        console.log('todayDat::',todayDat);
+                        if(DatVal < todayDat) {
+                            Visualforce.remoting.Manager.invokeAction(
+                            '{!$RemoteAction.TimeLog_Locking_Date_Ctrl.updateTimeLogLockVal}',
+                            $scope.lockDate,
+                            function(response, ev) {
+                                if(ev.status) {                          
+                                    console.log('Success');
+                                    $scope.lockDate = response;
+                                    $scope.messageVal = 'Updated Successfully';
+                                    document.getElementById("spinner").style.display = 'none'; 
+                                    $scope.modalState = 'slds-fade-in-open';
+                                    $scope.modalBackdropState = 'slds-modal-backdrop--open'; 
+                                    $scope.$apply();  
+                                } else {
+                                    console.log(':::::::error:::::::',ev);
+                                    $scope.messageVal = 'Error on Updating TimeLog Locking Date. Please contact your Admin';
+                                    document.getElementById("spinner").style.display = 'none';
+                                    $scope.modalState = 'slds-fade-in-open';
+                                    $scope.modalBackdropState = 'slds-modal-backdrop--open';
+                                    $scope.$apply();
+                                }
+                                  
+                            },
+                            {escape: true}
+                            );
+                        } else {
+                            $scope.lockDate = tempDate;
+                            $scope.messageVal = 'Please select Date before Today Date';
+                            document.getElementById("spinner").style.display = 'none';
+                            $scope.modalState = 'slds-fade-in-open';
+                            $scope.modalBackdropState = 'slds-modal-backdrop--open';
+                        }
+                    }
+                }
+        });
+    </script>
+</apex:page>

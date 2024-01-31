@@ -1,0 +1,77 @@
+<aura:component >
+    <aura:attribute name="gridData" type="Map" access="Public" />
+    <aura:attribute name="gridColumns" type="List" access="Public" />
+    <aura:attribute name="arieaLevel" type="Integer" default="0" access="Public" />
+    <aura:attribute name="activityChecked" type="Boolean"  default="false" access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="expanded" type="Boolean" default="true" access="Public" />
+    <aura:attribute name="isExpandedChild" type="Boolean" default="false" access="Public" />
+    <aura:registerEvent name="dtActionClick" type="ldt:clickedDtAction"></aura:registerEvent>
+    <tr aria-level="{!v.arieaLevel + 1 }" aria-posinset="{!v.arieaLevel + 1}" aria-selected="false" aria-setsize="4" class="slds-hint-parent" tabindex="0">
+        
+        <td class="slds-tree__item" data-label="Account Name" scope="row" >
+            <aura:if isTrue="{!v.gridData.childrens}">
+                <lightning:buttonicon  iconName="{!v.expanded ? 'utility:chevrondown' : 'utility:chevronright'}" size="xx-small" onclick="{!c.toogle}"/>&nbsp;&nbsp;
+            </aura:if>
+            <aura:if isTrue="{!v.isExpandedChild}">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </aura:if>
+            <div  style="width:8rem;" title="{!v.gridData.productName}"><a onclick="{!c.navigateToRecord}" tabindex="-1">{!v.gridData.productName}</a></div>
+        </td>
+        <td data-label="{!v.gridData.quantityPlanned}" role="gridcell">
+            <div class="slds-truncate"  style="{!v.activityChecked == true ?'text-align: center;':''}" title="{!v.gridData.quantityPlanned}">{!v.gridData.quantityPlanned}</div>
+        </td>
+        <aura:if isTrue="{!!v.activityChecked}" >
+            <td data-label="{!v.gridData.clin}" role="gridcell" >
+                <div class="slds-truncate" title="{!v.gridData.clin}"><a onclick="{!c.navigateToCLINRecord}" tabindex="-1">{!v.gridData.clin}</a></div>
+            </td>
+            <td data-label="{!v.gridData.productPrice}" role="gridcell">
+                <div class="slds-truncate" title="{!v.gridData.productPrice}">{!(v.gridData.Id ? '$' + (v.gridData.productPrice ? v.gridData.productPrice : 0) : '')}</div>
+            </td>
+            <td data-label="{!v.gridData.extendedPrice}" role="gridcell">
+                <!--div class="slds-truncate" title="{!v.gridData.extendedPrice}">${!v.gridData.extendedPrice ? v.gridData.extendedPrice : 0}</div-->
+                <ui:outputCurrency value="{!v.gridData.extendedPrice ? v.gridData.extendedPrice : 0.00}"/>
+            </td>
+            <td data-label="{!v.gridData.description}" role="gridcell">
+                <div class="slds-truncate" title="{!v.gridData.description}">{!v.gridData.description}</div>
+            </td>
+            <aura:set attribute="else" >
+                <td data-label="{!v.gridData.quantityPaid}" role="gridcell">
+                   <div  style="text-align: center;" class="slds-truncate" title="{!v.gridData.quantityPaid}">{!v.gridData.quantityPaid}</div>    
+            </td>
+            <td data-label="{!v.gridData.quantityScheduled}" role="gridcell">
+                <div  style="text-align: center;" class="slds-truncate" title="{!v.gridData.quantityScheduled}">{!v.gridData.quantityScheduled}</div>
+            </td>
+            <td data-label="{!v.gridData.quantityUsed}" role="gridcell">
+                <div  style="text-align: center;"  class="slds-truncate" title="{!v.gridData.quantityUsed}">{!v.gridData.quantityUsed}</div>
+            </td>
+            <td data-label="{!v.gridData.quantityPlannedRemaining}" role="gridcell">
+                <div  style="text-align: center;" class="slds-truncate" title="{!v.gridData.quantityPlannedRemaining}">{!v.gridData.quantityPlannedRemaining}</div>
+            </td>
+                <td data-label="{!v.gridData.quantityPaidRemaining}" role="gridcell">
+                <div class="slds-truncate  bodyWrap"  style="font-weight:bold;text-align:center;" title="{!v.gridData.quantityPaidRemaining}">{!v.gridData.quantityPaidRemaining}</div>
+            </td>
+            <td data-label="{!v.gridData.quantityScheduledDeficit}" role="gridcell">
+             <center><div class="slds-truncate boldClss" style = "{! 'color:' +v.gridData.deficitColor}" title="{!v.gridData.quantityScheduledDeficit}">{!v.gridData.quantityScheduledDeficit}</div></center>   
+            </td>
+            </aura:set>
+        </aura:if>
+        <td data-label="Action" role="gridcell" style="width:15rem;text-align:center;">
+            <aura:if isTrue="{!v.gridData.Id}">
+                <a style="padding:1px;" onclick="{!c.fundingRecord}" >
+                    <lightning:icon  iconName="action:update" alternativeText="Approved" size="x-small" />
+                </a>
+                <a style="padding:1px;" onclick="{!c.editRecord}">
+                    <lightning:icon  iconName="action:edit" alternativeText="Approved" size="x-small" />
+                </a>
+                <a style="padding:1px;" onclick="{!c.deleteRecord}">
+                    <lightning:icon  iconName="action:delete" alternativeText="Approved"  size="x-small"  />
+                </a>
+            </aura:if>
+        </td>
+    </tr>
+    <aura:if isTrue="{!v.expanded}">
+        <aura:iteration items="{!v.gridData.childrens}" var="gridData">
+            <c:treeGridRow gridData="{!gridData}" arieaLevel="3" activityChecked="{!v.activityChecked}" isExpandedChild='true'/>
+        </aura:iteration>
+    </aura:if>
+</aura:component>

@@ -1,0 +1,56 @@
+.THIS .imgAction2{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.5rem!important;
+    max-height: 2rem!important;
+    background-color: steelblue !important;
+}
+.THIS .imgAction1{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.5rem!important;
+    max-height: 2rem!important;
+    background-color: #f97a7a !important;
+}
+
+.THIS .slds-table thead th .slds-truncate {
+    padding: 4px !important;
+    white-space: normal !important;
+    overflow: visible;
+}
+
+.THIS .slds-table thead th  {
+    width: 7rem;
+    padding-top: 8px;
+    padding-bottom: 12px;
+    white-space: pre-wrap;
+}
+
+.THIS .slds-card__footer{
+    padding:;
+    margin-top : ;
+}
+.THIS .hr{
+    margin : ;
+}
+.THIS .link_dis{
+    pointer-events: none;
+    cursor: default;
+    text-decoration: none;
+    color: black;
+}
+
+.THIS .slds-p-around_small{
+    padding: 0.45rem !IMPORTANT;
+}
+
+.THIS .rowColour{
+    background-color: #f5f504 !important;
+}
+.THIS .buttonClass{
+    margin-left: 81.9rem !important;
+    margin-bottom: 1rem !important;
+}
+.THIS .butt{
+margin-right: 1rem !important ;    
+}

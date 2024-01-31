@@ -1,0 +1,15 @@
+<aura:component implements="flexipage:availableForAllPageTypes,forceCommunity:availableForAllPageTypes" access="global" >
+	<aura:attribute name="folderId" type="String" />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <span class="backCls">
+        <div style="float: left;" class="slds-p-vertical_medium">
+            <div class="slds-grid">
+                <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.back}" ></i></span>
+                <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+            </div>
+        </div>
+    </span>
+    <aura:if isTrue="{!v.folderId}">
+    	<box_lightning:Box_File_Embed sharedLinkId="{!v.folderId}"></box_lightning:Box_File_Embed>
+    </aura:if>
+</aura:component>

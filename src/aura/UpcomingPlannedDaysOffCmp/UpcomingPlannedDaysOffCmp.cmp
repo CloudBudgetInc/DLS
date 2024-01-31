@@ -1,0 +1,129 @@
+<aura:component controller="EventListViewController" implements="forceCommunity:availableForAllPageTypes">
+    <aura:attribute name="plannedOffRows" type="List" default="[]"/>
+    <aura:attribute name="plannedOffheader" type="List" default="[]"/>
+    <aura:attribute name="tableconfig" type="Map"  default="{}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="projectValues" type="List" access="PUBLIC"/>
+    <aura:attribute name="showDeleteModel" type="Boolean" default="false"/>
+    <aura:attribute name="showAddEditModel" type="Boolean" default="false"/>
+    <aura:attribute name="typeValues" type="List" default="['Instructor','Student']"/>
+    <aura:attribute name="contactRec" type="Map" default="{}"/>
+    <aura:attribute name="requestOffRT" type="String" default="" description="request off record type id"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    <aura:attribute name="visibleError" type="String" default="slds-hide"/>
+    <aura:attribute name="showWarningMsg" type="String" default=""/>
+    <aura:attribute name="typeOfAction" type="String" default=""/>
+    <aura:attribute name="modalHeaderName" type="String" default=""/>
+    <aura:attribute name="plannedDaysMap" type="Map" default="{}"/>
+    <aura:attribute name="plannedOffDays" type="List" default="[]"/>
+    <aura:attribute name="plannedOffdayRecord" type="Map" default="{}"/>
+    <aura:attribute name="multiDaysOff" type="Boolean" default="true"/>
+    <aura:attribute name="showSuccessModel" type="Boolean" default=""/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="allowParentPlanToUpdate" type="Boolean" default="false"/>
+    <aura:attribute name="currentPlannedDay" type="String"/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" access="PUBLIC"/>
+    
+    <ltng:require scripts="{!join(',',
+                           $Resource.MomentjsResource,
+                           $Resource.MomentTimezone_Data)}"/>
+    
+    <div class="card-deck">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Upcoming Planned Days Off</h5>
+                <aura:if isTrue="{!v.plannedOffRows.length > 0}">
+                    <div class="containerTable table-responsive">
+                        <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                            <thead class="thead-light">
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col" class="wrap">Date</th>    
+                                    <th scope="col" class="wrap">Description</th>    
+                                    <th scope="col" class="wrap">Type</th>    
+                                    <th scope="col" class="wrap">Status</th>    
+                                    <th scope="col" class="wrap">Action</th>    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.plannedOffRows}" var="row" indexVar="index">
+                                    <tr class="slds-hint-parent">
+                                        <td class="wrap" data-label="Date"><ui:outputDate format="MM/DD/YYYY" value="{!row.dateStr}"/></td>
+                                        <td class="wrap" data-label="Description">{!row.description}</td>
+                                        <td class="wrap" data-label="Type">{!row.type}</td>
+                                        <td class="wrap" data-label="Status" style="">{!row.status}</td>
+                                        <td class="wrap" data-label="Action">
+                                            <aura:if isTrue="{!row.showEditDelIcon}">
+                                                <span>
+                                                    <i style="font-size: 1rem;" data-name="{!index}" onclick="{!c.onEditClick}"  class="far fa-edit"></i>&nbsp;
+                                                    <i style="font-size: 1rem;" data-name="{!index}" onclick="{!c.onDeleteClick}"  class="far fa-trash-alt"></i>
+                                                </span>
+                                            </aura:if>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                    </div>
+                    <aura:set attribute="else">
+                        <center><p>No records to display</p></center>
+                    </aura:set>
+                </aura:if>
+            </div>
+        </div>
+    </div>
+    
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    
+    <!-- Planned day off edit model -->
+    <aura:if isTrue="{!v.showAddEditModel}">
+        <c:sldsModal aura:id="editOffModel" displayCloseImage="false" header="{!v.modalHeaderName}"  modelWidth="{!v.displayDevice == 'Pc'  ? '80rem' : ''}"> 
+            <aura:set attribute="content">
+                <c:ToastCmp visibleError = "{!v.visibleError}" showErrorMsg = "{!v.showWarningMsg}"/>
+                <aura:iteration items="{!v.plannedOffDays}" var="day">
+                    <c:PlannedDaysOffEditCmp aura:id="plannedDaysEdit" projectValues="{!v.projectValues}" plannedOffdayRecord = "{!day}"  multiDaysOff="{!v.multiDaysOff}" displayDevice="{!v.displayDevice}"/>
+                </aura:iteration>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand"  class="btn btn-primary" label="Save" onclick="{!c.saveEditBtnClick}"/>
+                <lightning:button variant="brand"  class="btn btn-secondary" label="Cancel" onclick="{!c.cancelEditClick}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Planned Days Off Delete Modal -->
+    <aura:if isTrue="{!v.showDeleteModel}">
+        <c:sldsModal aura:id="deletePDO" displayCloseImage="false" header="Delete Confirmation">
+            <aura:set attribute="content">
+                <div>
+                    <center><h1 style=" font-size:0.875rem;font-weight:50!important;">Are you sure want to delete?</h1> </center>                 
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Yes" class="btn btn-primary" onclick="{!c.deleteYesClick}"  />
+                <lightning:button label="No" class="btn btn-secondary"  onclick="{!c.deleteNoClick}" />
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    
+     <!--Success model -->
+    <aura:if isTrue="{!v.showSuccessModel}">
+        <c:sldsModal aura:id="successModel" displayCloseImage="false" header="Success">
+            <aura:set attribute="content">
+                <div>
+                    <center><p>{!v.successTitle}</p></center>                 
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeClickOnSuccess}" />
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+</aura:component>

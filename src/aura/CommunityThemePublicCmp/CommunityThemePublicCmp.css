@@ -1,0 +1,138 @@
+.THIS .cCenterPanel {
+    max-width:100% !important;       
+    margin:0
+}
+.THIS .cSearchPublisher {
+    width: 75%;
+    height: 3rem;
+    overflow: visible;
+    z-index: 10;
+}
+.THIS .cNavBarCon {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+.THIS .cHeaderLine {
+    padding: 2rem 1rem 2rem 1rem;
+}
+.THIS .cHeaderOverlay {
+    height: inherit;
+    background: rgba(0, 0, 0, 0.2);
+}
+.THIS .cNotifications {
+    width: 5%;
+    text-align: right;
+    line-height: 3rem;
+    position: relative;
+}
+.THIS .cProfileCon {
+    width: 15%;
+    line-height: 3rem;
+    height: 3rem;
+}
+
+.THIS .forceCommunitySearchBox .search-button {
+    width: 128px !important;
+    height: 70% !important;
+    margin-top: 23px !important;
+}
+.THIS .custom-header .searchWebCls .search-bar input {
+    width: 570px !important;
+}
+.THIS ul{
+    margin-bottom:0rem !important;
+}
+.THIS .slds-icon {
+    color:#fff !important;
+}
+.THIS .selfServiceUserProfileMenu .uiMenuList.visible .home.uiMenuItem,
+.THIS .selfServiceUserProfileMenu .uiMenuList.visible .myAccount.uiMenuItem {
+    display:none !important;
+}
+.THIS .selfServiceUserProfileMenu .uiMenuList.visible .home.uiMenuItem,
+.THIS .selfServiceUserProfileMenu .uiMenuList.visible .profile.uiMenuItem {
+    display:none !important;
+}
+.THIS .forceCommunityGlobalNavigation {
+    background-color:transparent !important;
+    border-bottom: 1px solid var(--gray-light) !important;
+    color:#055E89 !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal>.slds-list__item>.comm-navigation__item>a.slds-is-active {
+    background-color:#055E89 !important;
+    color:white !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal>.slds-list__item>.comm-navigation__item>a:hover{
+    background-color:#055E89 !important;
+    color:white !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal>.slds-list__item>.comm-navigation__item>button.slds-is-active:not([data-type="home"]) {
+    background-color:#055E89 !important;
+    color:white !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal>.slds-list__item>.comm-navigation__item>button:hover{
+    background-color:#055E89 !important;
+    color:white !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list__item a:hover {
+    background-color:#055E89 !important;
+    color:white !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list__item a.slds-is-active{
+    background-color:#055E89 !important;
+    color:white !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal .slds-is-nested a {
+    background-color:white !important;
+    color:#055E89 !important;
+    font-weight: bold !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+} 
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal .slds-is-nested button {
+    background-color:white !important;
+    color:#055E89 !important;
+    font-weight:bold !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal .slds-is-nested a:hover {
+    background-color:#055E89 !important;
+    color:white !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list__item a{
+	font-weight:bold !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list__item button{
+	font-weight:bold !important;      
+}
+@media(max-width:48em){
+    .THIS .forceCommunityGlobalNavigation .slds-list_vertical {
+        background-color: white;
+    }
+    .THIS .forceCommunityGlobalNavigation .slds-list__item button:hover {
+        background-color:#055E89  !important;
+        color:white !important;
+    }
+    .THIS .forceCommunityGlobalNavigation .slds-list__item button.slds-is-active{
+        background-color:#055E89  !important;
+        color:white !important;
+    }
+    .THIS .forceCommunityGlobalNavigation  .slds-list__item .slds-is-nested a {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;         
+    }
+    .THIS .forceCommunityGlobalNavigation .slds-list__item button.slds-is-active .slds-icon_container svg {
+        fill: white !important;
+    }
+    .THIS .forceCommunityGlobalNavigation .slds-list__item button.slds-is-open + ul {
+        padding-left: 1rem !important;
+    }
+  
+}
+.THIS .forceCommunityGlobalNavigation button .slds-icon{
+	color:#055E89  !important;
+}
+.THIS .forceCommunityGlobalNavigation button:hover .slds-icon{
+	color:white  !important;
+}
+.THIS .forceCommunityGlobalNavigation .slds-list_horizontal>.slds-list__item>.comm-navigation__item>button.slds-is-active .slds-icon{
+   color:white  !important;
+}

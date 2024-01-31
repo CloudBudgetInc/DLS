@@ -1,0 +1,229 @@
+<!--
+  @description       : 
+  @author            : Vasanthram
+  @group             : 
+  @last modified on  : 09-26-2023
+  @last modified by  : Vasanthram
+-->
+<aura:component>
+    <aura:attribute name="dayRecord" type="Map" default="{}" access="public"/>
+    <aura:attribute name="wholeTimeList" type="List" default="[]"/>
+    <aura:attribute name="startTimeList" type="List" default="[]"/>
+    <aura:attribute name="endTimeList" type="List" default="[]"/>
+    <aura:attribute name="lineIndex" type="Integer" default=""/>
+    <aura:attribute name="dayIndex" type="Integer" default=""/>
+    <aura:attribute name="type" type="String" default=""/>
+    <aura:attribute name="timeType" type="String" default=""/>
+    <aura:attribute name="scheduleTimezone" type="String" default=""/>
+    
+    <aura:attribute name="startTime" type="String" default=""/>
+    <aura:attribute name="endTime" type="String" default=""/>
+    <aura:attribute name="inputType" type="String" default=""/>
+    <aura:attribute name="showCancellationModal" type="Boolean" default="false"/>
+    <aura:attribute name="changedField" type="String" default=""/>
+    <aura:attribute name="showEditModal" type="Boolean" default="false"/>
+    <aura:attribute name="editRecord" type="Map" default="{}"/>
+    <aura:attribute name="notesInfo" type="Map" default="{}"/>
+    <aura:attribute name="showRecallConfirmationModal" type="Boolean" default="false"/>
+    <aura:attribute name="buttonType" type="String" default=""/>
+    <aura:attribute name="recallReason" type="String" default=""/>
+    <aura:attribute name="startTimeLabel" type="String" default="Start Time"/>
+    <aura:attribute name="endTimeLabel" type="String" default="End Time"/>
+    <aura:attribute name="amStartTimeList" type="List" default="[]"/>
+    <aura:attribute name="amEndTimeList" type="List" default="[]"/>
+    <aura:attribute name="pmStartTimeList" type="List" default="[]"/>
+    <aura:attribute name="pmEndTimeList" type="List" default="[]"/>
+    <aura:attribute name="oldValue" type="String" default=""/>
+    <aura:attribute name="endTimeValidationModel" type="Boolean" default="false"/>
+    <aura:attribute name="endTimeValidationMsg" type="String" default=""/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <aura:registerEvent name="UpdatedContent" type="c:childClickEvent"/>
+    <aura:method name="prepHrsInputValidation" action="{!c.inputValidation}" 
+        description="Preparation Hours Validation"> 
+        <!-- <aura:attribute name="param1" type="String" default=""/>  -->
+        <aura:attribute name="prepDayRecord" type="String" default="" /> 
+    </aura:method>
+    <aura:if isTrue="{!v.inputType == 'inputText'}">
+        <span onclick="{!c.checkHrsEditedOrNot}" style="position: relative;">
+            <!--lightning:input type="number" formatter="decimal" step="0.01" name="" label="" value="{!v.dayRecord.dayHours}" disabled="{!v.dayRecord.isHrsDisabled}" onchange="{!c.hoursValidation}" 
+                                                                  class="{!(v.dayRecord.color == 'Green'? 'inputClass approvedClass' : (v.dayRecord.color == 'Red' ? 'inputClass rejectedClass' : (v.dayRecord.color == 'Yellow' ? 'inputClass changedColor' : 'inputClass')))}"/-->
+            
+            <ui:inputNumber label="" aura:id="hrsInput" value="{!v.dayRecord.dayHours}" format="#0.00" disabled="{!v.dayRecord.isHrsDisabled}" updateOn="keyup" keyup="{!c.hoursValidation}" 
+                            class="{!(v.dayRecord.status == 'Rejected' ? 'inputClass slds-input supervisorRejectCls' : (v.dayRecord.color == 'Green'? 'inputClass slds-input approvedClass' : (v.dayRecord.color == 'Red' ? 'inputClass slds-input rejectedClass' : (v.dayRecord.color == 'Yellow' ? 'inputClass slds-input changedColor' : 'inputClass slds-input'))))}"/>
+            
+            <aura:if isTrue="{!v.dayRecord.showEditIcon}">
+                <i class="pointerCursorCls far fa-edit editIconcls" onclick="{!c.openEditModal}"></i>
+            </aura:if>
+            <aura:if isTrue="{!v.dayRecord.showReverseIcon}">
+                <i class="pointerCursorCls far fa-undo editIconClass" onclick="{!c.openRecallConfirmation}"></i>
+            </aura:if>
+        </span>
+    </aura:if>
+    <aura:if isTrue="{!v.inputType == 'pickList'}">
+        <aura:if isTrue="{!and(v.dayRecord.taskName != 'Fringe-PTO', v.dayRecord.taskName != 'Fringe-Holiday')}">
+            <!--div class="slds-grid slds-gutters_xxx-small">
+                <div class="slds-col"-->
+            <lightning:select name="startTime" aura:id="startTime" value="{!v.startTime}" onchange="{!c.populateEndTimeList}" class="selectClass selectspacing" disabled="{!v.dayRecord.isHrsDisabled}">
+                <option value="">--None--</option>
+                <aura:iteration items="{!v.startTimeList}" var="time">
+                    <option value="{!time}" selected="{!(v.startTime == time)? true : false}">{!time}</option>
+                </aura:iteration>
+            </lightning:select>
+            <!--/div-->
+            <!--div class="slds-col"-->
+            <lightning:select name="endTime" aura:id="endTime" label="" value="{!v.endTime}" class="selectClass" onchange="{!c.endTimeChangeHandle}" disabled="{!v.dayRecord.isHrsDisabled}"> 
+                <option value="">--None--</option>
+                <aura:iteration items="{!v.endTimeList}" var="time">
+                    <option value="{!time}" selected="{!(v.endTime == time)? true : false}">{!time}</option>
+                </aura:iteration>
+            </lightning:select>
+            <!--/div>
+            </div-->
+        </aura:if>
+    </aura:if>
+    <aura:if isTrue="{!v.inputType == 'checkBox'}">
+        <center>
+            <span><lightning:input type="checkbox" class="lateCancellationCls" label="" name="input1" checked="{!v.dayRecord.lateCancellation}" onchange="{!c.getCancellationReason}" disabled="{!v.dayRecord.isHrsDisabled}"/>
+                <aura:if isTrue="{!v.dayRecord.lateCancellation}">
+                    <a onclick="{!c.getCancellationReason}">View Notes</a>
+                </aura:if>
+            </span>
+        </center>
+    </aura:if>
+    
+    <!-- capturing cancellation reason modal -->
+    <aura:if isTrue="{!v.showCancellationModal}">
+        <c:sldsModal aura:id="cancellationModal">
+            <aura:set attribute="header">Cancellation Reason</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <p>
+                    <lightning:textarea aura:id="cancelReason" label="Cancellation Reason" value="{!v.dayRecord.cancellationReason}" rows="4"/>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Submit" class="btn btn-primary" onclick="{!c.submitCancellation}"/>
+                <lightning:button label="Cancel" class="btn btn-primary" onclick="{!c.cancelCancellation}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Edit Icon Click Model -->
+    <aura:if isTrue="{!v.showEditModal}">
+        <c:sldsModal aura:id="editModal">
+            <aura:set attribute="header">{!v.dayRecord.projectName}/{!v.dayRecord.taskName} - {!v.dayRecord.displayDate}</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="3" padding="around-small" class="editHrsCls">
+                        <!--lightning:input type="text" name="" label="Hours" value="{!v.editRecord.hours}" onchange="{!c.hoursValidation}"/-->
+                        <label class="form-element__label">Hours</label><br/>
+                        <ui:inputNumber label="" aura:id="hrsInput" value="{!v.editRecord.hours}" format="#0.00" updateOn="keyup" keyup="{!c.hoursValidation}" />
+                    </lightning:layoutItem>
+                    <aura:if isTrue="{!v.dayRecord.taskName != 'Fringe-PTO'}">
+                        <lightning:layoutItem size="3" padding="around-small">
+                            <lightning:select name="select" label="{!v.startTimeLabel}" value="{!v.editRecord.startTime}" onchange="{!c.calculateEndTimeValues}">
+                                <option value="">--None--</option>
+                                <aura:iteration items="{!v.startTimeList}" var="time">
+                                    <option value="{!time}" selected="{!(v.editRecord.startTime == time)? true : false}">{!time}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="3" padding="around-small">
+                            <lightning:select name="select" label="{!v.endTimeLabel}" value="{!v.editRecord.endTime}"> 
+                                <option value="">--None--</option>
+                                <aura:iteration items="{!v.endTimeList}" var="time">
+                                    <option value="{!time}" selected="{!(v.editRecord.endTime == time)? true : false}">{!time}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!or(v.timeType == 'Both',and(v.dayRecord.startTime2,v.dayRecord.endTime2))}">
+                        <lightning:layoutItem size="3" padding="around-small">
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="3" padding="around-small">
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="3" padding="around-small" class="pmTimeCls">
+                            <lightning:select name="select" label="PM - Start Time" value="{!v.editRecord.startTime2}" onchange="{!c.calculateEndTime1Values}">
+                                <option value="">--None--</option>
+                                <aura:iteration items="{!v.pmStartTimeList}" var="time">
+                                    <option value="{!time}">{!time}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="3" padding="around-small" class="pmTimeCls">
+                            <lightning:select name="select" label="PM - End Time" value="{!v.editRecord.endTime2}"> 
+                                <option value="">--None--</option>
+                                <aura:iteration items="{!v.pmEndTimeList}" var="time">
+                                    <option value="{!time}">{!time}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                    </aura:if>
+                    
+                    <!--aura:if isTrue="{!v.dayRecord.taskType != 'Preparation time'}">
+                    	<lightning:layoutItem size="3" padding="around-small">
+                            <label class="slds-form-element__label">Late Cancellation</label>
+                            <lightning:input type="checkbox" label="" name="input1" checked="{!v.editRecord.lateCancellation}" class="checkBoxCls"/>
+                        </lightning:layoutItem>
+                    </aura:if-->
+                    
+                    <lightning:layoutItem size="6" padding="around-small">
+                        <lightning:textarea aura:id="comment" label="Comments" value="{!v.editRecord.comments}" rows="4"/>
+                    </lightning:layoutItem>
+                    
+                    <!--aura:if isTrue="{!v.editRecord.lateCancellation}">
+                        <lightning:layoutItem size="6" padding="around-small">
+                            <lightning:textarea aura:id="cancelReasonTxt" label="Cancellation Reason" value="{!v.editRecord.cancellationReason}" rows="4"/>
+                        </lightning:layoutItem>
+                    </aura:if-->
+                </lightning:layout>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Delete" class="btn btn-primary" onclick="{!c.updateStatusToUnposted}"/>
+                <lightning:button label="Okay" class="btn btn-primary" onclick="{!c.okayClickOnEdit}"/>
+                <lightning:button label="Cancel" class="btn btn-primary" onclick="{!c.cancelClickOnEdit}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- confirmation for recall action -->
+    <aura:if isTrue="{!v.showRecallConfirmationModal}">
+        <c:sldsModal aura:id="recallModal">
+            <aura:set attribute="header">Confirmation</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <p>
+                    Would you like to recall this time entry?
+                    <lightning:textarea aura:id="recallReason" label="Recall Reason" value="{!v.recallReason}" rows="4"/>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Okay" class="btn btn-primary" onclick="{!c.recallOkayClick}"/>
+                <lightning:button label="Cancel" class="btn btn-primary" onclick="{!c.recallCancelClick}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- end time validation msg block -->
+    <aura:if isTrue="{!v.endTimeValidationModel}">
+        <c:sldsModal aura:id="endTimeValidationModel" header="Warning" displayCloseImage="false" modelWidth="53rem">          
+            <aura:set attribute="content">
+                <p style="padding-left: 1rem;font-size: medium;">
+                	<aura:unescapedHtml value="{!v.endTimeValidationMsg}"/>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeBntClick}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+</aura:component>

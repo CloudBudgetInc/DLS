@@ -1,0 +1,73 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global"  controller="OnBoardingController">
+    
+    <aura:attribute name="toDoItemsList" type="List" default="[]"/>
+    <aura:attribute name="studentPolicyInfoModal" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <aura:attribute name="pendingAssessmentReportCount" type="Integer" default="0"></aura:attribute>
+    
+    <!--DLI Attendance related attributes -->
+    <aura:attribute name="dliSummaryDetail" type="List" default="[]"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>  
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" alternativeText="Loading" size="medium" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div class="card">
+        <span class="card-body">
+            
+            <!-- DLI Attendance Section -->
+            <aura:if isTrue="{!v.dliSummaryDetail.length > 0}">
+                <h5 class="card-title">DLI Attendance</h5>
+                <div style="padding-top: 1rem; padding-bottom: 1.5rem;">
+                	<aura:iteration items="{!v.dliSummaryDetail}" var="summary" indexVar="index">
+                        <div><a onclick="{!c.redirectToAttendance}" name="{!index}" style="font-size:1.2rem;">{!summary.dliAttendanceLink}</a></div>
+                    </aura:iteration>
+                </div>
+            </aura:if>
+            
+            
+            <h5 class="card-title">To Do Items</h5>
+            <div class="{!or(v.toDoItemsList.length > 0, v.pendingAssessmentReportCount > 0) ? 'todoItemClass' : 'todoItemClass1'}" style="{!v.dliSummaryDetail.length > 0 ? 'min-height: 9rem !important;' : ''}">
+                <aura:if isTrue="{!or(v.toDoItemsList.length > 0, v.pendingAssessmentReportCount > 0)}">
+                    <aura:if isTrue="{!v.toDoItemsList.length > 0}">
+                        <aura:iteration items="{!v.toDoItemsList}" var="todo">
+                            <input type="checkbox" name="" disabled="true"/><a name="{!todo.Id}" onclick="{!c.navigateTODO}">{!todo.Subject}</a><br/>
+                        </aura:iteration>
+                    </aura:if>
+                    <aura:if isTrue="{!v.pendingAssessmentReportCount > 0}">
+                        <div><a onclick="{!c.redirectToAssessmentReport}" style="font-size:1.2rem;"><span style="color: red;">{!v.pendingAssessmentReportCount} </span>  Pending Training Report</a></div>
+                    </aura:if>
+                    <aura:set attribute="else">
+                        <div class="center-screen">
+                            <center>No Open To Do Items</center>
+                            <div style="padding-top:7.2rem;">
+                                <center><a onclick="{!c.navigateCompleteToDoItems}">See all completed To Do Items</a></center>
+                            </div>
+                        </div>
+                    </aura:set>                    
+                </aura:if>                
+            </div>
+        </span>
+    </div>
+    <aura:if isTrue="{!v.studentPolicyInfoModal}">
+        <c:sldsModal aura:id="studentPolicy" >
+            <aura:set attribute="header">
+                Information
+            </aura:set>
+            <aura:set attribute="content">
+                <div aura:id="editForm">
+                    <center style="font-size:0.875rem;"> The Student Policies and Procedure document was previously emailed to you for signature. Once you have electronically signed the document, this To Do Item will be marked as completed.</center>
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" class="btn btn-primary" variant="brand" onclick="{!c.closeStudentPolicy}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+</aura:component>

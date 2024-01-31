@@ -1,0 +1,9 @@
+.THIS .groupByClass{
+    width: 15rem;
+    font-weight: 400 !important;
+    margin-top:0.5rem;
+}
+.THIS .groupByClass label{
+    font-weight: bold;
+    font-size: .8rem;
+}

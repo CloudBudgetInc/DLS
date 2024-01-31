@@ -1,0 +1,19 @@
+.headerFntCls{
+    font-size: 1rem;
+    font-weight: bold;
+}
+.employeeFntCls{
+    text-align: justify;
+    font-size: 1rem;
+}
+.comboCls{
+    height: calc(1.25em + 1.5rem + 2px) !important;
+}
+@media only screen and (max-width: 48em) {
+    .card-body{
+        padding: 0.5rem !important;
+    }
+}
+.btn-primary {
+    background-color: #1D4588 !important;
+}

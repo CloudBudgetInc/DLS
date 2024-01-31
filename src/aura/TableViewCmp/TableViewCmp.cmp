@@ -1,0 +1,34 @@
+<aura:component >
+    <aura:attribute name="fieldNames" type="List"/>
+    <aura:attribute name="records" type="List"/>
+    
+    <aura:if isTrue="{! not(empty(v.records))}">
+        <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+            <thead><!--aura:attribute name="filterString" type="String"/-->
+                <!--aura:attribute name="show" type="Boolean"/-->
+                <tr class="slds-text-title_caps">
+                    
+                    <aura:iteration items="{!v.fieldNames}" var="field">
+                        <th scope="col">
+                            <div class="slds-truncate" title="{!field.label}">{!field.label}</div>
+                        </th>
+                    </aura:iteration>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:iteration items="{!v.records}" var="rec">
+                    <tr>
+                        <aura:iteration items="{!v.fieldNames}" var="field">
+                            <td scope="row">
+                                <div class="slds-truncate" title="">
+                                    <c:CellData record="{!rec}" field="{!field}"/>
+                                </div>
+                            </td>
+                        </aura:iteration>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </aura:if>
+    
+</aura:component>

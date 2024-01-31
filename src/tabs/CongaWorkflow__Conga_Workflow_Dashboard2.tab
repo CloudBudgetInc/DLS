@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <frameHeight>650</frameHeight>
+    <hasSidebar>true</hasSidebar>
+    <icon>CongaWorkflow__Conga_Resources/CongaWorkflow__Conga_O_Logo.png</icon>
+    <label>Conga Workflow Dashboard</label>
+    <motif>Custom253: TV Widescreen</motif>
+    <url>/apex/CongaWorkflow__DashboardPage?mysid={!$Api.Session_ID}&amp;myserverurl={!$Api.Partner_Server_URL_290}</url>
+    <urlEncodingKey>UTF-8</urlEncodingKey>
+</CustomTab>

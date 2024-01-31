@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Annual_Report_Remainder_Mail_to_LTS</name>
+        <label>Annual Report Remainder Mail to LTS</label>
+        <locationX>436</locationX>
+        <locationY>337</locationY>
+        <actionName>AnnualReportReminderEmailToLTS</actionName>
+        <actionType>apex</actionType>
+    </actionCalls>
+    <interviewLabel>Annual Review Report LTS Email Notification {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Annual Review Report LTS Email Notification</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>311</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>Annual_Report_Remainder_Mail_to_LTS</targetReference>
+        </connector>
+        <schedule>
+            <frequency>Weekly</frequency>
+            <startDate>2021-12-01</startDate>
+            <startTime>14:00:00.000Z</startTime>
+        </schedule>
+        <triggerType>Scheduled</triggerType>
+    </start>
+    <status>Obsolete</status>
+</Flow>

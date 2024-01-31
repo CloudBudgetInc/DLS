@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>To launch the Dashboard with the All Folders as default view</description>
+    <frameHeight>600</frameHeight>
+    <hasSidebar>true</hasSidebar>
+    <label>Dashboards</label>
+    <motif>Custom59: Can</motif>
+    <url>https://dlsdc.lightning.force.com/lightning/o/Dashboard/home?queryScope=userFolders</url>
+    <urlEncodingKey>UTF-8</urlEncodingKey>
+</CustomTab>

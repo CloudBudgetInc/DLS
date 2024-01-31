@@ -1,0 +1,293 @@
+<aura:component controller="EventListViewController" implements="forceCommunity:availableForAllPageTypes">
+    <aura:attribute name="plannedOffRows" type="List" default="[]"/>
+    <aura:attribute name="plannedOffheader" type="List" default="[]"/>
+    <aura:attribute name="tableconfig" type="Map"  default="{}"/>
+    <aura:attribute name="plannedOffdayRecord" type="Map"  default="{}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="filterObj" type="Map" default="{'fromDate':'','toDate':''}" />
+    <aura:attribute name="selectedProject" type="String" />
+    <aura:attribute name="projectValues" type="List" access="PUBLIC"/>
+    <aura:attribute name="showDeleteModel" type="Boolean" default="false"/>
+    <aura:attribute name="showAddEditModel" type="Boolean" default="false"/>
+    <aura:attribute name="typeValues" type="List" default="['Instructor','Student']"/>
+    <aura:attribute name="contactRec" type="Map" default="{}"/>
+    <aura:attribute name="requestOffRT" type="String" default="" description="request off record type id"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    <aura:attribute name="visibleError" type="String" default="slds-hide"/>
+    <aura:attribute name="showWarningMsg" type="String" default=""/>
+    <aura:attribute name="typeOfAction" type="String" default=""/>
+    <aura:attribute name="modalHeaderName" type="String" default=""/>
+    <aura:attribute name="plannedDaysMap" type="Map" default="{}"/>
+    <aura:attribute name="plannedOffDays" type="List" default="[]"/>
+    <aura:attribute name="showAddModal" type="Boolean" default="false"/>
+    <aura:attribute name="multiDaysOff" type="Boolean" default="true"/>
+    <aura:attribute name="allowParentPlanToUpdate" type="Boolean" default="false"/>
+    <aura:attribute name="currentPlannedDay" type="String"/>
+    <aura:attribute name="viewMode" type="Boolean" default="true"/>
+    <aura:attribute name="parentViewMode" type="Boolean" default="true"/>
+    <aura:attribute name="showSaveButton" type="Boolean" default="false"/>
+    
+    <aura:attribute name="showSuccessModel" type="Boolean" default=""/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successHeader" type="String" default=""/>
+    
+    <aura:attribute name="statusValues" type="List" default="[]"/>
+    <aura:attribute name="selectedStatus" type="String" default="All"/>
+    
+    <aura:attribute name="communityName" type="String"/>
+    
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClick}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" access="PUBLIC"/>
+    <aura:handler name="change" value="{!v.filterObj.fromDate}" action="{!c.dateFilter}"/>
+    <aura:handler name="change" value="{!v.filterObj.toDate}" action="{!c.dateFilter}"/>
+    
+    <aura:handler name="CommunityPDOEditEvent" event="c:CommunityPDOEditEvent" action="{!c.handleToggleSaveButton}"/>
+    
+    
+    <ltng:require scripts="{!join(',',
+                           $Resource.MomentjsResource,
+                           $Resource.MomentTimezone_Data)}"/>
+    
+    <br/><center><h5 class="card-title" style="font-size:2rem;">My Planned Days Off</h5></center><br/>
+    
+    <div class="card-deck">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Filters</h5>
+                <div style="float: right;margin-top:-3rem;">
+                    <aura:if isTrue="{!v.communityName != 'client'}">
+                    	<lightning:button variant="brand" class="btn btn-primary" label="New" onclick="{!c.tabActionClick}"/>
+                    </aura:if>
+                </div>
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '2' : '12'}">
+                        <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                            <div><ui:inputDate label="From"  value="{!v.filterObj.fromDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/></div>
+                            <div><ui:inputDate label="To" value="{!v.filterObj.toDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/> </div>
+                            
+                            <lightning:select label="Status" value="{!v.selectedStatus}" onchange="{!c.dateFilter}">
+                                <aura:iteration items="{!v.statusValues}" var="status">
+                                    <option value="{!status.value}" selected="{!(v.selectedStatus == status.value)}">{!status.label}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                            
+                            <lightning:select label="Project" value="{!v.selectedProject}" onchange="{!c.dateFilter}">
+                                <aura:iteration items="{!v.projectValues}" var="project">
+                                    <option value="{!project.value}" selected="{!(v.selectedProject == project.value)}">{!project.label}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                            
+                            <aura:set attribute="else">
+                                
+                                <lightning:layout>
+                                    <ui:inputDate label="From" class="{!v.displayDevice != 'Mobile' ? 'slds-input viewSelectClass' : ''}" value="{!v.filterObj.fromDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/>
+                                </lightning:layout>
+                                <lightning:layout>
+                                    <ui:inputDate label="To" class="{!v.displayDevice != 'Mobile' ? 'slds-input viewSelectClass' : ''}" value="{!v.filterObj.toDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/> 
+                                </lightning:layout>
+                                
+                                <br/>
+                                <lightning:select label="Status" class="{!v.displayDevice != 'Mobile' ? ' viewSelectClass' : ''}" value="{!v.selectedStatus}" onchange="{!c.dateFilter}">
+                                    <aura:iteration items="{!v.statusValues}" var="status">
+                                        <option value="{!status.value}" selected="{!(v.selectedStatus == status.value)}">{!status.label}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                                
+                                <br/>
+                                <div>
+                                    <lightning:layout>
+                                        <lightning:select label="DLS Class #" class="{!v.displayDevice != 'Mobile' ? ' viewSelectClass' : ''}" value="{!v.selectedProject}" onchange="{!c.dateFilter}">
+                                            <aura:iteration items="{!v.projectValues}" var="project">
+                                                <option value="{!project.value}" selected="{!(v.selectedProject == project.value)}">{!project.label}</option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </lightning:layout>
+                                </div>
+                            </aura:set>
+                        </aura:if>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '10' : '12'}">
+                        <aura:if isTrue="{!or(v.displayDevice != 'Mobile' ,and(v.displayDevice == 'Mobile',v.plannedOffRows.length > 0))}">
+                            <div class="ldtTableCls">
+                                <ldt:datatableDev title="" 
+                                                  aura:id="plannedOffTable" 
+                                                  dataRows="{!v.plannedOffRows}"
+                                                  header="{!v.plannedOffheader}"       
+                                                  config="{!v.tableconfig}"  
+                                                  noRecordsMessage="No Record to Display"/>
+                            </div>
+                            <aura:set attribute="else"><br/><br/>
+                                <center style="font-size:0.875rem;">No records to display</center>
+                            </aura:set>
+                        </aura:if>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+        </div>
+    </div>
+    <!--lightning:layout multipleRows="true">
+        <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '2' : '12'}">
+            <div class="slds-m-top_medium slds-m-left_large">
+                <lightning:layout>
+                    <ui:inputDate label="From" class="slds-input " value="{!v.filterObj.fromDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/>  
+                </lightning:layout>
+                <lightning:layout>
+                    <ui:inputDate label="To" class="slds-input"  value="{!v.filterObj.toDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/>  
+                </lightning:layout><br/>
+            </div>
+            <div class="slds-m-top_medium slds-m-left_large">
+                <lightning:layout>
+                    <lightning:select label="Project" class="viewSelectClass" value="{!v.selectedProject}" onchange="{!c.dateFilter}">
+                        <aura:iteration items="{!v.projectValues}" var="project">
+                            <option value="{!project.value}" selected="{!(v.selectedProject == project.value)}">{!project.label}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layout>
+            </div>
+        </lightning:layoutItem>
+        <lightning:layoutItem   size="{!v.displayDevice != 'Mobile' ? '10' : '12'}">
+            <br/>
+            <div class="slds-p-left_small slds-p-right_small">
+                <ldt:datatableDev title="" 
+                                  aura:id="plannedOffTable" 
+                                  dataRows="{!v.plannedOffRows}"
+                                  header="{!v.plannedOffheader}"       
+                                  config="{!v.tableconfig}"  
+                                  noRecordsMessage="No Record to Display"/>
+            </div>
+        </lightning:layoutItem>
+    </lightning:layout-->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- Planned day off add model -->
+    <aura:if isTrue="{!v.showAddModal}">
+        <c:sldsModal aura:id="newOffModel" displayCloseImage="false" header="New Planned Days Off">
+            <aura:set attribute="content">
+                <c:ToastCmp visibleError = "{!v.visibleError}" showErrorMsg = "{!v.showWarningMsg}"/>
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="12" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                        <ui:inputDate aura:id="dateInputField" label="From Date" required="true" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.Date__c}"/>  
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="12" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                        <ui:inputDate required="true" label="To Date" aura:id="dateInputField" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.To_Date__c}"/>  
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="12" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                        <lightning:select label="DLS Class #" value="{!v.plannedOffdayRecord.Project__c}"  aura:id="otherInputField"  required="true">
+                            <aura:iteration items="{!v.projectValues}" var="project">
+                                <option value="{!project.value}">{!project.label}</option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="12" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                        <lightning:select label="Type" value="{!v.plannedOffdayRecord.Type__c}" aura:id="otherInputField" required="true">  
+                            <option value="">--None--</option>
+                            <aura:iteration items="{!v.typeValues}" var="i">
+                                <option value="{!i}">{!i}</option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="12" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                        <lightning:textarea label="Description" required="true" aura:id="otherInputField"  value="{!v.plannedOffdayRecord.Description__c}"/>  
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand"  class="btn btn-primary" label="Save" onclick="{!c.saveBtnClick}"/>
+                <lightning:button variant="brand"  class="btn btn-secondary" label="Cancel" onclick="{!c.cancelBtnClick}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    
+    <!-- Planned day off edit model -->
+    <aura:if isTrue="{!v.showAddEditModel}">
+        <c:sldsModal aura:id="editOffModel" displayCloseImage="false" header="{!v.modalHeaderName}" modelWidth="{!v.displayDevice == 'Pc'  ? '80rem' : ''}">
+            <aura:set attribute="content">
+                <c:ToastCmp visibleError="{!v.visibleError}" showErrorMsg="{!v.showWarningMsg}"/>
+                <aura:if isTrue="{!v.plannedOffDays.length > 1}">
+                    <!--<lightning:layout>
+                        <lightning:layoutItem size="3" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}" largeDeviceSize="2" mediumDeviceSize="6" smallDeviceSize="12">
+                            <ui:inputDate aura:id="dateInputField" label="From Date" required="true" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.Date__c}"/>  
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="3" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}" largeDeviceSize="2" mediumDeviceSize="6" smallDeviceSize="12">
+                            <ui:inputDate label="To Date" aura:id="dateInputField" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.To_Date__c}"/>  
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '2' : '12'}"  padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">                                                     
+                            <lightning:select label="DLS Class #" value="{!v.plannedOffdayRecord.Project__c}">
+                                <aura:iteration items="{!v.projectValues}" var="project">
+                                    <option value="{!project.value}">{!project.label}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '2' : '12'}"  padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">
+                            <lightning:select label="Type" value="{!v.plannedOffdayRecord.Type__c}" aura:id="otherInputField" required="true">  
+                                <option value="">None</option>
+                                <aura:iteration items="{!v.typeValues}" var="i">
+                                    <option value="{!i}">{!i}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '3' : '12'}"  padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">
+                            <lightning:textarea label="Description" required="true"  aura:id="otherInputField"  value="{!v.plannedOffdayRecord.Description__c}"/>  
+                        </lightning:layoutItem>                    
+                    </lightning:layout>-->
+                    <c:PlannedDaysOffEditCmp aura:id="parentPlannedDaysEdit" projectValues="{!v.projectValues}" plannedOffdayRecord="{!v.plannedOffdayRecord}" multiDaysOff="false" displayDevice="{!v.displayDevice}" viewMode="{!v.parentViewMode}"/>
+                    <lightning:accordion aura:id="accordion" allowMultipleSectionsOpen="true" activeSectionName="B">
+                        <lightning:accordionSection name="viewDetails" label="Edit Specific Dates">
+                            <aura:iteration items="{!v.plannedOffDays}" var="day">
+                                <c:PlannedDaysOffEditCmp aura:id="plannedDaysEdit" projectValues="{!v.projectValues}" plannedOffdayRecord="{!day}" multiDaysOff="{!v.multiDaysOff}" displayDevice="{!v.displayDevice}" showEditIcon="{!v.parentViewMode}" viewMode="{#v.viewMode}" isParent='false'/>
+                            </aura:iteration>
+                        </lightning:accordionSection>
+                    </lightning:accordion>
+                    <aura:set attribute="else">
+                         <aura:iteration items="{!v.plannedOffDays}" var="day">
+                             <c:PlannedDaysOffEditCmp aura:id="plannedDaysEdit" projectValues="{!v.projectValues}" plannedOffdayRecord="{!day}" multiDaysOff="{!v.multiDaysOff}" displayDevice="{!v.displayDevice}" viewMode="{!v.viewMode}"  handleToggleSaveButton="{!c.handleToggleSaveButton}"/>
+                        </aura:iteration>
+                    </aura:set>
+                </aura:if>
+                
+            </aura:set>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.showSaveButton}">
+                    <lightning:button variant="brand" class="btn btn-primary" label="Save" onclick="{!c.saveEditBtnClick}"/>
+                </aura:if>
+                
+                <lightning:button variant="brand" class="btn btn-secondary" label="Cancel" onclick="{!c.cancelEditClick}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Planned Days Off Delete Modal -->
+    <aura:if isTrue="{!v.showDeleteModel}">
+        <c:sldsModal aura:id="deletePDO" displayCloseImage="false" header="Delete Confirmation">
+            <aura:set attribute="content">
+                <div>
+                    <center><h1 style=" font-size:0.875rem;font-weight:50!important;">Are you sure want to delete?</h1> </center>                 
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Yes" class="btn btn-primary" onclick="{!c.deleteYesClick}"  />
+                <lightning:button label="No" class="btn btn-secondary" onclick="{!c.deleteNoClick}" />
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!--Success model -->
+    <aura:if isTrue="{!v.showSuccessModel}">
+        <c:sldsModal aura:id="successModel" displayCloseImage="false" header="{!v.successHeader}">            
+            <aura:set attribute="content">
+                <div>
+                    <center><p>{!v.successTitle}</p></center>                 
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeClickOnSuccess}" />
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+</aura:component>

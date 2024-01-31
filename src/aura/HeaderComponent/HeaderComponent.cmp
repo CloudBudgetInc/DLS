@@ -1,0 +1,34 @@
+<aura:component >
+    <aura:attribute name="headerName" type="String" access="public"/>
+    <aura:attribute name="subHeader" type="String" access="public"/>
+    <aura:attribute name="previousIconDisplay" type="Boolean" access="public"/>
+    <aura:attribute name="nextIconDisplay" type="Boolean" access="public"/>
+    <aura:attribute name="displayInfo" type="Boolean" access="public" default="false"/>
+    <aura:attribute name="information" type="String" access="public"/>
+    <aura:attribute name="displayApprovalSummaryLink" type="Boolean" access="public" default="false"/>
+    <aura:attribute name="summaryLinkName" type="String" access="public"/>
+    
+    <aura:registerEvent name="clickEvent" type="c:childClickEvent"/>
+    
+    <header class="slds-media" style="text-align:center;">
+        <div class="slds-media__body">
+            <aura:if isTrue="{!v.previousIconDisplay}">
+                <lightning:buttonIcon iconName="utility:chevronleft" variant="bare" alternativeText="Previous" class="slds-float_left headingCls" iconClass="dark" size="large" onclick="{!c.previousClick}"/>
+            </aura:if>
+            <div class="headingCls">
+                <h1 class="slds-page-header__title slds-truncate">{!v.headerName}</h1>
+                <p class="slds-text-body_small slds-line-height_reset">{!v.subHeader}</p>
+                <aura:if isTrue="{!v.displayApprovalSummaryLink}">
+                	<a onclick="{!c.summaryClick}">{!v.summaryLinkName}</a>
+                </aura:if>
+                <aura:if isTrue="{!v.displayInfo}">
+                	<p class="slds-text-body_small slds-line-height_reset" style="color: red;">{!v.information}</p>
+                </aura:if>
+            </div>
+            <aura:if isTrue="{!v.nextIconDisplay}">
+                <lightning:buttonIcon iconName="utility:chevronright" variant="bare" alternativeText="Next" class="slds-float_right headingCls" iconClass="dark" size="large" onclick="{!c.nextClick}"/>
+            </aura:if>
+        </div>
+    </header>
+    
+</aura:component>

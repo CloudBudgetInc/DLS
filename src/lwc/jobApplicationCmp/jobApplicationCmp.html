@@ -1,0 +1,395 @@
+<template>
+
+    <template if:true={showSpinner}>
+        <lightning-spinner variant='brand' alternative-text="Loading" class="slds-is-fixed"></lightning-spinner>
+    </template>
+
+    <div style="cursor:pointer;" onclick={navigateToPreviousPage}>
+        <lightning-icon icon-name="utility:back" alternative-text="Back" title="Back"></lightning-icon>
+        <span class="slds-col" style="font-size: 1.25rem;color: #1D4588!important;">&nbsp;Back</span>
+    </div><br />
+
+    <lightning-progress-indicator current-step={currentvalue} type="path" variant="base">
+        <lightning-progress-step label="Personal Information" value="1" onclick={pathHandler}>
+        </lightning-progress-step>
+        <lightning-progress-step label="Resume" value="2" onclick={pathHandler}></lightning-progress-step>
+        <lightning-progress-step label="Employment Questions" value="3" onclick={pathHandler}>
+        </lightning-progress-step>
+        <lightning-progress-step label="Equal Opportunity Employment" value="4" onclick={pathHandler}>
+        </lightning-progress-step>
+    </lightning-progress-indicator><br/>
+   
+    <!--Personal Information Section-->
+    <lightning-layout multiple-rows="true">
+        <lightning-layout-item size="2"></lightning-layout-item>
+        <lightning-layout-item size="12" small-device-size="12" medium-device-size="12" large-device-size="8">
+             <div class="slds-m-top_small">
+                <div class="cardPadding">
+                    <div class="card-deck">
+                        <div class="card">
+                            <span class="card-body">
+                                <template if:true={showPersonInfo}>
+                                    <div class="slds-align_absolute-center headerFntCls">Personal Information</div>
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="12">
+                                            <lightning-input data-id="personId" label="First Name" data-name="FirstName"
+                                                value={contactRec.FirstName} required="true"></lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-input data-id="personId" label="Last Name" data-name="LastName"
+                                                value={contactRec.LastName} required="true">
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-input data-id="txtEmailAddress" label="Email Address"
+                                                value={contactRec.Email} required="true">
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-input data-id="personId" label="Mobile Phone"
+                                                value={contactRec.MobilePhone} required="true">
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-textarea data-id="personId" label="Street"
+                                                value={contactRec.MailingStreet} required="true"></lightning-textarea>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-input data-id="personId" label="City"
+                                                value={contactRec.MailingCity} required="true">
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-input data-id="personId" label="Postal Code"
+                                                value={contactRec.MailingPostalCode} required="true">
+                                            </lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-combobox label="Country" data-id="personId" required="true"
+                                                options={countryOptions} value={selectedCountryCode}
+                                                onchange={handleCountryChange}></lightning-combobox>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12">
+                                            <lightning-combobox label="State" data-id="personId" options={stateOptions}
+                                                required={showState} value={selectedStateCode} onchange={handleStateChange}>
+                                            </lightning-combobox>
+                                        </lightning-layout-item>
+                                        <template if:true={PMcontactOptions.data}>
+                                            <lightning-layout-item size="12">
+                                                <lightning-combobox data-id="personId"
+                                                    name="Preferred Method of Contact" required="true"
+                                                    label="Preferred Method of Contact"
+                                                    value={contactRec.Preferred_Phone__c}
+                                                    options={PMcontactOptions.data.values}>
+                                                </lightning-combobox>
+                                            </lightning-layout-item>
+                                        </template>
+                                        <template if:true={ReferenceOptions.data}>
+                                            <lightning-layout-item size="12">
+                                                <lightning-combobox data-id="personId" name="How did you hear about us"
+                                                    required="true" label="How did you hear about us"
+                                                    value={contactRec.How_did_you_hear_about_us_ATS__c}
+                                                    options={ReferenceOptions.data.values}>
+                                                </lightning-combobox>
+                                            </lightning-layout-item>
+                                        </template>
+                                    </lightning-layout>
+                                </template>
+
+                                <!-- Resume File Upload Section -->
+                                <template if:true={showResumePage}>
+                                    <div class="slds-align_absolute-center headerFntCls">Resume</div>
+                                    <!--Upload Resume Letter-->
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="1" required="true">
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="4" required="true">
+                                            <br />
+                                            <div><abbr class="slds-required">*</abbr>Upload Resume</div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="7" required="true">
+                                            <!--File Upload Input-->
+                                            <div class="slds-m-around_medium">
+                                                <div class="slds-form-element">
+                                                    <!-- <span class="slds-form-element__label" id="file-selector-primary-label-105">Attachment</span> -->
+                                                    <div class="slds-form-element__control">
+                                                        <div class="slds-file-selector slds-file-selector_files">
+                                                            <!-- <div class="slds-file-selector__dropzone"> -->
+                                                            <div>
+                                                                <input type="file"
+                                                                    class="slds-file-selector__input slds-assistive-text"
+                                                                    onchange={handleFileSelection}
+                                                                    id="file-upload-resume" name="Resume"
+                                                                    aria-labelledby="file-selector-primary-label-105 file-selector-secondary-label106" />
+                                                                <label class="slds-file-selector__body"
+                                                                    for="file-upload-resume"
+                                                                    id="file-selector-secondary-label106">
+                                                                    <span
+                                                                        class="slds-file-selector__button slds-button slds-button_neutral">
+                                                                        <svg class="slds-button__icon slds-button__icon_left"
+                                                                            aria-hidden="true">
+                                                                            <use
+                                                                                xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#upload">
+                                                                            </use>
+                                                                        </svg>Upload Files</span>
+                                                                    <!-- <span class="slds-text-body_medium slds-m-around_x-small slds-text-color_weak">or drop files</span> -->
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <template for:each={filesDetails} for:item="file" for:index="index">
+                                                    <template lwc:if={file.isResumetype}>
+                                                        <lightning-pill key={file.fileName} name={index}
+                                                            label={file.fileName} onremove={handleFileRemove}>
+                                                        </lightning-pill>
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </lightning-layout-item>
+                                        <!--Upload Cover Letter-->
+                                        <lightning-layout-item size="1" required="true">
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="4" required="true">
+                                            <br />
+                                            <div>Upload Cover Letter</div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="7" required="true">
+                                            <!--File Upload Input-->
+                                            <div class="slds-m-around_medium">
+                                                <div class="slds-form-element">
+                                                    <!-- <span class="slds-form-element__label" id="file-selector-primary-label-105">Attachment</span> -->
+                                                    <div class="slds-form-element__control">
+                                                        <div class="slds-file-selector slds-file-selector_files">
+                                                            <!-- <div class="slds-file-selector__dropzone"> -->
+                                                            <div>
+                                                                <input type="file"
+                                                                    class="slds-file-selector__input slds-assistive-text"
+                                                                    onchange={handleFileSelection}
+                                                                    id="file-upload-cover" name="Cover Letter"
+                                                                    aria-labelledby="file-selector-primary-label-105 file-selector-secondary-label177"
+                                                                    multiple />
+                                                                <label class="slds-file-selector__body"
+                                                                    for="file-upload-cover"
+                                                                    id="file-selector-secondary-label177">
+                                                                    <span
+                                                                        class="slds-file-selector__button slds-button slds-button_neutral">
+                                                                        <svg class="slds-button__icon slds-button__icon_left"
+                                                                            aria-hidden="true">
+                                                                            <use
+                                                                                xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#upload">
+                                                                            </use>
+                                                                        </svg>Upload Files</span>
+                                                                    <!-- <span class="slds-text-body_medium slds-m-around_x-small slds-text-color_weak">or drop files</span> -->
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <template for:each={filesDetails} for:item="file" for:index="index">
+                                                    <template lwc:if={file.isCoverType}>
+                                                        <lightning-pill key={file.fileName} name={index}
+                                                            label={file.fileName} onremove={handleFileRemove}>
+                                                        </lightning-pill>
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </lightning-layout-item>
+
+                                        <!--Upload Reference Letter-->
+                                        <lightning-layout-item size="1">
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="4">
+                                            <br />
+                                            <div>Upload Reference Letter(s)</div>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="7">
+                                            <!--File Upload Input-->
+                                            <div class="slds-m-around_medium">
+                                                <div class="slds-form-element">
+                                                    <!-- <span class="slds-form-element__label" id="file-selector-primary-label-105">Attachment</span> -->
+                                                    <div class="slds-form-element__control">
+                                                        <div class="slds-file-selector slds-file-selector_files">
+                                                            <!-- <div class="slds-file-selector__dropzone"> -->
+                                                            <div>
+                                                                <input type="file"
+                                                                    class="slds-file-selector__input slds-assistive-text"
+                                                                    onchange={handleFileSelection}
+                                                                    id="file-upload-reference" name="Ref Letter"
+                                                                    aria-labelledby="file-selector-primary-label-105 file-selector-secondary-label188"
+                                                                    multiple />
+                                                                <label class="slds-file-selector__body"
+                                                                    for="file-upload-reference"
+                                                                    id="file-selector-secondary-label188">
+                                                                    <span
+                                                                        class="slds-file-selector__button slds-button slds-button_neutral">
+                                                                        <svg class="slds-button__icon slds-button__icon_left"
+                                                                            aria-hidden="true">
+                                                                            <use
+                                                                                xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#upload">
+                                                                            </use>
+                                                                        </svg>Upload Files</span>
+                                                                    <!-- <span class="slds-text-body_medium slds-m-around_x-small slds-text-color_weak">or drop files</span> -->
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <template for:each={filesDetails} for:item="file" for:index="index">
+                                                    <template lwc:if={file.isRefType}>
+                                                        <lightning-pill key={file.fileName} label={file.fileName}
+                                                            name={index} onremove={handleFileRemove}>
+                                                        </lightning-pill>
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                </template>
+
+                                <!-- Employment Questions Section -->
+                                <template if:true={showEmpQuestionPage}>
+                                    <lightning-layout multiple-rows="true">
+                                        <div class="slds-p-around_small employeeFntCls">
+                                            <div class="slds-align_absolute-center headerFntCls">Employment Questions
+                                            </div>
+
+                                            <lightning-layout-item size="12" padding="around-small">
+                                                <div>What is your current availability? For a teaching position, please
+                                                    be as specific as possible with
+                                                    regard to full-time, part-time, dates and times.</div>
+                                                <lightning-textarea data-id="personId" label="Availability"
+                                                    value={contactRec.Availability__c} required="true">
+                                                </lightning-textarea>
+                                            </lightning-layout-item>
+
+                                            <lightning-layout-item size="12" padding="around-small">
+                                                <div>For language positions, please let us know your native language.
+                                                    For staff positions, you may select “N/A”.</div>
+                                                    <lightning-combobox name="progress" label="Native Language"
+                                                        value={contactRec.Language_1__c} placeholder="Select Language"
+                                                        required="true" data-id="personId"
+                                                        options={nativeLanguagePicklistValues}>
+                                                    </lightning-combobox>
+                                                <br />
+                                            </lightning-layout-item>
+                                        </div>
+                                    </lightning-layout>
+                                </template>
+
+                                <!-- Equal Opportunity Employment Section -->
+                                <template if:true={showOppEmployPage}>
+                                    <div class="slds-p-around_small">
+                                        <div class="slds-align_absolute-center headerFntCls">Equal Opportunity
+                                            Employment</div>
+                                        <lightning-layout multiple-rows="true">
+                                            <lightning-layout-item size="12" padding="around-small">
+                                                <div class="employeeFntCls">You are invited to provide information to
+                                                    assist
+                                                    EEO Company
+                                                    Name in meeting government reporting requirements and furthering
+                                                    its affirmative action efforts in the employment and advancement of
+                                                    qualified
+                                                    minorities and women. Providing this information
+                                                    is strictly voluntary and any information you provide will be kept
+                                                    confidential. The
+                                                    information that you provide or choose not
+                                                    to provide will have no effect on employment-related decisions.
+                                                </div>
+                                            </lightning-layout-item>
+
+                                            <template if:true={genderPicklistValues.data}>
+                                                <lightning-layout-item size="12" padding="around-small">
+                                                    <lightning-combobox name="progress" label="Gender"
+                                                        value={contactRec.GenderIdentity} placeholder="-Select-"
+                                                        data-id="personId" options={genderPicklistValues.data.values}>
+                                                    </lightning-combobox>
+                                                </lightning-layout-item>
+                                            </template><br />
+
+                                            <template if:true={racePicklistValues.data}>
+                                                <lightning-layout-item size="12" padding="around-small">
+                                                    <lightning-combobox name="progress" label="Race"
+                                                        value={contactRec.Race__c} placeholder="-Select-"
+                                                        options={racePicklistValues.data.values} data-id="personId">
+                                                    </lightning-combobox>
+                                                </lightning-layout-item>
+                                            </template><br />
+
+                                            <template if:true={veteranPicklistValues.data}>
+                                                <lightning-layout-item size="12" padding="around-small">
+
+                                                    <lightning-combobox name="progress" label="Veteran"
+                                                        value={contactRec.Veteran__c} placeholder="-Select-"
+                                                        data-id="personId" options={veteranPicklistValues.data.values}>
+                                                    </lightning-combobox>
+                                                </lightning-layout-item>
+                                            </template><br />
+
+                                            <template if:true={disabledPicklistValues.data}>
+                                                <lightning-layout-item size="12" padding="around-small">
+                                                    <lightning-combobox name="progress" label="Disabled"
+                                                        value={contactRec.Disabled__c} placeholder="-Select-"
+                                                        data-id="personId" options={disabledPicklistValues.data.values}>
+                                                    </lightning-combobox>
+                                                </lightning-layout-item>
+                                            </template><br />
+                                        </lightning-layout>
+                                    </div>
+                                </template><br />
+
+                                <!-- Button Section-->
+                                <lightning-layout multiple-rows="true">
+                                    <template if:true={showBackButton}>
+                                        <lightning-layout-item size="6" class="slds-text-align_right"
+                                            padding="around-small" small-device-size="6" medium-device-size="6"
+                                            large-device-size="6">
+                                            <button class="slds-button slds-button_neutral btn btn-secondary"
+                                                onclick={formBackClick} name="Back">Back</button>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="6" padding="around-small" small-device-size="6"
+                                            medium-device-size="6" large-device-size="6">
+                                            <template if:true={showSubmitButton}>
+                                                <button class="btn btn-primary" onclick={submitApplicationPage}
+                                                    name="Submit Application">Submit
+                                                    Application</button>
+                                            </template>
+                                            <template if:false={showSubmitButton}>
+                                                <button class="btn btn-primary" onclick={formNextClick}
+                                                    name="Next">Next</button>
+                                            </template>
+                                        </lightning-layout-item>
+                                    </template>
+
+                                    <template if:false={showBackButton}>
+                                        <template if:false={showSubmitButton}>
+                                            <lightning-layout-item size="12" class="slds-text-align_center"
+                                                padding="around-small" small-device-size="12" medium-device-size="12"
+                                                large-device-size="12">
+                                                <button class="btn btn-primary" onclick={formNextClick}
+                                                    name="Next">Next</button>
+                                            </lightning-layout-item>
+                                        </template>
+                                    </template>
+                                </lightning-layout>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </lightning-layout-item>
+        <lightning-layout-item size="2"></lightning-layout-item>
+    </lightning-layout>
+
+    <!-- Confirmation-->
+    <c-modal-cmp header={toastMsg.header} show-header show-footer show={toastMsg.show}>
+        <div slot="body">
+            <p class="slds-align_absolute-center">{toastMsg.message}</p>
+        </div>
+        <div slot="footer">
+            <button class="slds-button slds-button_neutral btn btn-primary" onclick={closeToastMsg}
+                name="OK">OK</button>
+        </div>
+    </c-modal-cmp>
+
+</template>

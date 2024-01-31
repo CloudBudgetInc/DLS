@@ -1,0 +1,59 @@
+<aura:component controller="FormResponseCtrl" implements="force:appHostable,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" >
+    <aura:attribute name="formTemplate" type="Form_Template__c"/>
+    <aura:attribute name="formTemplateId" type="String"/>
+    <aura:attribute name="formTempEleIdWithResponseForUniqueResponse" type="Object"/>
+    <aura:attribute name="formTempEleIdwithOptionLimit" type="Object"/>    
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="PRIVATE"/>
+    <aura:attribute name="toast" type="object"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>    
+
+    <c:ApexService aura:id="server"/>
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+
+    <aura:if isTrue="{!v.toast.show}">
+        <div class="slds-notify_container">
+            <div class="{!'slds-notify slds-notify_toast slds-theme_' + v.toast.type}" role="status">          
+                <div class="slds-notify__content">
+                    <h2 class="slds-text-heading_small ">{!v.toast.message}</h2>
+                </div>
+                <div class="slds-notify__close">
+                    <lightning:buttonIcon iconName="utility:close"  variant="border-inverse" title="Close" onclick="{!c.hideToast}"/>
+                </div>
+            </div>
+        </div>
+    </aura:if>
+
+    <aura:if isTrue="{!v.formTemplate}">
+        <lightning:card>
+            <div class="slds-card__header slds-grid">
+                <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                  
+                  <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <lightning:formattedRichText value="{!v.formTemplate.Header_Information__c}"/>
+                    </h2>
+                  </div>
+                </header>
+            </div>
+                
+            
+            <aura:set attribute="footer">
+                <div class="slds-align_absolute-center">
+                    <lightning:button label="Submit" variant="brand" onclick="{!c.validateAndSaveFormResponse}"/>
+                </div>
+            </aura:set>
+            <div class="slds-p-horizontal_medium">
+                <aura:iteration items="{!v.formTemplate.Form_Template_Elements__r}" var="formTempElement">
+                    <c:FormResponseElementCmp aura:id="formResElement" formTempElement="{!formTempElement}" 
+                                              formTempEleIdwithOptionLimit="{!v.formTempEleIdwithOptionLimit}" 
+                                              formTempEleIdWithResponseForUniqueResponse="{!v.formTempEleIdWithResponseForUniqueResponse}"/>
+                </aura:iteration>
+            </div>
+        </lightning:card>
+    </aura:if>
+</aura:component>

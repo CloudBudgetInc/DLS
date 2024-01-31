@@ -1,0 +1,9 @@
+<aura:component extensible="true" abstract="true" controller="GenericUrlLaunch_Ctrl">
+    <aura:attribute name="channel" type="String" default="/event/Box_FRUP__e"/>
+    <aura:attribute name="subscription" type="Object" default="{}"/> 
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+
+    <aura:registerEvent name="boxFolderCreationEvt" type="c:boxFolderCreationEvt"/>   	    
+    
+    {!v.body}
+</aura:component>

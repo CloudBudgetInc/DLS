@@ -1,0 +1,246 @@
+<apex:page controller="mergerecordscontroller" id="thePage">
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"/>
+    <style>
+        .sectionStyle{
+            background-color:blue;
+        }
+    </style>
+    <apex:form id="theForm">
+        <apex:pageMessages escape="false"/>
+        <apex:pageBlock title="Merge Records" id="theBlock">
+            <apex:outputPanel rendered="{!isValid}">
+                
+                <apex:pageBlockSection columns="1" title="Object Information" id="theSection" >
+                    <apex:facet name="header">Editable {!objectLabel} Information</apex:facet>
+                    <apex:pageBlockTable value="{!GeneralInfoList}" var="gen" width="100%" columnsWidth="{!IF((destroyerId2 != null && destroyerId2!= ''), '25%,25%,25%,25%', '30%, 35%, 35%')}" id="theTable">
+                        <apex:column style="{!IF(OR((CONTAINS(gen.objFieldLabel,'Master Record')),gen.isHighLighted == true), "background-color:#D7E2F5;", "background-color:white;")}">
+                            <apex:facet name="header">Fields</apex:facet>
+                            <apex:outputText value="{!gen.objFieldLabel}" style="font-weight:bold;"/>
+                        </apex:column>
+                        <apex:column >
+                              <apex:facet name="header">
+                              <apex:outputText >
+                                  <a href="javascript:;" onclick="viewRecord('{!survivorid}');">{!survivorName}</a>
+                              </apex:outputText>
+                              </apex:facet>
+                              <input type = "radio" name="{!gen.choice}" value = "{!gen.objFieldOneValue}" checked="checked"/>
+                              <apex:outputPanel rendered="{!IF(gen.objFieldOneReferenceName != NULL,false,true)}">
+                                <apex:outputText value="{!gen.objFieldOneValue}"></apex:outputText>
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(gen.objFieldOneReferenceName != NULL,true,false)}">
+                                <apex:outputPanel rendered="{!IF(OR((CONTAINS(gen.objFieldLabel,'Master Record')),gen.isHighLighted == true),false,true)}">
+                                    <a href="javascript:;" onclick="viewRecord('{!gen.objFieldOneValue}');">
+                                        <apex:outputText value="{!gen.objFieldOneReferenceName}"></apex:outputText>
+                                    </a>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!IF(OR((CONTAINS(gen.objFieldLabel,'Master Record')),gen.isHighLighted == true),true,false)}">
+                                    <apex:outputText value="{!gen.objFieldOneReferenceName}"></apex:outputText>
+                                </apex:outputPanel>
+                              </apex:outputPanel>   
+                        </apex:column>
+                        <apex:column >
+                             <apex:facet name="header">
+                                  <apex:outputText >
+                                      <a href="javascript:;" onclick="viewRecord('{!destroyerid}');">{!destroyerName}</a>
+                                  </apex:outputText>
+                              </apex:facet>
+                              <apex:outputPanel rendered="{!IF(gen.objFieldOneValue != NULL,true,false)}">
+                                <input type = "radio" name="{!gen.choice}" value = "{!gen.objFieldTwoValue}" />
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(AND(gen.objFieldOneValue == NULL,gen.objFieldTwoValue != NULL),true,false)}">
+                                <input type = "radio" name="{!gen.choice}" value = "{!gen.objFieldTwoValue}" checked="true" />
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(AND(gen.objFieldOneValue == NULL,gen.objFieldTwoValue == NULL),true,false)}">
+                                <input type = "radio" name="{!gen.choice}" value = "{!gen.objFieldTwoValue}"  />
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(gen.objFieldTwoReferenceName != NULL,false,true)}">
+                                <apex:outputText value="{!gen.objFieldTwoValue}"></apex:outputText>
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(gen.objFieldTwoReferenceName != NULL,true,false)}">
+                                <apex:outputPanel rendered="{!IF(OR((CONTAINS(gen.objFieldLabel,'Master Record')),gen.isHighLighted == true),false,true)}">
+                                    <a href="javascript:;" onclick="viewRecord('{!gen.objFieldTwoValue}');">
+                                        <apex:outputText value="{!gen.objFieldTwoReferenceName}"></apex:outputText>
+                                    </a>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!IF(OR((CONTAINS(gen.objFieldLabel,'Master Record')),gen.isHighLighted == true),true,false)}">
+                                    <apex:outputText value="{!gen.objFieldTwoReferenceName}"></apex:outputText>
+                                </apex:outputPanel>
+                              </apex:outputPanel>
+                              <apex:inputHidden id="hiddenvalue" value="{!gen.selectedvalue}"></apex:inputHidden>
+                        </apex:column>
+                        <apex:column rendered="{!destroyerId2 != null && destroyerId2!= ''}">
+                             <apex:facet name="header">
+                                  <apex:outputText >
+                                      <a href="javascript:;" onclick="viewRecord('{!destroyerid2}');">{!destroyerName2}</a>
+                                  </apex:outputText>
+                              </apex:facet>
+                              <apex:outputPanel rendered="{!IF(OR(gen.objFieldOneValue != NULL, gen.objFieldTwoValue != NULL,gen.objFieldThreeValue == NULL),true,false)}">
+                                <input type = "radio" name="{!gen.choice}" value = "{!gen.objFieldThreeValue}" />
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(AND(gen.objFieldOneValue == NULL,gen.objFieldTwoValue == NULL,gen.objFieldThreeValue != NULL),true,false)}">
+                                <input type = "radio" name="{!gen.choice}" value = "{!gen.objFieldThreeValue}" checked="true" />
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(gen.objFieldThreeReferenceName != NULL,false,true)}">
+                                <apex:outputText value="{!gen.objFieldThreeValue}"></apex:outputText>
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(gen.objFieldThreeReferenceName != NULL,true,false)}">
+                                <apex:outputPanel rendered="{!IF(OR((CONTAINS(gen.objFieldLabel,'Master Record')),gen.isHighLighted == true),false,true)}">
+                                    <a href="javascript:;" onclick="viewRecord('{!gen.objFieldThreeValue}');">
+                                        <apex:outputText value="{!gen.objFieldThreeReferenceName}"></apex:outputText>
+                                    </a>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!IF(OR((CONTAINS(gen.objFieldLabel,'Master Record')),gen.isHighLighted == true),true,false)}">
+                                    <apex:outputText value="{!gen.objFieldThreeReferenceName}"></apex:outputText>
+                                </apex:outputPanel>
+                              </apex:outputPanel>
+                          </apex:column>
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection columns="1" title="Object Information" id="section2" >
+                <script>twistSection(document.getElementById("{!$Component.section2}").childNodes[0].childNodes[0]); </script>
+                    <apex:facet name="header">Read Only {!objectLabel} Information</apex:facet>
+                    <apex:pageBlockTable value="{!ReadOnlyInfoList}" var="roi"  width="100%" columnsWidth="{!IF((destroyerId2 != null && destroyerId2!= ''), '25%,25%,25%,25%', '30%, 35%, 35%')}">
+                        <apex:column >
+                            <apex:facet name="header">Fields</apex:facet>
+                            <apex:outputText value="{!roi.objFieldLabel}" style="font-weight:bold;"/>
+                        </apex:column>
+                        <apex:column >
+                              <apex:facet name="header"><apex:outputText value="{!survivorName}"/></apex:facet>
+                              <apex:outputPanel rendered="{!IF(roi.objFieldOneReferenceName != NULL,false,true)}">
+                                <apex:outputText value="{!roi.objFieldOneValue}"></apex:outputText>
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(roi.objFieldOneReferenceName != NULL,true,false)}">
+                                <a href="javascript:;" onclick="viewRecord('{!roi.objFieldOneValue}');">
+                                    <apex:outputText value="{!roi.objFieldOneReferenceName}"></apex:outputText>
+                                </a>
+                              </apex:outputPanel>
+                        </apex:column>
+                        <apex:column >
+                              <apex:facet name="header">{!destroyerName}</apex:facet>
+                              <apex:outputPanel rendered="{!IF(roi.objFieldTwoReferenceName != NULL,false,true)}">
+                                <apex:outputText value="{!roi.objFieldTwoValue}"></apex:outputText>
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(roi.objFieldTwoReferenceName != NULL,true,false)}">
+                                <a href="javascript:;" onclick="viewRecord('{!roi.objFieldTwoValue}');">
+                                    <apex:outputText value="{!roi.objFieldTwoReferenceName}"></apex:outputText>
+                                </a>
+                              </apex:outputPanel>
+                        </apex:column>
+                        <apex:column rendered="{!destroyerId2 != null && destroyerId2!= ''}">
+                              <apex:facet name="header">{!destroyerName2}</apex:facet>
+                              <apex:outputPanel rendered="{!IF(roi.objFieldThreeReferenceName != NULL,false,true)}">
+                                <apex:outputText value="{!roi.objFieldThreeValue}"></apex:outputText>
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!IF(roi.objFieldThreeReferenceName != NULL,true,false)}">
+                                <a href="javascript:;" onclick="viewRecord('{!roi.objFieldThreeValue}');">
+                                    <apex:outputText value="{!roi.objFieldThreeReferenceName}"></apex:outputText>
+                                </a>
+                              </apex:outputPanel>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection columns="1" title="Object Information" id="section3" >
+                <script>twistSection(document.getElementById("{!$Component.section3}").childNodes[0].childNodes[0]); </script>
+                    <apex:facet name="header">Reparentable Records</apex:facet>
+                    <apex:pageBlockTable value="{!ReparantableChildList}" var="rpi" width="100%" columnsWidth="{!IF((destroyerId2 != null && destroyerId2!= ''), '25%,25%,25%,25%', '30%, 35%, 35%')}" rendered="{!IF(ReparantableChildList.size >0,true,false)}">
+                        
+                        <apex:column >
+                            <apex:facet name="header">
+                                 <apex:outputText value="Object"/> 
+                             </apex:facet>
+                            <apex:outputText style="font-weight:bold;" value="{!rpi.objectLabel}"></apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                             <apex:facet name="header">
+                                 <apex:outputText value="{!survivorName}"/> 
+                              </apex:facet>
+                            <apex:outputText value="{!rpi.childonelistsize}"></apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                             <apex:facet name="header">
+                                <apex:outputText value="{!destroyerName}"/> 
+                              </apex:facet>
+                            <apex:outputText value="{!rpi.childtwolistsize}"></apex:outputText>
+                        </apex:column>
+                        <apex:column rendered="{!destroyerId2 != null && destroyerId2!= ''}">
+                             <apex:facet name="header">
+                                <apex:outputText value="{!destroyerName2}"/> 
+                              </apex:facet>
+                            <apex:outputText value="{!rpi.childthreelistsize}"></apex:outputText>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                    <apex:pageBlockSectionItem rendered="{!(IF(ReparantableChildList.size == 0,true,false))}">
+                        <apex:outputText value="Reparentable child records not available"></apex:outputText>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection columns="1" title="Object Information" id="section4" >
+                <script>twistSection(document.getElementById("{!$Component.section4}").childNodes[0].childNodes[0]); </script>
+                    <apex:facet name="header">Non-Reparentable Records</apex:facet>
+                    <apex:pageBlockTable value="{!NotReparantableChildList}" var="nrpi" width="100%" columnsWidth="{!IF((destroyerId2 != null && destroyerId2!= ''), '25%,25%,25%,25%', '30%, 35%, 35%')}" rendered="{!(IF(NotReparantableChildList.size > 0,true,false))}">
+                        
+                        <apex:column >
+                            <apex:facet name="header">
+                                 <apex:outputText value="Object"/> 
+                             </apex:facet>
+                            <apex:outputText style="font-weight:bold;" value="{!nrpi.objectLabel}"></apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                             <apex:facet name="header">
+                                 <apex:outputText value="{!survivorName}"/> 
+                              </apex:facet>
+                            <apex:outputText value="{!nrpi.childonelistsize}"></apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                             <apex:facet name="header">
+                                <apex:outputText value="{!destroyerName}"/> 
+                              </apex:facet>
+                            <apex:outputText value="{!nrpi.childtwolistsize}"></apex:outputText>
+                        </apex:column>
+                        <apex:column rendered="{!destroyerId2 != null && destroyerId2!= ''}">
+                             <apex:facet name="header">
+                                <apex:outputText value="{!destroyerName2}"/> 
+                              </apex:facet>
+                            <apex:outputText value="{!nrpi.childthreelistsize}"></apex:outputText>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                    <apex:pageBlockSectionItem rendered="{!(IF(NotReparantableChildList.size == 0,true,false))}">
+                        <apex:outputText value="Non-Reparentable child records not available"></apex:outputText>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!NOT(isValid)}">
+                <apex:outputLabel >Not valid Id for Merge</apex:outputLabel>
+            </apex:outputPanel>
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Merge" onclick="mergefunction()" action="{!mergerecords}" rendered="{!isValid}"/>
+                <apex:commandButton value="Cancel" action="{!cancel}"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+    
+    <script>
+        function viewRecord(recordid){
+            window.open('/'+recordid,'sample','width=1000,height=500'); 
+        }
+        $(document).ready(function(){ 
+            
+            mergefunction();
+            $('.tertiaryPalette').css('background-color','cornflowerblue');
+        });
+        function mergefunction(){
+            var inputstr = 'gen'; 
+            var hiddenList = $('input[id$=hiddenvalue]');
+            for(var i=0; i < hiddenList.length; i++){
+            
+                var inputid = inputstr + i;
+                hiddenList[i].value = $('input[name='+inputid+']:checked').val();
+              
+            }
+        }
+
+    </script>
+</apex:page>

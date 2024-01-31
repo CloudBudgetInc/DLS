@@ -1,0 +1,371 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+    .slds-input {
+        float: right;
+    }
+    
+    .boxClass {
+        padding-top: 0px !important;
+        padding-right: 8px !important;
+        padding-left: 8px !important;
+        padding-bottom: 0px !important;
+    }
+    
+    </style>
+     
+    <div class="slds">
+      
+       <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+              <div class="slds-grid">
+                  <div class="slds-media__figure">
+                        <img src="{!URLFOR($Resource.FindSchools_PackageIcon)}" style="width:60px;height:50px;"></img>
+                    </div>
+                    <div class="slds-media__body">
+                        <p class="slds-text-heading--label" style="color: #f8f8f8;">Resources</p>
+                        <div class="slds-grid">
+                            <h1 class="slds-text-heading--medium slds-m-right--small slds-truncate slds-align-middle" title="Projects">Find Schools</h1>
+                        </div>
+                     </div>
+                     <div class="slds-col slds-no-flex slds-align-bottom">
+                        <div style="width: 100%;padding-top: 20px;text-align: center;">
+                            <input type="button" value="Back" class="slds-button slds-button--neutral" ng-click="backToSite()" ng-disabled="button_clicked" style="border: 1px solid #d8dde6;background-color: #fff;"/>
+                        </div>
+                    </div>
+              </div>
+          </div>  
+          
+          <div>
+            <label>
+                <span class="slds-box slds-box_xx-small boxClass" style="background-color: #368ffe;"></span>
+                <span style="margin-left: 5px;">DLS-Site</span>
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <span class="slds-box slds-box_xx-small boxClass" style="background-color: indianred;"></span>
+                <span style="margin-left: 5px;">Partner-Site</span>
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <span class="slds-box slds-box_xx-small boxClass" style="background-color: orange;"></span>
+                <span style="margin-left: 5px;">Client-Site</span>
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <span class="slds-box slds-box_xx-small boxClass" style="background-color: #32d432d9;"></span>
+                <span style="margin-left: 5px;">Hotel Locations</span>
+            </label>
+            &nbsp;&nbsp;
+            <label>
+                <span class="slds-box slds-box_xx-small boxClass" style="background-color: yellow;"></span>
+                <span style="margin-left: 5px;">Candidates</span>
+            </label>
+        </div>
+          
+          <div class="slds-grid slds-m-top--medium" >
+               
+               <!--
+               <script type="text/ng-template" id="control.tpl.html">
+                    <button class="btn btn-sm btn-primary" ng-class="{'btn-warning': danger}" ng-click="controlClick()">{{controlText}}</button>
+               </script> -->
+               
+               <div id="map_canvas">
+                    
+                    <script type="text/ng-template" id="control.tpl.html">
+                       <button type="button" class="slds-button slds-button--icon-border-filled slds-modal__close" ng-click="controlClick()">
+                          <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                            <use xlink:href="{!URLFOR($Resource.SLDS_Icons,'salesforce-lightning-design-system-icons/action-sprite/svg/symbols.svg#filter')}"></use>
+                          </svg>
+                          <span class="slds-assistive-text">Close</span>
+                       </button> 
+                    </script>
+                    
+                    <ui-gmap-google-map center="map.center" zoom="map.zoom"  dragging="map.dragging" events="map.events" options="map.options" bounds="map.bounds" pan="true" control="map.control">
+                        <ui-gmap-search-box options="searchbox.options" template="searchbox.template" events="searchbox.events" position="searchbox.position"></ui-gmap-search-box>
+                        <ui-gmap-markers models="map.filteredMarkers" idkey="map.idkey" coords="'self'" icon="'icon'" fit="true" click="'onClicked'">
+                        </ui-gmap-markers>
+                        <ui-gmap-map-control template="control.tpl.html" position="top-right" controller="controlCtrl" index="-1"></ui-gmap-map-control>
+                    </ui-gmap-google-map>
+                </div>
+          </div>
+            
+           <div class="slds-grid slds-m-top--medium">
+               <span style="float: left;margin-left: 1em;font-size: 15px;font-weight: bold;">Total # of results: {{totalResultsCount}}</span>
+           </div>
+          <div class="slds-grid slds-m-top--medium">
+               
+                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal" id="locationtable">
+                    <thead>
+                        <tr >
+                            <th scope="col">
+                                <span class="slds-truncate">Name</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">City</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">State</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Country</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Zip Code</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Website</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Type</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate"> Proximity(Mi) </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="loc in locationlist" ng-if="loc.Proximity < selectedMiles" class="slds-hint-parent">
+                            <td data-label="Name" role="row">
+                                <a href="/{{loc.Id}}" target="_blank">{{loc.Name}}</a>
+                            </td>
+                            <td data-label="City">
+                                <span class="slds-truncate">{{loc.City}}</span>
+                            </td>
+                            <td data-label="State">
+                                <span class="slds-truncate">{{loc.State}}</span>
+                            </td>
+                            <td data-label="Country">
+                                <span class="slds-truncate">{{loc.Country}}</span>
+                            </td>
+                            <td data-label="ZipCode">
+                                <span class="slds-truncate">{{loc.ZipCode}}</span>
+                            </td>
+                            <td data-label="Website">
+                                <span class="slds-truncate">{{loc.Website}}</span>
+                            </td>
+                            <td data-label="Type">
+                                <span class="slds-truncate">{{loc.Type}}</span>
+                            </td>
+                            <td data-label="Proximity">
+                                <span class="slds-truncate">{{loc.Proximity | number:2}}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table> 
+                <!--</div>-->
+            </div> 
+             
+            <div aria-hidden="false" role="dialog" class="slds-modal slds-modal--large {{model.modelState2}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;">
+                         <button type="button" class="slds-button slds-button--icon-border-filled slds-modal__close" ng-click="CancelClickForContentSelect()">
+                              <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                                <use xlink:href="{!URLFOR($Resource.SLDS_Icons,'salesforce-lightning-design-system-icons/action-sprite/svg/symbols.svg#close')}"></use>
+                              </svg>
+                              <span class="slds-assistive-text">Close</span>
+                          </button>
+                          
+                         <h2 class="slds-text-heading--medium" ng-show="selectedMarker.content.Type != 'Hotel' && selectedMarker.content.Type != 'Candidate'">Location Details</h2>
+                         <h2 class="slds-text-heading--medium" ng-show="selectedMarker.content.Type == 'Hotel'">Hotel Details</h2>
+                         <h2 class="slds-text-heading--medium" ng-show="selectedMarker.content.Type == 'Candidate'">Candidate Details</h2>
+                     </div>
+                     <div class="slds-modal__content"> 
+                         <div class="slds-tabs--default">
+                            <ul class="slds-tabs--default__nav .slds-p-around--medium" role="tablist" >
+                              <li class="slds-tabs--default__item slds-text-heading--label" ng-class="(tabname == 'tabOne')?'slds-active':''" title="Item One" role="presentation"  >
+                                <a class="slds-tabs--default__link" href="javascript:;" role="tab" tabindex="0" aria-selected="true" aria-controls="tab-default-1" id="tab-default-1__item" ng-click="tabname='tabOne';console.log('::::',tabname)">Info</a></li>
+                              <li class="slds-tabs--default__item slds-text-heading--label" title="Item Two" ng-class="(tabname == 'tabTwo')?'slds-active':''"
+                                role="presentation" ><a class="slds-tabs--default__link" href="javascript:;" role="tab"  aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item" ng-click="tabname='tabTwo'" ng-show="selectedMarker.content.Type != 'Hotel' && selectedMarker.content.Type != 'Candidate'">Enquiry Form</a></li>
+                              <li class="slds-tabs--default__item slds-text-heading--label" title="Item Three" 
+                                role="presentation" ><a class="slds-tabs--default__link" href="javascript:;" role="tab"  aria-selected="false" aria-controls="tab-default-3" id="tab-default-3__item" ng-click="tabname='tabThree'" ng-show="selectedMarker.content.Type != 'Hotel' && selectedMarker.content.Type != 'Candidate'">Find Hotels</a></li>
+                              <!--<li class="slds-tabs--default__item slds-text-heading--label" title="Item Four" 
+                                role="presentation" ><a class="slds-tabs--default__link" href="javascript:;" role="tab"  aria-selected="false" aria-controls="tab-default-4" id="tab-default-4__item" ng-click="tabname='tabFour'">Door Codes</a></li>-->
+                            </ul>
+                            <div id="tab-default-1" class="slds-tabs--default__content slds-m-top--medium" ng-class="(tabname == 'tabOne')?'slds-show':'slds-hide'" role="tabpanel" aria-labelledby="tab-default-1__item">
+                                 <div><a href="/{{selectedMarker.id}}" target="_blank"> {{selectedMarker.content.Name}}</a></div>
+                                 <div>{{selectedMarker.content.Street}}</div>
+                                 <div>{{selectedMarker.content.City}}, {{selectedMarker.content.State}}</div>
+                                 <div>{{selectedMarker.content.Country}}</div>
+                                 <div>{{selectedMarker.content.ZipCode}}</div>
+                                 <!--<div ng-show="(selectedMarker.content.WifiCode.length > 0)?true:false">Wifi Code:{{selectedMarker.content.WifiCode}}</div>-->
+                                 <div>Miles:{{selectedMarker.content.Proximity | number:2}}</div>  
+                                 <div ng-show="selectedMarker.content.Type == 'Candidate'">All count as Instructor: {{selectedMarker.content.Count}}</div> 
+                                 <div ng-show="selectedMarker.content.Type == 'Candidate'">Active count as Instructor: {{selectedMarker.content.ActiveCount}}</div> 
+                                 <div ng-if="selectedMarker.content.Type != 'Candidate' && selectedMarker.content.Type != 'Hotel'"># of Projects per Location: {{selectedMarker.content.Count}}</div>     
+                                 <div ng-if="selectedMarker.content.Type != 'Candidate' && selectedMarker.content.Type != 'Hotel'"># of Active Projects per Location: {{selectedMarker.content.ActiveCount}}</div>                  
+                            </div>
+                            <div id="tab-default-2" class="slds-tabs--default__content slds-m-top--medium" role="tabpanel" aria-labelledby="tab-default-2__item" ng-class="(tabname == 'tabTwo')?'slds-show':'slds-hide'">
+                                
+                                <div class="slds-grid slds-grid--pull-padded" style="width: 95%;">
+                                    <div class="slds-col--padded"><label class="slds-form-element__label" for="text-input-01">Name</label><input id="text-input-01" class="slds-input" ng-model="enquiryName" type="text" placeholder="Name" /></div>
+                                    <div class="slds-col--padded"><label class="slds-form-element__label" for="text-input-02">Email</label><input id="text-input-02" class="slds-input" ng-model="enquiryEmail" type="text" placeholder="Email" /></div>
+                                </div>
+                                <div class="slds-grid slds-grid--pull-padded" >
+                                    <div class="slds-col--padded"><label class="slds-form-element__label" for="text-input-03">Phone</label><input id="text-input-03" class="slds-input" ng-model="enquiryPhone" type="text" placeholder="Phone" /></div>
+                                    <div class="slds-col--padded"><label class="slds-form-element__label" for="text-input-04">Agency/Company</label><input id="text-input-04" class="slds-input" ng-model="enquiryAgency" type="text" placeholder="Agency/Company" /></div>
+                                </div>
+                                <div class="slds-grid slds-grid--pull-padded" style="width: 99%;">
+                                    <div class="slds-col--padded"><label class="slds-form-element__label" for="text-input-03">Language</label>
+                                    <select  ng-options="opt.id as opt.name for opt in languageData" ng-model="selectedLanguage" class="slds-select" style="width: 99%;"></select></div>
+                                    <div class="slds-col--padded"><label class="slds-form-element__label" for="text-input-04">Dialect</label>
+                                    <select  ng-options="opt.id as opt.name for opt in dialectData" ng-model="selectedDialect" class="slds-select" ></select></div>
+                                </div>
+                               
+                                <div class="slds-grid slds-grid--pull-padded" >
+                                    <div class="slds-col--padded"><label class="slds-form-element__label" for="enquirycomments">Requirement Details / Questions</label><textarea id="enquirycomments" class="slds-textarea" ng-model="enquirycomments"></textarea></div>
+                                    <div class="slds-col--padded"></div>
+                                </div>
+                             </div>
+                            <div id="tab-default-3" class="slds-tabs--default__content slds-m-top--medium" role="tabpanel" aria-labelledby="tab-default-3__item" ng-class="(tabname == 'tabThree')?'slds-show':'slds-hide'">
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal" id="hoteltable" ng-show="(selectedMarker.content.Hotels.length >0)?true:false">
+                                    <thead>
+                                        <tr >
+                                            <th scope="col">
+                                                <span class="slds-truncate">Name</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span class="slds-truncate">Address</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span class="slds-truncate">Proximity(Mi)</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="hotel in selectedMarker.content.Hotels" class="slds-hint-parent">
+                                            <td data-label="Name" role="row">
+                                                <span class="slds-truncate">{{hotel.Name}}</span>
+                                            </td>
+                                            <td data-label="City">
+                                                <span class="slds-truncate">{{hotel.Address__c}}</span>
+                                            </td>
+                                            <td data-label="State">
+                                                <span class="slds-truncate">{{hotel.Proximity | number:2}}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table> 
+                                <div ng-show="(selectedMarker.content.Hotels.length >0)?false:true">
+                                    No hotels found
+                                </div>
+                            </div>
+                            
+                            <!--<div id="tab-default-4" class="slds-tabs--default__content slds-m-top--medium" ng-class="(tabname == 'tabFour')?'slds-show':'slds-hide'" role="tabpanel" aria-labelledby="tab-default-4__item">
+                                
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal" id="doortable" ng-show="(selectedMarker.content.DoorCodes.length >0)?true:false">
+                                    <thead>
+                                        <tr >
+                                            <th scope="col">
+                                                <span class="slds-truncate">Name</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span class="slds-truncate">Door Code</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="code in selectedMarker.content.DoorCodes" class="slds-hint-parent">
+                                            <td data-label="Name" role="row">
+                                                <span class="slds-truncate">{{code.Name}}</span>
+                                            </td>
+                                            <td data-label="City">
+                                                <span class="slds-truncate">{{code.Door_Code__c}}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table> 
+                                <div ng-show="(selectedMarker.content.DoorCodes.length >0)?false:true">
+                                    No door codes found
+                                </div>
+
+                            </div>-->
+                         </div>
+                    </div>
+                    <div class="slds-modal__footer" ng-class="(tabname == 'tabTwo')?'slds-show':'slds-hide'">     
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer" ng-click="submitOpp();" >Submit</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{model.backDropeOpen2}}"></div>
+            
+            <div aria-hidden="false" role="dialog" class="slds-modal {{model.modelState4}}">
+                <div class="slds-modal__container" style="width:30%">
+                    <div class="slds-modal__header" style="background-color:cadetblue;">
+                       <button type="button" class="slds-button slds-button--icon-border-filled slds-modal__close" ng-click="CancelClickForContent()">
+                          <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                            <use xlink:href="{!URLFOR($Resource.SLDS_Icons,'salesforce-lightning-design-system-icons/action-sprite/svg/symbols.svg#close')}"></use>
+                          </svg>
+                          <span class="slds-assistive-text">Close</span>
+                       </button>      
+                        <h2 class="slds-text-heading--medium" >Search Filters</h2>
+                    </div>
+                    <div class="slds-modal__content"> 
+                       <div>
+                           <div class="slds-col"><label >School Type</label></div>
+                       </div>
+                        <div>
+                            <label class="slds-checkbox" for="dlssite">
+                              <input name="default" type="checkbox" id="dlssite" ng-model="dlssite"/>
+                              <span class="slds-checkbox--faux"></span>
+                              <span class="slds-form-element__label">DLS-Site</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="slds-checkbox" for="partnersite">
+                              <input name="default" type="checkbox" id="partnersite" ng-model="partnersite"/>
+                              <span class="slds-checkbox--faux"></span>
+                              <span class="slds-form-element__label">Partner-Site</span>    
+                            </label>
+                        </div>
+                        <div>
+                            <label class="slds-checkbox" for="clientsite">
+                              <input name="default" type="checkbox" id="clientsite" ng-model="clientsite"/>
+                              <span class="slds-checkbox--faux"></span>
+                              <span class="slds-form-element__label">Client-Site</span>    
+                            </label>
+                        </div>
+                        <div>
+                            <label class="slds-checkbox" for="candidates">
+                              <input name="default" type="checkbox" id="candidates" ng-model="candidates"/>
+                              <span class="slds-checkbox--faux"></span>
+                              <span class="slds-form-element__label">Candidates</span>    
+                            </label>
+                        </div>
+                        <div>
+                            <label class="slds-checkbox" for="hotellocations">
+                              <input name="default" type="checkbox" id="hotellocations" ng-model="hotellocations"/>
+                              <span class="slds-checkbox--faux"></span>
+                              <span class="slds-form-element__label">Hotel Locations</span>    
+                            </label>
+                        </div>
+                        <div>
+                           <div class="slds-col"><label >Miles</label></div>
+                        </div>
+                        <div>
+                            <select  ng-options="opt.id as opt.name for opt in data" ng-model="selectedMiles" class="slds-select" ></select>
+                        </div>
+                        <div>
+                            <label class="slds-checkbox" for="activeProjects">
+                              <input name="default" type="checkbox" id="activeProjects" ng-model="ActiveProjectLocations"/>
+                              <span class="slds-checkbox--faux"></span>
+                              <span class="slds-form-element__label">Active Projects > 0</span>    
+                            </label>
+                        </div>
+                        <div>
+                            <label class="slds-checkbox" for="allProjects">
+                              <input name="default" type="checkbox" id="allProjects" ng-model="AllProjectLocations"/>
+                              <span class="slds-checkbox--faux"></span>
+                              <span class="slds-form-element__label">All Projects > 0</span>    
+                            </label>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">     
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer" ng-click="search();" >Search</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{model.backDropeOpen4}}"></div> 
+        </div>
+        
+    </html>   
+</apex:page>

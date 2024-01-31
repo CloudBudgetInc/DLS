@@ -1,0 +1,22 @@
+<template>
+    <c-modal-cmp header='Delete Uploaded Files' show-header show-footer show>
+        <div slot="footer">
+            <button class="slds-button slds-button_neutral btn btn-primary" disabled={isDisabled}
+                onclick={handleFileDelete} name="Close">Delete</button>
+            <button class="slds-button slds-button_neutral btn btn-secondary" onclick={closeToastMsg}
+                name="Close">Close</button>
+        </div>
+        <div slot="body">
+            <template if:true={isLoaded}>
+                <template if:false={isNillFiles}>
+                    <lightning-datatable key-field="Id" data={records} columns={columns}
+                        onrowselection={handleSelectedRows}>
+                    </lightning-datatable>
+                </template>
+                <template if:true={isNillFiles}>
+                    <p class="slds-align_absolute-center">There are no files found.</p>
+                </template>
+            </template>
+        </div>
+    </c-modal-cmp>
+</template>

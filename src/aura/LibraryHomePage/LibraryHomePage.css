@@ -1,0 +1,8 @@
+.THIS .wrapTableHeader .slds-truncate{
+   white-space: initial !important;
+}
+
+.THIS .matReqClass .ldtdev .slds-table_fixed-layout {
+    table-layout: auto !important;
+    white-space: nowrap !important;
+}

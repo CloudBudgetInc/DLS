@@ -1,0 +1,47 @@
+<aura:component>
+
+    <aura:attribute name="contactAssignments" type="LIST"/>
+    <aura:attribute name="showActionCol" type="Boolean" default="true"/>
+    <aura:attribute name="showSentBadge" type="Boolean" default="false"/>
+    <aura:attribute name="fieldAPINameToShowBadge" type="String"/>
+
+    <aura:method name="getSelectedCA" action="{!c.getSelectedRows}" access="PUBLIC"></aura:method>
+
+    <aura:if isTrue="{!v.contactAssignments.length > 0}">
+        <div>                    
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="slds-text-align_right" scope="col" style="width:3.25rem">
+                            <div class="slds-th__action slds-th__action_form">
+                                <div class="slds-checkbox">
+                                    <lightning:input aura:id="selectall" type="checkbox" label="" onchange="{!c.toggleSelectAllRows}"/>
+                                </div>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Name">Name</div>
+                        </th>
+                        <aura:if isTrue="{!v.showActionCol}">
+                            <th scope="col">
+                                <div class="slds-truncate" title="Action">Action</div>
+                            </th>  
+                        </aura:if>    
+                    </tr>
+                </thead>
+                <tbody>  
+                    <aura:iteration items="{!v.contactAssignments}" var="ca">
+                        <c:CATableRowUtilCmpForConga aura:id="tableRow"
+                            fieldAPINameToShowBadge="{!v.fieldAPINameToShowBadge}" 
+                            conAssign="{!ca}"
+                            showSentBadge="{!v.showSentBadge}"
+                            showActionCol="{!v.showActionCol}"/>
+                    </aura:iteration>
+                </tbody>
+            </table>
+        </div>
+        <aura:set attribute="else">
+            <br/><center><h5 style="font-size:0.875rem;">No records to display</h5></center>
+        </aura:set>
+    </aura:if>
+</aura:component>

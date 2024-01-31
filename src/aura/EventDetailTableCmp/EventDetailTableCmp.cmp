@@ -1,0 +1,69 @@
+<aura:component >
+    <aura:attribute name="event" type="Map"/>
+    <aura:attribute name="cancellationType" type="List[]" default="['Canceled','Late Cancellation','No class']"/>
+    <aura:attribute name="cancelType" type="List[]" default="['Canceled','Late Cancellation','No class']"/>
+    <aura:attribute name="dayDetails" type="List[]"/>
+    <aura:attribute name="updatedEventIds" type="List[]"/>
+    <aura:attribute name="viewType" type="String"/>
+    
+    <aura:method name="toggleError" action="{!c.toggleHasError}">
+        <aura:attribute name="hasError" type="Boolean"/>
+    </aura:method>
+
+    <tr>
+        <td>
+            <div>{!v.event.taskName}</div>
+            <div>{!v.event.scheduleName}</div>
+        </td>
+        <td>
+            <div>{!v.event.eventDate}</div>
+            <div>{!v.event.day}</div>
+        </td>
+        <td>
+            <div>{!v.event.startTime}</div>
+            <div>{!v.event.endTime}</div>
+        </td>
+        <td><div>&nbsp;&nbsp;&nbsp;&nbsp;{!v.event.eventDuration}</div></td>
+        <td><div>{!v.event.instructorName}</div></td>
+        <aura:if isTrue="{!not(v.event.tcdName)}">
+            <aura:if isTrue="{!not(or(v.event.status == 'Canceled',v.event.status == 'Late Cancellation',v.event.status == 'No class'))}">
+            	<td><lightning:select aura:id="cancelSelect" name="" label="" value="{!v.event.cancelSelection}" onchange="{!c.cancelChange}" disabled="{!v.event.cancelDisabled}">
+                    <option text="--Select--" value="--Select--"></option>
+                    <aura:iteration items="{!v.cancelType}" var="type">
+                        <option text="{!type}" value="{!type}"></option>
+                    </aura:iteration>
+                    </lightning:select>
+                </td>
+                
+				<aura:set attribute="else">
+                    <td class="slds-cell-wrap">{!v.event.status}</td>
+                </aura:set>                
+            </aura:if>
+            <aura:if isTrue="{!not(or(v.event.status == 'Canceled',v.event.status == 'Late Cancellation',v.event.status == 'No class'))}">
+            	<td>
+                    <lightning:select aura:id="matchTime" name="" label="" value="{!v.event.selectedTCD}" onchange="{!c.timeMapped}" disabled="{!v.event.disableTimeSelection}">
+                        <option text="--Select--" value="--Select--"></option>
+                        <aura:iteration items="{!v.dayDetails}" var="day">
+                            <option text="{!day.dayChargeCode}" value="{!day.dayId}"></option>
+                        </aura:iteration>
+                    </lightning:select>
+                </td>
+                <aura:set attribute="else">
+                    <td>
+                    <lightning:select name="" label="" value="{!v.event.selectedTCD}" onchange="{!c.timeMapped}" disabled="true">
+                        <option text="--Select--" value="--Select--"></option>
+                        <aura:iteration items="{!v.dayDetails}" var="day">
+                            <option text="{!day.dayChargeCode}" value="{!day.dayId}"></option>
+                        </aura:iteration>
+                    </lightning:select>
+                    </td>
+                </aura:set>    
+            </aura:if>
+            
+            <aura:set attribute="else">
+                <td></td>
+            	<td class="slds-cell-wrap">{!v.event.tcdName}</td>
+            </aura:set>
+        </aura:if>
+    </tr>
+</aura:component>

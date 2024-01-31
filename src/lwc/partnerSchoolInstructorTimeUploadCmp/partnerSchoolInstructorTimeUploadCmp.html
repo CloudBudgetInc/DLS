@@ -1,0 +1,98 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 12/21/2022
+  @last modified by  : Dhinesh Kumar
+-->
+<template>
+    <lightning-card title="Partner School Project's Instructor Time Upload" icon-name="standard:timesheet_entry">
+        <lightning-spinner if:true={loading}></lightning-spinner>
+        <div class="slds-p-around_medium">
+            <template if:false={showFilters}>
+                <lightning-input type="file" label="CSV file" multiple="false" accept=".csv"
+                    onchange={handleInputChange}></lightning-input>
+            </template>
+            <template if:true={showFilters}>
+                <div class="box">
+                    <span class="boxTitle">Partner School Fields</span>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item padding="horizontal-small" size="4">
+                            <lightning-combobox name="project" label="Project Title" value={filter.project}
+                                placeholder="Select Project Title" options={projectoptions} required
+                                onchange={handleFilterChange}>
+                            </lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item padding="horizontal-small" size="4">
+                            <lightning-combobox name="person" label="Person" value={filter.person}
+                                placeholder="Select Person" options={instructoroptions} required
+                                onchange={handleFilterChange} disabled={disableFilter.person}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item padding="horizontal-small" size="4">
+                            <lightning-combobox name="task" label="Task" value={filter.task} placeholder="Select Task"
+                                options={taskoptions} onchange={handleFilterChange} required
+                                disabled={disableFilter.task}>
+                            </lightning-combobox>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </div>
+                <div class="slds-p-top_small">
+                    <div class="box">
+                        <span class="boxTitle">Salesforce Fields</span>
+                        <lightning-layout multiple-rows="true">
+                            <lightning-layout-item padding="horizontal-small" size="4">
+                                <c-lookup data-id="projlookup" label="Select Project"
+                                    s-object-api-name="Acctseed__Project__c" placeholder="Search Project"
+                                    fields="Id, Name, Training_Location__c" icon-name="custom:custom68" search-field="DLS_Ref__c"
+                                    required onlookupupdate={handleProjectSelection}>
+                                </c-lookup>
+                            </lightning-layout-item>
+                            <lightning-layout-item padding="horizontal-small" size="4">
+                                <c-lookup data-id="inslookup" label="Select Instructor" s-object-api-name="Contact"
+                                    placeholder="Search Instructor" icon-name="standard:contact" fields="Id, Name"
+                                    filter={contactFilter} required onlookupupdate={handleInstructorSelection}
+                                    disabled={disableProjFilter.instructor}>
+                                </c-lookup>
+                            </lightning-layout-item>
+                            <lightning-layout-item padding="horizontal-small" size="4">
+                                <c-lookup data-id="tasklookup" label="Select Project Task"
+                                    s-object-api-name="Acctseed__Project_Task__c" placeholder="Search Project Task"
+                                    fields="Id, Name, Billable__c, Parent_Project_Task__c, Project_Task_Type__c, RecordType.DeveloperName"
+                                    icon-name="custom:custom68" filter={ptFilter} required
+                                    onlookupupdate={handlePTSelection} disabled={disableProjFilter.task}></c-lookup>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                </div>
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item padding="around-small" size="12">
+                        <div class="slds-float_right">
+                            <lightning-button label="Apply Filter" variant="brand" onclick={validateFilter}>
+                            </lightning-button>
+                            <lightning-button class="slds-p-left_small" label="Cancel" onclick={cancel}>
+                            </lightning-button>
+                            <template if:true={showTable}>
+                                <lightning-button class="slds-p-left_small" label="Save" variant="brand"
+                                    onclick={validateSave}></lightning-button>
+                            </template>
+                        </div>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+            <template if:true={showTable}>
+                <lightning-datatable key-field="_id" columns={columns} data={filteredData} sorted-by={sortBy}
+                    sorted-direction={sortDirection} hide-checkbox-column onsort={doSorting} suppress-bottom-bar>
+                </lightning-datatable>
+            </template>
+        </div>
+    </lightning-card>
+
+    <c-modal-cmp header={toastMsg.header} show-header show-footer show={toastMsg.show}>
+        <div slot="footer">
+            <lightning-button variant="brand" label="Ok" onclick={confirmUpdate}></lightning-button>
+        </div>
+        <div slot="body">
+            <lightning-formatted-rich-text value={toastMsg.message}></lightning-formatted-rich-text>
+        </div>
+    </c-modal-cmp>
+</template>

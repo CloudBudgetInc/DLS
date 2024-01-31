@@ -1,0 +1,59 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global" >
+    <aura:attribute name="CATabList" type="List" default="[]" />
+    
+    <div>
+        <aura:if isTrue="{!v.CATabList.length > 0}">
+            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                <thead class="thead-light">
+                    <tr class="slds-line-height_reset">
+                        <th class="" scope="col">
+                            <div class="slds-truncate">Name</div>
+                        </th>
+                        <th class="" scope="col">
+                            <div class="slds-truncate">Start Date</div>
+                        </th>
+                        <th class="" scope="col">
+                            <div class="slds-truncate">End Date</div>
+                        </th>
+                        <th class="" scope="col">
+                            <div class="slds-truncate">Position</div>
+                        </th>
+                        <th class="" scope="col">
+                            <div class="slds-truncate">Status</div>
+                        </th>     
+                    </tr>
+                </thead>
+                <tbody>
+                    <aura:iteration items="{!v.CATabList}" var="item" indexVar="index">
+                        <tr class="slds-hint-parent">
+                            <td data-label="Name">
+                                <div class="slds-truncate" title="Cloudhub">
+                                    {!item.contactName}
+                                </div>
+                            </td>
+                            <td data-label="Start Date">
+                                <div class="slds-truncate">
+                                    <ui:outputDate aura:id="oDate" format="MM/DD/YYYY" value="{!item.startDate}" />                                      
+                                </div>
+                            </td>
+                            <td data-label="End Date">
+                                <div class="slds-truncate">
+                                    <ui:outputDate aura:id="oDate" format="MM/DD/YYYY" value="{!item.endDate}" />                                                                  
+                                </div>
+                            </td>
+                            <td data-label="Position">
+                                <div class="slds-truncate">{!item.position}</div>
+                            </td>
+                            <td data-label="Status">
+                                <div class="slds-truncate">{!item.status}</div>
+                            </td>
+                        </tr>
+                    </aura:iteration>
+                </tbody>            
+            </table><br/>
+            <aura:set attribute="else">
+                <center style="font-size:0.875;">No records to display</center>
+            </aura:set>
+        </aura:if>
+    </div>
+</aura:component>

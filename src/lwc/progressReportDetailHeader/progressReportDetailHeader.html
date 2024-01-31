@@ -1,0 +1,33 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 11/01/2022
+  @last modified by  : Dhinesh Kumar
+-->
+<template>
+    <span class="backCls">
+        <div style="float: left;" class="slds-p-vertical_medium">
+            <div class="slds-grid">
+                <span class="slds-col"><i class="far fa-arrow-left" onclick={back}></i></span>
+                <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+            </div>
+        </div>
+    </span>
+    <div if:true={showLTReport}>
+        <center><h5 class="card-title" style=" font-size:2rem !important;">LANGUAGE TRAINING REPORT</h5></center>
+        <br/>
+    </div>
+    <div if:true={showDLIReport}>
+        <center><h5 class="card-title" style=" font-size:2rem !important;">PERIODIC ASSESSMENT REPORT</h5></center>
+        <br/>
+    </div>
+    <div if:true={showTestReport}>
+        <center><h5 class="card-title" style=" font-size:2rem !important;">TEST REPORT</h5></center>
+        <br/>
+    </div> 
+    <div if:true={showDLITest}>
+        <center><h5 class="card-title" style=" font-size:2rem !important;">STUDENT ASSESSMENT</h5></center>
+        <br/>        
+    </div>   
+</template>

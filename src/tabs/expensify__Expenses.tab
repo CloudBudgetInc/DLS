@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Expense reports that don&apos;t suck!</description>
+    <frameHeight>6000</frameHeight>
+    <hasSidebar>false</hasSidebar>
+    <label>Expenses</label>
+    <motif>Custom17: Sack</motif>
+    <url>https://salesforce.expensify.com/salesforce?email={!User.Email}&amp;sessionID={!API.Session_ID}&amp;url={!API.Partner_Server_URL_160}</url>
+    <urlEncodingKey>UTF-8</urlEncodingKey>
+</CustomTab>

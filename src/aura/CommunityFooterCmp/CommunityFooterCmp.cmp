@@ -1,0 +1,64 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" >
+    
+    <aura:attribute name="communityName" type="String" default=""/>
+    
+    <!-- ltng:require scripts="{!$Resource.FontCss}" /--> 
+    <img src="{!$Resource.footerBorderIcon}" class="footerImg" alt="DLS Logo" style="width: 100%;"/>
+    <div class="py-4">
+        <footer id="footer" class="footer" style="margin-top: -25px;">
+            <!-- Footer goes here -->
+            <div class="footer__main pt-5 pb-4">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-sm-4 col-md-2 text-center text-md-left">
+                            <a class="footer-brand" onclick="{!c.redirectToHome}">
+                                <img src="{!$Resource.FooterIcon}"  class="footerLogo" width="120"/>
+                            </a>
+                        </div>
+                        <div class="col-sm-8 col-md-5 col-lg-4 text-center text-md-left mt-3 mt-sm-0">
+                            <ul id="footer-menu" class="list-unstyled footer-menu"><li id="menu-item-17" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-17"><a href="http://dls.myblennd.com/about-language-development/">About Us</a></li>
+                                <li id="menu-item-66" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-66"><a href="http://dls.myblennd.com/services/">Services</a></li>
+                                <li id="menu-item-67" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-67"><a href="http://dls.myblennd.com/dls-locations/">Locations</a></li>
+                                <li id="menu-item-69" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-69"><a href="http://dls.myblennd.com/linguistic-news-resources/">News &amp; Blog</a></li>
+                                <li id="menu-item-16" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-16"><a href="http://dls.myblennd.com/contact/">Contact Us</a></li>
+                                <li id="menu-item-68" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-68"><a href="http://dls.myblennd.com/careers/">Careers</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-12 col-md-5 col-lg-auto ">
+                            <ul class="footer__contact list-unstyled my-4 mt-lg-0 text-center text-md-right">
+                                <li class="phoneIconCls">
+                                    <a href="tel:17032434855">
+                                        <i class="fas fa-phone fa-fw"></i> +1 (703) 243-4855</a>
+                                </li>
+                            </ul>
+                            <ul class="social-share list-inline list-unstyled text-center text-md-right iconCls">
+                                <li class="social-icon list-inline-item ml-3 mr-0">
+                                    <a href="https://www.facebook.com/" title="Facebook" class="social-facebook" target="_blank"> <i class="fab fa-facebook-f"></i> </a>
+                                </li>
+                                <li class="social-icon list-inline-item ml-3 mr-0">
+                                    <a href="http://twitter.com/" title="Twitter" class="social-twitter" target="_blank"> <i class="fab fa-twitter"></i> <span class="sr-only">Twitter</span> </a>
+                                </li>
+                                <li class="social-icon list-inline-item ml-3 mr-0">
+                                    <a href="http://linkedin.com" title="Linkedin" class="social-linkedin" target="_blank"> <i class="fab fa-linkedin-in"></i> <span class="sr-only">Linkedin</span> </a>
+                                </li>
+                                <li class="social-icon list-inline-item ml-3 mr-0">
+                                    <a href="https://www.instagram.com/" title="Instagram" class="social-instagram" target="_blank"> <i class="fab fa-instagram"></i> <span class="sr-only">Instagram</span> </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer__bottom">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-9">
+                            <span>© 2019</span> Language Services, LLC dba Diplomatic Language Services |  <a href="#" title="Blennd">Web Design</a> | <a href="#" title="Sitemap">Sitemap</a> | <a href="#" title="Privacy Policy">Privacy Policy</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+</aura:component>

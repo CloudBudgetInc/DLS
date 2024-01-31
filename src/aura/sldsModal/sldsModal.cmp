@@ -1,0 +1,40 @@
+<aura:component access="public">
+    <aura:attribute name="header" type="Aura.Component[]" access="public"/>
+    <aura:attribute name="content" type="Aura.Component[]" access="public"/>
+    <aura:attribute name="footer" type="Aura.Component[]" access="public"/>
+    <aura:attribute name="displayCloseImage" type="Boolean" access="public"/>
+    <aura:attribute name="closeAction" type="Aura.Action" access="public"/>
+    <aura:attribute name="modalZIndexValue" type="String" access="public" default=""/>
+    <aura:attribute name="backdropZIndexValue" type="String" access="public" default=""/>
+    <aura:attribute name="modelWidth" type="string" default=""/>
+    <aura:attribute name="modelHeight" type="string" default=""/>
+    <aura:attribute name="showFooter" type="Boolean" default="true"/>
+    <aura:attribute name="showHeader" type="Boolean" default="true"/>
+    
+    <aura:method name="open" action="{!c.toggleModal}" />
+    <aura:method name="close" action="{!c.toggleModal}" />
+    
+    <div class="slds-modal" style="{!not(empty(v.modalZIndexValue)) ? 'z-index : '+v.modalZIndexValue : ''}"  aura:id="modal" aria-hidden="false" role="dialog">
+        <div class="slds-modal__container" style="{!'width:'+v.modelWidth+'!important'+';height: '+v.modelHeight}">
+            <aura:if isTrue="{!v.displayCloseImage}">
+                <lightning:buttonIcon iconName="utility:close" class="slds-button slds-button_icon white slds-modal__close" variant="bare" size="large" alternativeText="Close" onclick="{!v.closeAction}"/>
+            </aura:if>
+            <aura:if isTrue="{!v.showHeader}">
+                <div class="slds-modal__header">                
+                    <h2 class="slds-text-heading_small">{!v.header}</h2>
+                </div>
+            </aura:if>
+            <div class="slds-modal__content slds-p-around--medium">
+                {!v.content}
+            </div>
+            <aura:if isTrue="{!v.showFooter}">
+                <div class="slds-modal__footer">
+                    {!v.footer}
+                </div>
+            </aura:if>
+        </div>
+    </div>
+    
+    <div class="slds-backdrop" style="{!not(empty(v.backdropZIndexValue)) ? 'z-index : '+v.backdropZIndexValue : ''}" aura:id="modal-backdrop"></div>
+    
+</aura:component>

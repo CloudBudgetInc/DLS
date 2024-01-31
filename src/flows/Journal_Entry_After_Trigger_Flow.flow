@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_Journal_Entry_Creation_Email</name>
+        <label>Send Journal Entry Creation Email</label>
+        <locationX>50</locationX>
+        <locationY>647</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <inputParameters>
+            <name>emailAddressesArray</name>
+            <value>
+                <elementReference>AccountingEmailToAddress</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Journal Entry created with Posting Status as {!$Record.AcctSeed__Status__c}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>Template_for_JE_creation_when_Posting_Status_not_equal_to_Posted</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <assignments>
+        <name>Add_Accounting_Email_ToAddress</name>
+        <label>Add Accounting Email ToAddress</label>
+        <locationX>50</locationX>
+        <locationY>539</locationY>
+        <assignmentItems>
+            <assignToReference>AccountingEmailToAddress</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Label.Accounting_Email_To_Address</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Send_Journal_Entry_Creation_Email</targetReference>
+        </connector>
+    </assignments>
+    <decisions>
+        <name>Check_Is_Insert_or_Is_Update</name>
+        <label>Check Is Insert or Is Update</label>
+        <locationX>380</locationX>
+        <locationY>323</locationY>
+        <defaultConnectorLabel>Is Update</defaultConnectorLabel>
+        <rules>
+            <name>Is_Insert</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Is_New</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_Notification_for_Journal_Entries_when_Posting_Status_not_equal_to_Posted</targetReference>
+            </connector>
+            <label>Is Insert</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Email_Notification_for_Journal_Entries_when_Posting_Status_not_equal_to_Posted</name>
+        <label>Email Notification for Journal Entries when Posting Status not equal to Posted</label>
+        <locationX>182</locationX>
+        <locationY>431</locationY>
+        <defaultConnectorLabel>Do other Action 1</defaultConnectorLabel>
+        <rules>
+            <name>Send_Email_for_JE_creation</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.CreatedById</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <elementReference>$Label.Accounting_Team_User_Id</elementReference>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.AcctSeed__Status__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Posted</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Add_Accounting_Email_ToAddress</targetReference>
+            </connector>
+            <label>Send Email for JE creation</label>
+        </rules>
+    </decisions>
+    <description>1. W-007833 - Email Notification Request for Journal Entries Posting Status
+    - To send an email to Shruti If someone created a Journal Entry (JE) with the Posting Status is not equal to &quot;Posted&quot;&apos;</description>
+    <formulas>
+        <name>Is_New</name>
+        <dataType>Boolean</dataType>
+        <expression>ISNEW()</expression>
+    </formulas>
+    <formulas>
+        <name>Journal_Entry_Record_Link</name>
+        <dataType>String</dataType>
+        <expression>LEFT($Api.Enterprise_Server_URL_510, FIND( &apos;/services&apos;, $Api.Enterprise_Server_URL_510)) &amp; {!$Record.Id}</expression>
+    </formulas>
+    <interviewLabel>Journal Entry After Trigger Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Journal Entry After Trigger Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>254</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Is_Insert_or_Is_Update</targetReference>
+        </connector>
+        <object>AcctSeed__Journal_Entry__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>Template_for_JE_creation_when_Posting_Status_not_equal_to_Posted</name>
+        <text>&lt;p&gt;Hi Shruti,&lt;/p&gt;&lt;p&gt;This is a notification to inform you that a new Journal Entry has been created with Posting Status as &lt;strong&gt;{!$Record.AcctSeed__Status__c}&lt;/strong&gt;. Please, see the link below.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;{!Journal_Entry_Record_Link}&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;{!$Record.Name}&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Thank you,&lt;/p&gt;&lt;p&gt;System Generated Email&lt;/p&gt;</text>
+    </textTemplates>
+    <variables>
+        <name>AccountingEmailToAddress</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

@@ -1,0 +1,44 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="CustomButtonService">
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="onHoldDt" type="String"/>   
+    <aura:attribute name="message" type="String"/>
+    <aura:attribute name="type" type="String"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" style="background-color: rgba(0, 0, 0, 0.10);" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div aura:id="toast" class="slds-hide">
+        <div aura:id="toastTheme" class="slds-notify slds-notify--toast" role="alert">
+            <span class="slds-assistive-text">Info</span>
+            <a class="slds-button slds-button--icon-inverse slds-notify__close" onclick="{!c.closeToast}">
+                <lightning:icon aura:id="closeIcon" iconName="utility:close" size="small" />
+            </a>
+            
+            <div class="slds-notify__content">
+                <a class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                    <lightning:icon aura:id="actionIcon" iconName="{!v.type == 'success' ? 'utility:success' : 'utility:error' }" size="small" />
+                </a>
+                <h2 class="slds-text-heading--small" style="margin-left: 29px;margin-top: -22px;">{!v.message}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <aura:if isTrue="{!empty(v.message)}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p class="slds-text-align_center">Confirmation</p>
+            </aura:set>
+            <p class="slds-p-horizontal_small">
+                Project related contact assignment and schedule records' Status will get updated to On Hold.<br/><br/><br/>
+                
+                <ui:inputDate aura:id="dtVal" label="On Hold Date" value="{!v.onHoldDt}" displayDatePicker="true" required="true" format="MM/dd/yyyy"/>   
+            </p>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Okay" onclick="{!c.updateProject}"/>
+                <lightning:button variant="brand" label="Close" onclick="{!c.closeAction}"/>
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+</aura:component>

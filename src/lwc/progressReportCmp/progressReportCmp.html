@@ -1,0 +1,24 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 03/07/2023
+  @last modified by  : Dhinesh Kumar
+-->
+<template>
+    <template if:true={showLTReport}>
+        <c-assessment-report-for-l-t picklist-options={picklistOptions} show-edit-button={showEditButton} assessment-report-rec={assessmentReport}></c-assessment-report-for-l-t>
+    </template>
+    <template if:true={showDLIReport}>
+        <c-assessment-report-for-dli picklist-options={picklistOptions} show-edit-button={showEditButton} assessment-report-rec={assessmentReport} student-con-assign={studentConAssign}></c-assessment-report-for-dli>
+    </template>
+    <template if:true={showDLI22Report}>
+        <c-assessment-report-dli22 picklist-options={picklistOptions} show-edit-button={showEditButton} assessment-report-rec={assessmentReport}></c-assessment-report-dli22>
+    </template>
+    <template if:true={showDLITestReport}>
+        <c-assessment-report-dlitest picklist-options={picklistOptions} show-edit-button={showEditButton} assessment-report-rec={assessmentReport}></c-assessment-report-dlitest>
+    </template>
+    <template if:true={showTestReport}>
+        <c-test-report picklist-options={picklistOptions} show-edit-button={showEditButton} assessment-report-rec={assessmentReport}></c-test-report>
+    </template>
+</template>

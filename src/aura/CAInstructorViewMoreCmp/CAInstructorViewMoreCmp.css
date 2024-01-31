@@ -1,0 +1,74 @@
+.THIS .slds-form-element__label{
+    
+    font-weight: bold;
+    font-size: 13px;
+    line-height: 2;
+    margin-right: 12px;
+    margin-left: 5px; 
+    display: inline-block;
+    
+}
+.THIS .uiVal {
+    font-size: 13px; 
+    text-justify: inter-word;
+    
+}
+.THIS .uiValue {
+    font-size: 14px; 
+    margin-left: 8px; 
+    
+}
+.THIS .slds-form-element__control{
+    margin-bottom: 10px; 
+    
+    
+}
+.THIS .imgAction2  {
+    width: 4rem;
+    height: 4rem;
+    line-height: 1;
+}
+.THIS .iconAction {
+    max-width: 30px !important;
+    max-height: 30px !important;
+}
+.THIS  th.slds-is-sorted--asc a.toggle:after{
+    
+    opacity:0 !important;
+    
+}
+.THIS .slds-text{
+    line-height:2;
+} 
+.THIS  tr {
+    line-height:3;
+}
+.THIS  th {
+    padding-left: 2px !important;
+    padding-right: 0px !important;
+    
+}
+.THIS .slds-truncate{ 
+    overflow: visible  !important;
+    white-space: initial  !important;  
+}
+
+.THIS slds {
+    box-sizing: border-box  !important;
+}
+.THIS .slds-table td {
+    
+    white-space: initial  !important;
+    position: relative;
+}
+.THIS .checkResult{
+    float: right;
+    margin-right:130px;
+}
+.THIS .Editspin {
+    
+    margin-left: -35%;
+    width: 171%;
+    background-color: rgba(0, 0, 0, 0.10);
+    
+}

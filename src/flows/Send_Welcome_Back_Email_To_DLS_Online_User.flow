@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_Welcome_Back_Email_To_DLS_Online_User</name>
+        <label>Send Welcome Back Email To DLS Online User</label>
+        <locationX>176</locationX>
+        <locationY>334</locationY>
+        <actionName>WelcomeBackEmailToDLSOnlineUser</actionName>
+        <actionType>apex</actionType>
+        <faultConnector>
+            <targetReference>Error_Handling_for_Send_Welcome_Back_Email_To_DLS_Online_User</targetReference>
+        </faultConnector>
+    </actionCalls>
+    <interviewLabel>Send Welcome Back Email To DLS Online Users {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Send Welcome Back Email To DLS Online User</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>50</locationY>
+        <connector>
+            <targetReference>Send_Welcome_Back_Email_To_DLS_Online_User</targetReference>
+        </connector>
+        <schedule>
+            <frequency>Daily</frequency>
+            <startDate>2021-12-17</startDate>
+            <startTime>02:00:00.000Z</startTime>
+        </schedule>
+        <triggerType>Scheduled</triggerType>
+    </start>
+    <status>Active</status>
+    <subflows>
+        <name>Error_Handling_for_Send_Welcome_Back_Email_To_DLS_Online_User</name>
+        <label>Error Handling for Send Welcome Back Email To DLS Online User</label>
+        <locationX>332</locationX>
+        <locationY>334</locationY>
+        <flowName>Publish_Error_Event</flowName>
+        <inputAssignments>
+            <name>Component_Name</name>
+            <value>
+                <stringValue>Flow - Send Welcome Back Email To DLS Online User</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <name>Description</name>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <name>Method_Name</name>
+            <value>
+                <stringValue>Send Welcome Back Email To DLS Online User</stringValue>
+            </value>
+        </inputAssignments>
+    </subflows>
+</Flow>

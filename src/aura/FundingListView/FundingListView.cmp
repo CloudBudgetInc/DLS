@@ -1,0 +1,55 @@
+<aura:component controller="FundingListController" implements="forceCommunity:availableForAllPageTypes" access="global" >
+    <aura:attribute name="projectId" type="String" description="choosen project id" />
+    <aura:attribute name="fundingList" type="list" description="fundslist  of the project"/>
+    <aura:attribute name="displayDevice" type="String" default="" description="browser factor of device"/>
+	<aura:attribute name="communityName" type="String"/>
+  
+    <aura:handler name="init" value="{!this}" action="{!c.getFundingList}"/>
+    
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Payments</h5><br/>  
+            <aura:if isTrue="{!or(v.displayDevice != 'Mobile' ,and(v.displayDevice == 'Mobile',v.fundingList.length > 0))}">
+                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                    <thead class="thead-light">
+                        <tr class="slds-text-title_caps">
+                            <th >Transaction #</th>
+                            <th >Payment Date</th>
+                            <th >Type</th>
+                            <th >Method Of Payment</th>
+                            <aura:if isTrue="{!v.communityName != 'client'}">
+                            	<th>Total Amount</th> 
+                            </aura:if>
+                            <aura:if isTrue="{!v.displayDevice != 'Mobile'}">
+                                <th>Receipt</th> 
+                            </aura:if>
+                        </tr>
+                    </thead>
+                    <tbody>                        
+                        <aura:iteration items="{!v.fundingList}" var="fund" indexVar="index">
+                            <tr>
+                                <td class="wrap" data-label="Transaction" ><a href="javascript:void(0);" onclick="{!c.getFundingDetailView}" name="{!index}">{!fund.transactionName}</a></td>
+                                <td class="wrap" data-label="Payment Date" >{!fund.paymentDate}</td>
+                                <td class="wrap" data-label="Type" >{!fund.type}</td>
+                                <td class="wrap" data-label="Method of payment" >{!fund.modeOfPayment}</td>
+                                <aura:if isTrue="{!v.communityName != 'client'}">
+                                	<td class="wrap" data-label="Type" >{!fund.totalAmount}</td>
+                                </aura:if>
+                                <!-- W-002989 - PVT Student Payment Receipts -->
+                                <aura:if isTrue="{!v.displayDevice != 'Mobile'}">
+                                    <td data-label="View Receipt" ><a name="{!fund.transactionId}" onclick="{!c.generateReceiptPDF}" >View Receipt</a></td>
+                                </aura:if>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+                <aura:set attribute="else"><br/>
+                    <center>No records to display</center>
+                </aura:set>
+            </aura:if>
+        </div>
+        
+    </div>
+    <c:ApexService aura:id="server"/>
+</aura:component>

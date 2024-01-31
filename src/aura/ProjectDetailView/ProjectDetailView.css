@@ -1,0 +1,41 @@
+.THIS .lineClass{
+    border-bottom: 1px solid rgb(221, 219, 218);
+    padding: 5px 10px;
+}
+
+.THIS .detailClass {
+    /*padding-left: 7%;*/
+}
+
+.THIS .labelClass {
+    font-weight: bold;
+    font-size: 14px;
+}
+.THIS .container-table{
+    padding:1rem;
+}
+.THIS.cardPadding {
+    padding:1rem !important;
+}
+.THIS .fa-arrow-left{
+    font-size:2rem !important;
+    cursor:pointer;
+    color: #055e89 !important;
+}
+.THIS.bldCls{
+    color: #055e89 !important;
+    font-weight:bold;
+}
+
+.THIS .card-title:after {
+    margin-right: 32px !important;
+}
+
+@media(max-width:48em){
+    .THIS .wrap {
+        word-break: break-all !important;
+    }
+    .THIS .card-body{
+        padding: .50rem !important;
+    }
+}

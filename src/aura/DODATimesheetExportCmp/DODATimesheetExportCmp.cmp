@@ -1,0 +1,21 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="DODATimesheetExportCtrl">
+    <aura:attribute name="fromDate" type="Date" default=""/>
+    <aura:attribute name="toDate" type="Date" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <lightning:layout>
+        <lightning:layoutItem size="4" padding="around-small">
+            <ui:inputDate aura:id="fromdtVal" label="From Date" value="{!v.fromDate}" displayDatePicker="true" format="MM/DD/YYYY"/>
+        </lightning:layoutItem>
+        <lightning:layoutItem size="4" padding="around-small">
+            <ui:inputDate aura:id="todtVal" label="To Date" value="{!v.toDate}" displayDatePicker="true" format="MM/DD/YYYY"/>
+        </lightning:layoutItem>
+        <lightning:layoutItem size="4" padding="around-small" class="btnCls">
+            <lightning:button variant="brand" label="Download as PDF" onclick="{!c.validateInput}"/>
+        </lightning:layoutItem>
+    </lightning:layout>
+</aura:component>

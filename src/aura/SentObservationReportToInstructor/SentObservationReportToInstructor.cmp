@@ -1,0 +1,62 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 11/28/2023
+  @last modified by  : Dhinesh Kumar
+-->
+<aura:component extends="c:BoxFolderCreationUtilCmp" Controller="GenericUrlLaunch_Ctrl"
+    implements="force:hasRecordId,force:lightningQuickActionWithoutHeader">
+    <aura:attribute name="showSpinner" type="Boolean" default="false" />
+    <aura:attribute name="channel" type="String" default="/event/Box_FRUP__e" />
+    <aura:attribute name="subscription" type="Object" default="{}" />
+    <aura:attribute name="record" type="Object" />
+    <aura:attribute name="assessmentReport" type="Assessment_Report__c" />
+    <aura:attribute name="recordError" type="String" />
+    <aura:attribute name="error" type="Object" />
+    <aura:attribute name="fields" type="LIST"
+        default="['RecordType.DeveloperName','Instructor__c','Date_Completed__c',
+         'Status__c', 'Class_Observed_Level__c' ,'Class_Observed_Skill_Grammar_Focus__c', 
+         'Class_Observed_Topic__c', 'Comments__c', 'Annual_Review_Strengths__c', 'Annual_Review_Areas_for_Further_Develop__c',
+         'AR_Further_Developments_Other_Comments__c', 'AR_Strengths_Other_Comments__c']" />
+
+    <force:recordData aura:id="recordLoader" fields="{!v.fields}" recordId="{!v.recordId}"
+        targetFields="{!v.assessmentReport}" recordUpdated="{!c.doInit}" />
+
+    <!-- Modified By Dhinesh - 21/7/2023 -->
+    <aura:attribute name="showProceedBtn" type="Boolean" default="false" />
+    <aura:attribute name="congaUrl" type="String"/>
+    <aura:handler event="c:boxFolderCreationEvt" action="{!c.doInit}"/>
+
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server" />
+
+    <lightning:empApi aura:id="empApi" />
+
+    <aura:if isTrue="{!v.error.isShow}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <h1 style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">
+                    {!v.showProceedBtn ? 'Warning - Email Already Sent!' : 'Error'}</h1>
+            </aura:set>
+            <br /><br />
+            <p style="font-size:1rem;">
+                <lightning:formattedRichText value="{!v.error.errorMsg}" />
+            </p><br /><br />
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.showProceedBtn}">
+                    <div class="slds-float_right">
+                        <lightning:button label="Cancel" onclick="{!c.closeAction}" />
+                        <lightning:button label="Proceed" variant="brand" onclick="{!c.launchUrl}" />                        
+                    </div>
+                </aura:if>
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+
+</aura:component>

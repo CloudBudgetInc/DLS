@@ -1,0 +1,62 @@
+<aura:component  controller="CandidateProfileController" implements="flexipage:availableForRecordHome,force:hasRecordId,lightning:actionOverride" access="global" >
+    <aura:handler name="init" value="{!this}" action="{!c.tableIntialize}"/>
+    <aura:attribute name="dataRows" type="List"/>
+    <aura:attribute name="recordId" type="string"/>
+    <aura:attribute name="index" type="Integer" />
+    <aura:attribute name="dataHeader" type="List" />
+    <aura:attribute name="selectTab" type="string"/>
+    <aura:attribute name="SobjectName" type="string"/>
+    <aura:attribute name="RecordType" type="string"/>
+    <aura:attribute name="ParentId" type="string"/>
+    <aura:attribute name="forceEditCheck" type="string" default="false"/>
+    <aura:attribute name="sModelBox" type="BOOLEAN" default="false"/>
+    <aura:attribute name="eventTableConfig" type="Map" access="public"/>  
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClicked}"/>
+    
+    <ldt:datatableDev title="" 
+                      aura:id="eventsTable" 
+                      dataRows="{!v.dataRows}"
+                      header="{!v.dataHeader}"       
+                      config="{!v.eventTableConfig}"  
+                      noRecordsMessage="No Record to Display"/>  
+    
+    <c:Modal aura:id="closeDeleteComponent" closeAction="{!c.closePromptDelete}" hasCloseIcon="true">
+        <aura:set attribute="header">
+            <h4>Delete {!v.selectTab}</h4>
+        </aura:set>
+        <aura:set attribute="content">
+            <div> 
+                <center>  <h1>Are you sure you want to delete this {!v.selectTab}?</h1></center>
+                <aura:if isTrue="{!v.showSpinner}">          
+                    <lightning:spinner class="deleteSpin"  variant="brand" alternativeText="Loading" size="smamedium" />         
+                </aura:if>
+            </div>
+        </aura:set>
+        <aura:set attribute="footer">    
+            <lightning:button label="Cancel"  onclick="{!c.closePromptDelete}" />
+            <lightning:button label="Delete" variant="brand"  onclick="{!c.deleteTask}" />
+        </aura:set>
+    </c:Modal>
+    
+    <c:Modal modelWidth="65%" aura:id="EditRecordComponent" closeAction="{!c.EditClose}" hasCloseIcon="true">    
+        <aura:set attribute="header">
+            <h1> Edit {!v.selectTab}</h1>      
+        </aura:set>
+        <aura:set attribute="content">
+            <div>
+                <aura:if isTrue="{!v.forceEditCheck}">      
+                    <force:recordEdit aura:id="editRecord" recordId="{!v.recordId}"/>
+                    <aura:if isTrue="{!v.showSpinner}">          
+                        <lightning:spinner class="Editspin" variant="brand" alternativeText="Loading" size="medium" />
+                    </aura:if>                 
+                </aura:if>
+            </div>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Cancel"  onclick="{!c.EditClose}" />
+            <lightning:button label="Save" variant="brand"  onclick="{!c.EditSave}" />
+        </aura:set>
+    </c:Modal>
+    
+</aura:component>

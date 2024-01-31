@@ -1,0 +1,37 @@
+<aura:component >
+    <aura:attribute name="header" type="Aura.Component[]" access="global" />
+    <aura:attribute name="tagline" type="Aura.Component[]" access="public" description="The optional tagline of the modal. It is displayed under the title in the header block." />
+    <aura:attribute name="content" type="Aura.Component[]" access="global"/>
+    <aura:attribute name="footer" type="Aura.Component[]" access="global" />
+    <aura:attribute name="closeAction" type="Aura.Action" access="global"/>
+	<aura:attribute access="global" name="hasCloseIcon" type="Boolean" default="true" description="Whether the modal can be closed with a top right 'x' icon. True by default." />
+	<aura:attribute access="global" name="isLarge" type="Boolean" default="false" description="Whether the modal can be closed with a top right 'x' icon. True by default." />
+    <aura:method name="openModal" action="{!c.toogleModal}" access="global">
+        <aura:attribute access="global" name="isLarge" type="Boolean" default="false" description="Whether the modal can be closed with a top right 'x' icon. True by default." />
+    </aura:method>
+    <aura:method name="closeModal" action="{!c.toogleModal}" access="global">
+    </aura:method>
+    <aura:attribute name="modelWidth" type="string" default=""/>
+    
+    <div class="slds-modal"  aura:id="modal">
+        <div class="slds-modal__container" style="{!'width:'+v.modelWidth+'!important'}">
+            <div class="{!'slds-modal__header' + (empty(v.header)?'slds-modal__header--empty':'')}" >
+                <aura:if isTrue="{!v.hasCloseIcon}" >
+                    <lightning:buttonIcon onclick="{!v.closeAction}" iconName="utility:close" alternativeText="Close" class="slds-modal__close" variant="bare-inverse" size="large"/>
+                </aura:if>
+                <h2 class="slds-text-heading--medium">{!v.header}</h2>
+                <aura:if isTrue="{!empty(v.tagline)}">
+                    <p class="slds-m-top--x-small">{!v.tagline}</p>
+                </aura:if>
+            </div>
+            <div class="slds-modal__content slds-p-around--medium">
+                {!v.content}
+            </div>
+            <div class="slds-modal__footer">
+                {!v.footer}
+            </div>
+        </div>
+    </div>
+    <div class="slds-backdrop" aura:id="modal-backdrop"></div> 
+    
+</aura:component>

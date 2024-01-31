@@ -1,0 +1,69 @@
+<template>
+    <lightning-tabset active-tab-value="New Task" variant="scoped">
+        <lightning-tab label="New Task" value="New Task">
+						<template if:false = {isNewTask}>
+								<lightning-layout multiple-rows="true">
+										<lightning-layout-item size=11 class="slds-form-element__control" padding="around-small" >
+												<lightning-input type = 'text' variant = 'label-hidden' placeholder="Create a task..." onclick = {handleNewTask} class="slds-col">
+												</lightning-input>
+										</lightning-layout-item>
+
+										<lightning-layout-item size=1 class="slds-form-element__control" padding="around-small" >
+												<lightning-button variant="brand" label = 'Add' class= "slds-p-around_x-small slds-col" onclick = {handleNewTask} slds-col>
+												</lightning-button>
+										</lightning-layout-item>
+								</lightning-layout>
+													
+						</template>
+            <template if:true = {isNewTask}>
+                <c-new-task-cmp project-record-id = {recordId} onclosefields={handleCloseFields}>
+
+                </c-new-task-cmp>
+            </template>
+            
+        </lightning-tab>
+        <lightning-tab label="New Event" value="New Event">
+            <template if:false = {isNewEvent}>
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size=11 class="slds-form-element__control" padding="around-small" >
+                        <lightning-input type = 'text' variant = 'label-hidden' placeholder="Create an event..." onclick = {handleNewEvent} class="slds-col">
+
+                        </lightning-input>
+                    </lightning-layout-item>
+                    
+                    <lightning-layout-item size=1 class="slds-form-element__control" padding="around-small" >
+                        <lightning-button variant="brand" label = 'Add' class= "slds-p-around_x-small slds-col" onclick = {handleNewEvent}>
+
+                        </lightning-button>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+            <template if:true = {isNewEvent}>
+                <c-new-event-cmp record-id = {recordId} onclosefields = {handleCloseFields}>
+
+                </c-new-event-cmp>
+            </template>
+        </lightning-tab>
+        <lightning-tab label="New Email" value="New Email">
+            <template if:false = {isNewEmail}>
+                <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size=11 class="slds-form-element__control" padding="around-small" >
+                                <lightning-input type = 'text' variant = 'label-hidden' placeholder="Send an email..." onclick = {handleNewEmail} class="slds-col">
+                                </lightning-input>
+                        </lightning-layout-item>
+
+                        <lightning-layout-item size=1 class="slds-form-element__control" padding="around-small" >
+                                <lightning-button variant="brand" label = 'Add' class= "slds-p-around_x-small slds-col" onclick = {handleNewEmail} slds-col>
+                                </lightning-button>
+                        </lightning-layout-item>
+                </lightning-layout>
+                                    
+        </template>
+        <template if:true = {isNewEmail}>
+            <c-new-email-cmp record-id = {recordId} onclosefields = {handleCloseFields}>
+
+            </c-new-email-cmp>
+        </template>
+        </lightning-tab>
+    </lightning-tabset>
+</template>

@@ -1,0 +1,325 @@
+<aura:component  access="global" implements="force:appHostable" Controller="CostRateCreation_Ctrl">
+    
+    <!--- Parent component related attributes-->
+    <aura:attribute name="parentObjName" type="String"/>
+    <aura:attribute name="defaultCR" type="String"/>
+    <aura:attribute name="parentRTName" type="String"/>
+    <aura:attribute name="caRecord" type="Map" default="{}"/> 
+    <aura:attribute name="modifyLTPrepRTLabel" type="Map"  default="{'LT with Billable Prep' : 'LT with Prep','LT without Billable Prep' : 'LT without Prep'}"/>
+    
+  
+    <!-- Translation and Interpretation Projects related cost rate modal attributes-->
+    <aura:attribute name="tiProjectCRDetailMap" type="Map" default="{tiPTExistingCRMap : {},
+                                                                    isShowTIExistingCROptions : false,
+                                                                    isTIProjectCreateCR : false,
+                                                                    isTIProjectExistingCR : false,
+                                                                    tiExistingCROptions : [],
+                                                                    tiProjectPerWordExistingCR : [],
+                                                                    tiProjectPerWordCreateCR : [],
+                                                                    perWordCRRateTypeLst : [],
+                                                                    perHrFFPBasedRateTypeLst : [],
+                                                                    tiproTaskDefaultCR : '',
+                                                                    selectedTICR : '',
+                                                                    tiSelectedCRId : ''}"/>
+    
+    <!-- Cost Rate creation and option modal related attributes-->
+    <aura:attribute name="showCROptionModal" type="Boolean" default="false"/>
+    <aura:attribute name="showCRCreationInputModal" type="Boolean" default="false"/>
+    <aura:attribute name="ftSalRT" type="Boolean" default="false"/>
+    <aura:attribute name="showCRMessageModel" type="Boolean" default="false"/>
+    <aura:attribute name="crRateTypeOptions" type="List" default="[]"/>
+    <aura:attribute name="displayRateTypeMsg" type="String" default=""/>
+    <aura:attribute name="multiPayRateCR" type="Map" default="{}"/>
+    <aura:attribute name="crInputValues" type="Map" default="{}"/>
+    <aura:attribute name="otherCRCreationMap" type="Map" default="{}"/>
+    <aura:attribute name="selectedPayRate" type="String" default=""/>
+    <aura:attribute name="costRateInfo" type="Map" default="{}"/> 
+    <aura:attribute name="projectLocation" type="String" default=""/>
+    <aura:attribute name="cRPicklistBasedInput" type="Map" default="{showDate : false,
+                                                                    showHC : false,
+                                                                    showAS : false,
+                                                                    fulLoadAmtFlag : false,
+                                                                    hourlyGreaterThanLCRMHourly : false,
+                                                                    perWordCost : false,
+                                                                    showFFP : false,
+                                                                    taxType : ''}"/>
+
+    <aura:attribute name="nonSCATestingLCRPayType" type="Map" default="{isTestingPayType : false,
+                                                                       selectedNonSCATestPay : '',
+                                                                       testingPayTypeOption : []}"/>
+    
+    <aura:attribute name="crOptionModalRateTypeNames" type="List" default="['LT with Prep','LT without Prep','Non-SCA CD','DLI-21 SCA CD','DLI-21 SCA LT',
+                                                                           'DLI-21 SCA MTT','DODA PS','DLI-W LT',
+                                                                           'DLI-W PS - Group 3','DLI-W PS - Group 4']"/>
+    
+    
+    <!-- These attributes to display view existing contact related CR Table-->
+    <aura:attribute name="conOrAccRelCRHeader" type="List" default="[]"/>
+    <aura:attribute name="showExistingCRTable" type="Boolean" default="false"/>
+    <aura:attribute name="conOrAccRelCRRows" type="List" default="[]"/>
+    <aura:attribute name="isAccRelatedCR" type="Boolean" default="false"/>
+    
+    <!-- Error handling related attributes-->
+    <aura:attribute name="visibleError" type="String" default="slds-hide"/>
+    <aura:attribute name="showErrorMsg" type="String" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="isShowErrorModal" type="Boolean" default="false"/>
+    
+   
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- Event to assign cost rate value to Contact Assignment records-->
+    <aura:registerEvent name="assignCostRateTOCA" type="c:childClickEvent"/>
+    
+    <aura:registerEvent name="ErrorLogEvt" type="c:childClickEvent"/>
+
+    
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <div style="position:fixed;z-index: 9900000000;">
+            <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed"/>
+        </div>
+    </aura:if>
+    
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <!-- Show Rate Type Option Modal -->
+    <aura:if isTrue="{!v.showCROptionModal}">
+        <c:sldsModal  aura:id="showOptions" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005">    
+            <aura:set attribute="header">
+                <h1>{!v.showExistingCRTable == true ? 'Existing Cost Rate' : 'New Cost Rate'}</h1>  
+            </aura:set>
+            <aura:set attribute="content">
+                <c:ToastCmp visibleError="{!v.visibleError}" showErrorMsg="{!v.showErrorMsg}"/>
+                <aura:if isTrue="{!v.showExistingCRTable}">
+                    <aura:if isTrue="{!v.conOrAccRelCRRows.length > 0}">
+                        <c:ViewContactsExistingRatesCmp conCRHeader="{!v.conOrAccRelCRHeader}" conCRRows="{!v.conOrAccRelCRRows}"/>
+                        <aura:set attribute="else"> 
+                            <div style="background-color:#fafaf9;">
+                                <br/><br/><center>No Record to Display</center><br/><br/></div>
+                        </aura:set>
+                    </aura:if>
+                    <aura:set attribute="else">
+                        <div style="height :240px;">
+                            <h1 style=" font-size: 1rem;">Please select one of the available Pay Rate options below for this Contact</h1> 
+                            
+                            <lightning:layoutItem size="8" padding="around-small"   >
+                                <lightning:combobox name="Cost Rate" aura:id="rateTypeId" label="{!(and(v.tiproTaskDefaultCR == 'Non-SCA Translation (Per Word)',or(v.parentRTName == 'Interpretation_Projects',v.parentRTName == 'Translation_Projects')) ? 'Select option' : 'Rate Type Options')}" required="true" value="{!v.selectedPayRate}" options="{!v.crRateTypeOptions}" onchange="{!c.showPerWordDepPickList}"/>
+                            </lightning:layoutItem>
+                            
+                            <aura:if isTrue ="{!and(v.tiProjectCRDetailMap.tiproTaskDefaultCR == 'Non-SCA Translation (Per Word)',or(v.parentRTName == 'Interpretation_Projects',v.parentRTName == 'Translation_Projects'))}">
+                                <aura:if isTrue="{!not(empty(v.selectedPayRate))}">
+                                    
+                                    <aura:if isTrue ="{!v.tiProjectCRDetailMap.isTIProjectCreateCR}">
+                                        <lightning:layoutItem size="8" padding="around-small">
+                                            <h1>Create anyone of the Cost Rate</h1>
+                                            <lightning:combobox name="Select Rate Type" aura:id="depCRRateTypeId" label="Select Rate Type" required="true" value="{!v.tiProjectCRDetailMap.selectedTICR}" options="{!v.tiProjectCRDetailMap.tiProjectPerWordCreateCR}" />
+                                        </lightning:layoutItem>
+                                    </aura:if> 
+                                    
+                                    <aura:if isTrue ="{!v.tiProjectCRDetailMap.isTIProjectExistingCR}">
+                                        <lightning:layoutItem size="8" padding="around-small" >
+                                            <h1>Assign anyone of the Cost Rate</h1>
+                                            <lightning:combobox name="Select Rate Type" aura:id="depExRateTypeId" label="Select Rate Type" required="true" value="{!v.tiProjectCRDetailMap.selectedTICR}" options="{!v.tiProjectCRDetailMap.tiProjectPerWordExistingCR}" onchange="{!c.showTIExistingCROptions}"/>
+                                        </lightning:layoutItem>
+                                    </aura:if>
+                                    
+                                </aura:if>
+                            </aura:if>
+                            <!--W-001288 - Translation Labor Cost Rates - Multiple Active Labor Cost Rates for the Same Rate Type  -->                              
+                            <!-- show Existing CR record Picklist -->
+                            <aura:if isTrue ="{!or(v.parentRTName == 'Interpretation_Projects',v.parentRTName == 'Translation_Projects')}">
+                                
+                                <aura:if isTrue ="{!v.tiProjectCRDetailMap.isShowTIExistingCROptions}">
+                                    <lightning:layoutItem size="8" padding="around-small">
+                                        <lightning:combobox name="Cost Rate" aura:id="costRateId" label="Select Cost Rate" value="{!v.tiProjectCRDetailMap.tiSelectedCRId}" options="{!v.tiProjectCRDetailMap.tiExistingCROptions}"/>
+                                    </lightning:layoutItem>
+                                </aura:if>
+                            </aura:if>
+                        </div>
+                    </aura:set>
+                </aura:if><br/><br/>
+            </aura:set>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.showExistingCRTable}">
+                    <lightning:button label="Close" onclick="{!c.closeExistingCRTable}" />
+                    <aura:set attribute="else">
+                        <div style="float:left;"><a onclick="{!c.viewConRelatedCR}">View Contact's Existing Rates</a></div>
+                        <lightning:button label="Proceed" onclick="{!c.proceedWithSelectedValues}"/>
+                        <lightning:button label="Cancel" onclick="{!c.closeCRModal}"/>
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+        </c:sldsModal>    
+    </aura:if>
+    
+    <!-- Show Cost Rate Input Modal -->
+    <aura:if isTrue="{!v.showCRCreationInputModal}">
+        <c:sldsModal  aura:id="showInputModalId" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005"> 
+            <aura:set attribute="header">
+                <h1>{!v.showExistingCRTable == true ? 'Existing Cost Rate' : 'New Cost Rate'}</h1>  
+            </aura:set>
+            <aura:set attribute="content">
+                <c:ToastCmp visibleError="{!v.visibleError}" showErrorMsg="{!v.showErrorMsg}"/>
+                <aura:if isTrue="{!v.showExistingCRTable}">
+                    
+                    <aura:if isTrue="{!v.conOrAccRelCRRows.length > 0}">
+                        <c:ViewContactsExistingRatesCmp conCRHeader="{!v.conOrAccRelCRHeader}" conCRRows="{!v.conOrAccRelCRRows}"/>
+                        <aura:set attribute="else"> 
+                            <div style="background-color:#fafaf9;">
+                                <br/><br/><center>No Record to Display</center><br/><br/></div>
+                        </aura:set>
+                    </aura:if>
+                    
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!!v.nonSCATestingLCRPayType.isTestingPayType}">
+                            <aura:if isTrue="{!(not(empty(v.otherCRCreationMap.costRateMessage)))}">
+                                <h1 style="font-size: 1rem;"><aura:unescapedHtml value="{!v.otherCRCreationMap.costRateMessage}" /></h1>
+                                <aura:set attribute="else">
+                                    <h1 style=" font-size: 1rem;">A new cost rate for <span style="font-weight: bold;">{!v.displayRateTypeMsg}</span> will be created {!or(v.parentRecordType == 'Interpretation_Projects', v.parentRecordType == 'Translation_Projects') ? '' :'and submitted for approval '}for this Contact.</h1>
+                                </aura:set>
+                            </aura:if>
+                        </aura:if>
+                        
+                        <aura:if isTrue="{!!v.nonSCATestingLCRPayType.isTestingPayType}"><br/>
+                            <div>
+                                <aura:if isTrue="{!or(v.cRPicklistBasedInput.showHC,v.otherCRCreationMap.crRequest)}">
+                                    <div class="crClass">
+                                        <lightning:input type="Text" label="Hourly Cost" aura:id="crInputField" required="true" value="{!v.crInputValues.getHourlyCost}" onkeyup ="{!c.getFullyLoadedValues}"  onchange="{!c.validateHCGreaterThanSCACD}" onblur="{!c.validateHCGreaterThanSCACD}" disabled="{!v.crInputValues.isHCDisable}"/>
+                                    </div>
+                                </aura:if>
+                            </div>
+                            
+                            <div>
+                                <aura:if isTrue="{!v.cRPicklistBasedInput.showFFP}">
+                                    <div class="crClass">
+                                        <lightning:input type="Text" label=" Per FFP Cost" aura:id="crInputField" required="true" value="{!v.crInputValues.getperFFP}"/>
+                                    </div>
+                                </aura:if>
+                            </div>
+                            <div> 
+                                <aura:if isTrue="{!v.cRPicklistBasedInput.showAS}">
+                                    <div class="crClass">
+                                        <lightning:input type="text" label="Annual Salary Amount:"  aura:id="crInputField"  required="true"  value="{!v.crInputValues.annualCost}"/>
+                                        <lightning:input type="text"  label="Salary Cost Per hour" aura:id="crInputField"  required="true" value="{!v.crInputValues.salaryCostPerHour}" />
+                                    </div>
+                                </aura:if>                
+                            </div>
+                            <div> 
+                                <aura:if isTrue="{!v.otherCRCreationMap.perHourCost}">
+                                    <div class="crClass">
+                                        <lightning:input type="Text" label="Per Hour Cost" aura:id="crInputField" required="true" value="{!v.crInputValues.getHourlyCost}"/>
+                                    </div>
+                                </aura:if>
+                            </div>
+                            <div>
+                                <aura:if isTrue="{!v.otherCRCreationMap.perTestCost}">
+                                    <div class="crClass">
+                                        <lightning:input type="Text" label="Per Test Cost"  aura:id="crInputField"  required="true"  value="{!v.crInputValues.perTestCost}"/>
+                                    </div>
+                                </aura:if> 
+                            </div>
+                            <div>
+                                <aura:if isTrue="{!or(v.cRPicklistBasedInput.perWordCost,v.otherCRCreationMap.perWordCost)}">
+                                    <div  class="crClass">
+                                        <lightning:input type="Text" label="Per Word Cost"  aura:id="crInputField"  required="true"  value="{!v.crInputValues.perWordCost}"/>
+                                    </div>
+                                </aura:if> 
+                            </div>
+                            <div>
+                                <aura:if isTrue="{!v.otherCRCreationMap.noHrsExcepted}">
+                                    <div class="crClass">
+                                        <lightning:input type="Text" label="# of Hours Expected" aura:id="crInputField" required="true" value="{!v.crInputValues.noHrsExcepted}"/>
+                                    </div>
+                                </aura:if>
+                            </div>
+                            <div> 
+                                <aura:if isTrue="{!or(v.cRPicklistBasedInput.showDate,v.otherCRCreationMap.displayEffectiveDate)}">
+                                    <div class="crClass">
+                                        <ui:inputDate  label="Effective Date:" aura:id="crInputDate" displayDatePicker="true" required='true' format="MM/DD/yyyy" value="{!v.crInputValues.effectiveDate}"/>
+                                    </div> 
+                                </aura:if>                
+                            </div><br/>
+                            <aura:if isTrue="{!v.cRPicklistBasedInput.fulLoadAmtFlag}">
+                                <h1> Fully Loaded Rate : {!v.crInputValues.fullyLoadedAmount} </h1>
+                            </aura:if>
+                            <aura:set attribute="else">
+                                <lightning:layout>
+                                    <lightning:layoutItem size="8" padding="around-small"   >
+                                        <lightning:combobox name="Pay Type" aura:id="payTypeId" label="Pay Type" required="true" value="{!v.nonSCATestingLCRPayType.selectedNonSCATestPay}" options="{!v.nonSCATestingLCRPayType.testingPayTypeOption}" />
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                                <br/><br/><br/><br/>                                    
+                            </aura:set>
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.showExistingCRTable}">
+                    <lightning:button label="Close" onclick="{!c.closeExistingCRTable}" />
+                    <aura:set attribute="else"> 
+                        <aura:if isTrue="{!v.isAccRelatedCR}">
+                            <div style="float:left;"><a onclick="{!c.viewAccRelatedCR}">View Accounts's Existing Rates</a></div>
+                            <aura:set attribute="else">
+                                <div style="float:left;"><a onclick="{!c.viewConRelatedCR}">View Contact's Existing Rates</a></div>
+                            </aura:set>
+                        </aura:if>                           
+                        <aura:if isTrue="{!v.nonSCATestingLCRPayType.isTestingPayType}">
+                            <lightning:button label="Next" onclick="{!c.createNonSCATestingLCR}" />
+                            <aura:set attribute="else">
+                                
+                                <aura:if  isTrue="{!and((not(v.nonSCATestingLCRPayType.isTestingPayType)),and(v.defaultCR == 'Non-SCA Testing',v.parentObjName == 'AcctSeed__Project__c'))}">
+                                    <lightning:button label="Back"  onclick="{!c.backTONonSCATestPayType}" />
+                                </aura:if>
+                                
+                                <aura:if isTrue="{!or(v.cRPicklistBasedInput.showProceedBtn,v.otherCRCreationMap.showProceedBtn)}">
+                                    <lightning:button label="Proceed" onclick="{!c.proceedToCreateCR}" />
+                                </aura:if>
+                                
+                                <lightning:button label="Close" onclick="{!c.closeCRCreateModal}" />
+                            </aura:set>
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Show Cost Rate Message Modal -->
+    <aura:if isTrue="{!v.showCRMessageModel}">
+        <c:sldsModal aura:id="showFinalCRMsg" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005">    
+            <aura:set attribute="header">
+                <h1>Cost Rate Assigned</h1>    
+            </aura:set>
+            <aura:set attribute="content">
+                <h1 style=" font-size: 1rem;"><aura:unescapedHtml value="{!v.displayRateTypeMsg}"/></h1><br/> 
+            </aura:set>
+            <aura:set attribute="footer">
+                <div>
+                    <lightning:button label="Close" onclick="{!c.closeCRModal}"/>
+                </div>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if> 
+    
+    <!-- show ErrorModal-->
+    <aura:if isTrue="{!v.isShowErrorModal}">
+        <c:sldsModal aura:id="errorModal" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005">        
+            <aura:set attribute="header">
+                <h1>Error</h1>    
+            </aura:set>
+            <aura:set attribute="content">
+                <center><h1>{!v.showErrorMsg}</h1></center>
+            </aura:set>
+            <aura:set attribute="footer">
+                <div>
+                    <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeErrorModal}"/>
+                </div>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if> 
+</aura:component>

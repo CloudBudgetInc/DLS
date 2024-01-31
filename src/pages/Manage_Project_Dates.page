@@ -1,0 +1,1353 @@
+<!-- Developed by Shalini to update Dates of CAs, Schedules and to create Planned_Day_Off records based on changed dates of Project -->
+<apex:page showHeader="true" sidebar="false" controller="ManageProjectDatescontroller">
+    <apex:includeLightning />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+        <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+
+        <script src="{!URLFOR($Resource.Filter)}"/>
+        <link rel="stylesheet" href="{!URLFOR($Resource.datePickerCss)}" />
+        <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+        <script src="{!URLFOR($Resource.moment)}" ></script>
+        <script src="{!URLFOR($Resource.jquery)}"></script>
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS_2_1_3, 'assets/styles/salesforce-lightning-design-system.css')}" />
+        <apex:form >
+            <div class="slds" ng-app="Opp_Pro_App" ng-controller="Opp_Pro_Controller"> 
+                <div ng-hide="isLoaded">
+                    <c:slds_Loading />
+                </div>
+                <style>
+                    
+                    ._720kb-datepicker-calendar {
+                        position: absolute;
+                    }
+                    .deleteColour {
+                        background-color: red !important;
+                    }
+                    select:disabled {
+                        color: #333;
+                    }
+                    .body {
+                        font-size: 0.8125rem !important; 
+                    }
+                    
+                    .slds:not(html), .slds body {
+                        background: white !important;
+                    }
+                    
+                    html .brandQuaternaryBgr {
+                        background: white !important;
+                    }
+                    
+                   .ReqClass{
+                        border: 1px solid rgb(194, 57, 52) !important;
+                   }
+                    
+                </style>
+                
+                <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                    <div class="slds-grid">                    
+                        <div class="slds-media__body">
+                            <div class="slds-grid">
+                                <h1 ng-if="displayEndHeader == false" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Manage Project Dates</h1>
+                                <h1 ng-if="displayEndHeader == true" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Manage Project Dates - End Project</h1>
+                            </div>
+                        </div>                   
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                            <div style="width: 100%;text-align: center;">                                
+                                <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="endDateStartDateValidationCheck()">Save</div>                               
+                            </div>                        
+                        </div> &nbsp;                   
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                            <div style="width: 100%;text-align: center;">
+                                
+                                <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="cancelPage();">Cancel</div> 
+                            </div>                        
+                        </div>                         
+                    </div> 
+                </div>
+                
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <span class="slds-text-heading--small" ng-if="parentType == 'Project'">Project Details:</span>
+                                    <span class="slds-text-heading--small" ng-if="parentType == 'Opportunity'">Opportunity Details:</span>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                 
+                    <div class="slds-card__body body">                                
+                         <div class="slds-grid slds-wrap slds-grid--pull-padded-medium" ng-if="parentType == 'Project'">
+                            <div class="slds-col--padded slds-size--1-of-4 " style="padding-top: 1%;padding-left:40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Project Name: </label>{{proDetail.Name}}  
+                             </div>
+                             <div class="slds-col--padded slds-size--1-of-4" style="padding-top: 1%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Status: </label>{{proDetail.AcctSeed__Status__c}}  
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-4 " style="padding-top: 1%;padding-right:0px;margin-left: -150px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Start Date: </label>
+                                <datepicker date-format="MM/dd/yyyy"> 
+                                    <input type="datetime" date='dd-MM-yyyy' ng-model="proDetail.Start_Date__c" class="slds-input" ng-change="proToUpdateByStartDate(proDetail);"/>
+                                </datepicker>   
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-4" style="padding-top: 1%;padding-right:60px;">
+                                <label class="slds-form-element__label slds-text-body--regular">End Date: </label>
+                                <datepicker date-format="MM/dd/yyyy">
+                                    <input type="datetime" date='dd-MM-yyyy' ng-model="proDetail.End_Date__c" class="slds-input" ng-change="proToUpdateByEndDate(proDetail);" ng-class="proDetail.isProOppEndDateValError == true ? 'ReqClass':''"/>
+                                    <div ng-show="proDetail.isProOppEndDateValError" style="color: rgb(194, 57, 52)">End date must be greater than Start date</div>
+                                </datepicker>  
+                            </div>
+                        </div>
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium" ng-if="parentType == 'Opportunity'">
+                            <div class="slds-col--padded slds-size--1-of-4 " style="padding-top: 1%;padding-left:40px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Opportunity Name: </label>{{oppDetail.Name}}  
+                             </div>
+                             <div class="slds-col--padded slds-size--1-of-4" style="padding-top: 1%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Stage Name: </label>{{oppDetail.StageName}}  
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-4 " style="padding-top: 1%;padding-right:60px;margin-left: -150px;">
+                                <label class="slds-form-element__label slds-text-body--regular">Start Date: </label>
+                                <datepicker date-format="MM/dd/yyyy">
+                                    <input type="datetime" date='dd-MM-yyyy' ng-model="oppDetail.Start_Date__c" class="slds-input" ng-change="oppToUpdate(oppDetail);"/>
+                                </datepicker>   
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-4" style="padding-top: 1%;padding-right:60px;">
+                                <label class="slds-form-element__label slds-text-body--regular">End Date: </label>
+                                <datepicker date-format="MM/dd/yyyy">
+                                    <input type="datetime" date='dd-MM-yyyy' ng-model="oppDetail.End_Date__c" class="slds-input" ng-change="oppToUpdate(oppDetail);" ng-class="oppDetail.isProOppEndDateValError == true ? 'ReqClass':''"/>
+                                    <div ng-show="oppDetail.isProOppEndDateValError" style="color: rgb(194, 57, 52)">End date must be greater than Start date</div>
+                                </datepicker>  
+                            </div>
+                                                     
+                        </div>
+                    </div>
+                    &nbsp;
+                </div>
+                
+                <div class="slds-card body">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <span class="slds-text-heading--small">Contact Assignments:</span>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    
+                    <div ng-show="!conAssign.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                        <div class="slds-card__body">
+                            <div class="slds-text-align--center"> No records found. </div>
+                        </div>
+                    </div> 
+                    
+                    <div class="slds-card__body" ng-show="conAssign.length > 0">
+                                                        
+                         <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                             <thead>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Contact</div>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Start Date</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">End Date</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Old Date Range</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Position</span> 
+                                </th>
+                                <th scope="col" ng-if="parentType == 'Project'">
+                                    <span class="slds-truncate">Project Task</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Status</span>                                
+                                </th>
+                                           
+                            </thead>  
+                            <tbody>
+                                <tr ng-repeat="con in conAssign" style="{{con.Id == null ? 'background-color: #ffb75d;' : ''}}">
+                                    <td data-label="Name">
+                                        <a ng-href="/{{con.Candidate_Name__c}}" target="_blank"><span ng-bind="con.Candidate_Name__r.Name"/></a>                                            
+                                    </td>
+                                    <td data-label="CLIN Start Date">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" date='dd-MM-yyyy' ng-model="con.Start_Date__c" class="slds-input" />
+                                        </datepicker>                                  
+                                    </td>
+                                    <td data-label="CLIN End Date" >
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" ng-model="con.End_Date__c" class="slds-input" ng-class="con.isCAEndateValError == true ? 'ReqClass':''"/>
+                                            <div ng-show="con.isCAEndateValError" style="color: rgb(194, 57, 52)">End date must be greater than Start date</div>
+                                        </datepicker>                                   
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <span ng-bind="con.oldStartEndDate"/>
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <span ng-bind="con.Assignment_Position__c"/>
+                                    </td>
+                                    <td data-label="CLIN Name" ng-if="parentType == 'Project'">
+                                        <a ng-href="/{{con.Project_Task__c}}" target="_blank"><span ng-bind="con.Project_Task__r.Name"/></a>
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <span ng-bind="con.Status__c"/>
+                                    </td>                                   
+                                </tr>
+                            </tbody>
+                        </table>
+                        &nbsp; 
+                    </div>
+                      
+                </div>
+                <div class="slds-card body">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <span class="slds-text-heading--small">Schedules:</span>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    
+                    <div ng-show="!schedules.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                        <div class="slds-card__body">
+                            <div class="slds-text-align--center"> No records found. </div>
+                        </div>
+                    </div> 
+                    
+                    <div class="slds-card__body" ng-show="schedules.length > 0">
+                         <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                             <thead>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Name</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Start Date</div>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">End Date</span>                                
+                                </th>  
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Old Date Range</div>
+                                </th>                              
+                                <th scope="col">
+                                    <span class="slds-truncate">Time</span>                                
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Days</div>
+                                </th>
+                                <th scope="col" ng-if="parentType == 'Project'">
+                                    <span class="slds-truncate">Project Task</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Instructor</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Room</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Status</span>                                
+                                </th>
+                                           
+                            </thead>  
+                            <tbody>
+                                <tr ng-repeat="sch in schedules">
+                                 
+                                    <td data-label="Name">
+                                        <a ng-href="/{{sch.Id}}" target="_blank"><span ng-bind="sch.Name "/></a>                                            
+                                    </td>
+                                    <td data-label="CLIN Start Date">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" date='dd-MM-yyyy' ng-model="sch.Start_Date__c" class="slds-input"  ng-disabled ="sch.Status__c == 'Active'"/>
+                                        </datepicker>                                  
+                                    </td>
+                                    <td data-label="CLIN End Date" >
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" ng-model="sch.End_Date__c" class="slds-input" ng-disabled="sch.Schedule_Type__c == 'Substitute'" ng-class="sch.isScheduleEndateValError == true ? 'ReqClass':''"/>
+                                            <div ng-show="sch.isScheduleEndateValError" style="color: rgb(194, 57, 52)">End date must be greater than Start date</div>
+                                        </datepicker>                                   
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <span ng-bind="sch.oldStartEndDate"/>
+                                    </td>
+                                    <td data-label="Name">
+                                        <span ng-bind="sch.timeRange"/>                                            
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <span ng-bind="sch.Days__c"/>
+                                    </td>
+                                    <td data-label="CLIN Name" ng-if="parentType == 'Project'">
+                                        <a ng-href="/{{sch.Project_Task__c}}" target="_blank"><span ng-bind="sch.Project_Task__r.Name"/></a>
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <a ng-href="/{{sch.Instructor__c}}" target="_blank"><span ng-bind="sch.Instructor__r.Name"/></a>
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <a ng-href="/{{sch.Room__c}}" target="_blank"><span ng-bind="sch.Room__r.Name"/></a>
+                                    </td>
+                                    <td data-label="CLIN Name">
+                                        <span ng-bind="sch.Status__c"/>
+                                    </td>                                   
+                                </tr>
+                            </tbody>
+                        </table>
+                        &nbsp; 
+                    </div>
+                       
+                </div>
+                <div class="slds-card body">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <span class="slds-text-heading--small">Planned Days Off:</span>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    
+                    <div ng-show="!planDaysOff.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                        <div class="slds-card__body">
+                            <div class="slds-text-align--center"> No records found. </div>
+                        </div>
+                    </div> 
+                    
+                    <div class="slds-card__body" ng-show="planDaysOff.length > 0">
+                                                        
+                         <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                             <thead>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Select</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Name</div>
+                                </th>                            
+                                <th scope="col">
+                                    <span class="slds-truncate">Date</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Description</span>                                
+                                </th>
+                                
+                                <th scope="col">
+                                    <span class="slds-truncate">Requested Reschedule Date</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Type</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Contact</span>                                
+                                </th>
+                            </thead>  
+                            <tbody>
+                                <tr ng-repeat="plan in planDaysOff">
+                                    <td data-label="Select">
+                                        <input class = "slds-align--absolute-left" type="checkbox" name="options" id="checkbox-308" ng-model="plan.selected" />
+                                    </td> 
+                                    <td data-label="Name">
+                                        <a ng-href="/{{plan.dayOff.Id}}" target="_blank"><span ng-bind="plan.dayOff.Name "/> </a>                                           
+                                    </td>
+                                    <td data-label="Date">
+                                        <span ng-bind="plan.dayOff.Date__c"/>
+                                    </td>
+                                    <td data-label="Description">
+                                        <span ng-bind="plan.dayOff.Description__c"/>
+                                    </td>
+                                    <td data-label="Requested Reschedule Date">
+                                        <span ng-bind="plan.dayOff.Requested_Reschedule_Date__c"/>
+                                    </td>
+                                    <td data-label="Type">
+                                        <span ng-bind="plan.dayOff.Type__c"/>
+                                    </td>
+                                    <td data-label="Contact">
+                                        <span ng-bind="plan.contactName"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        &nbsp; 
+                    </div>
+                </div>
+                                    
+                <!--Added-->
+                <!--Start - to display the related Project Task records - #/tasks/16890500-->
+                <div ng-if="parentType == 'Project'" class="slds-card body">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <span class="slds-text-heading--small">Project Task:</span>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    
+                    <div ng-show="!projectTask.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                        <div class="slds-card__body">
+                            <div class="slds-text-align--center"> No records found. </div>
+                        </div>
+                    </div> 
+                    
+                    <div class="slds-card__body" ng-show="projectTask.length > 0">
+                                                        
+                         <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                             <thead>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Name</div>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Total Qty Planned</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Start Date</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">End Date</span>                                
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Parent Project Task</span>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Status</span>                                
+                                </th>
+                                           
+                            </thead>  
+                            <tbody>
+                                <tr ng-repeat="proTask in projectTask">
+                                    <td data-label="Name">
+                                        <a ng-href="/{{proTask.Id}}" target="_blank"><span ng-bind="proTask.Name"/></a>                                            
+                                    </td>
+                                    <td data-label="Total Qty Planned">
+                                        <span ng-bind="proTask.Total_Qty_Planned__c"/>
+                                    </td>
+                                    <td data-label="Start Date">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" date='dd-MM-yyyy' ng-model="proTask.AcctSeed__Start_Date__c" class="slds-input" />
+                                        </datepicker>                                  
+                                    </td>
+                                    <td data-label="End Date" >
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" ng-model="proTask.AcctSeed__End_Date__c" class="slds-input" ng-class="proTask.isProTaskEndDateValError == true ? 'ReqClass':''"/>
+                                            <div ng-show="proTask.isProTaskEndDateValError" style="color: rgb(194, 57, 52)">End date must be greater than Start date</div>
+                                        </datepicker>                                   
+                                    </td>
+                                    <td data-label="Parent Project Task">
+                                        <a ng-href="/{{proTask.Parent_Project_Task__c}}" target="_blank"><span ng-bind="proTask.Parent_Project_Task__r.Name"/></a>                                            
+                                    </td>
+                                    <td data-label="Status">
+                                        <span ng-bind="proTask.AcctSeed__Status__c"/>
+                                    </td>                                   
+                                </tr>
+                            </tbody>
+                        </table>
+                        &nbsp; 
+                    </div>
+                </div>
+                <!--End - to display the related Project Task records - #/tasks/16890500-->
+                <!--Ended--> 
+                
+                <div class="slds-card body">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <span class="slds-text-heading--small">Training Reports:</span>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    
+                    <div ng-show="!finalAssessmentReports.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                        <div class="slds-card__body">
+                            <div class="slds-text-align--center"> No records found. </div>
+                        </div>
+                    </div> 
+                    
+                    <div class="slds-card__body" ng-show="finalAssessmentReports.length > 0">
+                                                        
+                         <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                             <thead>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Name</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-hyphenate">Status</div>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Due Date</span>                                
+                                </th>                                           
+                            </thead>  
+                            <tbody>
+                                <tr ng-repeat="assessmentReport in finalAssessmentReports">
+                                    <td data-label="Name">
+                                        <a ng-href="/{{assessmentReport.Id}}" target="_blank"><span ng-bind="assessmentReport.Name"/></a>                                            
+                                    </td>
+                                    <td data-label="Name">
+                                        <span ng-bind="assessmentReport.Status__c"/>                                           
+                                    </td>
+                                    <td data-label="Due Date">
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="datetime" date='dd-MM-yyyy' ng-model="assessmentReport.Report_Date__c" class="slds-input" />
+                                        </datepicker>                                  
+                                    </td>                                                                      
+                                </tr>
+                            </tbody>
+                        </table>
+                        &nbsp; 
+                    </div>
+                      
+                </div>
+                               
+                <div class="slds-modal {{modalStateForSaveConfirmation}} body" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Confirmation </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <span>
+                                Do you want to save all the changes? 
+                                <div ng-show="showPostponedStartDateMsg"> Draft and Scheduled Training Reports with due date less than {{proDetail.Start_Date__c}} will be deleted. </div>
+                            </span>
+   
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="saveAllDetails();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Yes</div>
+                            <div ng-click="modalStateForSaveConfirmation='';modalBackdropStateForSaveConfirmation='';" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">No</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForSaveConfirmation}}"></div>
+                
+                <div class="slds-modal {{modalStateForError}} body" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Error </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <span>{{errorMsg}}</span>
+   
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="modalStateForError='';modalBackdropStateForError='';" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForError}}"></div>
+                
+                <div class="slds-modal {{initGenerateCertificateModal}} body" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium">Generate Certificate</h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                            
+                            <div ng-show="showGenerateCertificateMsg">Would you like to generate and send a Certificate to each Student?</div>
+                            <div id="lightning"/>                            
+                        </div>
+                        <div ng-show="showGenerateCertificateMsg" class="slds-modal__footer">                            
+                            <div ng-click="showGenerateCertificateCmp();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Yes</div>
+                            <div ng-click="cancelPage();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">No</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{initGenerateCertificateModalBackdrop}}"></div>
+            </div>
+
+        </apex:form>
+    </html>
+    <script>
+          
+        var app = angular.module('Opp_Pro_App', ['720kb.datepicker','ngRoute']);
+        app.controller('Opp_Pro_Controller', function($scope,$timeout,$routeParams,$location,$route,$window) {
+        
+            var url = $location.absUrl().split('Id=')[1];
+            var proStatus = '';
+            $scope.parentId = '';
+            $scope.returnType = '';
+            
+            console.log(':::::::::::url:::::',url);
+            var isSite = '{!$Site.Name}';
+            
+            if(url){
+                //Get Parent Id
+                if(url.indexOf('&isdtp') != -1){
+                    if(!isSite){
+                        $scope.parentId = url.split('&isdtp')[0];
+                    }else {
+                        $scope.parentId = url.split('&tour=&isdtp')[0].split('&SetProjectStatus')[0];
+                    }
+                } else if(url.indexOf('&SetProjectStatus') != -1) {
+                    $scope.parentId = url.split('&SetProjectStatus')[0];
+                } else if(url.indexOf('&return') != -1){
+                    $scope.parentId = url.split('&return')[0];
+                } else {
+                    //$scope.parentId = url;
+                }
+                
+                // Get SetProjectStatus attribute
+                if(url.indexOf('&SetProjectStatus') != -1) {
+                    //proStatus = url.split('&SetProjectStatus=')[1].split('&nonce')[0];
+                    
+                    if(!isSite){
+                        proStatus = url.split('&SetProjectStatus=')[1].split('&return')[0].split('&nonce')[0];
+                    }else {
+                        proStatus = url.split('&SetProjectStatus=')[1].split('&tour')[0].split('&return=')[0];
+                    }
+                    $scope.displayEndHeader  = true;
+                }else {
+                    $scope.displayEndHeader  = false;
+                }
+                
+                //Get Return type attribute
+                if(url.indexOf('&return') != -1){
+                    $scope.returnType = url.split('&return=')[1].split('&tour=')[0];
+                }
+            }else{
+                $scope.parentId = '{!parentId}'
+                proStatus = '{!projectStatus}'
+            }
+            console.log(':::::::::::',$scope.parentId,proStatus,$scope.returnType);
+            
+            $scope.proDetail = {};
+            $scope.oldConAss = [];
+            $scope.oldSch = [];
+            $scope.oldPro = {};
+            $scope.oldOpp = {};
+            $scope.insStudIds = [];
+            $scope.modalStateForSaveConfirmation = '';
+            $scope.modalBackdropStateForSaveConfirmation = '';
+            $scope.errorMsg = '';
+            $scope.modalStateForError = '';
+            $scope.modalBackdropStateForError = '';
+            $scope.showGenerateCertificateMsg = true;
+            $scope.showPostponedStartDateMsg = false;
+            
+            console.log('::$scope.parentId::',$scope.parentId);
+            console.log('::::::::::proStatus:::::::;',proStatus);
+            
+            function init() {
+                $scope.isLoaded = false;
+                $scope.filteredParentClins = {};
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageProjectDatescontroller.getChilDetails}',
+                    $scope.parentId,proStatus,$scope.returnType,
+                    function(records1, ev) {
+                        if(ev.status) {
+                        
+                        
+                            console.log(':::records1:::::',records1); 
+                            $timeout(function() {
+                            
+                                var records = records1;
+                                
+                                $scope.conAssign = records.conAssign;
+                                $scope.endedCAFromOnHoldForInActiveLCR = records.endedCAFromOnHoldForInActiveLCR;
+                                $scope.schedules = records.schedules;
+                                $scope.planDaysOff = records.planDaysOff;
+                                //Added
+                                $scope.projectTask = records.projectTask;
+                                //Ended
+                                $scope.proDetail = records.pro;
+                                $scope.oppDetail = records.opp;
+                                $scope.parentType = records.parentType;
+                                $scope.finalAssessmentReports = records.finalAssessmentReports;
+                                $scope.allowFinalReportsDateUpdate = records.allowFinalReportsDateUpdate;
+                                
+                                //console.log(':::::',$scope.conAssign,$scope.schedules,$scope.planDaysOff);
+                                
+                                if($scope.parentType == 'Project'){
+                                    $scope.proDetail.isProOppEndDateValError = false;
+                                    if($scope.proDetail.Start_Date__c){
+                                        $scope.proDetail.Start_Date__c = millisecondToString($scope.proDetail.Start_Date__c);
+                                    } 
+                                    if($scope.proDetail.End_Date__c){
+                                        $scope.proDetail.End_Date__c = millisecondToString($scope.proDetail.End_Date__c);
+                                    }
+                                   
+                                } else {
+                                    $scope.oppDetail.isProOppEndDateValError = false;
+                                    if($scope.oppDetail.Start_Date__c){
+                                        $scope.oppDetail.Start_Date__c = millisecondToString($scope.oppDetail.Start_Date__c);
+                                    }
+                                    if($scope.oppDetail.End_Date__c){
+                                        $scope.oppDetail.End_Date__c = millisecondToString($scope.oppDetail.End_Date__c);
+                                    }
+                                } 
+                                //Added
+                                for(var i = 0; i < $scope.projectTask.length; i++) {
+                                    $scope.projectTask[i].isProTaskEndDateValError = false;
+                                    if($scope.projectTask[i].AcctSeed__Start_Date__c) 
+                                        $scope.projectTask[i].AcctSeed__Start_Date__c = millisecondToString($scope.projectTask[i].AcctSeed__Start_Date__c);
+                                    if($scope.projectTask[i].AcctSeed__End_Date__c) 
+                                        $scope.projectTask[i].AcctSeed__End_Date__c = millisecondToString($scope.projectTask[i].AcctSeed__End_Date__c);
+                                }
+                                //Ended  
+                                for(var i = 0; i < $scope.conAssign.length; i++){
+                                     $scope.conAssign[i].isCAEndateValError = false;
+                                    if($scope.conAssign[i].Start_Date__c){
+                                        $scope.conAssign[i].Start_Date__c = millisecondToString($scope.conAssign[i].Start_Date__c);
+                                    } 
+                                    if($scope.conAssign[i].End_Date__c){
+                                        $scope.conAssign[i].End_Date__c = millisecondToString($scope.conAssign[i].End_Date__c);
+                                    } 
+                                    if($scope.conAssign[i].Start_Date__c && $scope.conAssign[i].End_Date__c){
+                                        $scope.conAssign[i].oldStartEndDate = $scope.conAssign[i].Start_Date__c+' - '+$scope.conAssign[i].End_Date__c;
+                                    } 
+                                    if($scope.conAssign[i].RecordType.DeveloperName == 'Instructor' || $scope.conAssign[i].RecordType.DeveloperName == 'Student' || $scope.conAssign[i].RecordType.DeveloperName == 'Staff'){
+                                        $scope.insStudIds.push($scope.conAssign[i].Candidate_Name__c); 
+                                    }  
+                                }
+                                for(var i = 0; i < $scope.schedules.length; i++){
+                                    $scope.schedules[i].isScheduleEndateValError = false;
+                                    if($scope.schedules[i].Start_Date__c){
+                                        $scope.schedules[i].Start_Date__c = millisecondToString($scope.schedules[i].Start_Date__c);
+                                    }  
+                                    if($scope.schedules[i].End_Date__c){
+                                        $scope.schedules[i].End_Date__c = millisecondToString($scope.schedules[i].End_Date__c);
+                                    }  
+                                    if($scope.schedules[i].Start_Date__c && $scope.schedules[i].End_Date__c){
+                                        $scope.schedules[i].oldStartEndDate = $scope.schedules[i].Start_Date__c+' - '+$scope.schedules[i].End_Date__c;
+                                    }  
+                                    if($scope.schedules[i].Start_Time__c && $scope.schedules[i].End_Time__c){
+                                        $scope.schedules[i].timeRange = $scope.schedules[i].Start_Time__c+' - '+$scope.schedules[i].End_Time__c;
+                                    }   
+                                }
+                                for(var i = 0; i < $scope.planDaysOff.length; i++){
+                                    if($scope.planDaysOff[i].dayOff.Date__c){
+                                        $scope.planDaysOff[i].dayOff.Date__c = millisecondToString($scope.planDaysOff[i].dayOff.Date__c);
+                                    }
+                                    if($scope.planDaysOff[i].dayOff.Requested_Reschedule_Date__c){
+                                        $scope.planDaysOff[i].dayOff.Requested_Reschedule_Date__c = millisecondToString($scope.planDaysOff[i].dayOff.Requested_Reschedule_Date__c);
+                                    }
+                                    $scope.planDaysOff[i].dayOff.Description__c = decode($scope.planDaysOff[i].dayOff.Description__c);  
+                                }
+                                
+                                for(var i = 0; i < $scope.finalAssessmentReports.length; i++){
+                                    if($scope.finalAssessmentReports[i].Report_Date__c){
+                                        $scope.finalAssessmentReports[i].Report_Date__c = millisecondToString($scope.finalAssessmentReports[i].Report_Date__c);
+                                    }                                   
+                                }
+                                
+                                $scope.oldConAss = angular.copy($scope.conAssign);
+                                $scope.oldSch = angular.copy($scope.schedules);
+                                $scope.oldPro = angular.copy($scope.proDetail);
+                                //Added
+                                $scope.oldProjectTask = angular.copy($scope.projectTask);
+                                //Ended
+                                $scope.oldOpp = angular.copy($scope.oppDetail);
+                                $scope.oldPlanDay = angular.copy($scope.planDaysOff);
+                                $scope.oldAssessmentReport = angular.copy($scope.finalAssessmentReports);
+                                
+                                $scope.isLoaded = true; 
+                            });  
+                        } else {
+                            $scope.isLoaded = true;
+                            $scope.errorMsg = ev.message;
+                            $scope.modalStateForError = 'slds-fade-in-open';
+                            $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                            console.log('::::ev::::',ev);
+                            
+                        }
+                        $scope.$apply();
+                    },
+                    {escape: true}
+                ); 
+            }
+            
+            $scope.proToUpdateByEndDate = function(pro){
+                
+                //Added
+                for(var i = 0; i < $scope.projectTask.length; i++){
+                    $scope.projectTask[i].AcctSeed__End_Date__c = moment(pro.End_Date__c).format('MM/DD/YYYY');
+                }
+                //Ended
+                for(var i = 0; i < $scope.conAssign.length; i++){
+                    $scope.conAssign[i].End_Date__c = moment(pro.End_Date__c).format('MM/DD/YYYY');
+                }
+                for(var i = 0; i < $scope.schedules.length; i++){
+                    $scope.schedules[i].End_Date__c = moment(pro.End_Date__c).format('MM/DD/YYYY');
+                }
+                for(var i = 0; i < $scope.finalAssessmentReports.length; i++){
+                    if($scope.allowFinalReportsDateUpdate){ //Added By Dhinesh -  W-007683 - 18/1/2023 - to restrict change the report date for DODA with SLP-FT / SLP-PT / JMAS / PLP
+                        if(($scope.finalAssessmentReports[i].Language_Training_Status__c == 'Final' || $scope.finalAssessmentReports[i].Test_Report_Type__c == 'Final') && ($scope.finalAssessmentReports[i].Status__c == 'Draft' || $scope.finalAssessmentReports[i].Status__c == 'Scheduled')){
+                            $scope.finalAssessmentReports[i].Report_Date__c = moment(pro.End_Date__c).format('MM/DD/YYYY');
+                        }
+                    }
+                }
+                //$scope.selectPlannedDaysOff($scope.oldPro,pro);    
+            }
+             
+            $scope.proToUpdateByStartDate = function(pro){
+                
+                //Added
+                for(var i = 0; i < $scope.projectTask.length; i++){
+                    $scope.projectTask[i].AcctSeed__Start_Date__c = moment(pro.Start_Date__c).format('MM/DD/YYYY');
+                }
+                //Ended
+                for(var i = 0; i < $scope.conAssign.length; i++){
+                     $scope.conAssign[i].Start_Date__c = moment(pro.Start_Date__c).format('MM/DD/YYYY');
+                }
+                for(var i = 0; i < $scope.schedules.length; i++){
+                    $scope.schedules[i].Start_Date__c = moment(pro.Start_Date__c).format('MM/DD/YYYY');
+                }
+                //$scope.selectPlannedDaysOff($scope.oldPro,pro);    
+                
+                // Added on Sep 12 2023 - W-007872 : Training Reports for Projects with Delayed/Postponed Start Dates
+                // To update report date for initial test reports when project start date is postponed
+                for(var i = 0; i < $scope.finalAssessmentReports.length; i++){
+                    if(($scope.finalAssessmentReports[i].Test_Report_Type__c == 'Initial') && ($scope.finalAssessmentReports[i].Status__c == 'Draft' || $scope.finalAssessmentReports[i].Status__c == 'Scheduled')){
+                        $scope.finalAssessmentReports[i].Report_Date__c = moment(pro.Start_Date__c).format('MM/DD/YYYY');
+                    }
+                }
+                
+                if($scope.proDetail.Start_Date__c > $scope.oldPro.Start_Date__c){
+                    $scope.showPostponedStartDateMsg = true;     
+                }
+            }
+            
+            $scope.oppToUpdate = function(opp){
+                for(var i = 0; i < $scope.conAssign.length; i++){
+                    $scope.conAssign[i].Start_Date__c = moment(opp.Start_Date__c).format('MM/DD/YYYY');
+                    $scope.conAssign[i].End_Date__c = moment(opp.End_Date__c).format('MM/DD/YYYY');
+                }
+                for(var i = 0; i < $scope.schedules.length; i++){
+                    $scope.schedules[i].Start_Date__c = moment(opp.Start_Date__c).format('MM/DD/YYYY');
+                    $scope.schedules[i].End_Date__c = moment(opp.End_Date__c).format('MM/DD/YYYY');
+                }
+                //$scope.selectPlannedDaysOff($scope.oldOpp,opp);    
+            }
+            
+            //W-005855 - End Date reflecting dates prior to the Start Date
+            //Added by Siva Prasanth on 28-08-2020
+            
+            $scope.endDateStartDateValidationCheck = function(){
+                var isValidEndDate = true;
+                //Project  End Date Validation
+                if($scope.parentType == 'Project'){
+                    if($scope.proDetail.Start_Date__c && $scope.proDetail.End_Date__c ){
+                        var proStDate = $scope.proDetail.Start_Date__c.split("/");
+                        var proEdDate = $scope.proDetail.End_Date__c.split("/");
+                        
+                        var projectStDate = new Date(proStDate[2], parseInt(proStDate[0])-1, proStDate[1]);  // -1 because months are from 0 to 11
+                        var projectEdDate = new Date(proEdDate[2], parseInt(proEdDate[0])-1, proEdDate[1]);
+                        
+                        if(projectStDate > projectEdDate){
+                            isValidEndDate = false;
+                            $scope.proDetail.isProOppEndDateValError = true;
+                        }else{
+                            $scope.proDetail.isProOppEndDateValError = false;
+                        }
+                    }
+                }else{
+                    if($scope.oppDetail.Start_Date__c && $scope.oppDetail.End_Date__c){
+                        var oppStDate = $scope.oppDetail.Start_Date__c.split("/");
+                        var oppEdDate = $scope.oppDetail.End_Date__c.split("/");
+                        
+                        var opportunityStDate = new Date(oppStDate[2], parseInt(oppStDate[0])-1, oppStDate[1]);  // -1 because months are from 0 to 11
+                        var  opportunityEdDate = new Date(oppEdDate[2], parseInt(oppEdDate[0])-1, oppEdDate[1]);
+                        
+                        if(opportunityStDate > opportunityEdDate){
+                            isValidEndDate = false;
+                            $scope.oppDetail.isProOppEndDateValError = true;
+                        }else{
+                            $scope.oppDetail.isProOppEndDateValError = false;
+                        }
+                    }
+                }
+                // Contact Assignment End Date Validation
+                for(var i = 0; i < $scope.conAssign.length; i++){
+                    if($scope.conAssign[i].End_Date__c && $scope.conAssign[i].Start_Date__c){
+                        var caStDate = $scope.conAssign[i].Start_Date__c.split("/");
+                        var caEdDate = $scope.conAssign[i].End_Date__c.split("/");
+                        
+                        var conStDate = new Date(caStDate[2], parseInt(caStDate[0])-1, caStDate[1]);  // -1 because months are from 0 to 11
+                        var conEdDate = new Date(caEdDate[2], parseInt(caEdDate[0])-1, caEdDate[1]);
+                        
+                        if(conStDate > conEdDate){
+                            isValidEndDate = false;
+                            $scope.conAssign[i].isCAEndateValError = true;
+                        }else{
+                            $scope.conAssign[i].isCAEndateValError = false;
+                        }
+                    }
+                }
+                
+                // Project Task End Date Validation
+                for(var i = 0; i < $scope.projectTask.length; i++) {
+                    if($scope.projectTask[i].AcctSeed__Start_Date__c && $scope.projectTask[i].AcctSeed__End_Date__c){
+                        var ptStDate = $scope.projectTask[i].AcctSeed__Start_Date__c.split("/");
+                        var ptEdDate = $scope.projectTask[i].AcctSeed__End_Date__c.split("/");
+                        
+                        var protaskStDate = new Date(ptStDate[2], parseInt(ptStDate[0])-1, ptStDate[1]);  // -1 because months are from 0 to 11
+                        var protaskEdDate = new Date(ptEdDate[2], parseInt(ptEdDate[0])-1, ptEdDate[1]);
+                        
+                        if(protaskStDate > protaskEdDate){
+                            isValidEndDate = false;
+                            $scope.projectTask[i].isProTaskEndDateValError = true;
+                        }else{
+                            $scope.projectTask[i].isProTaskEndDateValError = false;
+                        }
+                    }
+                }
+                
+                // Schedule EndDate Validation
+                for(var i = 0; i < $scope.schedules.length; i++){
+                    
+                    if($scope.schedules[i].Start_Date__c && $scope.schedules[i].End_Date__c && $scope.schedules[i].Schedule_Type__c != 'Substitute'){
+                        var schStDate = $scope.schedules[i].Start_Date__c.split("/");
+                        var schEdDate = $scope.schedules[i].End_Date__c.split("/");
+                        
+                        var scheduleStDate = new Date(schStDate[2], parseInt(schStDate[0])-1, schStDate[1]);  // -1 because months are from 0 to 11
+                        var scheduleEdDate = new Date(schEdDate[2], parseInt(schEdDate[0])-1, schEdDate[1]);
+                        
+                        if(scheduleStDate > scheduleEdDate){
+                            isValidEndDate = false;
+                            $scope.schedules[i].isScheduleEndateValError = true;
+                        }else{
+                            $scope.schedules[i].isScheduleEndateValError = false;
+                        }
+                    }
+                }
+                
+                if(isValidEndDate){
+                    $scope.modalStateForSaveConfirmation='slds-fade-in-open';
+                    $scope.modalBackdropStateForSaveConfirmation='slds-modal-backdrop--open';
+                }
+            }
+            
+            $scope.saveAllDetails = function(){
+                $scope.modalStateForSaveConfirmation = '';
+                $scope.modalBackdropStateForSaveConfirmation = '';
+                $scope.isLoaded = false;
+                var tempCon = [];
+                var tempSch = [];
+                var tempPro = [];
+                //Added
+                var tempProTask = [];
+                //Ended
+                var tempOpp = [];
+                var tempPlanToDel = [];
+                var tempPlanToIns = [];
+                var tempAssessmentReports = [];
+                //Added
+                for(var i = 0; i < $scope.projectTask.length; i++){
+                    if($scope.projectTask[i].AcctSeed__Start_Date__c != $scope.oldProjectTask[i].AcctSeed__Start_Date__c ||
+                       $scope.projectTask[i].AcctSeed__End_Date__c != $scope.oldProjectTask[i].AcctSeed__End_Date__c || proStatus == 'Active') {
+                          tempProTask.push($scope.projectTask[i]);
+                    }
+                }
+                //Ended
+                
+                // this method ended the CA FROM On Hold Status with having InActiveCA
+                for(var i = 0; i < $scope.endedCAFromOnHoldForInActiveLCR.length; i++){
+                    tempCon.push($scope.endedCAFromOnHoldForInActiveLCR[i]);
+                }
+                
+                
+                for(var i = 0; i < $scope.conAssign.length; i++){
+                    /*if($scope.conAssign[i].Id == null || $scope.conAssign[i].Start_Date__c != $scope.oldConAss[i].Start_Date__c 
+                        || $scope.conAssign[i].End_Date__c != $scope.oldConAss[i].End_Date__c) {
+                        
+                    }*/
+                    
+                    if(proStatus){
+                        $scope.conAssign[i].Status__c = proStatus;
+                    }
+                    tempCon.push($scope.conAssign[i]);
+                }
+                for(var i = 0; i < $scope.schedules.length; i++){
+                    if($scope.schedules[i].Start_Date__c != $scope.oldSch[i].Start_Date__c 
+                        || $scope.schedules[i].End_Date__c != $scope.oldSch[i].End_Date__c || proStatus == 'Ended' || proStatus == 'Active') {
+                        tempSch.push($scope.schedules[i]);
+                    }
+                }
+                
+                for(var i = 0; i < $scope.planDaysOff.length; i++){
+                    if($scope.planDaysOff[i].dayOff.Id == undefined && $scope.planDaysOff[i].selected == true){
+                        tempPlanToIns.push($scope.planDaysOff[i].dayOff);
+                    } 
+                    if($scope.planDaysOff[i].dayOff.Id != undefined && $scope.planDaysOff[i].selected == false){
+                        tempPlanToDel.push($scope.planDaysOff[i].dayOff);
+                    }  
+                }
+                
+                for(var i = 0; i < $scope.finalAssessmentReports.length; i++){
+                    if($scope.finalAssessmentReports[i].Report_Date__c != $scope.oldAssessmentReport[i].Report_Date__c){
+                        tempAssessmentReports.push($scope.finalAssessmentReports[i]);
+                    }
+                }
+                
+                if($scope.proDetail){
+                    if(proStatus != 'Ended' && proStatus != 'Active') { 
+                        if($scope.proDetail.Start_Date__c != $scope.oldPro.Start_Date__c || $scope.proDetail.End_Date__c != $scope.oldPro.End_Date__c){
+                            tempPro.push($scope.proDetail);
+                        }
+                    } else {
+                        tempPro.push($scope.proDetail);
+                    }
+                } else { 
+                    if($scope.oppDetail.Start_Date__c != $scope.oldOpp.Start_Date__c || $scope.oppDetail.End_Date__c != $scope.oldOpp.End_Date__c){
+                        tempOpp.push($scope.oppDetail);
+                    }
+                }
+                var conToUpdate = angular.copy(tempCon);
+                var schToUpdate = angular.copy(tempSch);
+                var proToUpdate = angular.copy(tempPro);
+                //Added
+                var proTaskToUpdate = angular.copy(tempProTask);
+                //Ended
+                var oppToUpdate = angular.copy(tempOpp);
+                var planToInsert = angular.copy(tempPlanToIns);
+                var planToDelete = angular.copy(tempPlanToDel);
+                var assessmentReportsToUpdate= angular.copy(tempAssessmentReports);
+                
+                console.log(':1::records',proToUpdate);
+                console.log(':1::records',conToUpdate);
+                console.log(':1::records',schToUpdate);
+                
+                console.log('::2:records',$scope.oldPro);
+                console.log('::2:records',$scope.oldConAss);
+                console.log(':2::records',$scope.oldSch);
+
+                if(proToUpdate.length > 0){
+                    if(proToUpdate[0].Start_Date__c){
+                        proToUpdate[0].Start_Date__c = moment(proToUpdate[0].Start_Date__c).format('YYYY-MM-DD');
+                    }
+                    if(proToUpdate[0].End_Date__c){
+                        proToUpdate[0].End_Date__c = moment(proToUpdate[0].End_Date__c).format('YYYY-MM-DD');
+                    }
+                }
+                if(oppToUpdate.length > 0){
+                    if(oppToUpdate[0].Start_Date__c){
+                        oppToUpdate[0].Start_Date__c = moment(oppToUpdate[0].Start_Date__c).format('YYYY-MM-DD');
+                    }
+                    if(oppToUpdate[0].End_Date__c){
+                        oppToUpdate[0].End_Date__c = moment(oppToUpdate[0].End_Date__c).format('YYYY-MM-DD');
+                    }
+                }
+                
+                //Added
+                for(var x = 0; x < proTaskToUpdate.length; x++) {
+                    if(proTaskToUpdate[x].AcctSeed__Start_Date__c){
+                        proTaskToUpdate[x].AcctSeed__Start_Date__c = moment(proTaskToUpdate[x].AcctSeed__Start_Date__c).format('YYYY-MM-DD');
+                    }
+                    if(proTaskToUpdate[x].AcctSeed__End_Date__c){
+                        proTaskToUpdate[x].AcctSeed__End_Date__c = moment(proTaskToUpdate[x].AcctSeed__End_Date__c).format('YYYY-MM-DD');
+                    }
+                    delete proTaskToUpdate[x].$$hashKey;
+                }
+                //Ended
+                for(var x = 0; x < conToUpdate.length; x++) {
+                    if(conToUpdate[x].Start_Date__c){
+                        conToUpdate[x].Start_Date__c = moment(conToUpdate[x].Start_Date__c).format('YYYY-MM-DD');
+                    }
+                    if(conToUpdate[x].End_Date__c){
+                        conToUpdate[x].End_Date__c = moment(conToUpdate[x].End_Date__c).format('YYYY-MM-DD');
+                    }
+                    delete conToUpdate[x].$$hashKey;
+                    delete conToUpdate[x].oldStartEndDate;
+                }
+                for(var x = 0; x < schToUpdate.length; x++) {
+                    if(schToUpdate[x].Start_Date__c){
+                        schToUpdate[x].Start_Date__c = moment(schToUpdate[x].Start_Date__c).format('YYYY-MM-DD');
+                    }
+                    if(schToUpdate[x].End_Date__c){
+                        schToUpdate[x].End_Date__c = moment(schToUpdate[x].End_Date__c).format('YYYY-MM-DD');
+                    }
+                    delete schToUpdate[x].$$hashKey;
+                    delete schToUpdate[x].oldStartEndDate;
+                    delete schToUpdate[x].timeRange;
+                }
+                for(var x = 0; x < planToInsert.length; x++) {
+                    if(planToInsert[x].Date__c){
+                        planToInsert[x].Date__c = moment(planToInsert[x].Date__c).format('YYYY-MM-DD');
+                    }
+                    if(planToInsert[x].Requested_Reschedule_Date__c){
+                        planToInsert[x].Requested_Reschedule_Date__c = moment(planToInsert[x].Requested_Reschedule_Date__c).format('YYYY-MM-DD');
+                    }
+                    delete planToInsert[x].$$hashKey;
+                }
+                for(var x = 0; x < planToDelete.length; x++) {
+                    if(planToDelete[x].Date__c){
+                        planToDelete[x].Date__c = moment(planToDelete[x].Date__c).format('YYYY-MM-DD');
+                    }
+                    if(planToDelete[x].Requested_Reschedule_Date__c){
+                        planToDelete[x].Requested_Reschedule_Date__c = moment(planToDelete[x].Requested_Reschedule_Date__c).format('YYYY-MM-DD');
+                    }
+                    delete planToDelete[x].$$hashKey;
+                }
+                
+                for(var x = 0; x < assessmentReportsToUpdate.length; x++){
+                     if(assessmentReportsToUpdate[x].Report_Date__c){
+                         assessmentReportsToUpdate[x].Report_Date__c = moment(assessmentReportsToUpdate[x].Report_Date__c).format('YYYY-MM-DD');
+                     }           
+                }
+                console.log('::3:records',proToUpdate);
+                console.log('::3:records',conToUpdate);
+                console.log('::3:records',schToUpdate);
+
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageProjectDatescontroller.saveAllDetails}',
+                    JSON.stringify(proToUpdate),
+                    JSON.stringify(oppToUpdate),
+                    //Added
+                    JSON.stringify(proTaskToUpdate),
+                    //Ended
+                    JSON.stringify(conToUpdate),
+                    JSON.stringify(schToUpdate),
+                    JSON.stringify(planToInsert),
+                    JSON.stringify(planToDelete),
+                    JSON.stringify(assessmentReportsToUpdate),
+                    proStatus, 
+                    function(result, ev) {
+                        if(ev.status) {
+                            $timeout(function() {
+                                console.log(':::result',result);
+                                //$scope.cancelPage();
+                                //init(); 
+                                
+                                if(result){
+                                    $scope.isLoaded = true;
+                                    $scope.errorMsg = result;
+                                    $scope.modalStateForError = 'slds-fade-in-open';
+                                    $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';                            
+                                }else if(proStatus == 'Ended'){
+                                    $scope.isLoaded = true;
+                                    $scope.initGenerateCertificateModal = 'slds-fade-in-open';
+                                    $scope.initGenerateCertificateModalBackdrop = 'slds-modal-backdrop--open';                                    
+                                }else {
+                                    $scope.cancelPage();
+                                }
+                                
+                            });  
+                        } else {
+                            console.log('::::ev::::',ev);
+                            
+                            $scope.isLoaded = true;
+                            $scope.errorMsg = ev.message;
+                            $scope.modalStateForError = 'slds-fade-in-open';
+                            $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                            
+                        }
+                        $scope.$apply();
+                    },
+                    {escape: true}
+                ); 
+                
+            }
+            
+            $scope.showGenerateCertificateCmp = function(){
+                $scope.showGenerateCertificateMsg = false;
+                $Lightning.use("c:GenerateCertificateApp", function() {
+                    $Lightning.createComponent(
+                        "c:GenerateCertificateCmp",
+                        {recordId : $scope.proDetail.Id, isFromVFPage: true},
+                        "lightning",
+                        function() {
+                            $A.eventService.addHandler({ "event": "c:closeGenerateCertificateModal", "handler" : closeGenerateCertificateModalHandler});   
+                        });
+                 });
+            }
+            //Added By Dhinesh - 30-09-2021 - To Fix the loading issue because callback not called after CA update in Aura Component
+            var closeGenerateCertificateModalHandler = function(event){
+                var caList = event.getParam("caList");
+                $scope.initGenerateCertificateModal = '';
+                $scope.initGenerateCertificateModalBackdrop = '';
+                $scope.isLoaded = false;
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageProjectDatescontroller.updateContactRecords}',
+                    JSON.stringify(caList),                    
+                    function(records, ev) {
+                        if(ev.status) {
+                            $timeout(function() {
+                                $scope.isLoaded = true;
+                                $scope.cancelPage();
+                            });  
+                        } else {
+                            $scope.isLoaded = true;
+                            $scope.errorMsg = ev.message;
+                            $scope.modalStateForError = 'slds-fade-in-open';
+                            $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';                            
+                        }
+                        $scope.$apply();
+                    },
+                    {escape: true}
+                );                 
+            }
+            
+            $scope.selectPlannedDaysOff = function(oldProOrOpp,proOrOpp){
+                $scope.isLoaded = false;
+                var tempProOrOpp = [];
+                var tempOldProOrOpp = [];
+                var tempPlannedDaysOff = [];
+               
+                tempOldProOrOpp.push(angular.copy(oldProOrOpp));
+                if(tempOldProOrOpp[0].Start_Date__c){
+                    tempOldProOrOpp[0].Start_Date__c = moment(tempOldProOrOpp[0].Start_Date__c).format('YYYY-MM-DD');
+                }
+                if(tempOldProOrOpp[0].End_Date__c){
+                    tempOldProOrOpp[0].End_Date__c = moment(tempOldProOrOpp[0].End_Date__c).format('YYYY-MM-DD');
+                }
+                
+                tempProOrOpp.push(angular.copy(proOrOpp));
+                if(tempProOrOpp[0].Start_Date__c){
+                    tempProOrOpp[0].Start_Date__c = moment(tempProOrOpp[0].Start_Date__c).format('YYYY-MM-DD');
+                }
+                if(tempProOrOpp[0].End_Date__c){
+                    tempProOrOpp[0].End_Date__c = moment(tempProOrOpp[0].End_Date__c).format('YYYY-MM-DD');
+                }
+                
+                tempPlannedDaysOff = angular.copy($scope.oldPlanDay);
+                for(var i = 0; i < $scope.oldPlanDay.length; i++){
+                    if(tempPlannedDaysOff[i].dayOff.Date__c){
+                        tempPlannedDaysOff[i].dayOff.Date__c = moment(tempPlannedDaysOff[i].dayOff.Date__c).format('YYYY-MM-DD');
+                    }
+                    if(tempPlannedDaysOff[i].dayOff.Requested_Reschedule_Date__c){
+                        tempPlannedDaysOff[i].dayOff.Requested_Reschedule_Date__c = moment(tempPlannedDaysOff[i].dayOff.Requested_Reschedule_Date__c).format('YYYY-MM-DD');
+                    }   
+                }
+                
+                console.log('::$scope.insStudIds::',$scope.insStudIds);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ManageProjectDatescontroller.clonePlannedDaysOff}',
+                    JSON.stringify(tempOldProOrOpp),
+                    JSON.stringify(tempProOrOpp),
+                    JSON.stringify(tempPlannedDaysOff),
+                    $scope.parentType,
+                    $scope.insStudIds,
+                    function(records, ev) {
+                        if(ev.status) {
+                            $timeout(function() {
+                                console.log(':::records',records);
+                                $scope.planDaysOff = records;
+                                for(var i = 0; i < $scope.planDaysOff.length; i++){
+                                    if($scope.planDaysOff[i].dayOff.Date__c != undefined){
+                                        $scope.planDaysOff[i].dayOff.Date__c = millisecondToString($scope.planDaysOff[i].dayOff.Date__c);
+                                    }
+                                    if($scope.planDaysOff[i].dayOff.Requested_Reschedule_Date__c != undefined){
+                                        $scope.planDaysOff[i].dayOff.Requested_Reschedule_Date__c = millisecondToString($scope.planDaysOff[i].dayOff.Requested_Reschedule_Date__c);
+                                    }
+                                    $scope.planDaysOff[i].dayOff.Description__c = decode($scope.planDaysOff[i].dayOff.Description__c); 
+                                }
+                                $scope.isLoaded = true;
+                            });  
+                        } else {
+                            $scope.isLoaded = true;
+                            $scope.errorMsg = ev.message;
+                            $scope.modalStateForError = 'slds-fade-in-open';
+                            $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                            console.log('::::ev::::',ev);
+                        }
+                        $scope.$apply();
+                    },
+                    {escape: true}
+                ); 
+                
+            }
+            
+            $scope.cancelPage = function(){
+                $scope.isLoaded = false;
+                console.log(':$scope.parentId:::',$scope.parentId);
+                var uiTheme = '{!$User.UIThemeDisplayed}';
+                console.log(':::::::::::uiTheme::::',uiTheme);
+                console.log(':::::::::::$scope.parentType::::',$scope.parentType);
+                console.log(':::::::::::$scope.isSite::::',isSite);
+
+                
+                var isSite = '{!$Site.Name}';
+                var urlPrefix = '{!$Label.Community_Site_Prefix}';
+
+                if(uiTheme == 'Theme4d' || uiTheme == 'Theme4t') {
+                    //sforce.one.navigateToURL('/'+$scope.parentId);
+                    //sforce.one.back(true);
+                    
+                    if(!isSite) {
+                        
+                        /*if($scope.parentType == 'Opportunity' && $scope.returnType == 'ToDetailPage') {
+                            //sforce.one.navigateToURL('/006');
+                            sforce.one.navigateToURL('/'+$scope.parentId);
+                        } else if($scope.parentType == 'Project' && $scope.returnType == 'ToDetailPage'){
+                            //sforce.one.navigateToURL('/a48');
+                            sforce.one.navigateToURL('/'+$scope.parentId);
+                        } else*/
+                        if($scope.parentType == 'Project' && $scope.returnType == 'ToProjectSummary'){
+                            sforce.one.navigateToURL('/apex/LTSProjectSummaryView');
+                        }else{
+                            sforce.one.navigateToURL('/'+$scope.parentId);
+                        }
+                    }else {
+                        if($scope.parentType == 'Opportunity' && $scope.returnType == 'ToDetailPage') {
+                            sforce.one.navigateToURL(urlPrefix+'/s/006');
+                        } else if($scope.parentType == 'Project' && $scope.returnType == 'ToDetailPage'){
+                            sforce.one.navigateToURL(urlPrefix+'/s/a48');
+                        } else if($scope.parentType == 'Project' && $scope.returnType == 'ToProjectSummary'){
+                            sforce.one.navigateToURL(urlPrefix+'/s/project-summary');
+                        }
+                    }
+                    
+                }else {
+                    //window.location.href = '/'+$scope.parentId;
+                    
+                    /*if($scope.parentType == 'Opportunity' && $scope.returnType == 'ToDetailPage') {
+                        //window.location.href = '/006';
+                        window.location.href = '/'+$scope.parentId;
+                    } else if($scope.parentType == 'Project' && $scope.returnType == 'ToDetailPage'){
+                        //window.location.href = '/a48';
+                        window.location.href = '/'+$scope.parentId;
+                    } else*/
+                    if($scope.parentType == 'Project' && $scope.returnType == 'ToProjectSummary'){
+                        window.location.href = '/apex/LTSProjectSummaryView';
+                    }else{
+                        if(uiTheme == 'Theme3' && $scope.parentType == 'Project'){
+                            if(!isSite) {
+                                sforce.one.navigateToURL('/'+$scope.parentId);                                
+                            }else{
+                                sforce.one.navigateToURL(urlPrefix+'/s/project/'+$scope.parentId);
+                            }
+                        }else{
+                            window.location.href = '/'+$scope.parentId;
+                        }
+                    }
+                }
+            }
+            
+            function decode(encodedStr){
+                var parser = new DOMParser;
+                var dom = parser.parseFromString(
+                    '<!doctype html><body>' + encodedStr,
+                    'text/html');
+                var decodedString = dom.body.textContent;
+                
+                console.log(decodedString);
+                return decodedString;
+            }
+            
+            function millisecondToString(millisecond) {
+                var date = new Date(millisecond);            
+                date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+                var day = date.getDate();
+                var month = date.getMonth() + 1;
+                if(day < 10) {
+                    day = '0' + day;
+                }
+                if(month < 10) {
+                    month = '0' + month;
+                }
+                return  month + '/' + day + '/' + date.getFullYear();
+            }
+            
+            init();
+        });
+    </script>
+</apex:page>

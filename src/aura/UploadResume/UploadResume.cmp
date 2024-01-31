@@ -1,0 +1,10 @@
+<aura:component implements="lightning:availableForFlowScreens" access="global" >
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="applicant" type="bpats__ATS_Applicant__c"/>
+	<force:recordData aura:id="recordLoader"
+                      recordId="{!v.recordId}"
+                      fields="Id,Name,bpats__ATS_Applicant__c,bpats__Job__c"
+                      targetFields="{!v.applicant}"
+                      recordUpdated="{!c.doInit}"
+    />
+</aura:component>

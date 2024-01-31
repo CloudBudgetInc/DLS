@@ -1,0 +1,18 @@
+.titleCls{
+  font-size: 1.5rem;
+}
+.fontCls{
+    font-size: 1rem;
+}
+.labelCls{
+    color: #1D4588;
+    font-weight: bold;
+}
+@media only screen and (max-width: 48em) {
+  .card-body{
+      padding: 0.5rem !important;
+  }
+}
+.btn-primary {
+  background-color: #1D4588 !important;
+}

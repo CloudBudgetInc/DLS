@@ -1,0 +1,10 @@
+.notesLabelCls > b {
+    color: #055E89 !important;
+    font-weight: bold !important;
+    font-size: 1rem;
+}
+.notesContentCls {
+    font-size: .875rem;
+    font-weight: 600;
+    font-family: "Lato";
+}

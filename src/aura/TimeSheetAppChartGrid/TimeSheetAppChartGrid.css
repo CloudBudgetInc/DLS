@@ -1,0 +1,9 @@
+.THIS {
+}
+.THIS .chartdiv {
+  height: 200px;
+} 
+
+.THIS .chartdiv a{
+    display : none !important;
+}

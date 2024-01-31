@@ -1,0 +1,176 @@
+<!--
+  @description       : 
+  @author            : Vasanthram
+  @group             : 
+  @last modified on  : 09-29-2023
+  @last modified by  : Vasanthram
+-->
+<aura:component implements="flexipage:availableForRecordHome,force:hasSObjectName,force:hasRecordId,forceCommunity:availableForAllPageTypes" controller="ScheduleCmpLightningController" access="global" >
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="parentType" type="String"/>
+    <aura:attribute name="statusSelected" type="String" default="Drafted &amp; Active"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="schStatusValue" type="List"/>
+    <aura:attribute name="parentRecordType" type="String"/>
+    <aura:attribute name="schOpliWrap" type="ScheduleDomain.SchOpliWrapper[]"/>
+    <aura:attribute name="onlineRoomId" type="String"/>
+    <aura:attribute name="roomIdsFilterConditionForLTS" type="String"/>
+    <aura:attribute name="isDLSOnlineProject" type="Boolean"/>
+    
+    <aura:attribute name="showAddModel" type="Boolean" default="false"/>
+    <aura:attribute name="validationTitle" type="String" default=""/>
+    <aura:attribute name="validationMsg" type="String" default=""/>
+    <aura:attribute name="scheduleType" type="String" default="Regular"/>
+    <aura:attribute name="scheduleId" type="String" default=""/>
+    <aura:attribute name="priorScheduleId" type="String" default=""/>
+    <aura:attribute name="parentScheduleId" type="String" default=""/>
+    <aura:attribute name="isProjectExist" type="Boolean" default="false"/>
+    <aura:attribute name="projectId" type="String" default=""/>
+    <aura:attribute name="currentUsrProfileName" type="String" default="" description="To display the plus icon values based on profile name"/>
+    <aura:attribute name="typeOfAction" type="String" description="To determine the action type"/>
+    <aura:attribute name="activeTab" type="String" default=""/>
+    <aura:attribute name="proRecordIds" type="List[]" default="[]" description="to pass the project id as list to EventsTabCmp"/>
+    <aura:attribute name="dipslayEventTab" type="Boolean" default="false"/>
+    <aura:attribute name="parentTypeForPDO" type="String" default=""/>
+    <aura:attribute name="displayPDOTab" type="Boolean" default="false"/>
+    <aura:attribute name="haveDLSClassNo" type="Boolean" default="true"/>
+    <aura:attribute name="productOrPTExist" type="Boolean" default="true"/>
+    <aura:attribute name="scheduleActionPermissionMap" type="Map"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="deleteEvent" event="c:DeleteScheduleEvent" action = "{!c.handleTableActions}"/> 
+    
+    <aura:handler event="c:reloadEvent" action="{!c.refreshTable}"/>
+    
+    <!-- Spinner -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="large" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    
+    <!-- Tab Set to display Schedule, Events & Planned Days off details display -->
+    <lightning:card>
+        <aura:set attribute="title">
+            <h1 style="font-weight:bold;">Schedule</h1>
+        </aura:set>
+        <lightning:tabset onselect="{!c.activeTaChange}" selectedTabId="{!v.activeTab}">
+            <lightning:tab label="Schedule" id="scheduleTab">
+                <!-- Schedule Table -->
+                <div class = "slds-p_around-large">
+                    <lightning:card class="slds-theme_shade">
+                        <aura:set attribute="actions">
+                            <aura:if isTrue="{!and(v.parentType == 'Opportunity',v.isProjectExist)}">
+                                <a onclick="{!c.navigateToProject}" style="font-size: .85rem;">Go to Project</a>&nbsp;<lightning:helptext content="This opportunity already has Project." class="helpTextClass"/>
+                                <aura:set attribute="else">
+                                    <lightning:button variant="Brand" label="Add Schedule" onclick="{!c.addScheduleBtnClick}"/>
+                                </aura:set>	
+                            </aura:if>
+                            
+                        </aura:set>
+                        <aura:set attribute="title">
+                            <lightning:select label="Status" class="fontSize" value="{!v.statusSelected}" onchange="{!c.statusChanged}">
+                                <aura:iteration items="{!v.schStatusValue}" var="status">
+                                    <option value="{!status}" selected="{!status==v.statusSelected}">{!status}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </aura:set>
+                        
+                        <aura:set attribute="body">
+                            <table class="slds-table slds-table_bordered">
+                                <thead>
+                                    <tr class="slds-text-title_caps">
+                                        <th class="slds-text-align_center">Name</th>
+                                        <th class="slds-text-align_center">Days</th>
+                                        
+                                        <!-- Opportunity -->
+                                        <aura:if isTrue="{!or(v.parentRecordType == 'MTT_Projects', v.parentRecordType == 'MTT_Opportunities', v.parentRecordType == 'DLI_W_TO_Opportunities')}">
+                                            <th class="wrap slds-text-align_center" Style="width:95px">Travel Dates</th>
+                                        </aura:if >
+                                        <!-- Opportunity -->
+                                        
+                                        <th class="wrap slds-text-align_center" Style="width:95px">Training Dates</th>
+                                        <th class="slds-text-align_center" Style="width:88px">Time</th>
+                                        
+                                        <!-- Opportunity -->
+                                        <aura:if isTrue="{!v.parentType == 'Opportunity'}">
+                                            <th class="wrap slds-text-align_center">Opportunity Product</th>
+                                        </aura:if>
+                                        <!-- Opportunity -->
+                                        
+                                        <!-- Project -->
+                                        <aura:if isTrue="{!v.parentType != 'Opportunity'}">
+                                            <th class="wrap slds-text-align_center">Project Task</th>
+                                            <aura:if isTrue="{!v.parentRecordType == 'Admin_Projects'}">
+                                                <th class="slds-text-align_center">Contact</th>
+                                                <aura:set attribute="else">
+                                                    <th class="slds-text-align_center">Instructor</th>
+                                                </aura:set>
+                                            </aura:if>
+                                            <th class="slds-text-align_center">Room</th>
+                                        </aura:if>
+                                        <!-- Project -->
+                                        
+                                        <th class="wrap slds-text-align_center">Qty Per Session</th>
+                                        <th class="wrap slds-text-align_center">Total Scheduled Qty</th>
+                                        <!-- th class="wrap slds-text-align_center">Total Planned Qty</th> -->
+                                        <th class="slds-text-align_center">Unit</th>
+                                        <th class="slds-text-align_center">Timezone</th>
+                                        <aura:if isTrue="{!v.statusSelected == 'Canceled'}">
+                                            <th class="slds-text-align_center">Cancellation Reason</th>
+                                            <th class="slds-text-align_center">Cancellation Date</th>
+                                        </aura:if>
+                                        <aura:if isTrue="{!or(v.parentType != 'Opportunity',and(v.parentType == 'Opportunity',not(v.isProjectExist)))}">
+                                            <aura:if isTrue="{!not(or(v.statusSelected == 'Canceled',or(v.statusSelected == 'Completed',v.statusSelected == 'On Hold')))}">
+                                                <th class="slds-text-align_center">Action</th>
+                                            </aura:if>
+                                        </aura:if>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <aura:if isTrue="{!v.schOpliWrap.length > 0}">
+                                        <aura:iteration items="{!v.schOpliWrap}" var="schOpli" indexVar="order">
+                                            <c:ScheduleChildComponent schOpli = "{!schOpli}" recordId = "{!v.recordId}" parentType = "{!v.parentType}" parentRecordType = "{!v.parentRecordType}" index = "{!order}" currentUsrProfileName="{!v.currentUsrProfileName}" isProjectExist="{!v.isProjectExist}" statusSelected="{!v.statusSelected}" onlineRoomId="{!v.onlineRoomId}" roomCondition="{#v.roomIdsFilterConditionForLTS}" isDLSOnlineProject="{!v.isDLSOnlineProject}" scheduleActionPermissionMap="{!v.scheduleActionPermissionMap}"/>
+                                        </aura:iteration>
+                                        <aura:set attribute="else">
+                                            <center><p>No Data to Show</p></center>
+                                        </aura:set>
+                                    </aura:if>
+                                </tbody>
+                            </table>
+                        </aura:set>
+                    </lightning:card>
+                </div>
+            </lightning:tab>
+            <lightning:tab label="Events" id="EventsTab">
+                <aura:if isTrue="{!v.dipslayEventTab}">
+                    <c:EventTabCmp proRecordIds="{!v.proRecordIds}" previousWeekStDate="" nextWeekEnDate="" parenRecordTypeName="{!v.parentRecordType}"/>
+                </aura:if>
+            </lightning:tab>
+            <lightning:tab label="Planned Days Off" id="pdoTab" >
+                <aura:if isTrue="{!v.displayPDOTab}">
+                    <!--iframe src="{!'/apex/Schedule_PDO_Temp_Page?parentId=' + v.recordId + '&amp;parentType=' + v.parentTypeForPDO}" width="100%" height="500px"/-->
+                    <c:PlannedDaysOffCmp recordId="{!v.recordId}" sObjectName="{!v.sObjectName}"/>
+                </aura:if>
+            </lightning:tab>
+        </lightning:tabset> 
+    </lightning:card>
+    
+    <!-- Add Schedule -->
+    <aura:if isTrue="{!v.showAddModel}">
+        <c:ScheduleAddEditCmp parentId="{!v.recordId}" objectName="{!v.sObjectName}" scheduleType="{!v.scheduleType}" scheduleId="{!v.scheduleId}" priorScheduleId="{!v.priorScheduleId}" parentScheduleId="{!v.parentScheduleId}" parentRTName="{!v.parentRecordType}" typeOfAction="{!v.typeOfAction}" currentUsrProfileName="{!v.currentUsrProfileName}"  onlineRoomId="{!v.onlineRoomId}" isDLSOnlineProject="{!v.isDLSOnlineProject}" roomCondition="{#v.roomIdsFilterConditionForLTS}"/>
+    </aura:if>
+    
+    <!-- validation model-->
+    <c:sldsModal aura:id="validationModal">
+        <aura:set attribute="header">
+            {!v.validationTitle}
+        </aura:set>
+        <aura:set attribute="content">
+            {!v.validationMsg}
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Close"  variant="neutral" onclick="{!c.closeValidationModal}"/>
+        </aura:set>
+    </c:sldsModal>
+    
+</aura:component>

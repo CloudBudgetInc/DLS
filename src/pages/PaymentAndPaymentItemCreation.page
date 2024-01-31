@@ -1,0 +1,830 @@
+<apex:page standardController="Transaction__c" extensions="PaymentAndPaymentItemCreationHandler" action="{!createChildContract}">
+    
+    <apex:includeScript value="{!URLFOR($Resource.ProjectTimeSchedule,'jquery.min.js')}"/>   
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}"/>
+
+    <script type="text/javascript">
+        var redirectId;
+        var OldNewlistMap = JSON.parse('{!strForPage}');
+        
+        // Added By HL
+        var msgStr;
+        var myflag = false;
+        var calculateAmt = false;
+        
+        var tableStr;
+        
+        var qtyModalFlag = false;
+        var rateModalFlag = false;
+        var israteChanged = false;
+        var oldRateVal;
+        var oldRatePos;
+        var oldRateIndex;
+        
+        function newPaymentItemJS() {
+            $('#Spinner').show();
+            insertNewPaymentAF();
+        }
+        
+        function upsertAllRecsJS(){
+            
+            $('#confirmbackdropId').removeClass('slds-modal-backdrop--open');
+            $('#confirmmodalId').removeClass('slds-fade-in-open');
+            $('#Spinner').show();
+            createPaymentAF();    
+        }
+        
+        function createPaymentJS() {
+        
+            myflag = false;
+            
+            tableStr = new Array();
+            tableStr.push(["Project Task Name", "Old Value", "New Value"]);
+            
+            msgStr = '';
+                        
+            var actStr;
+                        
+            var genList = JSON.parse('{!genStrForPage}');
+            //console.log('genList::::',genList);
+            //console.log('genList::::',genList.length);
+            
+            var tempVar = genList.length;
+            console.log('tempVar::::',tempVar);
+            
+            var newIndex = 0;
+            var oldIndex = 0;
+            
+            for(var i = 0; i<tempVar; i++){
+                
+                var price = genList[i].quantity;
+                console.log('price::::',price);
+                
+                var myTempStr = genList[i].position;
+                actStr = myTempStr;
+                
+                var uiQty;
+                var uiPrice;
+                
+                var tempRec = genList[i];
+                var tempRecName = ((tempRec.prodName != '' && tempRec.prodName != null) ? tempRec.prodName : tempRec.projTaskName);
+                var langTrainingBol = false;
+                
+                if(tempRecName.includes("Training")){
+                    langTrainingBol = true;
+                }else{
+                    langTrainingBol = false;
+                }
+                
+                if(actStr === 'Old'){
+                    
+                    //console.log('oldIndex::::',oldIndex);
+                    
+                    calculateAmt = true;
+                    
+                    uiPrice = document.getElementsByClassName(actStr+'rate_' + oldIndex)[0].value;
+                    console.log('uiPrice::::',uiPrice);
+                    
+                    uiQty = document.getElementsByClassName(actStr+'quantity_' + oldIndex)[0].value;
+                    console.log('uiQty::::',uiQty);
+                    
+                    //For refund calculation
+                    if(uiQty > 0){
+                        if(langTrainingBol === true){
+                            calculateAmount(actStr, oldIndex, uiQty, uiPrice);
+                        }
+                    }
+                    
+                    oldIndex = oldIndex+1;
+                }
+                
+                if(actStr === 'New'){
+                    
+                    //console.log('newIndex::::',newIndex);
+                    
+                    calculateAmt = true;
+                    
+                    uiPrice = document.getElementsByClassName(actStr+'rate_' + newIndex)[0].value;
+                    console.log('uiPrice::::',uiPrice);
+                    
+                    uiQty = document.getElementsByClassName(actStr+'quantity_' + newIndex)[0].value;
+                    console.log('uiQty::::',uiQty);
+                    
+                    //For refund calculation
+                    if(uiQty > 0){
+                        if(langTrainingBol === true){
+                            calculateAmount(actStr, newIndex, uiQty, uiPrice);
+                        }
+                    }
+                    newIndex = newIndex+1;
+                }
+            }
+            
+            //console.log('msgStr::::',msgStr);
+            
+            if(myflag === true){
+                
+                var myHasProject = {!hasProject};
+                console.log('::::::::myHasProject:::',myHasProject);
+                
+                if(myHasProject === true){
+                    showConfirmationMsg();
+                }else{
+                    $('#Spinner').show();
+                    createPaymentAF();
+                }
+            }else{
+                $('#Spinner').show();
+                createPaymentAF();
+            }
+        }
+        
+        function showConfirmationMsg() {
+            
+            qtyModalFlag = true;
+            
+            //Create a HTML Table element.
+            var table = document.createElement("TABLE");
+            table.border = "1";
+            
+            //Get the count of columns.
+            var columnCount = tableStr[0].length;
+            
+            //Add the header row.
+            var row = table.insertRow(-1);
+            for (var i = 0; i < columnCount; i++) {
+                var headerCell = document.createElement("TH");
+                headerCell.innerHTML = tableStr[0][i];
+                row.appendChild(headerCell);
+            }
+        
+            //Add the data rows.
+            for (var i = 1; i < tableStr.length; i++) {
+                row = table.insertRow(-1);
+                for (var j = 0; j < columnCount; j++) {
+                    var cell = row.insertCell(-1);
+                    cell.innerHTML = tableStr[i][j];
+                }
+            }
+                
+            var dvTable = document.getElementById("confirmTextId");
+            dvTable.innerHTML = "";
+            dvTable.appendChild(table);
+            
+            $('#confirmbackdropId').addClass('slds-modal-backdrop--open');
+            $('#confirmmodalId').addClass('slds-fade-in-open');
+            //$('.confirmTextCls').text(msgStr);
+        }
+        
+        function calculatePTRate(pos, index) {
+        
+            rateModalFlag = true;
+            
+            var myRec;
+            var myRecName;
+            if(pos == 'Old') {
+                myRec = OldNewlistMap['Old'][index];
+            } 
+            if(pos == 'New') {
+                myRec = OldNewlistMap['New'][index];
+            }
+            if(myRec != null) {
+                myRecName = ((myRec.prodName != '' && myRec.prodName != null) ? myRec.prodName : myRec.projTaskName);
+            }
+            
+            var newRate = document.getElementsByClassName(pos+'rate_' + index)[0].value;
+            console.log(':::::newRate::::',newRate);
+            
+            var oldRate = myRec.payItem.Rate_per_Quantity__c;
+            console.log(':::::oldRate::::',oldRate);
+            
+            var rateMsg = 'With this change, for Project Task: "'+myRecName+'" the new Rate $'+newRate+' varied from existing Rate $'+oldRate+' do you want to update new Rate $'+newRate+'?\n\n';
+            console.log(':::::rateMsg::::',rateMsg);
+            
+            redirectId = myRec.redirectId;
+            
+            if(myRecName.includes("Training")){
+            
+                if(newRate != oldRate){
+                    
+                    israteChanged = true;
+                    oldRateVal = oldRate;
+                    oldRatePos = pos;
+                    oldRateIndex = index;
+                    
+                    $('#confirmbackdropIdForRate').addClass('slds-modal-backdrop--open');
+                    $('#confirmmodalIdForRate').addClass('slds-fade-in-open');
+                    $('.confirmTextClsForRate').text(rateMsg);
+                }
+            }
+        }
+        
+        var hasPositiveVal = 0; 
+        
+        function calculateAmount2(pos, index) {
+            //console.log('calculateAmount called', index);
+            var rate = document.getElementsByClassName(pos+'rate_' + index)[0].value;
+            var qty = document.getElementsByClassName(pos+'quantity_' + index)[0].value;
+            var value = Math.ceil((parseFloat(qty) * rate) * 100) / 100;
+            
+            $('.'+pos+'amount_' + index).val(value);
+        }
+        
+        function toValidateTheAvail(index, pos, amtValue, price) {
+            console.log('toValidateTheAvail called', index, pos, amtValue, price);
+            var rec;
+            var recName;
+            if(pos == 'Old') {
+                rec = OldNewlistMap['Old'][index];
+            } 
+            if(pos == 'New') {
+                rec = OldNewlistMap['New'][index];
+            }
+            if(rec != null) {
+                recName = ((rec.prodName != '' && rec.prodName != null) ? rec.prodName : rec.projTaskName);
+            }
+            
+            // Shows the modal if the amount is fully paid
+            var temp; 
+            var newQty;
+            var projId = '{!projectId}';
+            //console.log('projId::::',projId);
+            if(projId != null && projId != '') {                      // To handle when launched from a Project.
+                temp = rec.Total_Budgeted - rec.Total_Amount_Paid + rec.payItem.Amount__c;
+                console.log('rec.Total_Amount_Paid:',rec.Total_Amount_Paid, 'price:', price, 'rec.payItem.Amount__c:', rec.payItem.Amount__c,'amtValue:', amtValue);
+                newQty = (rec.Total_Amount_Paid/price) - (rec.payItem.Amount__c/price) + (amtValue/price);
+            } else {                                                  // To handle when launched from an Opportunity.
+                //console.log('rec.totalprice:::',rec.totalprice);
+                //console.log('rec.payItem.Amount__c::::',rec.payItem.Amount__c);
+                var oppIdMap = new Map();
+                if('{!prodIdPaidMap}' != null && '{!prodIdPaidMap}' != '') {
+                    oppIdMap = JSON.parse('{!prodIdPaidMap}'); // Paid Amt in Opp Level
+                }
+                //console.log('oppIdMap ::::',oppIdMap );
+                //console.log('rec.payItem.Opportunity_Product_Id__c::::',rec.payItem.Opportunity_Product_Id__c);
+                var amtPaid = oppIdMap[rec.payItem.Opportunity_Product_Id__c] != undefined ? oppIdMap[rec.payItem.Opportunity_Product_Id__c] : 0;
+                //console.log('amtPaid::::',amtPaid);
+                if(rec.payItem.Id != null) {
+                    temp = rec.totalPrice;
+                } else {
+                    temp = rec.totalPrice - amtPaid;
+                }
+                newQty = (amtPaid/price) - (rec.payItem.Amount__c/price) + (amtValue/price);
+            }
+            
+            console.log('newQty:: BEFORE FIXED::',newQty);
+            temp = temp.toFixed(2);
+            newQty = newQty.toFixed(2);
+            
+            console.log('newQty::::',newQty);
+            console.log('rec.qty::::',rec.qty);
+            
+            if(newQty > rec.qty) {
+                redirectId = rec.redirectId;
+                myflag = true;
+                
+                var myOldVal = (rec.qty).toFixed(2);
+                var oldValue = myOldVal+' '+rec.unit;
+                var newValue = newQty+' '+rec.unit;
+                
+                tableStr.push([recName, oldValue, newValue]);
+                //$('#confirmbackdropId').addClass('slds-modal-backdrop--open');
+                //$('#confirmmodalId').addClass('slds-fade-in-open');
+                var conf = 'With this change, for Project Task: "'+recName+'" the new Total Paid Qty of ('+newQty+' '+rec.unit+') exceeds the existing Total Planned '+rec.unit+' of ('+rec.qty+' '+rec.unit+') do you want to update the Total Planned Qty to equal the new Total Paid Qty amount of ('+newQty +' '+rec.unit+' )?\n\n';
+                msgStr += conf;
+                msgStr += '\n';
+                //$('.confirmTextCls').text(conf);
+            }
+        }
+        
+        function calculateAmount(pos,index, value1, price) {
+            console.log('calculateAmount called first', index, value1, price);
+            
+            // Calculates the value
+            var rate = document.getElementsByClassName(pos + 'rate_' + index)[0].value;
+            rate = rate.split(',').join('');
+            console.log(':::rate::', rate);
+            //var value = Math.ceil((parseFloat(value1) * rate) * 100) / 100;
+            var value = ((parseFloat(value1) * rate) * 100) / 100;
+            var totalAmt = value.toFixed(2);
+            console.log(':::totalAmt::', totalAmt);
+            if(isNaN(totalAmt)) {
+                totalAmt = 0;
+                $('.'+ pos + 'quantity_' + index).val(0);
+            } 
+            $('.'+pos+'amount_' + index).val(totalAmt);
+            
+            console.log('calculateAmount called last', index, pos, totalAmt, price);
+            
+            if(calculateAmt === true){    // For UI Amount input field calculation
+                toValidateTheAvail(index, pos, totalAmt, price); 
+            }
+        }
+        
+        function calculateQuantity(pos, index, value, price) {           
+            console.log('calculateQuantity called', index, value, price);
+            var rate = document.getElementsByClassName(pos + 'rate_' + index)[0].value;
+            var value1;
+            if( value < 0 ) {
+                value1 = -1;
+            } else {
+                value1 = Math.ceil(parseFloat(value) / rate);
+            }
+            console.log('value1 :::',value1);
+            if(isNaN(value1)) {
+                value1 = 0;
+                $('.'+pos+'amount_' + index).val(0);
+            } 
+            $('.'+pos+'quantity_' + index).val(value1);
+            
+            toValidateTheAvail(index, pos, value, price); 
+        }
+        
+        
+        function calculateTotal() {
+           
+           var total = 0;   
+           
+           var totalNoOfPayItm = $('.paymentItemAmt').length; // To get the count for the Occourence of paymentItemAmt class
+           console.log('totalNoOfPayItm:::',totalNoOfPayItm);                
+           $(".paymentItemAmt").each(function() {
+                
+                var paymentItemAmount = this.innerHTML;
+                
+                if(typeof paymentItemAmount === 'undefined' || paymentItemAmount == null || paymentItemAmount == '') {
+                    paymentItemAmount = this.value;
+                }
+                
+                if(!paymentItemAmount == '' ) {
+                    var pIA =  paymentItemAmount.replace(',','');
+                    //alert(pIA );
+                    if(isNaN(pIA )){
+                        alert('please enter a valid number'+pIA );
+                    } else {
+                        total = total + parseFloat(pIA);
+                        $('.cardBodyForPayment').find('.totalClass').text(total.toFixed(2));
+                    }   
+                }         
+            });            
+        }
+        
+        function cancel() {
+            
+            tableStr = new Array();
+            if(qtyModalFlag === true){
+                $('#confirmbackdropId').removeClass('slds-modal-backdrop--open');
+                $('#confirmmodalId').removeClass('slds-fade-in-open');
+            }
+            if(rateModalFlag === true){
+                
+                if(israteChanged === true){
+                    $('.'+oldRatePos+'rate_' + oldRateIndex).val(oldRateVal);
+                    
+                    var tempQty = document.getElementsByClassName(oldRatePos+'quantity_' + oldRateIndex)[0].value;
+                    console.log('tempQty::::',tempQty);
+                    
+                    calculateAmount(oldRatePos,oldRateIndex, tempQty, oldRateVal);
+                    calculateTotal();
+                }
+                $('#confirmbackdropIdForRate').removeClass('slds-modal-backdrop--open');
+                $('#confirmmodalIdForRate').removeClass('slds-fade-in-open');
+            }
+        }
+        function confirmPTRate () {
+            console.log('redirectId::::',redirectId);
+            window.open('/'+redirectId);
+        }
+    </script>
+    <style>
+        .slds-spinner--small {
+                z-index: 999;
+                width: 100% !important ;
+                height: 100% !important;
+                top: 0;
+                left: 0;
+                // display: none;
+                position: absolute;             
+                background-color: #cccccc;
+                color: #aaaaaa;
+                opacity: .4;
+                filter: alpha(opacity = 50);
+             
+        }
+        .img{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            height: 10%;
+            width: 5%;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+        }
+    </style>
+    <apex:pageMessages Id="test"></apex:pageMessages>
+    <apex:form Id="paymentAndPaymentLineForm">
+        
+        <div class="slds">
+            <div class="slds-card">
+                <div class="slds-card__header slds-grid">
+                    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                        <div class="slds-media__body">                        
+                            <h2>Payment Details</h2>
+                        </div>
+                    </div>
+                    <div class="slds-no-flex">
+                        <div class="slds-button-group">
+                            <!--<apex:commandButton action="{!createProjectAndProjectTask}" onclick="$('#ltsSpinner').show();" value="Save" reRender="createProjPanel,errorMessage" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>-->
+                            <input type="button" onclick="createPaymentJS();" value="Save" class="slds-button slds-button--brand slds-m-bottom--small" rerender="test"/>&nbsp;
+                            <apex:commandButton action="{!previousPage}" value="Cancel" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-card__body cardBodyForPayment" id="oppDivId">
+                    <div class="slds-form--horizontal slds-grid slds-wrap">
+                        <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-2 slds-col--padded">  
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!If(hasProject == true,'','display:none')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label" for="inputSample2">Project</label>
+                                    <div class="slds-form-element__control">  
+                                                                        
+                                        <apex:OutputField value="{!Transaction__c.Project__c}"/>   
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!If(hasProject == false,'','display:none')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label" for="inputSample2">Opportunity</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:OutputField value="{!Transaction__c.Opportunity__c}"/>   
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="margin-top:15px;"> <!--  style="{!If((paymentId != null && isEditFromProject == true),'margin-top:15px;','display:none')}">-->
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Customer Name</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:InputField value="{!Transaction__c.Customer_Name__c}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="margin-top:15px;">
+                                <label class="slds-form-element__label">Auth/last 4 digits</label>
+                                <div class="slds-form-element__control">                                   
+                                    <apex:InputField value="{!Transaction__c.Auth_last_4_digits__c}"/>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="margin-top:15px;">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Transaction Notes</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:InputField value="{!Transaction__c.Transaction_Notes__c}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="margin-top:15px;">
+                                <label class="slds-form-element__label">Transaction Number</label>
+                                <div class="slds-form-element__control">                                   
+                                    <apex:InputField value="{!Transaction__c.Transaction_Number__c}"/>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="margin-top:15px;">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Amount</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <!--<apex:InputField value="{!Transaction__c.Total_Amount__c}" styleclass="totalClass" ng-disabled="true"/> 
+                                        <div class="errorClass" style="{!If(error != True ,'display:none;','')}">
+                                            <span style="color:red">Please check the total</span>
+                                        </div>
+                                        <span styleclass="totalClass"></span> -->
+                                        <apex:outputText value="{!Transaction__c.Total_Amount__c}" id="totalPriceId" styleClass="totalClass">
+                                        </apex:outputText>                             
+                                    </div>                            
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-2 slds-col--padded">
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!If((oppId != null && hasProject == true),'','display:none')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label" for="inputSample2">Opportunity</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:OutputField value="{!Transaction__c.Opportunity__c}"/>   
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!If((hasProject == true && oppId != null),'margin-top:15px;','')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Type</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:InputField value="{!Transaction__c.Type__c}" styleClass="transType" Id="transTypeId"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="margin-top:15px;">
+                                <label class="slds-form-element__label">Transaction Date</label>
+                                <div class="slds-form-element__control">                                   
+                                    <apex:InputField value="{!Transaction__c.Transaction_Date__c}"/>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="margin-top:15px;">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Method of Payment</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:InputField value="{!Transaction__c.Method_of_Payment__c}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!IF(OR($Profile.Name=='Timekeeping',$Profile.Name=='Timekeeping Admin',$Profile.Name=='System Administrator',$Profile.Name=='Payroll',$Profile.Name=='Power User'), 'margin-top:15px;' , 'display:none')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Reviewed</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:InputField value="{!Transaction__c.Reviewed__c}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!IF(NOT(OR($Profile.Name=='Timekeeping',$Profile.Name=='Timekeeping Admin',$Profile.Name=='System Administrator',$Profile.Name=='Payroll',$Profile.Name=='Power User')), 'margin-top:15px;' , 'display:none')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Reviewed</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:OutputField value="{!Transaction__c.Reviewed__c}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!IF(isDLIWLTProject, 'margin-top:15px;', 'display:none;')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Contract</label>
+                                    <div class="slds-form-element__control">                                   
+                                        <apex:InputField value="{!Transaction__c.Contract__c}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-1 slds-col--padded" style="{!IF(Transaction__c.Id != null, 'margin-top:15px;', 'display:none;')}">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Old Amount</label>
+                                    <div class="slds-form-element__control">                                   
+                                        
+                                        <apex:outputText value="{!Transaction__c.Total_Amount__c}">
+                                        </apex:outputText>                             
+                                    </div>                            
+                                </div>
+                            </div>
+                        </div>                        
+                        <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-2 slds-col--padded">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <apex:outputPanel id="payItemListDiv">
+                <apex:OutputPanel rendered="{!paymentItemList != null && paymentItemList.size > 0 }">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__body">                        
+                                    Existing Payment Item(S) 
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                <div class="slds-button-group">
+                                    <!--<apex:commandButton action="{!newPaymentItem}" value="New" reRender="payItemListDiv" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>
+                                    <input type="button" onclick="newPaymentItemJS();" value="New" class="slds-button slds-button--brand slds-m-bottom--small"/>-->
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="slds-card__body">                                                       
+                            <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                <tr class="slds-text-heading--label">
+                                    <th style="{!If((oppId != null && projectId == null),'','display:none')}">Product</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Project Task</th>
+                                    <th>Qty Planned</th>
+                                    <th style="{!If((oppId != null && projectId == null),'','display:none')}">UnitPrice</th>
+                                    <th style="{!If(projectId != null,'','display:none')}">Rate per Quantity</th>
+                                    <!--<th style="{!If((oppId != null && projectId == null),'','display:none')}">UnitPrice</th>-->
+                                    <th style="{!If((oppId != null && projectId == null),'','display:none')}">Total Price</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Total $ Budgeted</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Total $ Spent</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Total Amount Paid</th>
+                                    <th>Quantity</th>
+                                    <th>Amount</th>
+                                    <!--<th>Action</th>-->
+                                    
+                                </tr>
+                                <apex:variable var="index" value="{!0}"/>
+                                <apex:repeat value="{!paymentItemList}" var="pL" id="payItem">
+                                    <tr class="paymentItemListtr">
+                                        <td style="{!If((oppId != null && projectId == null),'','display:none')}">                                      
+                                            <apex:outputText >{!pL.prodName}</apex:outputText>        
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.projTaskName}</apex:outputText> 
+                                        </td>
+                                        <td>
+                                            <apex:outputText >{!pL.qty}</apex:outputText>
+                                        </td>
+                                        <td style="{!If((oppId != null && projectId == null),'','display:none')}">
+                                            <apex:outputText >{!pL.unitPrice}</apex:outputText>
+                                        </td>
+                                        <td style="{!If(projectId != null,'','display:none')}">
+                                            <apex:inputfield value="{!pL.payItem.Rate_per_Quantity__c}" styleclass="slds-input Oldrate_{!index}" onchange="calculatePTRate('Old', {!index});calculateAmount2('Old', {!index});calculateTotal();"/>
+                                        </td>
+                                        <td style="{!If((oppId != null && projectId == null),'','display:none')}">
+                                            <apex:outputText >{!pL.totalPrice}</apex:outputText>
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.Total_Budgeted}</apex:outputText> 
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.Total_Spent}</apex:outputText> 
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.Total_Amount_Paid}</apex:outputText> 
+                                        </td>
+                                        <td>
+                                            <apex:inputfield styleclass="slds-input Oldquantity_{!index}" onchange="calculateAmount('Old',{!index}, this.value, {!pL.quantity}); calculateTotal();" value="{!pL.payItem.Quantity__c }"/>
+                                        </td>
+                                        <td>
+                                             <!--apex:InputField value="{!pL.payItem.Amount__c}" styleClass="slds-input paymentItemAmt" onblur="calculateTotal();"/> -->
+                                            <apex:InputField value="{!pL.payItem.Amount__c}" styleClass="slds-input paymentItemAmt Oldamount_{!index}" onchange="calculateQuantity('Old', {!index}, this.value, {!pL.quantity});" onblur="calculateTotal();"/><!-- rendered="{!pL.notFullyPaid}"/-->
+                                            <!--<apex:OutputText styleClass="paymentItemAmt" Id="paymentItemAmtId" rendered="{!pL.notFullyPaid == false }" value="{!pL.payItem.Amount__c}"></apex:outputText>-->                                    
+                                        </td>
+                                        <!--<td>
+                                            <input type="button" onclick="delPaymetLine('{!pL.Index}');" value="Del" class="slds-button slds-button--neutral"/>
+                                        
+                                        </td>-->
+                                    </tr>
+                                    <apex:variable var="index" value="{!index + 1}"/>
+                                </apex:repeat>
+                            </table>
+                        </div>                
+                    </div>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <apex:outputPanel id="newPayItemListDiv">
+                <apex:OutputPanel rendered="{!newPaymentItemList != null && newPaymentItemList.size > 0 }">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__body">                        
+                                    New Payment Item(S) 
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                <div class="slds-button-group">
+                                    <!--<apex:commandButton action="{!newPaymentItem}" value="New" reRender="payItemListDiv" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>
+                                    <input type="button" onclick="newPaymentItemJS();" value="New" class="slds-button slds-button--brand slds-m-bottom--small"/>-->
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="slds-card__body">                                                       
+                            <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                <tr class="slds-text-heading--label">
+                                    <th style="{!If((oppId != null && projectId == null),'','display:none')}">Product</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Project Task</th>
+                                    <th style="{!If((hasProject && showCLIN),'','display:none')}">Parent CLIN</th>
+                                    <th>Qty Planned</th>
+                                    <th style="{!If((oppId != null && projectId == null),'','display:none')}">UnitPrice</th>
+                                    <th style="{!If(projectId != null,'','display:none')}">Rate per Quantity</th>
+                                    <!--<th style="{!If((oppId != null && projectId == null),'','display:none')}">UnitPrice</th>-->
+                                    <th style="{!If((oppId != null && projectId == null),'','display:none')}">Total Price</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Total $ Budgeted</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Total $ Spent</th>
+                                    <th style="{!If(hasProject == true,'','display:none')}">Total Amount Paid</th>
+                                    <th>Quantity</th>
+                                    <th>Amount</th>
+                                    <!--<th>Action</th>-->
+                                    
+                                </tr>
+                                <apex:variable var="index" value="{!0}"/>
+                                <apex:repeat value="{!newPaymentItemList}" var="pL" id="newPayItem">
+                                    
+                                    <tr class="paymentItemListtr">
+                                        <td style="{!If((oppId != null && projectId == null),'','display:none')}">
+                                            <apex:outputText >{!pL.prodName}</apex:outputText>       
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.projTaskName}</apex:outputText> 
+                                        </td>
+                                        <td style="{!If((hasProject && showCLIN),'','display:none')}">
+                                            <apex:selectList value="{!pL.parentClin}" multiselect="false" size="1">
+                                                <apex:selectOptions value="{!parentCLINsOptions}"/>
+                                            </apex:selectList>
+                                        </td>
+                                        <td>
+                                            <apex:outputText >{!pL.qty}</apex:outputText>
+                                        </td>
+                                        <td style="{!If((oppId != null && projectId == null),'','display:none')}">
+                                            <apex:outputText >{!pL.unitPrice}</apex:outputText>
+                                        </td>
+                                        <td style="{!If(projectId != null,'','display:none')}">
+                                            <apex:inputfield value="{!pL.payItem.Rate_per_Quantity__c}" styleclass="slds-input Newrate_{!index}" onchange="calculatePTRate('New', {!index});calculateAmount2('New',{!index});calculateTotal();"/>
+                                        </td>
+                                        <td style="{!If((oppId != null && projectId == null),'','display:none')}">
+                                            <apex:outputText >{!pL.totalPrice}</apex:outputText>
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.Total_Budgeted}</apex:outputText> 
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.Total_Spent}</apex:outputText> 
+                                        </td>
+                                        <td style="{!If(hasProject == true,'','display:none')}">
+                                            <apex:outputText >{!pL.Total_Amount_Paid}</apex:outputText> 
+                                        </td>
+                                        <td>
+                                            <apex:inputfield styleclass="slds-input Newquantity_{!index}" onchange="calculateAmount('New', {!index}, this.value, {!pL.quantity}); calculateTotal();" value="{!pL.payItem.Quantity__c }"/>
+                                        </td>
+                                        <td>
+                                             <!--apex:InputField value="{!pL.payItem.Amount__c}" styleClass="slds-input paymentItemAmt" onblur="calculateTotal();"/> -->
+                                            <apex:InputField value="{!pL.payItem.Amount__c}" styleClass="slds-input paymentItemAmt Newamount_{!index}" onchange="calculateQuantity('New',{!index}, this.value, {!pL.quantity});" onblur="calculateTotal();"/> <!-- rendered="{!pL.notFullyPaid}"/-->
+                                            <!--<apex:OutputText styleClass="paymentItemAmt" Id="paymentItemAmtId" rendered="{!pL.notFullyPaid == false }" value="{!pL.payItem.Amount__c}"></apex:outputText> -->                                     
+                                            <!--<input class="slds-input" class="paymentItemAmt" value="{!pL.payItem.Amount__c}" type="text"/> --> 
+                                        </td>
+                                        
+                                    </tr>
+                                    <apex:variable var="index" value="{!index + 1}"/>
+                                </apex:repeat>
+                            </table>
+                        </div>                
+                    </div>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <div class="slds-card">
+                <div class="slds-card__header slds-grid">
+                    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                        <div class="slds-media__body">                        
+                            Upload a File 
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-card__body">
+                    <div class="slds-form--horizontal slds-grid">
+                        <div class="slds-col slds-size--1-of-1 slds-medium-size--1-of-2 slds-col--padded" style="margin-top:15px;">
+                            <center>
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">File</label>
+                                <div class="slds-form-element__control">
+                                    <!--<input type="file" id="newAttFiles"/> --> 
+                                    <apex:inputFile id="Payfile" value="{!attach.Body}" fileName="{!attach.Name}"></apex:inputFile>  
+                                </div>
+                            </div>
+                            </center>
+                        </div>
+                    </div>                  
+                </div>
+            </div> 
+            <!-- Start of the modal to edit the Qty -->
+            <div>
+                <div aria-hidden="false" role="dialog" class="slds-modal" id="confirmbackdropId">
+                    <div class="slds-modal__container slds-modal--prompt">
+                        <div class="slds-modal__header slds-theme--alert-texture">
+                            <h2 class="slds-text-heading--medium">Qty Paid Exceeds Qty Planned</h2>
+                        </div>
+                        <div class="slds-modal__content">
+                            <div>
+                                <p>The following Project Task Qty Planned will be updated with the following values,<br/><br/><span Id="confirmTextId" class="confirmTextCls"></span><br/>Click Proceed to update Qty Planned on the Project Task</p>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer slds-theme--default">
+                            <div class="slds-x-small-buttons--horizontal">
+                                <input type="button" onclick="upsertAllRecsJS();" value="Proceed" class="slds-button slds-button--brand slds-m-bottom--small" rerender="test"/>
+                                <button type="button" onClick="return false;" class="slds-button slds-button--neutral slds-m-bottom--small" onclick="cancel();">Cancel</button>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop" Id="confirmmodalId"></div>
+            </div>
+            <!-- End of the modal to edit the Qty -->
+            <!-- Start of the modal to edit the Rate -->
+            <div>
+                <div aria-hidden="false" role="dialog" class="slds-modal" id="confirmbackdropIdForRate">
+                    <div class="slds-modal__container slds-modal--prompt">
+                        <div class="slds-modal__header slds-theme--alert-texture">
+                            <h2 class="slds-text-heading--medium">Update Project Task Hourly Rate</h2>
+                        </div>
+                        <div class="slds-modal__content">
+                            <p>Please update the following Project Tasks Rate,<br/><br/><span Id="confirmTextIdForRate" class="confirmTextClsForRate"></span><br/><br/>Click Proceed to update Rate on the Project Task</p>
+                        </div>
+                        <div class="slds-modal__footer slds-theme--default">
+                            <div class="slds-x-small-buttons--horizontal">
+                                <button type="button" onClick="return false;" class="slds-button slds-button--brand slds-m-bottom--small" onclick="confirmPTRate()">Proceed</button>
+                                <button type="button" onClick="return false;" class="slds-button slds-button--neutral slds-m-bottom--small" onclick="cancel();">Cancel</button>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop" Id="confirmmodalIdForRate"></div>
+            </div>
+            <!-- End of the modal to edit the Rate -->
+        </div>        
+        <apex:actionFunction action="{!createPayment}" name="createPaymentAF"/>
+        
+    </apex:form>
+    
+    <div class="slds-spinner--small" style="display:none;" id="Spinner">
+        <img alt="Loading..." src="{!URLFOR($Resource.SLDS091,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img"/>
+    </div>
+    
+</apex:page>

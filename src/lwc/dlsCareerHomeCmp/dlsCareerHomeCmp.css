@@ -1,0 +1,5 @@
+@media only screen and (max-width: 48em) {
+    .card-body{
+        padding: 0.5rem !important;
+    }
+  }

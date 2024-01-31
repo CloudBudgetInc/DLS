@@ -1,0 +1,23 @@
+.THIS .labelClass {
+    font-weight: bold;
+    font-size: 1re !important;
+}
+.THIS.bldCls{
+    color: #055e89 !important;
+    font-weight:bold;
+}
+.THIS .fa-arrow-left{
+    font-size:2rem !important;
+    cursor:pointer;
+    color: #055e89 !important;
+}
+.THIS .boldCls{
+    font-weight:bold;
+}
+.THIS .viewCls{
+    font-size:0.875 !important;
+}
+.THIS .viewMobCls{
+    font-size:0.875 !important;
+    float:right;
+}

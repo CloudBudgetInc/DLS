@@ -1,0 +1,46 @@
+<template>
+    <template if:true = {checkNillActivities}>
+        <h3 class="slds-section__title headerclass">
+            <button type="button" class="slds-button slds-section__title-action slds-grid">
+                <lightning-icon icon-name = {iconName} onclick={handleExpandOrCollapse} size='xx-small'
+                        class='slds-button slds-button_icon'>
+                </lightning-icon>
+                <span class="slds-col_bump-right monthPadding"><strong>{mapKey}</strong></span>
+                <span class = 'fontSizeMonthsAgo'><strong>{monthsAgo}</strong></span>
+            </button>
+        </h3>
+        <template if:true = {isExpandOrCollapse}>
+            <template for:each= {activitiesList} for:item = 'item'>
+            
+                <c-custom-activity-timeline-item-child 
+                    key = {item.Id} 
+                    activity-data = {item}
+                    record-name = {recordName}
+                    record-id = {recordId}
+                >
+
+                </c-custom-activity-timeline-item-child>
+            </template>
+        </template>
+    </template>
+    <template if:true = {noUpcomingAndOverDue}>
+        <h3 class="slds-section__title headerclass">
+            <button type="button" class="slds-button slds-section__title-action slds-grid">
+                <lightning-icon icon-name = {iconName} onclick={handleExpandOrCollapse} size='xx-small'
+                        class='slds-button slds-button_icon'>
+                </lightning-icon>
+                <span class="slds-col_bump-right monthPadding"><strong>{mapKey}</strong></span>
+                <span class = 'fontSizeMonthsAgo'><strong>{monthsAgo}</strong></span>
+            </button>
+        </h3>
+        <template if:true = {isExpandOrCollapse}>
+            <div class="slds-text-align_center slds-p-bottom_medium">
+                No activities to show.
+                <p>Get started by sending an email, scheduling a task, and more.</p>
+            </div>
+        </template>            
+    </template>
+    <template if:true = {noActivities}>
+        <div role="status" class="slds-border_top slds-p-top_medium slds-p-bottom_medium slds-text-align_center">No past activity. Past meetings and tasks marked as done show up here.</div>
+    </template>
+</template>

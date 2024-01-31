@@ -1,0 +1,28 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId,flexipage:availableForRecordHome">
+    <aura:attribute name="simpleRecord" type="Object"/>
+    
+    <force:recordData aura:id="forceRecordCmp"
+                      recordId="{!v.recordId}"
+                      mode="VIEW"
+                      fields="Lead_Account_Type__c, Type__c , Lead_Opportunity_Type__c"  
+                      targetFields="{!v.simpleRecord}"/>
+    
+    <lightning:card>
+        <aura:set attribute="title">
+            <p class="slds-box_x-small slds-theme_warning" style="font-size: 16px;color:white"><b>Record Types Confirmation</b></p>
+        </aura:set>
+        <div>
+            <p class="slds-p-top_large slds-p-left_x-small" style="font-size: 14px;"> When this Lead is converted, records will be created with following Record types</p>
+            <p class="slds-p-top_xx-small slds-p-left_x-small"> Account: <b>{!v.simpleRecord.Lead_Account_Type__c}</b></p>
+            <p class="slds-p-top_xx-small slds-p-left_x-small"> Contact: <b>{!v.simpleRecord.Type__c}</b></p>
+            <p class="slds-p-top_xx-small slds-p-left_x-small"> Opportunity: <b>{!v.simpleRecord.Lead_Opportunity_Type__c}</b></p>
+            <!--<p class="slds-p-top_xx-small">Click Ok to proceed. Or click Cancel to change values.</p>
+            <div class="slds-p-top_medium slds-align_absolute-center">
+                <lightning:button variant="brand" label="Ok" onclick="{!c.okAction}"/>
+                <lightning:button variant="brand" label="Close" onclick="{!c.closeAction}"/>
+            </div>-->
+        </div>
+       
+    </lightning:card>
+    
+</aura:component>

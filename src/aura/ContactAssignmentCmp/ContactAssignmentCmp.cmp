@@ -1,0 +1,46 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName,forceCommunity:availableForAllPageTypes" controller="ContactAssignmentLightningCtrl">
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="sObjectName" type="String"/>
+    <aura:attribute name="sobjectType" type="String" default="{!v.sObjectName}"/>
+    <aura:attribute name="tabNames" type="List" />
+    <aura:attribute name="defaultCostRate" type="String" default=""/>
+    <aura:attribute name="activeTab" type="String" default="Instructor"/>
+    <aura:attribute name="projectRecId" type="String" />
+    <aura:attribute name="contactAssignRecs" type="List" />
+    <aura:attribute name="config" type="Map" />
+    <aura:attribute name="header" type="List" />
+    <aura:attribute name="statusPickList" type="List" />
+    <aura:attribute name="displayTable" type="boolean" />
+    <aura:attribute name="isDisplayAction" type="boolean" />
+    <aura:attribute name="showSpinner" type="boolean" />
+    <aura:attribute name="parentRecordType" type="String" default="" />
+    <aura:attribute name="isDisplayLink" type="boolean" />
+    <aura:attribute name="recordtypeName" type="String"  default="Instructor"/>
+    <aura:attribute name="opportunitylineItems" type="Map"  default="{}"/>
+    <aura:attribute name="contactAssignCRChildCountMap" type="Map"  default="{}"/>
+    <aura:attribute name="payRateModifyPermission" type="Boolean"  default="false"/>
+    <aura:attribute name="insIdWithTotalEventSumMap" type="Map" default="{}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler event="c:reloadEvent" action="{!c.activeTaChange}"/>
+    
+    <lightning:card>
+        <aura:set attribute="title">
+            <h1 style="font-weight:bold;">Contact Assignment</h1>
+        </aura:set>
+        <lightning:tabset onselect="{! c.activeTaChange }" selectedTabId="{!v.activeTab}">
+            <aura:iteration items="{! v.tabNames }" var="tab"  indexVar="Index">
+                <lightning:tab label="{!tab}" id="{!tab}" >
+                    <aura:if isTrue="{!v.displayTable}">
+                        <c:ContactAssignmentTableCmp aura:id="childtable" selectedTab="{!v.activeTab}" projectRecordId="{!v.projectRecId}" defaultCR="{!v.defaultCostRate}" sObjectName="{!v.sObjectName}" isDisplayAction="{!v.isDisplayAction}" config="{!v.config}" contactAssignList="{!v.contactAssignRecs}" statusPickList="{!v.statusPickList}" header="{!v.header}" parentId="{!v.recordId}"  RecordType="{!v.recordtypeName}" parentRecordType="{!v.parentRecordType}" payRateModifyPermission="{!v.payRateModifyPermission}" insIdWithTotalEventSumMap="{!v.insIdWithTotalEventSumMap}"/> 
+                        <aura:set attribute="else">
+                            <aura:if isTrue="{!v.showSpinner}">
+                                <lightning:spinner alternativeText="Loading" class="showSpin" variant="brand"  size="small" />
+                            </aura:if> 
+                        </aura:set>
+                    </aura:if>
+                </lightning:tab>
+            </aura:iteration>
+        </lightning:tabset> 
+    </lightning:card>
+</aura:component>

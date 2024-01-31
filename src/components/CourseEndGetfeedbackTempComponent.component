@@ -1,0 +1,26 @@
+<apex:component controller="WeeklyGetfeedbackCompController" access="global">
+    
+    <apex:attribute name="contactId" description="" type="String" assignTo="{!conId}"/>
+    <apex:attribute name="parentId" description="" type="String" assignTo="{!proId}"/> 
+    
+    <center>
+        <!-- Production Logo URL -->
+        <img src="https://dlsdc--c.na61.content.force.com/servlet/servlet.ImageServer?id=01532000001YDsU&oid=00DRT0000006o6z&lastMod=1435434744000" alt="Company Logo" height="50px" width="100px"/>
+    </center>
+    
+    <p>Dear &nbsp;<apex:outputText value="{!IF(conAssign.Candidate_Name__r.Name != null,conAssign.Candidate_Name__r.Name,'')}"></apex:outputText>,</p><br/> 
+    
+    <apex:outputText value="{!IF(conAssign.RecordType.DeveloperName == 'Student','Thank you for choosing Diplomatic Language Services for your language training. We believe feedback from our clients is the single most important tool for improving our services. We ask only 5-10 minutes of your time to provide some feedback and comments on what we did well and what we can improve upon.','Thank you for teaching with us! We very much appreciate you taking 5 to 10 minutes to provide feedback about your teaching experience for Class #: ')}"></apex:outputText>
+    <apex:outputText value="{!IF(conAssign.RecordType.DeveloperName == 'Student','',conAssign.Project__r.DLS_Class__c)}"></apex:outputText>
+    <apex:outputText value="{!IF(conAssign.RecordType.DeveloperName == 'Student','',' for Student(s) ')}"></apex:outputText>
+    <apex:outputText value="{!IF(conAssign.RecordType.DeveloperName == 'Student','',conAssign.Project__r.Students__c)}"></apex:outputText>
+    <apex:outputText value="{!IF(conAssign.RecordType.DeveloperName == 'Student','','.')}"></apex:outputText>
+    
+    <p><apex:outputText value="{!IF(conAssign.RecordType.DeveloperName == 'Student','','We respect and appreciate our instructors and value your feedback as we strive to maintain the highest teaching & service standards.')}"></apex:outputText></p>
+    
+    <p>Please click the following link for the survey: <a href="{!IF(conAssign.RecordType.DeveloperName == 'Student', 'https://www.getfeedback.com/r/mge9MBo0', 'https://www.getfeedback.com/r/l1GPhS9C')}?ContactID={!conAssign.Candidate_Name__c}&OPPORTUNITY_ID={!pro.AcctSeed__Opportunity__c}&PROJECT_ID={!pro.Id}&CONASSIGN_ID={!conAssign.Id}">Click Here</a></p>
+    
+    <p>Sincerely,</p>
+    <p>Diplomatic Language Services</p>
+
+</apex:component>

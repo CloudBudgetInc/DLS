@@ -1,0 +1,98 @@
+<aura:component controller="CongaTemplateSelectionController" access="global">
+    <!-- Start of Attribute from the Parent Comp Gen_Send_Docusign_Selection -->
+    <aura:attribute name="sObjectName" type="String"/>
+    <aura:attribute name="record" type="Object" description="The record object to be displayed"/>
+    <aura:attribute name="recordId" type="Id"/>
+    <aura:attribute name="launchedFrom" type="String"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+
+    
+    
+    <!-- End of Attribute from the Parent Comp Gen_Send_Docusign_Selection -->
+    <aura:handler name="init" value="{!this}" action="{!c.loadCongaTemplates}"/>
+    <aura:attribute name="costRateId" type="Id"/>
+    <aura:attribute name="congaTemplates" type="List" default="[]" access="global"/>
+    <aura:attribute name="projectList" type="List" default="[]" access="global" description="projectList refers LCR related Project List Of CA"/>
+    <aura:attribute name="projectOppList" type="List" default="[]" access="global" description="project Opportunity List refers LCR related Project List Of CA"/>
+    <aura:attribute name="defaultVal" type="String" access="global"/>
+    <aura:attribute name="rateType" type="String" access="global"/>
+    <aura:attribute name="selectedCAId" type="String" access="global" default=""/>
+    <aura:attribute name="fieldVal" type="String" access="global"/>
+    <aura:attribute name="card" type="Map" default="{'title' : '', 'message' : '', 'buttonName' : ''}"/>
+    <aura:attribute name="showMessage" type="Boolean" default="false"/>
+    <aura:attribute name="buttonName" type="String"/>
+    <aura:attribute name="independContractorName" type="String" default = ''/>
+    <aura:attribute name="signerMap" type="Map" default = '{}'/>
+    <aura:attribute name="signerValMap" type="Map" default = "{'isValidHRUser':true,'valHRMsg':'','isValidDlsExecUser':true,'valDlsExecMsg':'','signer2Staff':'','signer3Staff':''}"/>
+
+
+
+    
+    <aura:attribute name="userObjLookup" type="List" default="[]"/>
+    <aura:attribute name="userHRObjLookup" type="List" default="[]"/>
+    <aura:attribute name="userDlsExecObjLookup" type="List" default="[]"/>
+
+    <!--
+	<lightning:combobox aura:id="selectCongaTemp" name="CongaTemplate" label="Offer Letter" placeholder="Choose Offer Letter Template" value="defaultVal" onchange="{!c.handleSelectedTemp}" options="{!v.congaTemplates}"/>
+	<lightning:button label="Gen &amp; Send Docusign" title="Neutral action" onclick="{!c.handleClick}"/>    
+	-->
+    
+        <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <div style="position:fixed;z-index: 9900000000;">
+            <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed"/>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!and(v.showMessage == false,v.rateType != null)}"> 
+        <lightning:card>
+            <aura:set attribute="title">
+                <b>{!v.buttonName}</b>
+            </aura:set>
+            <div>
+                <lightning:combobox aura:id="selectCongaTemp" name="CongaTemplate" label="{!or(v.defaultVal == 'FSI Offer Letter',or(v.defaultVal == 'PT FSI Offer Letter',or(v.defaultVal == 'FSI Letter of Intent',v.defaultVal == 'PT FSI Letter of Intent'))) ? 'Select Document type' : 'Offer Letter'}" placeholder="Choose Offer Letter Template" value="{!v.defaultVal}" onchange="{!c.handleSelectedTemp}" options="{!v.congaTemplates}"/>
+                <aura:if isTrue="{!or(v.defaultVal == 'FSI Offer Letter',or(v.defaultVal == 'PT FSI Offer Letter',or(v.defaultVal == 'FSI Letter of Intent',v.defaultVal == 'PT FSI Letter of Intent')))}">
+                    <lightning:combobox aura:id="selectProject" required="true" name="Select Project / Opportunity:" label="Select Project / Opportunity:" options="{!v.projectOppList}" value="{!v.selectedCAId}"/>
+                </aura:if>
+                <aura:if isTrue="{!v.defaultVal == 'Pay Rate Addendum'}">
+                    <lightning:combobox aura:id="selectProject" required="true" name="Select Project" label="Select Project:" options="{!v.projectList}" value="{!v.selectedCAId}"/>
+                </aura:if>
+                <aura:if isTrue="{!or(v.defaultVal == 'Pay Rate Addendum',v.defaultVal == 'Pay Rate Modification')}"> 
+                    <c:LookupSearch aura:id="userId" selection="{!v.userObjLookup}" onSearch="{!c.userLookupSearch}" iconName="standard:user" objectName="User" fieldName="Name" condition=" IsPortalEnabled = false AND isActive = true " label="Signer 1/ LTS" placeholder="Search Signer 1/ LTS" isMultiEntry="false"  isRequired="true"/>
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!v.defaultVal != 'Change of Status Form'}">  
+                            <br/><br/><br/><br/>
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+                <aura:if isTrue="{!v.defaultVal == 'Change of Status Form'}"> 
+                    <aura:if isTrue="{!v.signerValMap.isValidHRUser == false}">
+                        <c:LookupSearch aura:id="hrUserId" selection="{!v.userHRObjLookup}" onSearch="{!c.userLookupSearch}" iconName="standard:user" objectName="User" fieldName="Name" condition=" IsPortalEnabled = false AND isActive = true " label="{!v.signerValMap.valHRMsg}" placeholder="Search HR" isMultiEntry="false"  isRequired="true"/>
+                    </aura:if>
+                    <aura:if isTrue="{!v.signerValMap.isValidDlsExecUser == false}">
+                        <c:LookupSearch aura:id="dlsUserId" selection="{!v.userDlsExecObjLookup}" onSearch="{!c.userLookupSearch}" iconName="standard:user" objectName="User" fieldName="Name" condition=" IsPortalEnabled = false AND isActive = true " label="{!v.signerValMap.valDlsExecMsg}" placeholder="Search DLS Executive" isMultiEntry="false"  isRequired="true"/>
+                    </aura:if>
+                </aura:if>
+            </div>
+            <aura:set attribute="footer">
+                <lightning:button label="{!v.buttonName}" title="Neutral action" variant="brand" onclick="{!c.handleClick}"/>
+                <lightning:button variant="brand" label="Close" onclick="{!c.closeAction}"/>
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+    <!-- To display the message -->
+    <aura:if isTrue="{!v.showMessage}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">{!v.card.title}</p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="slds-float_right"
+                                  variant="brand"
+                                  label="{!v.card.buttonName}"
+                                  onclick="{!c.closeAction}"/>
+            </aura:set>
+            {!v.card.message}
+        </lightning:card>
+    </aura:if>
+</aura:component>

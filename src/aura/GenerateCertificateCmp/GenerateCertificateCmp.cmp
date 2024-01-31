@@ -1,0 +1,131 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 09/06/2023
+  @last modified by  : Dhinesh Kumar
+-->
+<aura:component extends="c:BoxFolderCreationUtilCmp" controller="GenerateCertificateCmp_Ctrl" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickActionWithoutHeader" access="global" >
+    <aura:attribute name="students" type="LIST"/>
+    <aura:attribute name="projRec" type="AcctSeed__Project__c"></aura:attribute>
+    <aura:attribute name="isFromVFPage" type="Boolean" default="false"/>
+    <aura:attribute name="congaBaseUrl" type="String"/>
+    <aura:attribute name="channel" type="String" default="/event/Box_FRUP__e"/>
+    <aura:attribute name="subscription" type="Object" default="{}"/> 
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="isLoaded" type="Boolean" default="false"/>
+    <aura:attribute name="emailParams" type="string"/>
+    <aura:attribute name="caIdWithExaminerId" type="Object"/>
+    <aura:attribute name="caIdWithLangTestingId" type="Object"/>
+    <aura:attribute name="errorMsg" type="String"/>
+    
+    <aura:attribute name="contactAssignments" type="List"/>
+    <aura:attribute name="showSendTo" type="Boolean" default="false"/>
+
+    <aura:handler event="c:boxFolderCreationEvt" action="{!c.doInit}"/>
+
+    <aura:registerEvent name="closeGenerateCertificateModal" type="c:closeGenerateCertificateModal" />
+    
+    <force:recordData aura:id="recordLoader"
+                      recordId="{!v.recordId}"
+                      fields="Name,AcctSeed__Account__r.Name,AcctSeed__Opportunity__c,RecordType.DeveloperName"
+                      targetFields="{!v.projRec}"
+                      recordUpdated="{!c.doInit}"
+    />       
+    
+    <ltng:require styles="{!$Resource.SldsModelCss}" />
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <lightning:empApi aura:id="empApi" />
+    
+    <aura:if isTrue="{! not(v.isFromVFPage)}">
+        <header class="slds-modal__header">      
+            <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Generate Certificate</h2>     
+        </header>
+    </aura:if>
+    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">  
+        <aura:if isTrue="{!v.isLoaded}">
+            <aura:if isTrue="{!v.contactAssignments.length > 0}">
+                <div>                    
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th class="slds-text-align_right" scope="col" style="width:3.25rem">
+                                    <div class="slds-th__action slds-th__action_form">
+                                        <div class="slds-checkbox">
+                                            <lightning:input aura:id="selectall" type="checkbox" label="" onchange="{!c.toggleSelectAllRows}"/>
+                                        </div>
+                                    </div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Student Name">Student Name</div>
+                                </th>
+                                <aura:if isTrue="{!v.showSendTo}">
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Send to">Send to</div>
+                                    </th>
+                                </aura:if>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Action">Action</div>
+                                </th>      
+                            </tr>
+                        </thead>
+                        <tbody>  
+                            <aura:iteration items="{!v.contactAssignments}" var="conAssignment">
+                                <tr class="slds-hint-parent">
+                                    <td class="slds-text-align_right" style="padding-right: 1rem;" role="gridcell">
+                                        <div class="slds-checkbox">
+                                            <lightning:input aura:id="selectRow" type="checkbox" label=""/>
+                                        </div>
+                                    </td>
+                                    <td data-label="Student Name" scope="row">
+                                        <div class="slds-truncate" title="{!conAssignment.ca.Candidate_Name__r.Name}">
+                                            <span class="slds-p-right_small">
+                                                {!conAssignment.ca.Candidate_Name__r.Name}
+                                            </span>                                            
+                                            <aura:if isTrue="{!conAssignment.ca.Certificate_Generated_Date__c}">
+                                                <lightning:badge label="Sent" class="slds-badge slds-theme_success"/>
+                                            </aura:if>
+                                        </div>
+                                    </td> 
+                                    <aura:if isTrue="{!v.showSendTo}">
+                                        <td data-label="Student Name" scope="row">
+                                            <c:multiSelectCmp hideLabel="true" optionsList="{!conAssignment.sendToNames}" selectedvalue="{!conAssignment.selectedSendTo}" isForCommunity="true"/>
+                                        </td>
+                                    </aura:if>
+                                    <td data-label="Student Name" scope="row">
+                                        <div class="slds-truncate" title="Action">
+                                            <a onclick="{!c.actionHandler}" name="{!conAssignment.ca.Id}">Preview</a>
+                                        </div>
+                                    </td>  
+                                </tr>
+                            </aura:iteration>
+                        </tbody>
+                    </table>
+                </div>
+                <aura:set attribute="else">
+                    <br/><center><h5 style="font-size:0.875rem;">No records to display</h5></center>
+                </aura:set>
+            </aura:if>
+        </aura:if>
+        <aura:if isTrue="{!v.errorMsg}">
+        	<br/><center><h5 style="font-size:0.875rem;">{!v.errorMsg}</h5></center>
+        </aura:if>
+    </div>
+    <footer class="slds-modal__footer">   
+        <aura:if isTrue="{! not(v.isLoaded)}">
+       		<button class="slds-button slds-button_neutral" onclick="{!c.closeModal}">Close</button>
+        </aura:if>
+        <aura:if isTrue="{!v.isLoaded}">
+            <button class="slds-button slds-button_neutral" onclick="{!c.closeModal}">Cancel</button>
+            <button class="slds-button slds-button_brand" onclick="{!c.generateCertificate}">Send Certificate</button>            
+        </aura:if>
+    </footer>             
+</aura:component>

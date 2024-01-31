@@ -1,0 +1,7 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="MoodleLoginCtrl">
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+</aura:component>

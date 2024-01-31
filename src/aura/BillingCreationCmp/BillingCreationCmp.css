@@ -1,0 +1,32 @@
+.THIS .requiredCls .slds-input{
+    border-color:red !important;
+}
+.THIS .wrap{
+    white-space:normal !important;
+    word-break: break-word;
+}
+.THIS .slds-checkbox_faux {
+    border-color: #055E89;
+    border-width: 1.5px;
+}
+.THIS .centerAlignClass{
+    text-align:center !important;
+}
+.THIS .slds-form-element__label{
+    padding-left:0.4rem !important;
+}
+.THIS .labelCls .slds-form-element__label{
+     padding-left:0rem !important;
+}
+.THIS .slds-table thead th {
+    color : black !important;
+    border-top: var(--lwc-borderWidthThin,1px) solid var(--lwc-colorBorder,rgb(221, 219, 218)) !important;
+    height: 2.2rem !important;
+}
+.THIS .textAreaCls{
+    margin-top: -0.50rem !important;
+    margin-bottom: 0.40rem !important;
+}
+.THIS .fontCls{
+   font-size:1rem !important;
+ }

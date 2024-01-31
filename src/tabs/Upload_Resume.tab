@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Upload Resume</label>
+    <motif>Custom48: Trophy</motif>
+    <page>RChilliResumeUploadWizardPage</page>
+</CustomTab>

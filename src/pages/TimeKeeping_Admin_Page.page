@@ -1,0 +1,3193 @@
+<apex:page showHeader="true" sidebar="true" controller="TimeKeeping_Admin_Controller">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+        <apex:includeScript value="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"/>
+        <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+        <script src="{!URLFOR($Resource.Filter)}"/>
+        <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+        
+        <script src="{!URLFOR($Resource.moment)}"></script>
+        <script src="{!URLFOR($Resource.MomentTimezone_Data)}"></script>
+        <!-- script src="{!URLFOR($Resource.MomentTimezone)}"></script -->
+        
+        <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+        <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+    
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        <style>
+        /**
+         * Hide when Angular is not yet loaded and initialized
+         */
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+          display: none !important;
+        }
+        
+        .slds-input {
+            float: right;
+        }
+        
+        .selectErrorClass {
+            background-color: #fff;
+            border-color: #c23934;
+            box-shadow: #c23934 0 0 0 1px inset;
+            background-clip: padding-box;
+        }
+        
+        //Loader Screen
+        .loader {
+            position:   absolute;
+            z-index:    25000;
+            top:        0;
+            left:       0;
+            height:     100%;
+            width:      100%;
+            background: rgba(230, 233, 239, 0.91)
+                        url('{!URLFOR($Resource.SLDS091,'/assets/images/spinners/slds_spinner_brand.gif')}')
+                        50% 50%
+                        no-repeat;
+            background-size: 60px 60px;
+        }
+
+            
+        .red {
+            color: red;
+        }
+        .green {
+            color: green;
+        }
+        
+        .blue {
+            color: blue;
+        }
+        td:before {
+            font-weight: 700 !important;;
+        }
+        td {
+            vertical-align:top;
+        }
+        
+        .hrsalign {
+            margin-top: 25%;
+        }
+        
+        // To wrap and show the Request Notes field
+        .slds .slds-table td {
+            white-space: normal;
+        }
+        .nowrapStyle {
+            white-space: normal !important;
+        }
+        
+        .selectErrorClass {
+            background-color: #fff;
+            border-color: #c23934;
+            box-shadow: #c23934 0 0 0 1px inset;
+            background-clip: padding-box;
+        }
+        
+        .hrsColour {
+            background-color: yellow !important;
+        }
+        
+        .deleteColour {
+            background-color: red !important;
+        }                   
+    </style>
+    <apex:form >
+        <div class="slds ng-cloak" ng-app="myApp" ng-controller="TimeSheet_InternalController">
+            <div ng-hide="dayDetails.isLoaded">
+                <c:slds_Loading />
+            </div>
+            
+            <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">                
+                <div class="slds-grid">
+                    <div class="slds-media__figure">
+                         <img src="{!URLFOR($Resource.MyTimeSheet_PackageIcon)}" style="width:60px;height:50px;"></img>
+                    </div>
+                    <div class="slds-media__body">
+                        <div class="slds-grid">
+                            <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="Admin Time Entry - Internal">Admin Time Entry - Internal</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-col slds-no-flex slds-align-bottom"> <!--ng-if="dayDetails.selectedUserType == 'Instructor'"-->
+                        <div style="width: 100%;text-align: center;padding-right: 1rem;padding-bottom: 0.5rem;">
+                            <a href="/lightning/n/Admin_Time_Entry_Instructor" style="color: white;">Link to Admin Time Entry - DLS Online</a>
+                        </div>
+                        <div style="width: 100%;text-align: center;padding-right: 1rem;padding-bottom: 0.5rem;">
+                            <a href="/lightning/n/Admin_Time_Entry_DLS_PS_Online" style="color: white;">Link to Admin Time Entry - DLS PS Online</a>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-no-flex slds-align-bottom" ng-show="UserPermissionForPage">
+                        <div style="width: 100%;text-align: center;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="RevertactionFunction()">Revert</div>
+                        </div>
+                    </div>
+                   
+                    <div class="slds-col slds-no-flex slds-align-bottom" style="margin-left: 5px;" ng-show="UserPermissionForPage">
+                        <div style="width: 100%;text-align: center;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="RevertedrecordsConfimation()">Save</div>
+                        </div>
+                    </div>
+                    <!--<div class="slds-col slds-no-flex slds-align-bottom">
+                        <div style="width: 100%;text-align: center;padding-left:17%;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="cancel()">Back</div>
+                        </div>
+                    </div>-->
+                </div>
+            </div>
+            
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;" ng-hide="UserPermissionForPage">
+                <div class="slds-card__body">
+                    <div style="text-align:center;">
+                        <span class="tile__label slds-text-heading--label-normal">Insufficient Privilege</span>
+                     </div>
+                 </div>
+             </div>
+                             
+         
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;" ng-show="UserPermissionForPage">
+                <div class="slds-card__header slds-grid">
+                    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                        <div class="slds-media__body">
+                             <div class="slds-grid slds-wrap">  
+                                 
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                    <label>User Type</label>
+                                    <select ng-model="dayDetails.selectedUserType" class="slds-select" ng-options="i as i for i in dayDetails.UserTypeList" ng-change="userChangeFunction()">
+                                    </select>
+                                </div>
+                                
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                    <label>Contact Status</label>
+                                    <select ng-model="dayDetails.selectedInstructorStatus" class="slds-select" ng-options="i as i for i in dayDetails.InstrcutorStatusList" ng-change="clearContactValue()">
+                                    </select>
+                                </div>
+                                 
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                     <label>Contact</label>
+                                    <!--<select ng-model="dayDetails.selectedContact" ng-options="i.Id as i.Name for i in dayDetails.contactFilterValues | orderBy:'Name':false" class="slds-select" ng-change="FilterChange();filterNotesvalues()">
+                                    </select>--> 
+                                    <lookup data="dayDetails.ContactRecord" object="'Contact'" placeholder="'Contact Name'" parameter="dayDetails.includeActiveDLSEmployee" type="dayDetails.selectedUserType" status="dayDetails.selectedInstructorStatus" on-change="FilterChange"></lookup>
+                                </div>
+                                 
+                               
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                    <label>Week</label>
+                                    <select ng-model="dayDetails.selectedWeekrange" class="slds-select" ng-options="i as i for i in dayDetails.WeekRangeList" ng-change="FilterChange()">
+                                    </select>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                    <label>Default Status</label>
+                                    <select ng-model="dayDetails.selectedDefaultstatus" class="slds-select" ng-options="i as i for i in dayDetails.StatusValues">
+                                    </select>
+                                </div>
+                                
+                                <!--div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top: 25px;" ng-if="dayDetails.selectedUserType != 'Instructor'">
+                                    <span class="slds-truncate">
+                                        <label class="slds-checkbox checkbox_custom">
+                                            <input name="checkbox" type="checkbox" ng-model="dayDetails.includeActiveDLSEmployee" ng-change="clearContactValue()"/>
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Include Inactive DLS Employee</span>
+                                        </label>
+                                    </span>
+                                </div-->
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top: 25px;">
+                                </div>
+                                
+                             </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="slds-card__body">
+                    <div class="slds-grid" ng-hide="dayDetails.timeCarddetails.length > 0"> 
+                        <div class="slds-col--padded slds-size--1-of-12">
+                            <input type="button" class="slds-button slds-button--neutral" value="Add" ng-click="addRow()"></input>
+                        </div>
+                        <div class="slds-col--padded slds-size--11-of-12" style="text-align:center;">
+                            <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                        </div>
+                    </div>
+                    <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%"  ng-show="dayDetails.timeCarddetails.length > 0">
+                        <thead>
+                            <th scope="col">
+                                <span class="slds-truncate">Charge Code</span>
+                                <div class="slds-button slds-button slds-button--icon" style="color: #16325c;margin-left: 5%;" aria-describedby="help" ng-if="dayDetails.selectedUserType == 'Internal'" title="Project Name / Task Name / Payroll Item / Billable / Location">
+                                    <svg class="slds-icon slds-icon-text-default" aria-hidden="true" style="width:20px;height:20px;">
+                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                    </svg>
+                                    <span class="slds-assistive-text">Project Name / Task Name / Payroll Item / Billable / Location</span>
+                                </div>
+                                <div class="slds-button slds-button slds-button--icon" style="color: #16325c;margin-left: 5%;" aria-describedby="help" ng-if="dayDetails.selectedUserType == 'Instructor'" title="DLS Class # / Project Name / Task Name / Payroll Item / Billable / Location">
+                                    <svg class="slds-icon slds-icon-text-default" aria-hidden="true" style="width:20px;height:20px;">
+                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                    </svg>
+                                    <span class="slds-assistive-text">DLS Class # / Project Name / Task Name / Payroll Item / Billable / Location</span>
+                                </div>
+                                <!--<p title="Project Name / Task Name / Payroll Item / Billable / Location" style="margin-top: -20px;margin-left: 55%;">
+                                    <span class="slds-icon__container">
+                                        <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:20px;height:20px;">
+                                            <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                        </svg>
+                                    </span>
+                                </p>-->
+                            </th>
+                            <!--<th scope="col">
+                                <span class="slds-truncate">Charge Code</span>
+                            </th>
+                            <th scope="col" class="nowrapStyle">
+                                <div class="slds-hyphenate">Task Name</div>
+                            </th>
+                            <th scope="col" class="nowrapStyle">
+                                <div class="slds-hyphenate">Payroll Item</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Billable</span>
+                            </th>-->
+                            <th scope="col">
+                                <span class="slds-truncate">{{dayDetails.dateLableArray[0]}}</span>
+                                <div>MON</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">{{dayDetails.dateLableArray[1]}}</span>
+                                <div>TUE</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">{{dayDetails.dateLableArray[2]}}</span>
+                                <div>WED</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">{{dayDetails.dateLableArray[3]}}</span>
+                                <div>THU</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">{{dayDetails.dateLableArray[4]}}</span>
+                                <div>FRI</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">{{dayDetails.dateLableArray[5]}}</span>
+                                <div>SAT</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">{{dayDetails.dateLableArray[6]}}</span>
+                                <div>SUN</div>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Total Hrs</span>
+                            </th>
+                            <!--<th scope="col">
+                                <span class="slds-truncate">Action</span>
+                            </th>-->
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent" ng-repeat="day in dayDetails.timeCarddetails | orderBy:'sequenceNumber':false">
+                                
+                                <td data-label="Charge Code" class="nowrapStyle">
+                                            
+                                     <span class="slds-icon__container" ng-if="day.isDisabled" ng-click="removeRow(day)" style="margin-left: -22px;margin-bottom: -25px;">
+                                        <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:16px;height:16px;">
+                                            <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#delete')}"></use>
+                                        </svg>
+                                    </span>
+                                    
+                                    <div class="slds-hyphenate" style="font-size: 12px;margin-left: 7px;" ng-if="dayDetails.selectedUserType == 'Internal'">{{day.project_Task_Payroll_Billable_Location}}</div>
+                                    <div class="slds-hyphenate" style="font-size: 12px;margin-left: 7px;" ng-if="dayDetails.selectedUserType == 'Instructor'">{{day.project_Task_Location}}</div>
+                                </td>
+                                
+                                <!--<td data-label="Charge Code" class="nowrapStyle">
+                                    <select ng-model="day.SelectedProject" ng-hide="day.Flag" style="width: 110px !important;" class="slds-select {{projectErrorMsg}}" ng-options="project.Id as project.Name for project in day.projects" ng-change="populateProjectTask(day);getExistingdayRecord(day);"></select>   
+                                    <div class="slds-hyphenate" ng-show="day.Flag">{{day.ProjectName}}</div>
+                                </td>
+                                <td data-label="Task Name" class="nowrapStyle">
+                                    <div>
+                                        <select ng-init="day.OldProjectTask = day.SelectedProTask" ng-model="day.SelectedProTask" ng-hide="day.Flag" style="width: 110px !important;" class="slds-select {{TaskErrorMsg}}" ng-options="project.Id as project.Name for project in day.projectTasks" ng-change="RemoveOldCombination(day,day.OldProjectTask,day.SelectedProTask);day.OldProjectTask = day.SelectedProTask"></select>
+                                        <div ng-show="day.Flag" class="slds-hyphenate">{{day.TaskName}}</div>
+                                    </div>
+                                </td>
+                                
+                                 <td data-label="Payroll Item" class="nowrapStyle">
+                                    <div class="slds-hyphenate">
+                                        <select ng-init="day.OldPayRollItem = day.payRollItem" ng-hide="day.Flag"  ng-model="day.payRollItem" style="width: 85px !important;" class="slds-select {{payRollErrorMsg}}" ng-options="i as i for i in day.PayRollItemList" ng-change="RemoveOldPayRollCombination(day,day.OldPayRollItem,day.payRollItem);day.OldPayRollItem = day.payRollItem"></select>
+                                        <span ng-show="day.Flag">{{day.payRollItem}}</span>
+                                    </div>
+                                </td>
+                                
+                                <td data-label="Billable">
+                                    <span class="slds-truncate" style="margin-right:56px;">
+                                        <label class="slds-checkbox checkbox_custom">
+                                            <input name="checkbox" type="checkbox" ng-model="day.isBillable" ng-disabled="day.disableBillable"/>
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label slds-assistive-text"></span>
+                                        </label>
+                                    </span>
+                                </td>-->
+                                
+                                <td data-label="{{dayDetails.dateLableArray[0]}}">
+                                    <span class="slds-truncate">
+                                        <input class="slds-input {{day.Hrs1ColourDisplay}} {{day.Hrs1Error}}" style="margin-right: 22px;width: 85px;" ng-model="day.Hours1" type="text" ng-change="hrsValidation(day,'Hours1');totalHrsCalculation(day);captureUpdation(day,'Hours1','Hrs1Day1Id','status1')" ng-disabled="hideInputbox(day.Hours1,day.Day1)" ng-click="openPopup(day,'Hours1','comment1','Hrs1ColourDisplay',day.Hrs1Day1Id,'Day1','status1','lateCancellation1','cancellationReason1')"/>
+                                        <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs1ErrMsg}}</p>
+                                     </span>
+                                </td>
+                                <td data-label="{{dayDetails.dateLableArray[1]}}">
+                                    <span class="slds-truncate">
+                                        <input class="slds-input {{day.Hrs2ColourDisplay}} {{day.Hrs2Error}}" style="margin-right: 22px;width: 85px;" ng-model="day.Hours2" type="text" ng-change="hrsValidation(day,'Hours2');totalHrsCalculation(day);captureUpdation(day,'Hours2','Hrs2Day2Id','status2')" ng-disabled="hideInputbox(day.Hours2,day.Day2)" ng-click="openPopup(day,'Hours2','comment2','Hrs2ColourDisplay',day.Hrs2Day2Id,'Day2','status2','lateCancellation2','cancellationReason2')"/>
+                                        <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs2ErrMsg}}</p>
+                                    </span>
+                                </td>
+                                <td data-label="{{dayDetails.dateLableArray[2]}}">
+                                    <span class="slds-truncate">
+                                        <input class="slds-input {{day.Hrs3ColourDisplay}} {{day.Hrs3Error}}" style="margin-right: 22px;width: 85px;" ng-model="day.Hours3" type="text" ng-change="hrsValidation(day,'Hours3');totalHrsCalculation(day);captureUpdation(day,'Hours3','Hrs3Day3Id','status3')" ng-disabled="hideInputbox(day.Hours3,day.Day3)" ng-click="openPopup(day,'Hours3','comment3','Hrs3ColourDisplay',day.Hrs3Day3Id,'Day3','status3','lateCancellation3','cancellationReason3')"/>
+                                        <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs3ErrMsg}}</p>
+                                    </span>
+                                </td>
+                                <td data-label="{{dayDetails.dateLableArray[3]}}">
+                                    <span class="slds-truncate">
+                                        <input class="slds-input {{day.Hrs4ColourDisplay}} {{day.Hrs4Error}}" style="margin-right: 22px;width: 85px;" ng-model="day.Hours4" type="text" ng-change="hrsValidation(day,'Hours4');totalHrsCalculation(day);captureUpdation(day,'Hours4','Hrs4Day4Id','status4')" ng-disabled="hideInputbox(day.Hours4,day.Day4)" ng-click="openPopup(day,'Hours4','comment4','Hrs4ColourDisplay',day.Hrs4Day4Id,'Day4','status4','lateCancellation4','cancellationReason4')"/>
+                                        <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs4ErrMsg}}</p>
+                                    </span>
+                                </td>
+                                <td data-label="{{dayDetails.dateLableArray[4]}}">
+                                    <span class="slds-truncate">
+                                        <input class="slds-input {{day.Hrs5ColourDisplay}} {{day.Hrs5Error}}" style="margin-right: 22px;width: 85px;" ng-model="day.Hours5" type="text" ng-change="hrsValidation(day,'Hours5');totalHrsCalculation(day);captureUpdation(day,'Hours5','Hrs5Day5Id','status5')" ng-disabled="hideInputbox(day.Hours5,day.Day5)" ng-click="openPopup(day,'Hours5','comment5','Hrs5ColourDisplay',day.Hrs5Day5Id,'Day5','status5','lateCancellation5','cancellationReason5')"/>
+                                       <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs5ErrMsg}}</p>
+                                    </span>
+                                </td>
+                                <td data-label="{{dayDetails.dateLableArray[5]}}">
+                                    <span class="slds-truncate">
+                                        <input class="slds-input {{day.Hrs6ColourDisplay}} {{day.Hrs6Error}}" style="margin-right: 22px;width: 85px;" ng-model="day.Hours6" type="text" ng-change="hrsValidation(day,'Hours6');totalHrsCalculation(day);captureUpdation(day,'Hours6','Hrs6Day6Id','status6')" ng-disabled="hideInputbox(day.Hours6,day.Day6)" ng-click="openPopup(day,'Hours6','comment6','Hrs6ColourDisplay',day.Hrs6Day6Id,'Day6','status6','lateCancellation6','cancellationReason6')"/>
+                                        <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs6ErrMsg}}</p>
+                                    </span>
+                                </td>
+                                <td data-label="{{dayDetails.dateLableArray[6]}}">
+                                    <span class="slds-truncate">
+                                        <input class="slds-input {{day.Hrs7ColourDisplay}} {{day.Hrs7Error}}" style="margin-right: 22px;width: 85px;" ng-model="day.Hours7" type="text" ng-change="hrsValidation(day,'Hours2');totalHrsCalculation(day);captureUpdation(day,'Hours7','Hrs7Day7Id','status7')" ng-disabled="hideInputbox(day.Hours7,day.Day7)" ng-click="openPopup(day,'Hours7','comment7','Hrs7ColourDisplay',day.Hrs7Day7Id,'Day7','status7','lateCancellation7','cancellationReason7')"/>
+                                       <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs7ErrMsg}}</p>
+                                    </span>
+                                </td>
+                                <td data-label="Total Hrs">
+                                    <input class="slds-input" style="margin-right: 22px;width: 85px;" ng-model="day.TotalHours" type="text" ng-disabled="true"/>
+                                </td>
+                                 <!--<td>
+                                    <a href="" ng-if="day.isDisabled" style="cursor: pointer;" ng-click="removeRow(day)">Remove</a>
+                                </td>-->
+                            </tr>
+                            <tr class="slds-hint-parent">
+                                <td><input type="button" class="slds-button slds-button--neutral" value="Add" ng-click="addRow()"></input></td>
+                                <td data-label="Total Hours"><span style="margin-top: 10px;" ng--bind="getHoursSumValues(dayDetails.timeCarddetails,'Hours1','Day1',dayDetails.DaysList[0])"></span></td> 
+                                <td data-label="Total Hours"><span style="margin-top: 10px;" ng--bind="getHoursSumValues(dayDetails.timeCarddetails,'Hours2','Day2',dayDetails.DaysList[1])"></span></td>
+                                <td data-label="Total Hours"><span style="margin-top: 10px;" ng--bind="getHoursSumValues(dayDetails.timeCarddetails,'Hours3','Day3',dayDetails.DaysList[2])"></span></td>
+                                <td data-label="Total Hours"><span style="margin-top: 10px;" ng--bind="getHoursSumValues(dayDetails.timeCarddetails,'Hours4','Day4',dayDetails.DaysList[3])"></span></td>
+                                <td data-label="Total Hours"><span style="margin-top: 10px;" ng--bind="getHoursSumValues(dayDetails.timeCarddetails,'Hours5','Day5',dayDetails.DaysList[4])"></span></td>
+                                <td data-label="Total Hours"><span style="margin-top: 10px;" ng--bind="getHoursSumValues(dayDetails.timeCarddetails,'Hours6','Day6',dayDetails.DaysList[5])"></span></td>
+                                <td data-label="Total Hours"><span style="margin-top: 10px;" ng--bind="getHoursSumValues(dayDetails.timeCarddetails,'Hours7','Day7',dayDetails.DaysList[6])"></span></td>
+                                <td><span style="margin-top: 10px;" ng--bind="totalhours()"></span></td>
+                            </tr>
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- This table for notes section display -->
+                <div class="slds-card" style="margin-top: 1%;padding: 15px;" ng-show="UserPermissionForPage">
+                    <div class="slds-card__header slds-grid">
+                        <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                            <div class="slds-media__body">
+                                <span class="slds-text-heading--small">Notes</span>
+                                
+                                <span ng-if="timeCardId != ''" style="float: right;">
+                                    <a href="/{{timeCardId}}" target="_blank">View Time Card</a>    
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-card__body">
+                        <div class="slds-grid" ng-hide="dayDetails.commentsList.length > 0"> 
+                            <div class="slds-col--padded slds-size--1-of-1" style="text-align:center;">
+                                <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                            </div>
+                        </div>
+                        <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%"  ng-show="dayDetails.commentsList.length > 0">
+                            <thead>
+                                <!--<th scope="col">
+                                    <span class="slds-truncate">Notes </span>
+                                </th>-->
+                            </thead>
+                            <tbody>
+                                <tr class="slds-hint-parent" ng-repeat="value in dayDetails.commentsList | orderBy:'createdDate':true">
+                                    <td style="white-space: normal;text-align:left;" ng-if="value.NewStatus != '' || value.OldStatus != '' || value.NewHrs != '' || value.OldHrs != '' || value.Date != '' || value.TaskName != '' || value.UserName != '' || value.Edited != '' || value.ChargeCode != '' || (value.Comment && value.Comment != '')">
+                                         <span style="font-weight: bold;" ng-if="value.UserName != ''">UserName:</span><span ng-if="value.UserName != ''"> {{value.UserName}}.</span>
+                                         <span style="font-weight: bold;" ng-if="value.Edited != ''">Edited:</span><span ng-if="value.Edited != ''"> {{value.Edited}}.</span>
+                                         <span style="font-weight: bold;" ng-if="value.ChargeCode != ''">Charge Code: </span> <span ng-if="value.ChargeCode != ''"> {{value.ChargeCode}}.</span>
+                                         <span style="font-weight: bold;" ng-if="value.TaskName != ''"> Task Name: </span> <span ng-if="value.TaskName != ''"> {{value.TaskName}}.</span>
+                                         <span style="font-weight: bold;" ng-if="value.Date != ''">Date: </span> <span ng-if="value.Date != ''"> {{value.Date | date:'MM-dd-yyyy'}}. </span>
+                                         <span style="font-weight: bold;" ng-if="value.OldHrs != ''">Old Hours: </span> <span ng-if="value.OldHrs != ''"> {{value.OldHrs}} Hrs. </span>
+                                         <span style="font-weight: bold;" ng-if="value.NewHrs != ''">New Hours: </span> <span ng-if="value.NewHrs != ''"> {{value.NewHrs}} Hrs. </span>
+                                         <span style="font-weight: bold;" ng-if="value.OldStatus != ''">Old Status: </span> <span ng-if="value.OldStatus != ''"> {{value.OldStatus}}. </span>
+                                         <span style="font-weight: bold;" ng-if="value.NewStatus != ''">New Status: </span> <span ng-if="value.NewStatus != ''"> {{value.NewStatus}}. </span>
+                                         <span style="font-weight: bold;" ng-if="value.Comment && value.Comment != ''">Comment: </span><span ng-if="value.Comment && value.Comment != ''"> {{value.Comment}}. </span><br ng-if="value.Comment && value.Comment != ''"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <!-- End of this table -->
+            
+            <!-- This model for date change conformation display -->
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForConfirmation}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Confirmation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <div>
+                            <p>Would you like to save changes?</p>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayFunction()">Yes</div>
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="cancelFunction()">No</div>
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="proceedwithoutsave()">Proceed without Save</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForConfirmation}}"></div>
+            
+             <!-- This model for time card day hours edit & capture Comment -->
+      
+              <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForDayEdit}}">
+                    <div class="slds-modal__container">
+                          <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Time Card Day</h2>
+                          </div>
+                          <div class="slds-modal__content">
+                                  
+                                  <div  class="slds-grid slds-wrap" ng-if="(dayDetails.selectedUserType == 'Internal' || (dayDetails.selectedUserType == 'Instructor' && dayRec.TaskType == 'Preparation time'))">
+                                  
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                        <div class="slds-form-element {{editRec.hoursError}}">
+                                            <label class="slds-form-element__label">Hours</label>
+                                             <div class="slds-form-element__control">
+                                               <input class="slds-input" ng-model="editRec.hours" type="text" ng-change="hrsValidate(editRec.hours)"/>
+                                               <p style="color:red;padding-top: 33px;">{{hoursErrorMsg}}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                   
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                         <div class="slds-form-element {{CommentsError}}">
+                                            <label class="slds-form-element__label">Comments</label>
+                                            <div class="slds-form-element__control">
+                                                <textarea class="slds-textarea" rows="5" cols="30" ng-model="editRec.comments"/>
+                                            </div>
+                                        </div>   
+                                    </div>
+                                    
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                        <div class="slds-form-element" ng-show="status != 'Reverted'">
+                                            <label class="slds-form-element__label">Status</label>
+                                            <div class="slds-form-element__control">
+                                                <select ng-model="editRec.status" class="slds-select" ng-options="i as i for i in dayDetails.StatusValues">
+                                                </select>
+                                            </div>
+                                        </div>   
+                                    </div>
+                                
+                                </div>
+                                
+                                <div class="slds-grid slds-wrap" ng-if="dayDetails.selectedUserType == 'Instructor' && dayRec.TaskType != 'Preparation time'">
+                                    
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                        <div class="slds-form-element {{editRec.hoursError}}">
+                                            <label class="slds-form-element__label">Hours</label>
+                                             <div class="slds-form-element__control">
+                                               <input class="slds-input" ng-model="editRec.hours" type="text" ng-change="hrsValidate(editRec.hours)"/>
+                                               <p style="color:red;padding-top: 33px;">{{hoursErrorMsg}}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                   
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12">
+                                        <div class="slds-form-element" ng-show="editRec.status != 'Reverted'">
+                                            <label class="slds-form-element__label">Status</label>
+                                            <div class="slds-form-element__control">
+                                                <select ng-model="editRec.status" class="slds-select" ng-options="i as i for i in dayDetails.StatusValues">
+                                                </select>
+                                            </div>
+                                        </div>   
+                                    </div>
+                                
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top: 1.5rem;">
+                                        <span class="slds-truncate">
+                                            <label class="slds-checkbox checkbox_custom">
+                                                <input name="checkbox" type="checkbox" ng-model="editRec.lateCancellation"/>
+                                                <span class="slds-checkbox--faux"></span>
+                                                <span class="slds-form-element__label">Late Cancellation</span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                    
+                                    
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top: 1.5rem;">
+                                         <div class="slds-form-element {{editRec.commentsError}}">
+                                            <label class="slds-form-element__label">Comments</label>
+                                            <div class="slds-form-element__control">
+                                                <textarea class="slds-textarea" rows="4" cols="30" ng-model="editRec.comments"/>
+                                            </div>
+                                        </div>   
+                                    </div>
+                                    
+                                    
+                                    <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top: 1.5rem;">
+                                        <div class="slds-form-element {{editRec.cancellationReasonError}}" ng-show="editRec.lateCancellation">
+                                            <label class="slds-form-element__label">Cancellation Reason</label>
+                                            <div class="slds-form-element__control">
+                                                <textarea class="slds-textarea" rows="4" cols="30" ng-model="editRec.cancellationReason"/>
+                                            </div>
+                                        </div>   
+                                    </div>
+                                    
+                                </div>
+                                    
+                         </div>
+                         <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Delete" ng-click="ChangeStatus_Unpost()"></input>
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForEditBox()"></input>
+                            <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="CancelForEdit()"></input>
+                         </div>
+                   </div>
+              </div>
+              <div class="slds-modal-backdrop {{modalBackdropStateForDayEdit}}"></div>
+              <!-- end of existing hrs edit -->
+          
+              <!-- This for duplicate message display -->
+              
+              <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForDuplicate}}">
+                    <div class="slds-modal__container">
+                          <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                          </div>
+                          <div class="slds-modal__content">
+                               <p>{{dayDetails.DuplicateMsgValue}}</p>
+                         </div>
+                         <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForDuplicates()"></input>
+                            <input type="button" class="slds-button slds-button--neutral" ng-show="dayDetails.cancelbtnDisplay" value="Cancel" ng-click="NOClickForDuplicates()"></input>
+                         </div>
+                   </div>
+              </div>
+              <div class="slds-modal-backdrop {{modalBackdropStateForDuplicate}}"></div>
+              
+              <!-- model for Success msg dispplay --->
+                <div class="slds-modal" ng-class="{'slds-fade-in-open': options.isSuccessOpen}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container">
+                        <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium">Message</h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium">
+                            <div>
+                                <p ng-bind="options.successMessage"></p>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer !important;" ng-click="openLastactivityWeek();options.isSuccessOpen = false;">Close</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop" ng-class="{'slds-modal-backdrop--open': options.isSuccessOpen}"></div>
+            <!-- End of Model---->
+            
+            <!-- model for Error msg dispplay --->
+              <div class="slds-modal" ng-class="{'slds-fade-in-open': options.isErrorOpen}" aria-hidden="false" role="dialog">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__header slds-theme--error">
+                        <h2 class="slds-text-heading--medium">Error</h2>
+                    </div>
+                    <div class="slds-modal__content slds-p-around--medium">
+                        <div>
+                            <p ng-bind="options.errorMessage"></p>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">
+                        <div class="slds-button slds-button--neutral" style="cursor: pointer !important;" ng-click="options.isErrorOpen = false;">Close</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop" ng-class="{'slds-modal-backdrop--open': options.isErrorOpen}"></div>
+            
+             <!-- This for Save action comment capturing display -->
+              
+              <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateSaveConfirmation}}">
+                    <div class="slds-modal__container">
+                          <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Save Confirmation</h2>
+                          </div>
+                          <div class="slds-modal__content">
+                              <div class="slds-grid slds-wrap">
+                              
+                                   <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--12-of-12">
+                                       <p>The following are the summary of entered Hours for each Status value: </p>
+                                       <div ng-repeat="(key,value) in status_HrssumMap">
+                                           <span>{{key}} : {{value}} hrs</span>
+                                       </div>
+                                   </div>
+                                   
+                                   <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="margin-top:1%;">
+                                         <div class="slds-form-element {{SaveCommentError}}">
+                                            <label class="slds-form-element__label">Comments</label>
+                                            <div class="slds-form-element__control">
+                                                <textarea class="slds-textarea" rows="5" cols="30" ng-model="SaveComment"/>
+                                            </div>
+                                        </div>   
+                                    </div>
+                               <p ng-if="displayRevert_MailMsg">Email notification for reverted time card days are not send to inactive DLS Employees. Would you like to proceed?</p>
+                             </div>
+                         </div>
+                         <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="okayForSaveConfimation()"></input>
+                            <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="modalStateSaveConfirmation='';modalBackdropStateSaveConfirmation='';"></input>
+                         </div>
+                   </div>
+              </div>
+              <div class="slds-modal-backdrop {{modalBackdropStateSaveConfirmation}}"></div>
+              
+              <!-- This for revert action comment capturing window display -->
+              
+              <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateRevertComment}}">
+                    <div class="slds-modal__container">
+                          <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Revert Confirmation</h2>
+                          </div>
+                          <div class="slds-modal__content">
+                               <div class="slds-grid slds-wrap">
+                                   
+                                   <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                         <div class="slds-form-element {{RevertCommentError}}">
+                                            <label class="slds-form-element__label">Enter Comments for Revert action</label>
+                                            <div class="slds-form-element__control">
+                                                <textarea class="slds-textarea" rows="5" cols="30" ng-model="RevertComment"/>
+                                            </div>
+                                        </div>   
+                                    </div>
+                                    <p>Email notification for reverted time card days are not send to inactive DLS Employees. Would you like to proceed?</p>
+                               </div>
+                         </div>
+                         <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="okayForRevertComment()"></input>
+                            <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="modalStateRevertComment='';modalBackdropStateRevertComment='';"></input>
+                         </div>
+                   </div>
+              </div>
+              <div class="slds-modal-backdrop {{modalBackdropStateRevertComment}}"></div>
+              
+          <!-- Add button model open to get Project,Task,Payroll & Billable values -->
+
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForAddBtn}}" style="z-index: 9005 !important;">
+                <div class="slds-modal__container" style="width:100%;max-width:750px;">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;"></h2>
+                      </div>
+                      <div class="slds-modal__content" style="overflow: inherit;overflow-y: inherit;">
+                           <div class="slds-grid slds-wrap">
+                              
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Charge Code</label>
+                                         <div class="slds-form-element__control">
+                                           <select ng-model="NewlyAddedRec.SelectedProject" style="width: 110px !important;" class="slds-select {{projectErrorMsg}}" ng-options="project.Id as project.Name for project in NewlyAddedRec.projects" ng-change="populateProjectTask(NewlyAddedRec);"></select>   
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Task Name</label>
+                                         <div class="slds-form-element__control">
+                                             <select ng-model="NewlyAddedRec.SelectedProTask" style="width: 110px !important;" class="slds-select {{TaskErrorMsg}}" ng-options="project.Id as project.Name for project in NewlyAddedRec.projectTasks" ng-change="TaskValidationFunction(NewlyAddedRec);"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Payroll Item</label>
+                                         <div class="slds-form-element__control">
+                                             <select ng-model="NewlyAddedRec.payRollItem" style="width: 85px !important;" class="slds-select {{payRollErrorMsg}}" ng-options="i as i for i in NewlyAddedRec.PayRollItemList" ng-disabled="NewlyAddedRec.disablePayRoll" ng-change="payrollItemChange(NewlyAddedRec)"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <div class="slds-form-element {{locationError}}">
+                                        <label class="slds-form-element__label">Location</label>
+                                         <div class="slds-form-element__control">
+                                             <lookup data="NewlyAddedRec.selectedLocation" object="'MTT_Location__c'" placeholder="'Location Name'" on-change="locationValueChanges" parameter="NewlyAddedRec"></lookup>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12" style="margin-top: 25px;">
+                                    <span class="slds-truncate" style="margin-right:56px;">
+                                        <label class="slds-checkbox checkbox_custom" ng-if="!NewlyAddedRec.hidebillableSection">
+                                            <input name="checkbox" type="checkbox" ng-model="NewlyAddedRec.isBillable" ng-disabled="NewlyAddedRec.disableBillable"/>
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Billable</span>
+                                        </label>
+                                        
+                                        <div ng-if="!NewlyAddedRec.isBillable && NewlyAddedRec.hidebillableSection">
+                                            <img src="{!$Site.Prefix}/img/checkbox_unchecked.gif" alt="Not Checked" width="23" height="19" class="checkImg"/><span class="slds-form-element__label" style="font-size: 14px;color: #54698d;" >Billable</span>
+                                        </div>
+                                        <div ng-if="NewlyAddedRec.isBillable && NewlyAddedRec.hidebillableSection">
+                                            <img src="{!$Site.Prefix}/img/checkbox_checked.gif" alt="Checked" width="23" height="19" class="checkImg"/><span class="slds-form-element__label" style="font-size: 14px;color: #54698d;" >Billable</span>
+                                        </div>
+                                        
+                                    </span>
+                                </div>
+                                
+                                <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" ng-if="dayDetails.selectedUserType != 'Internal'">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Charge Code</label>
+                                         <div class="slds-form-element__control">
+                                           <select ng-model="NewlyAddedRec.SelectedProject" class="slds-select {{projectErrorMsg}}" ng-options="project.Id as project.Name for project in NewlyAddedRec.projects" ng-change="populateProjectTask(NewlyAddedRec);"></select>   
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" ng-if="dayDetails.selectedUserType != 'Internal'">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Task Name</label>
+                                         <div class="slds-form-element__control">
+                                             <select ng-model="NewlyAddedRec.SelectedProTask" class="slds-select {{TaskErrorMsg}}" ng-options="project.Id as project.Name for project in NewlyAddedRec.projectTasks" ng-change="TaskValidationFunction(NewlyAddedRec)"></select>
+                                        </div>
+                                    </div>
+                                </div>-->
+                                
+                                <p>{{DuplicateMsgValue}}</p>
+                            </div>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayClickForAddBtn()"></input>
+                        <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="cancelClickForAddBtn()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForAddBtn}}" style="z-index: 9000 !important;"></div>
+          
+      <!-- End of add button model popup --->
+      
+      <!-- Model to get the Billable & Non Billable values if the payroll items are same on CR level-->
+      <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateBillable}}" style="z-index: 9015 !important;">
+            <div class="slds-modal__container">
+                  <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                    <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Confirmation</h2>
+                  </div>
+                  <div class="slds-modal__content">
+                      
+                        <p>Billable and Non Billable PayrollItem have same value. Please select value for Billable field</p>
+                        <div style="margin-top: 1%;">
+                            <label class="slds-checkbox checkbox_custom" ng-hide="nonBillable">
+                                <input name="checkbox" type="checkbox" ng-model="billable"/>
+                                <span class="slds-checkbox--faux"></span>
+                                <span class="slds-form-element__label">Billable</span>
+                            </label>
+                            
+                            <label class="slds-checkbox checkbox_custom" ng-hide="billable">
+                                <input name="checkbox" type="checkbox" ng-model="nonBillable"/>
+                                <span class="slds-checkbox--faux"></span>
+                                <span class="slds-form-element__label">Non-Billable</span>
+                            </label>
+                            
+                        </div>
+                        <p style="color: red;">{{billableMsg}}</p>
+                 </div>
+                 <div class="slds-modal__footer">
+                     <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="billableFunction()"></input>
+                    <input type="button" class="slds-button slds-button--neutral" value="Close" ng-click="modalStateBillable = '';modalBackdropStateBillable = '';"></input>
+                 </div>
+           </div>
+      </div>
+      <div class="slds-modal-backdrop {{modalBackdropStateBillable}}" style="z-index: 9010 !important;"></div>
+      
+      <!-- Model for Contact error msg display --->
+          <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateContactMsg}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Error</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                          <p>No user found for selected contact. Please create user with same Contact Name to proceed further.</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Close" ng-click="modalStateContactMsg='';modalBackdropStateContactMsg='';"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateContactMsg}}"></div>
+          
+          <!-- End of contact msg model --->
+          
+          <!-- This model to display deletion message for empty rows in table-->
+        
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForDeletionMsg}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Confirmation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <p>Following Charge Codes do not have any time entry and it will be skipped. Remaining time entries will be saved:</p><br/>
+                        <div ng-repeat="value in chargeCodeToDelete">
+                            <span style="display: inline;">{{value}}</span><br/>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayForDeletionMsgDisplay()">Yes</div>
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="modalStateForDeletionMsg='';modalBackdropStateForDeletionMsg='';">No</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForDeletionMsg}}"></div>
+            
+        <!-- End of deletion msg display --->
+        
+        <!-- Save / Revert action msg display if there is no TCD records -->
+          <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForInfo}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Information</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                          <p>{{btnActionInfoMsg}}</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Close" ng-click="modalStateForInfo='';modalBackdropStateForInfo='';"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForInfo}}"></div>
+            
+            <!-- for Look up code -->
+              <script type="text/ng-template" id="lookup1.html">
+                <div class="slds">
+                    <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <input id="lookupf" ng-model="searchTxt" ng-disabled="disabled" ng-KeyPress="fetchAccounts(searchTxt)" ng-KeyDown="isDropDownHidden= false;data = ''"  class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" placeholder="{{placeholder}}" />
+                            </div>
+                        </div>
+                        <div class="slds-lookup__menu" role="listbox" ng-hide="isDropDownHidden" style="margin-top: 35px;">
+                            <ul class="slds-lookup__list" role="presentation" id="lookuplist">
+                                <li class="slds-lookup__item" ng-repeat="acc in accounts" ng-click="updateDataModelAttr(acc)">
+                                    <a id="{{acc.Id}}" role="option">
+                                        {{acc.Name}}
+                                    </a>
+                                </li>
+                                <li ng-if="!accounts.length && !showLoadingDiv" class="slds-text-align--center">
+                                   No match found
+                                </li>
+                                <li ng-if="showLoadingDiv" class="slds-text-align--center">
+                                   <img src="{!URLFOR($Resource.SLDS090,'/assets/images/spinners/slds_spinner_brand.gif')}" width="50" height="50"/>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </script>
+          <!-- End of look up code --->
+         
+        </div>
+     </apex:form>
+    </html>
+    
+  <script>
+    
+    var underscore = angular.module('underscore', []);
+    underscore.factory('_', ['$window', function($window) {
+        return $window._;
+    }]);
+    
+    var app = angular.module('myApp', ['ngRoute','720kb.datepicker','underscore']);
+    app.controller('TimeSheet_InternalController', function($scope,$timeout,$route,QueryApex, helper,$location) {
+        
+        //document.getElementById("spinner").style.display = 'block';
+        
+        $scope.dayDetails = [];
+        
+        $scope.UpdationRecordList = [];
+        $scope.dayIdsForSaveCheck = [];
+        
+        $scope.revertedRecordList = [];
+        
+        $scope.previousValues = {};
+        $scope.updatedWeekRange;
+        
+        $scope.dayDetails.duplicateRecord = {};
+        $scope.dayDetails.ContactRecord = {};
+        
+        // to avoid duplicate records display
+        $scope.dayDetails.UniqueKeySet = [];
+        
+        $scope.dayDetails.isLoaded = false;
+        $scope.dayDetails.StatusValues = ['Approved','Admin Approved','Rejected','Draft','Submitted','Recalled','Unposted'];
+        $scope.dayDetails.selectedDefaultstatus = 'Admin Approved';
+        
+        $scope.modalStateForConfirmation = '';
+        $scope.modalBackdropStateForConfirmation = '';
+        
+        //For existing time card day hrs edit
+        $scope.modalStateForDayEdit = '';
+        $scope.modalBackdropStateForDayEdit = '';
+        
+        $scope.modalStateForDuplicate = '';
+        $scope.modalBackdropStateForDuplicate = '';
+        
+        $scope.modalStateSaveConfirmation = '';
+        $scope.modalBackdropStateSaveConfirmation = '';
+        
+        // For Add Btn popup open
+        $scope.modalStateForAddBtn = '';
+        $scope.modalBackdropStateForAddBtn = '';
+        
+        $scope.timeCardId = '';
+               
+        // Get Url data if contact & Week range values are passes
+        var url = '';
+        
+        var address = '';
+        if($location.absUrl().contains('+'))
+            address = $location.absUrl().split('+').join('%20');
+        else
+            address = $location.absUrl();
+        
+        var urlVal = decodeURIComponent(address);
+        
+        if(urlVal.contains('?')){
+            url = urlVal.split('?')[1];
+        }
+        
+        var urlContents = url.split('&');
+        
+        var urlObject = {};
+        
+        for(var i = 0;i < urlContents.length;i++){
+            if(urlContents[i].split('=')) {
+                if(!urlObject[urlContents[i].split('=')[0]])
+                    urlObject[urlContents[i].split('=')[0]] = urlContents[i].split('=')[1];
+            }
+        }
+        
+        console.log('::::urlObject:::::::',urlObject);
+        
+        $scope.urlValues = {
+            urlContact: urlObject.contactId,
+            urlWeekrange: urlObject.WeekRange,
+            urlContactName: urlObject.contactName,
+            urlUsertype: urlObject.userType
+        };
+        
+        $scope.options = {
+            isErrorOpen: false,
+            errorMessage: '',
+            isSuccessOpen: false,
+            successMessage: ''
+        };
+        
+        // User Type Flip option
+        
+        $scope.dayDetails.UserTypeList = ['Internal','Instructor'];
+        
+        // Default value assigning - if url values are empty
+        
+        if($scope.urlValues.urlUsertype) {
+            $scope.dayDetails.selectedUserType = $scope.urlValues.urlUsertype;
+        }else {
+            $scope.dayDetails.selectedUserType = 'Internal';
+        }
+        
+        $scope.dayDetails.InstrcutorStatusList = ['All','Available','Employed','Unavailable','Inactive'];
+        $scope.dayDetails.selectedInstructorStatus = 'All';
+        
+        
+        function initial() {
+            helper.getWholeWeekRanges($scope);
+        }
+        
+        // Week Range flip to call Qry function
+        $scope.weekRangeFlip_Function = function() {
+            $scope.dayDetails.isLoaded = false;            
+            helper.getSpecificWeekValues($scope);
+            
+        }
+        
+        // Filter notes values based on contact selection
+        $scope.filterNotesvalues = function() {
+            $scope.dayDetails.commentsList = [];
+            helper.notesSectionformation($scope.dayDetails.timeSnapshotRecords,$scope.dayDetails);
+        }
+        
+        // Calculate total hrs based on hrs changes
+        $scope.totalHrsCalculation = function(dayRec) {
+            helper.totalHrsCalculation(dayRec);
+        }
+        
+        // Hide hrs entry if there is no data
+        $scope.hideInputbox = function(hour,date) {
+            if(moment(date).isAfter($scope.dayDetails.timeLockingdate))
+                return false;
+            else
+                return true;
+        }
+        
+        //Calculate sum of hrs values on column level
+        
+        $scope.getHoursSumValues = function(records,Hrskey,dateKey,dateValue) {
+            var sum = 0;
+            if($scope.dayDetails.timeCarddetails) {
+                for(var i = 0; i < $scope.dayDetails.timeCarddetails.length; i++) {
+                    if($scope.dayDetails.timeCarddetails[i][Hrskey] && 
+                        new Date($scope.dayDetails.timeCarddetails[i][dateKey]).getTime() == new Date(dateValue).getTime() 
+                      ) {
+                        sum = sum + parseFloat($scope.dayDetails.timeCarddetails[i][Hrskey]);
+                    }
+                }
+                return ((sum * 100) / 100).toFixed(2);
+            }
+        }
+        
+        $scope.totalhours = function() {
+           var sum = 0;
+           if($scope.dayDetails.timeCarddetails) {
+               for(var i = 0; i < $scope.dayDetails.timeCarddetails.length; i++) {
+                   if($scope.dayDetails.timeCarddetails[i].TotalHours) {
+                       sum = sum + parseFloat($scope.dayDetails.timeCarddetails[i].TotalHours);
+                   }
+               }
+               
+               return ((sum * 100) / 100).toFixed(2);
+           }
+       }
+       
+       //Filter changes confirmation window display
+       $scope.FilterChange = function() {
+           
+           $scope.dayDetails.selectedContact = $scope.dayDetails.ContactRecord.Id;
+           
+           helper.getContactUser($scope);
+           
+           $timeout(function() {
+               console.log(':::::::$scope.dayDetails.usrAlreadyExist::::::::',$scope.dayDetails.usrAlreadyExist);
+               
+               if($scope.dayDetails.usrAlreadyExist) {
+                   if($scope.UpdationRecordList.length > 0) {
+                       $scope.modalStateForConfirmation = 'slds-fade-in-open';
+                       $scope.modalBackdropStateForConfirmation = 'slds-modal-backdrop--open';
+                   }else {
+                       $scope.weekRangeFlip_Function();
+                   }
+               }else {
+                   $scope.modalStateContactMsg = 'slds-fade-in-open';
+                   $scope.modalBackdropStateContactMsg = 'slds-modal-backdrop--open';
+               }
+           },1000);
+       }
+       
+       $scope.captureUpdation = function(record,hrsType,IdType,statusValue) {
+           
+           //console.log('::::capture:::::::',record);
+           
+           if(record[IdType]) {
+               var obj = {Total_Hours_Before_Approved__c:record[hrsType],Status__c:record[statusValue]};
+               if(record[hrsType] && $scope.UpdationRecordList.indexOf(obj) == -1) {
+                   $scope.UpdationRecordList.push(obj);
+               }
+           }else {
+               record[statusValue] = $scope.dayDetails.selectedDefaultstatus;
+               var obj = {Total_Hours_Before_Approved__c:record[hrsType],Status__c:record[statusValue]};
+               if(record[hrsType] && $scope.UpdationRecordList.indexOf(obj) == -1) {
+                   $scope.UpdationRecordList.push(obj);
+               }
+           }
+           
+           //console.log(record[statusValue]);
+           
+           var obj = {Total_Hours_Before_Approved__c:record[hrsType],Status__c:record[statusValue]};
+           if(record[statusValue] == 'Reverted' && $scope.revertedRecordList.indexOf(obj) == -1){
+               //console.log(':::::dfghjk:::::');
+               $scope.revertedRecordList.push(obj);
+           }
+           
+           //console.log(':::::::::$scope.revertedRecordList:::::',$scope.revertedRecordList);
+       }
+       
+       // For yes click on confirmation
+       $scope.OkayFunction = function() {
+            //$scope.SaveCallingFunction();
+            $scope.RevertedrecordsConfimation();
+            
+            $scope.modalStateForConfirmation = '';
+            $scope.modalBackdropStateForConfirmation = '';
+           //Modified by Dhinesh - 21/09/2023
+           $scope.updatedWeekRange = $scope.dayDetails.selectedWeekrange;
+           //Modified by Dhinesh - 14/09/2023
+            $scope.dayDetails.selectedWeekrange = $scope.previousValues.weekRange;
+           /*$timeout(function(){
+                //$scope.dayDetails.selectedWeekrange = $scope.previousValues.weekRange;
+                //$scope.dayDetails.selectedContact = $scope.previousValues.Contact;
+                
+                $scope.weekRangeFlip_Function();
+                
+            },4000);*/
+        }
+        
+         $scope.cancelFunction = function() {
+            $scope.modalStateForConfirmation = '';
+            $scope.modalBackdropStateForConfirmation = '';
+            $scope.dayDetails.selectedWeekrange = $scope.previousValues.weekRange;
+            $scope.dayDetails.selectedContact = $scope.previousValues.Contact;
+        }
+        
+        $scope.proceedwithoutsave = function() {
+            $scope.modalStateForConfirmation = '';
+            $scope.modalBackdropStateForConfirmation = '';
+            $timeout(function(){
+                $scope.weekRangeFlip_Function();
+            },1000);
+        }
+       
+       //Add New Row on table
+       $scope.addRow = function() {
+           
+           $scope.NewlyAddedRec = {};
+           
+           var Obj = {
+               Hours1:'',
+               Hours2:'',
+               Hours3:'',
+               Hours4:'',
+               Hours5:'',
+               Hours6:'',
+               Hours7:'',
+               Day1:$scope.dayDetails.DaysList[0],
+               Day2:$scope.dayDetails.DaysList[1],
+               Day3:$scope.dayDetails.DaysList[2],
+               Day4:$scope.dayDetails.DaysList[3],
+               Day5:$scope.dayDetails.DaysList[4],
+               Day6:$scope.dayDetails.DaysList[5],
+               Day7:$scope.dayDetails.DaysList[6],
+               Hrs1Error:'',
+               Hrs2Error:'',
+               Hrs3Error:'',
+               Hrs4Error:'',
+               Hrs5Error:'',
+               Hrs6Error:'',
+               Hrs7Error:'',
+               Flag:false,
+               isDisabled:true,
+               isBillable:false,
+               isVisible:true,
+               PayRollItemList: $scope.dayDetails.payRollItems,
+               holidayBoolean: false,
+               disableBillable: false,
+               isNew: true,
+               hidebillableSection: false
+            };
+            
+            
+             var dt1 = moment($scope.dayDetails.selectedWeekrange.split(' to ')[0]).format('YYYY-MM-DD');
+             var dateRange = moment(dt1).subtract(14,'days').format('YYYY-MM-DD');
+             
+             console.log('::::::::dateRange::::::',new Date(dateRange).getTime());
+             
+             var filterData = _.filter($scope.dayDetails.ProjectList, function(data){ 
+                if((data.AcctSeed__Status__c == 'Ended' && data.End_Date__c >= new Date(dateRange).getTime()) 
+                    || data.AcctSeed__Status__c == 'Active' || data.Id == $scope.dayDetails.HomeDepartId){
+                    return data;
+                }
+            });
+            
+            var selectObj = {Id:'--Select--',Name:'--Select--'};
+            filterData.unshift(selectObj);
+            
+            if(filterData.length > 0)
+                Obj.projects = filterData;
+            
+            if(Obj.projects.length > 0)
+                Obj.SelectedProject = Obj.projects[0].Id;
+            
+            $scope.NewlyAddedRec = Obj;
+            
+            console.log(':::::$scope.NewlyAddedRec:::',$scope.NewlyAddedRec);
+            
+            $scope.DuplicateMsgValue = '';
+            
+            $scope.modalStateForAddBtn = 'slds-fade-in-open';
+            $scope.modalBackdropStateForAddBtn = 'slds-modal-backdrop--open';
+       }
+       
+       $scope.OkayClickForAddBtn = function() {
+            $scope.DuplicateMsgValue = '';
+            if($scope.NewlyAddedRec.selectedLocation) {
+            
+                CostRateValidation();
+                $scope.UpdateBillableValue($scope.NewlyAddedRec);
+                
+                if(!$scope.DuplicateMsgValue){
+                    if($scope.NewlyAddedRec.SelectedProject != '--select--' 
+                            && $scope.NewlyAddedRec.SelectedProject != '--select--' && $scope.NewlyAddedRec.payRollItem 
+                            && $scope.NewlyAddedRec.selectedLocation.Id) {
+                        $scope.NewlyAddedRec.showDetails = true;
+                        
+                        var billableValue = '';
+                        if($scope.NewlyAddedRec.isBillable)
+                            billableValue = 'Billable';
+                        else
+                            billableValue = 'Non-billable';
+                            
+                        var location = '';
+                        if($scope.NewlyAddedRec.selectedLocation)
+                            location = $scope.NewlyAddedRec.selectedLocation.Name;
+                        else
+                            location = 'N/A';
+                        
+                        $scope.NewlyAddedRec.project_Task_Payroll_Billable_Location = $scope.NewlyAddedRec.ProjectName+' / '+$scope.NewlyAddedRec.TaskName+' / '+$scope.NewlyAddedRec.payRollItem+' / '+billableValue+' / '+location;
+                        $scope.NewlyAddedRec.project_Task_Location = $scope.NewlyAddedRec.dlsClassNo+' / '+$scope.NewlyAddedRec.ProjectName+' / '+$scope.NewlyAddedRec.TaskName+' / '+$scope.NewlyAddedRec.payRollItem+' / '+billableValue+' / '+location;
+                        
+                        
+                        var lastSequenceNumber;
+                                
+                        if($scope.dayDetails.timeCarddetails.length > 0) {
+                            lastSequenceNumber = $scope.dayDetails.timeCarddetails[$scope.dayDetails.timeCarddetails.length - 1].sequenceNumber;
+                            console.log('::::::::lastSequenceNumber::if:::',lastSequenceNumber);
+                            $scope.NewlyAddedRec.sequenceNumber = lastSequenceNumber + 1;
+                        } else {
+                            $scope.NewlyAddedRec.sequenceNumber = 1;
+                        }
+                        
+                        $scope.dayDetails.timeCarddetails.push($scope.NewlyAddedRec);
+                        
+                        $scope.modalStateForAddBtn = '';
+                        $scope.modalBackdropStateForAddBtn = '';
+                        
+                        $scope.locationError = '';
+                        $scope.getExistingdayRecord($scope.NewlyAddedRec);
+                    }else {
+                        if(!$scope.NewlyAddedRec.payRollItem)
+                            $scope.DuplicateMsgValue = 'Please contact your HR to create corresponding Cost Rate record to proceed further.';
+                    }
+                }
+            }else {
+                $scope.locationError = 'slds-has-error';
+            }
+        }
+        
+        $scope.cancelClickForAddBtn = function() {
+            $scope.modalStateForAddBtn = '';
+            $scope.modalBackdropStateForAddBtn = '';
+            
+            //$scope.DuplicateMsgValue = '';
+            $scope.locationError = '';
+        }
+        
+        // Capture location value changes
+        $scope.locationValueChanges = function(record) {
+            if(record) {
+                record.locationId = record.selectedLocation.Id;
+                record.locationName = record.selectedLocation.Name;
+            }
+        }
+       
+       // Cost rate validation for selected contact
+       function CostRateValidation() {
+           if(!$scope.NewlyAddedRec.costRateId){
+                $scope.DuplicateMsgValue = 'Please contact your HR to create corresponding Cost Rate record to proceed further.';
+            }
+       }
+       
+       //Populate project task on project selection
+       $scope.populateProjectTask = function(record) {
+            
+            record.projectTasks = [];
+            var filterData = [];
+            $scope.DuplicateMsgValue = '';
+            var taskTypeArray = ['Language Training','Interpretation (per hr)','Curriculum Development','Localization','Language Testing','Translation (per hr)','Translation','Interpretation (per hr)','Transcription (per hr)','Translation (per word)','Translation (per FFP)','Fringe','Preparation time'];
+            
+            var nonAdminProjectRTNames = ['EFL_Projects','CD_Projects','Linguist_Support_Projects'];
+            
+            //Qry selected project task & contact related contact assingments to filter the project task selection for Linguist Support Projects
+            // Added by NS on Nov 30 2018
+            var conAssign = [];
+            conAssign = _.filter($scope.dayDetails.contactAssign_ForPayRoll, function(data) {
+                            if(data.Project__c == record.SelectedProject && data.Candidate_Name__c == $scope.dayDetails.selectedContact) {
+                                return data;
+                            }
+                        });
+            var conAssignProjectTaskId = '';
+            var displayBenefitPT = false;
+            if(conAssign.length > 0 && conAssign[0].Rate_Card_Rate__c && helper.decodeHTML(conAssign[0].Rate_Card_Rate__r.Rate_Type__c) == 'Non-SCA CD') {
+                conAssignProjectTaskId = conAssign[0].Project_Task__c;
+            }else if(conAssign.length > 0 && conAssign[0].Rate_Card_Rate__c && helper.decodeHTML(conAssign[0].Rate_Card_Rate__r.Rate_Type__c) == 'FT Salary & Benefits') {
+                displayBenefitPT = true;
+            }
+            
+            if($scope.dayDetails.selectedUserType == 'Internal') {
+                filterData = _.filter($scope.dayDetails.ProjectTaskList, function(data){ 
+                    if(data.AcctSeed__Project__c == record.SelectedProject && data.AcctSeed__Project__r.RecordType.DeveloperName == 'Admin_Projects') {
+                        return data;
+                    } else if(data.AcctSeed__Project__c == record.SelectedProject && taskTypeArray.indexOf(data.Project_Task_Type__c) != -1 
+                        && (!data.Parent_Project_Task__c || data.Name.indexOf('Language Training- Preparation') != -1) 
+                        && data.AcctSeed__Project__r.RecordType.DeveloperName != 'Admin_Projects' 
+                        && nonAdminProjectRTNames.indexOf(data.AcctSeed__Project__r.RecordType.DeveloperName) == -1) {
+                        return data;
+                    }else if(data.AcctSeed__Project__c == record.SelectedProject 
+                        && nonAdminProjectRTNames.indexOf(data.AcctSeed__Project__r.RecordType.DeveloperName) != -1) {
+                        
+                        // For Linguist Support Project related task filtering
+                        if(data.AcctSeed__Project__r.RecordType.DeveloperName != 'Linguist_Support_Projects') {
+                            return data;
+                        }else if(data.AcctSeed__Project__r.RecordType.DeveloperName == 'Linguist_Support_Projects'){
+                             if(conAssignProjectTaskId && data.Id == conAssignProjectTaskId){
+                                 return data;
+                             }else if(displayBenefitPT) {
+                                 return data;
+                             }else if(!conAssignProjectTaskId && !displayBenefitPT && data.RecordType.DeveloperName != 'Fringe'){
+                                 return data;
+                             }
+                        }
+                    }
+                });
+            }else {
+                filterData = _.filter($scope.dayDetails.ProjectTaskList, function(data){ 
+                    if(data.AcctSeed__Project__c == record.SelectedProject && taskTypeArray.indexOf(data.Project_Task_Type__c) != -1 
+                        && (!data.Parent_Project_Task__c || data.Name.indexOf('Language Training- Preparation') != -1) 
+                        && data.AcctSeed__Project__r.RecordType.DeveloperName != 'EFL_Projects' 
+                        && nonAdminProjectRTNames.indexOf(data.AcctSeed__Project__r.RecordType.DeveloperName) == -1) {
+                        return data;
+                    }else if(data.AcctSeed__Project__c == record.SelectedProject 
+                        && (data.AcctSeed__Project__r.RecordType.DeveloperName == 'Admin_Projects' ||
+                            nonAdminProjectRTNames.indexOf(data.AcctSeed__Project__r.RecordType.DeveloperName) != -1)) {
+                            
+                        // For Linguist Support Project related task filtering
+                        if(data.AcctSeed__Project__r.RecordType.DeveloperName != 'Linguist_Support_Projects') {
+                            return data;
+                        }else if(data.AcctSeed__Project__r.RecordType.DeveloperName == 'Linguist_Support_Projects'){
+                             if(conAssignProjectTaskId && data.Id == conAssignProjectTaskId){
+                                 return data;
+                             }else if(displayBenefitPT) {
+                                 return data;
+                             }else if(!conAssignProjectTaskId && !displayBenefitPT && data.RecordType.DeveloperName != 'Fringe'){
+                                 return data;
+                             }
+                        }
+                    }
+                });
+            }
+            
+            var selectObj = {Id:'--Select--',Name:'--Select--'};
+            filterData.unshift(selectObj);
+            record.projectTasks = filterData;
+               
+            record.SelectedProTask = record.projectTasks[0].Id;
+            
+            //populate project name based on selection
+            var projectChoosen = _.filter(record.projects, function(data){ 
+                if(data.Id == record.SelectedProject) {
+                    return data;
+                }
+            });
+            
+            record.ProjectName = projectChoosen[0].Name;
+            record.projectRTName = projectChoosen[0].RecordType.DeveloperName;
+            record.dlsClassNo = projectChoosen[0].DLS_Class__c;
+            
+            if(projectChoosen[0].Training_Location__c) {
+                record.locationId = projectChoosen[0].Training_Location__c;
+                record.locationName = projectChoosen[0].Training_Location__r.Name;
+                record.selectedLocation = {Id:record.locationId,Name:record.locationName};
+            }
+            record.PayRollItemList = [];
+            record.payRollItem = '';
+            record.hidebillableSection = false;
+            record.isBillable = false;
+        }
+        
+        //Method to check the HRs format in all columns if they have not click the box after entering time
+        //Added by NS on Oct 26 2018
+        
+        var hrsMsg = 'Allowed decimal values are 00, 25, 50, 75';
+        var BLEHrsMsg = 'Allowed hours values are 4, 8, 12, 16, 20, 24';
+        
+        $scope.hrsValidation = function(data,hrsType) {
+            
+            var isBLEPayroll = false;
+            if(data.payRollItem == 'BLE')
+                isBLEPayroll = true
+            
+            if(hrsType == "Hours1") {
+                if(!validateHrs(data.Hours1,isBLEPayroll)){
+                    //console.log('invalid format');
+                    if(!isBLEPayroll) {
+                        data.hrs1ErrMsg  = hrsMsg;
+                    }else {
+                        data.hrs1ErrMsg  = BLEHrsMsg;
+                    }
+                }else {
+                    //console.log('correct format');
+                    data.hrs1ErrMsg  = '';
+                    data.Hrs1Error = '';
+                }
+            }else if(hrsType == "Hours2") {
+                if(!validateHrs(data.Hours2,isBLEPayroll)){
+                    //console.log('invalid format');
+                    if(!isBLEPayroll) {
+                        data.hrs2ErrMsg  = hrsMsg;
+                    }else {
+                        data.hrs2ErrMsg  = BLEHrsMsg;
+                    }
+                }else {
+                    //console.log('correct format');
+                    data.hrs2ErrMsg  = '';
+                    data.Hrs2Error = '';
+                }
+            }else if(hrsType == "Hours3") {
+                if(!validateHrs(data.Hours3,isBLEPayroll)){
+                    //console.log('invalid format');
+                    if(!isBLEPayroll) {
+                        data.hrs3ErrMsg  = hrsMsg;
+                    }else {
+                        data.hrs3ErrMsg  = BLEHrsMsg;
+                    }
+                }else {
+                    //console.log('correct format');
+                    data.hrs3ErrMsg  = '';
+                    data.Hrs3Error = '';
+                }
+            }else if(hrsType == "Hours4") {
+                if(!validateHrs(data.Hours4,isBLEPayroll)){
+                    //console.log('invalid format');
+                    if(!isBLEPayroll) {
+                        data.hrs4ErrMsg  = hrsMsg;
+                    }else {
+                        data.hrs4ErrMsg  = BLEHrsMsg;
+                    }
+                }else {
+                    //console.log('correct format');
+                    data.hrs4ErrMsg  = '';
+                    data.Hrs4Error = '';
+                }
+            }else if(hrsType == "Hours5") {
+                if(!validateHrs(data.Hours5,isBLEPayroll)){
+                    //console.log('invalid format');
+                    if(!isBLEPayroll) {
+                        data.hrs5ErrMsg  = hrsMsg;
+                    }else {
+                        data.hrs5ErrMsg  = BLEHrsMsg;
+                    }
+                }else {
+                    //console.log('correct format');
+                    data.hrs5ErrMsg  = '';
+                    data.Hrs5Error = '';
+                }
+            }else if(hrsType == "Hours6") {
+                if(!validateHrs(data.Hours6,isBLEPayroll)){
+                    //console.log('invalid format');
+                    if(!isBLEPayroll) {
+                        data.hrs6ErrMsg  = hrsMsg;
+                    }else {
+                        data.hrs6ErrMsg  = BLEHrsMsg;
+                    }
+                }else {
+                    //console.log('correct format');
+                    data.hrs6ErrMsg  = '';
+                    data.Hrs6Error = '';
+                }
+            }else if(hrsType == "Hours7") {
+                if(!validateHrs(data.Hours7,isBLEPayroll)){
+                    //console.log('invalid format');
+                    if(!isBLEPayroll) {
+                        data.hrs7ErrMsg  = hrsMsg;
+                    }else {
+                        data.hrs7ErrMsg  = BLEHrsMsg;
+                    }
+                }else {
+                    //console.log('correct format');
+                    data.hrs7ErrMsg  = '';
+                    data.Hrs7Error = '';
+                }
+            }
+        }
+        
+        function validateHrs(hrs,isBLEPayroll){
+            var hour = (hrs * 100) % 100;
+            
+            if(hrs) {
+                if(!isBLEPayroll) {
+                    if(!(hour == 25 || hour == 50 || hour == 75 || hour == 0)){
+                        return false;
+                    }else {
+                        return true;
+                    }
+                }else {
+                    var hour = parseInt(hrs.toString().split('.')[0]);
+                    var decimalVal = (hrs * 100) % 100;
+                    
+                    if(!((hour == 4 || hour == 8 || hour == 12 || hour == 16 || hour == 20 || hour == 24) && decimalVal == 0)){
+                        return false;
+                    }else {
+                       return true;
+                    }
+                }
+            }else {
+                return true;
+            }
+        }    
+                
+        var deleteStatus = '';
+        
+        // Open popup for comment capture already hrs value exist
+        $scope.openPopup = function(record,HrsType,comntType,colour,dayIdtype,dateType,status,lateCancelType,cancelReasonType) {
+            $scope.dayRec = {};
+            
+            $scope.editRec = {};
+            
+            $scope.editRec.hours = '';
+            $scope.editRec.comments = '';
+            $scope.editRec.hoursError = '';
+            $scope.editRec.status = '';
+            $scope.editRec.lateCancellation = false;
+            $scope.editRec.cancellationReason = '';
+            $scope.editRec.cancellationReasonError = '';
+            
+            deleteStatus = '';
+            
+            $scope.dayRec = record;
+            $scope.TypeOfHour = HrsType;
+            $scope.cmtType = comntType;
+            $scope.clourType = colour;
+            $scope.DayId = dayIdtype;
+            $scope.dtType = dateType;
+            $scope.statusValue = status;
+            $scope.typeOfCancel = lateCancelType;
+            $scope.typeOfCancelReason = cancelReasonType;
+            
+            $scope.editRec.hours = $scope.dayRec[HrsType];
+            $scope.editRec.comments = helper.decodeHTML($scope.dayRec[comntType]);
+            $scope.editRec.lateCancellation = $scope.dayRec[lateCancelType];
+            
+            if($scope.dayRec[cancelReasonType]){
+                $scope.editRec.cancellationReason = $scope.dayRec[cancelReasonType];
+            }else {
+                $scope.editRec.cancellationReason = '';
+            }
+            
+            if($scope.dayRec[status]) {
+                $scope.editRec.status = $scope.dayRec[status];
+            } else if($scope.dayRec[status] != 'Unposted') {
+                $scope.editRec.status = $scope.dayDetails.selectedDefaultstatus;
+            }
+            
+            if($scope.DayId && $scope.dayRec[HrsType]) {
+            
+                $scope.modalStateForDayEdit = 'slds-fade-in-open';
+                $scope.modalBackdropStateForDayEdit = 'slds-modal-backdrop--open';
+                
+            }else if($scope.DayId && $scope.statusValue == 'Unposted'){
+            
+                $scope.modalStateForDayEdit = 'slds-fade-in-open';
+                $scope.modalBackdropStateForDayEdit = 'slds-modal-backdrop--open';
+            }
+        }
+        
+        // For popup  hours validation 
+        $scope.hrsValidate = function(hrs) {
+            $scope.editRec.comments = '';
+            var hour = (hrs * 100) % 100;
+            
+            if($scope.dayRec.payRollItem != 'BLE') {
+                if(!(hour == 25 || hour == 50 || hour == 75 || hour == 0)){
+                    //console.log('invalid format');
+                    $scope.hoursErrorMsg = 'Allowed decimal values are 00, 25, 50, 75';
+                }else {
+                    //console.log('correct format');
+                    $scope.hoursErrorMsg = '';
+                }
+            }else {
+                
+                var hour = parseInt(hrs.toString().split('.')[0]);
+                var decimalVal = (hrs * 100) % 100;
+                
+                if(!((hour == 4 || hour == 8 || hour == 12 || hour == 16 || hour == 20 || hour == 24) && decimalVal == 0)){
+                    //console.log('invalid format');
+                    $scope.hoursErrorMsg = 'Allowed hours values are 4, 8, 12, 16, 20, 24';
+                }else {
+                    //console.log('correct format');
+                    $scope.hoursErrorMsg = '';
+                }
+            }
+        }
+        
+        $scope.OkayForEditBox = function() {
+            
+            if($scope.editRec.hours && $scope.editRec.comments && (!$scope.editRec.lateCancellation || ($scope.editRec.lateCancellation && $scope.editRec.cancellationReason))) {
+               $scope.modalStateForDayEdit = '';
+               $scope.modalBackdropStateForDayEdit = '';
+               
+               var oldHrsValue = $scope.dayRec[$scope.TypeOfHour];
+               
+               $scope.dayRec[$scope.TypeOfHour] = $scope.editRec.hours;
+               $scope.dayRec[$scope.cmtType] = $scope.editRec.comments;
+               
+               $scope.dayRec[$scope.typeOfCancel] = $scope.editRec.lateCancellation;
+               $scope.dayRec[$scope.typeOfCancelReason] = $scope.editRec.cancellationReason;
+               
+               var previousStatus = $scope.dayRec[$scope.statusValue];
+               
+               if(deleteStatus) {
+                   $scope.editRec.status = deleteStatus;
+                   
+                   $scope.dayRec[$scope.statusValue] =  deleteStatus; 
+                   $scope.dayRec[$scope.clourType] = 'deleteColour';
+               }else{
+                   
+                   $scope.dayRec[$scope.clourType] = 'hrsColour';
+                   $scope.dayRec[$scope.statusValue] = $scope.editRec.status;
+               }
+               
+               $scope.DayUpdateIdSet = [];
+               
+               //For comments section update
+               
+               if($scope.DayId != null) {
+                   var cmtObj = {
+                        UserName: $scope.UserName,
+                        Edited: moment.tz(new Date(), $scope.UserTimezoneValue).format('YYYY-MM-DD h:mm:ss a'),
+                        ChargeCode: $scope.dayRec.ProjectName,
+                        TaskName: $scope.dayRec.TaskName,
+                        Date:$scope.dayRec[$scope.dtType],
+                        OldHrs:oldHrsValue,
+                        NewHrs:$scope.editRec.hours,
+                        Comment:$scope.dayRec[$scope.cmtType],
+                        NewStatus: $scope.dayRec[$scope.statusValue],
+                        OldStatus: previousStatus
+                   };
+                   
+                   var flagForNotes = true;
+                   
+                   for(var i = 0;i < $scope.dayDetails.commentsList.length;i++) {
+                       
+                       if($scope.dayDetails.commentsList[i].ChargeCode == $scope.dayRec.ProjectName 
+                           && $scope.dayDetails.commentsList[i].TaskName == $scope.dayRec.TaskName
+                           && $scope.dayDetails.commentsList[i].Date == $scope.dayRec[$scope.dtType]
+                           && $scope.dayDetails.commentsList[i].NewHrs == oldHrsValue) {
+                           
+                           console.log('::::::sdfghjklrtyuiocvbnm:::::::');
+                           $scope.dayDetails.commentsList[i].UserName = $scope.UserName;
+                           $scope.dayDetails.commentsList[i].Edited = moment.tz(new Date(), $scope.UserTimezoneValue).format('YYYY-MM-DD h:mm:ss a');
+                           $scope.dayDetails.commentsList[i].OldHrs = oldHrsValue;
+                           $scope.dayDetails.commentsList[i].NewHrs = $scope.editRec.hours;
+                           $scope.dayDetails.commentsList[i].Comment = $scope.dayRec[$scope.cmtType];
+                           $scope.dayDetails.commentsList[i].NewStatus = $scope.dayRec[$scope.statusValue];
+                           $scope.dayDetails.commentsList[i].OldStatus = previousStatus;
+                           
+                           flagForNotes = false;
+                       }
+                   }
+                 
+                   if(flagForNotes)
+                       $scope.dayDetails.commentsList.push(cmtObj);
+                 
+                   if($scope.dayIdsForSaveCheck.indexOf($scope.DayId) == -1)
+                       $scope.dayIdsForSaveCheck.push($scope.DayId);
+               }
+               
+               console.log(':::::$scope.dayRec:::::',$scope.dayRec);
+               console.log('::::::$scope.dayIdsForSaveCheck::::::',$scope.dayIdsForSaveCheck);
+               
+               // Added this function call to change total hrs after records in lightbox edit
+               $scope.totalHrsCalculation($scope.dayRec);
+               
+               // To check updated record status is reverted & add this in revertList
+               var obj = {Total_Hours_Before_Approved__c:$scope.dayRec[$scope.TypeOfHour],Status__c:$scope.dayRec[$scope.statusValue]};
+               if($scope.dayRec[$scope.statusValue] == 'Reverted' && $scope.revertedRecordList.indexOf(obj) == -1){
+                   console.log(':::::dfghjk:::::');
+                   $scope.revertedRecordList.push(obj);
+               }
+               
+           }else {
+               if(!$scope.editRec.hours) {
+                   $scope.editRec.hoursError = 'slds-has-error';
+               }
+               if(!$scope.editRec.comments) {
+                   $scope.editRec.commentsError = 'slds-has-error';
+               }
+               
+               if($scope.editRec.lateCancellation && !$scope.editRec.cancellationReason) {
+                   $scope.editRec.cancellationReasonError = 'slds-has-error';
+               }
+           }
+        }
+        
+        $scope.CancelForEdit = function() {
+            $scope.modalStateForDayEdit = '';
+            $scope.modalBackdropStateForDayEdit = '';    
+        }
+        
+        // For delete btn click
+        $scope.ChangeStatus_Unpost = function() {
+            deleteStatus =  'Unposted';
+            $scope.OkayForEditBox();
+        }
+      
+        $scope.getExistingdayRecord = function(record) {
+            helper.getExistingdayRecord(record,$scope);
+        }
+        
+        $scope.OkayForDuplicates = function() {
+        
+            if($scope.dayDetails.cancelbtnDisplay && $scope.dayDetails.duplicateRecord) {
+               
+                var key = $scope.dayDetails.duplicateRecord.SelectedProject+'-'+$scope.dayDetails.duplicateRecord.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+$scope.dayDetails.duplicateRecord.isBillable+'-'+$scope.dayDetails.duplicateRecord.payRollItem;
+                var Index = $scope.dayDetails.timeCarddetails.indexOf($scope.dayDetails.duplicateRecord);
+                
+                $scope.dayDetails.timeCarddetails[Index].isBillable = !$scope.dayDetails.duplicateRecord.isBillable;
+                $scope.getExistingdayRecord($scope.dayDetails.timeCarddetails[Index]);
+                
+            }else if(!$scope.BillapleFlipDone && $scope.dayDetails.duplicateRecord && Object.keys($scope.dayDetails.duplicateRecord).length > 0){
+                var key = $scope.dayDetails.duplicateRecord.SelectedProject+'-'+$scope.dayDetails.duplicateRecord.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+$scope.dayDetails.duplicateRecord.isBillable+'-'+$scope.dayDetails.duplicateRecord.payRollItem;
+           
+                var Index = $scope.dayDetails.timeCarddetails.indexOf($scope.dayDetails.duplicateRecord);
+                $scope.dayDetails.timeCarddetails.splice(Index,1);
+            }
+            
+            $scope.modalStateForDuplicate = '';
+            $scope.modalBackdropStateForDuplicate = '';
+        }
+        
+        $scope.NOClickForDuplicates = function() {
+            
+            var key = $scope.dayDetails.duplicateRecord.SelectedProject+'-'+$scope.dayDetails.duplicateRecord.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+$scope.dayDetails.duplicateRecord.isBillable+'-'+$scope.dayDetails.duplicateRecord.payRollItem+'-'+$scope.dayDetails.duplicateRecord.selectedLocation.Id;
+           
+            var Index = $scope.dayDetails.timeCarddetails.indexOf($scope.dayDetails.duplicateRecord);
+            $scope.dayDetails.timeCarddetails.splice(Index,1);
+            //var keyIndex = $scope.dayDetails.UniqueKeySet.indexOf(key);
+            //UniqueKeySet.splice(keyIndex,1);
+            
+            $scope.modalStateForDuplicate = '';
+            $scope.modalBackdropStateForDuplicate = '';
+        }
+        
+        
+        //Remove the records from display list
+        $scope.removeRow = function(record) {
+            if(record) {
+                var key = record.SelectedProject+'-'+record.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+record.isBillable+'-'+record.payRollItem+'-'+record.selectedLocation.Id;   
+                if($scope.dayDetails.UniqueKeySet.indexOf(key) != -1) {
+                    var index = $scope.dayDetails.UniqueKeySet.indexOf(key);
+                    $scope.dayDetails.UniqueKeySet.splice(index,1);
+                }
+                
+                var indexofRemovingRec = $scope.dayDetails.timeCarddetails.indexOf(record);
+                
+                for(var i = indexofRemovingRec + 1; i < $scope.dayDetails.timeCarddetails.length;i++) {
+                    $scope.dayDetails.timeCarddetails[i].sequenceNumber -= 1;
+                }
+                
+                $scope.dayDetails.timeCarddetails.splice($scope.dayDetails.timeCarddetails.indexOf(record), 1);
+            }
+        }
+        
+        // Get confirmation for reverted records for inactive users save operation
+        
+        $scope.RevertedrecordsConfimation = function() {
+            
+            if($scope.dayDetails.timeCarddetails.length > 0) {
+                $scope.SaveCommentError = '';
+                $scope.SaveComment = '';
+                
+                $scope.status_HrssumMap = {};
+                
+                for(var i = 0;i < $scope.dayDetails.timeCarddetails.length;i++) {
+                    if($scope.dayDetails.timeCarddetails[i].Hours1) {
+                        hrs_StatusMapFormation($scope.dayDetails.timeCarddetails[i].Hours1,$scope.dayDetails.timeCarddetails[i].status1);
+                    }
+                    if($scope.dayDetails.timeCarddetails[i].Hours2) {
+                        hrs_StatusMapFormation($scope.dayDetails.timeCarddetails[i].Hours2,$scope.dayDetails.timeCarddetails[i].status2);
+                    }
+                    if($scope.dayDetails.timeCarddetails[i].Hours3) {
+                        hrs_StatusMapFormation($scope.dayDetails.timeCarddetails[i].Hours3,$scope.dayDetails.timeCarddetails[i].status3);
+                    }
+                    if($scope.dayDetails.timeCarddetails[i].Hours4) {
+                        hrs_StatusMapFormation($scope.dayDetails.timeCarddetails[i].Hours4,$scope.dayDetails.timeCarddetails[i].status4);
+                    }
+                    if($scope.dayDetails.timeCarddetails[i].Hours5) {
+                        hrs_StatusMapFormation($scope.dayDetails.timeCarddetails[i].Hours5,$scope.dayDetails.timeCarddetails[i].status5);
+                    }
+                    if($scope.dayDetails.timeCarddetails[i].Hours6) {
+                        hrs_StatusMapFormation($scope.dayDetails.timeCarddetails[i].Hours6,$scope.dayDetails.timeCarddetails[i].status6);
+                    }
+                    if($scope.dayDetails.timeCarddetails[i].Hours7) {
+                        hrs_StatusMapFormation($scope.dayDetails.timeCarddetails[i].Hours7,$scope.dayDetails.timeCarddetails[i].status7);
+                    }
+                }
+                
+                console.log(':::::::$scope.status_HrssumMap:::::',$scope.status_HrssumMap);
+                
+                if($scope.revertedRecordList.length > 0 && $scope.dayDetails.includeActiveDLSEmployee)
+                    $scope.displayRevert_MailMsg = true;
+                else
+                    $scope.displayRevert_MailMsg = false;
+                    
+                $scope.modalStateSaveConfirmation = 'slds-fade-in-open';
+                $scope.modalBackdropStateSaveConfirmation = 'slds-modal-backdrop--open';
+            }else {
+                $scope.btnActionInfoMsg = 'Please add atleast one time entry to save.';
+                $scope.modalStateForInfo = 'slds-fade-in-open';
+                $scope.modalBackdropStateForInfo = 'slds-modal-backdrop--open';
+            }
+        }
+        
+        function hrs_StatusMapFormation(hrs,status) {
+            var defaultStatus = $scope.dayDetails.selectedDefaultstatus;
+            
+            if(!status)
+                status = defaultStatus;
+                
+            if(!$scope.status_HrssumMap[status])
+                $scope.status_HrssumMap[status] = parseFloat(hrs);
+            else
+                $scope.status_HrssumMap[status] += parseFloat(hrs);
+        }
+        
+        $scope.okayForSaveConfimation = function() {
+            
+            if($scope.SaveComment) {
+                $scope.SaveCallingFunction('From Save',$scope.SaveComment);
+                $scope.modalStateSaveConfirmation = '';
+                $scope.modalBackdropStateSaveConfirmation = '';
+            }else {
+                $scope.SaveCommentError = 'slds-has-error';
+            }
+        }
+        
+        // Save operation function
+        $scope.SaveCallingFunction  = function(actionType,UsrComment) {
+            
+            $scope.dayDetails.isLoaded = false;
+            var InnerClassArray = [];
+            
+            $scope.chargeCodeToDelete = [];
+            $scope.usrCmt = UsrComment;
+            $scope.actionType = actionType;
+            
+            console.log(':::::::$scope.dayDetails.timeCarddetails::::::::',$scope.dayDetails.timeCarddetails);
+            if($scope.dayDetails.timeCarddetails.length > 0) {
+            
+                for(var i = 0;i < $scope.dayDetails.timeCarddetails.length;i++) {
+                    console.log(':::$scope.dayDetails.timeCarddetails[i]:::::',$scope.dayDetails.timeCarddetails[i]);
+                    if($scope.dayDetails.timeCarddetails[i].SelectedProject != '--Select--' && $scope.dayDetails.timeCarddetails[i].SelectedProTask 
+                        && $scope.dayDetails.timeCarddetails[i].SelectedProTask != '--Select--' && $scope.dayDetails.selectedContact 
+                        && $scope.dayDetails.timeCarddetails[i].payRollItem) {
+                        
+                        $scope.dayDetails.timeCarddetails[i].isCreatable = true; 
+                        
+                        if(
+                            $scope.dayDetails.timeCarddetails[i].Hours1 || $scope.dayDetails.timeCarddetails[i].Hours2 
+                            || $scope.dayDetails.timeCarddetails[i].Hours3 || $scope.dayDetails.timeCarddetails[i].Hours4 
+                            || $scope.dayDetails.timeCarddetails[i].Hours5 || $scope.dayDetails.timeCarddetails[i].Hours6 
+                            || $scope.dayDetails.timeCarddetails[i].Hours7
+                        ) {
+                            
+                            if($scope.dayDetails.timeCarddetails[i].Hours1 && !$scope.dayDetails.timeCarddetails[i].status1) 
+                                $scope.dayDetails.timeCarddetails[i].status1 = $scope.dayDetails.selectedDefaultstatus;
+                            
+                            if($scope.dayDetails.timeCarddetails[i].Hours2 && !$scope.dayDetails.timeCarddetails[i].status2) 
+                                $scope.dayDetails.timeCarddetails[i].status2 = $scope.dayDetails.selectedDefaultstatus;
+                            
+                            if($scope.dayDetails.timeCarddetails[i].Hours3 && !$scope.dayDetails.timeCarddetails[i].status3) 
+                                $scope.dayDetails.timeCarddetails[i].status3 = $scope.dayDetails.selectedDefaultstatus;
+                            
+                            if($scope.dayDetails.timeCarddetails[i].Hours4 && !$scope.dayDetails.timeCarddetails[i].status4) 
+                                $scope.dayDetails.timeCarddetails[i].status4 = $scope.dayDetails.selectedDefaultstatus;
+                            
+                            if($scope.dayDetails.timeCarddetails[i].Hours5 && !$scope.dayDetails.timeCarddetails[i].status5) 
+                                $scope.dayDetails.timeCarddetails[i].status5 = $scope.dayDetails.selectedDefaultstatus;
+                                
+                            if($scope.dayDetails.timeCarddetails[i].Hours6 && !$scope.dayDetails.timeCarddetails[i].status6) 
+                                $scope.dayDetails.timeCarddetails[i].status6 = $scope.dayDetails.selectedDefaultstatus;
+                            
+                            if($scope.dayDetails.timeCarddetails[i].Hours7 && !$scope.dayDetails.timeCarddetails[i].status7) 
+                                $scope.dayDetails.timeCarddetails[i].status7 = $scope.dayDetails.selectedDefaultstatus;
+                            
+                            $scope.dayDetails.timeCarddetails[i].SelectedInstructor = $scope.dayDetails.selectedContact;
+                            
+                            if(!$scope.dayDetails.timeCarddetails[i].hrs1ErrMsg && !$scope.dayDetails.timeCarddetails[i].hrs2ErrMsg
+                                && !$scope.dayDetails.timeCarddetails[i].hrs3ErrMsg && !$scope.dayDetails.timeCarddetails[i].hrs4ErrMsg
+                                && !$scope.dayDetails.timeCarddetails[i].hrs5ErrMsg && !$scope.dayDetails.timeCarddetails[i].hrs6ErrMsg
+                                && !$scope.dayDetails.timeCarddetails[i].hrs7ErrMsg ) {
+                                $scope.dayDetails.timeCarddetails[i].Day1 = millisecondToString($scope.dayDetails.timeCarddetails[i].Day1);
+                                $scope.dayDetails.timeCarddetails[i].Day2 = millisecondToString($scope.dayDetails.timeCarddetails[i].Day2);
+                                $scope.dayDetails.timeCarddetails[i].Day3 = millisecondToString($scope.dayDetails.timeCarddetails[i].Day3);
+                                $scope.dayDetails.timeCarddetails[i].Day4 = millisecondToString($scope.dayDetails.timeCarddetails[i].Day4);
+                                $scope.dayDetails.timeCarddetails[i].Day5 = millisecondToString($scope.dayDetails.timeCarddetails[i].Day5);
+                                $scope.dayDetails.timeCarddetails[i].Day6 = millisecondToString($scope.dayDetails.timeCarddetails[i].Day6);
+                                $scope.dayDetails.timeCarddetails[i].Day7 = millisecondToString($scope.dayDetails.timeCarddetails[i].Day7);
+                                InnerClassArray.push($scope.dayDetails.timeCarddetails[i]); 
+                                   
+                            }else {
+                                
+                                if(!$scope.dayDetails.timeCarddetails[i].hrs1ErrMsg == '')
+                                    $scope.dayDetails.timeCarddetails[i].Hrs1Error = 'slds-has-error';
+                                if(!$scope.dayDetails.timeCarddetails[i].hrs2ErrMsg == '')
+                                    $scope.dayDetails.timeCarddetails[i].Hrs2Error = 'slds-has-error';
+                                if(!$scope.dayDetails.timeCarddetails[i].hrs3ErrMsg == '')
+                                    $scope.dayDetails.timeCarddetails[i].Hrs3Error = 'slds-has-error';
+                                if(!$scope.dayDetails.timeCarddetails[i].hrs4ErrMsg == '')
+                                    $scope.dayDetails.timeCarddetails[i].Hrs4Error = 'slds-has-error';
+                                if(!$scope.dayDetails.timeCarddetails[i].hrs5ErrMsg == '')
+                                    $scope.dayDetails.timeCarddetails[i].Hrs5Error = 'slds-has-error';
+                                if(!$scope.dayDetails.timeCarddetails[i].hrs6ErrMsg == '')
+                                    $scope.dayDetails.timeCarddetails[i].Hrs6Error = 'slds-has-error';
+                                if(!$scope.dayDetails.timeCarddetails[i].hrs7ErrMsg == '')
+                                    $scope.dayDetails.timeCarddetails[i].Hrs7Error = 'slds-has-error';
+                            }
+                        }else {
+                           // Check if other project with tasks have empty rows & display message window
+                            $scope.dayDetails.timeCarddetails[i].isCreatable = false;
+                            $scope.chargeCodeToDelete.push($scope.dayDetails.timeCarddetails[i].project_Task_Payroll_Billable_Location);
+                        } 
+                    }else {
+                        console.log('Enter else');
+                        console.log(':::$scope.dayDetails.timeCarddetails:::::',$scope.dayDetails.timeCarddetails);
+                        if($scope.dayDetails.timeCarddetails[i].SelectedProject == '--Select--')
+                            $scope.projectErrorMsg = 'selectErrorClass';
+                        if($scope.dayDetails.timeCarddetails[i].SelectedProTask == '--Select--')
+                            $scope.TaskErrorMsg = 'selectErrorClass';
+                            
+                        if(!$scope.dayDetails.timeCarddetails[i].payRollItem)
+                            $scope.payRollErrorMsg = 'selectErrorClass';
+                    }
+                }
+                console.log(':::::::InnerClassArray::::::',InnerClassArray);
+                
+                console.log('::::::::$scope.chargeCodeToDelete::::',$scope.chargeCodeToDelete);
+                if($scope.chargeCodeToDelete.length > 0) {
+                
+                    $scope.dayDetails.isLoaded = true;
+                    $scope.modalStateForDeletionMsg = 'slds-fade-in-open';
+                    $scope.modalBackdropStateForDeletionMsg = 'slds-modal-backdrop--open';
+                }else {
+                
+                    if(InnerClassArray.length > 0)
+                        helper.dmlOperationFunction(InnerClassArray,$scope,actionType,UsrComment);
+                    else
+                        $scope.dayDetails.isLoaded = true;
+                }
+            }
+        }
+        function millisecondToString(millisecond) {
+            var date = new Date(millisecond);            
+            date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            if(day < 10) {
+                day = '0' + day;
+            }
+            if(month < 10) {
+                month = '0' + month;
+            }
+            return date.getFullYear() + '-' +month + '-' + day;
+        }
+        $scope.OkayForDeletionMsgDisplay = function() {
+        
+            $scope.modalStateForDeletionMsg = '';
+            $scope.modalBackdropStateForDeletionMsg = '';
+            
+            $scope.dayDetails.isLoaded = false;
+            
+            var filteredRecords = _.filter($scope.dayDetails.timeCarddetails,function(data){ 
+                return data.isCreatable;
+            });
+            
+            //console.log('::::::::filteredRecords:::::',filteredRecords);
+            
+            var finalRecList = [];
+            
+            for(var i = 0;i < filteredRecords.length;i++) {
+                
+                if(filteredRecords[i].isNew)
+                    filteredRecords[i].sequenceNumber =  filteredRecords[i - 1].sequenceNumber + 1;
+                
+                if(filteredRecords[i].Hours1 || filteredRecords[i].Hours2 
+                            || filteredRecords[i].Hours3 || filteredRecords[i].Hours4 
+                            || filteredRecords[i].Hours5 || filteredRecords[i].Hours6 
+                            || filteredRecords[i].Hours7
+                ) {
+                            
+                    filteredRecords[i].SelectedInstructor = $scope.dayDetails.selectedContact;
+                    
+                    if(!filteredRecords[i].hrs1ErrMsg && !filteredRecords[i].hrs2ErrMsg
+                        && !filteredRecords[i].hrs3ErrMsg && !filteredRecords[i].hrs4ErrMsg
+                        && !filteredRecords[i].hrs5ErrMsg && !filteredRecords[i].hrs6ErrMsg
+                        && !filteredRecords[i].hrs7ErrMsg ) {
+                        
+                        finalRecList.push(filteredRecords[i]);
+                    }
+                }
+            }
+            
+            console.log(':::::::::finalRecList::::::::::',finalRecList);
+            
+            if(finalRecList.length > 0)
+                helper.dmlOperationFunction(finalRecList,$scope,$scope.actionType,$scope.usrCmt);
+            else
+                $scope.dayDetails.isLoaded = true;
+        }
+        
+        //display recent action performed week after dml operation
+        
+        $scope.openLastactivityWeek = function() {
+            //$scope.weekRangeFlip_Function();
+            //Modified by Dhinesh - 21/09/2023
+            if($scope.updatedWeekRange){
+                $scope.dayDetails.selectedWeekrange = $scope.updatedWeekRange;
+                $scope.updatedWeekRange = null;
+            }
+            window.location.href = '/apex/TimeKeeping_Admin_Page?contactId='+$scope.dayDetails.selectedContact+'&contactName='+$scope.dayDetails.ContactRecord.Name+'&WeekRange='+$scope.dayDetails.selectedWeekrange+'&userType='+$scope.dayDetails.selectedUserType;
+        }
+        
+        //clear contact values on include inactive value change
+        
+        $scope.clearContactValue = function() {
+            $scope.dayDetails.selectedContact = '';
+            $scope.dayDetails.ContactRecord = {};
+        }
+        
+        // For billable value update in unique key set
+        
+        $scope.UpdateBillableValue = function(record) {
+            
+            var billableValue = !record.isBillable;
+            
+            //console.log(':::::::!record.isBillable:::::',record.isBillable);
+            //console.log(':::::::billableValue:::::',billableValue);
+            //console.log(':::::::$scope.dayDetails.UniqueKeySet:::::',$scope.dayDetails.UniqueKeySet);
+            
+            var key = record.SelectedProject+'-'+record.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+record.isBillable+'-'+record.payRollItem+'-'+record.selectedLocation.Id;   
+            console.log(':::::::key::::::',key);
+            
+            console.log(':::index::::key::::::',$scope.dayDetails.UniqueKeySet.indexOf(key));
+            
+            if($scope.dayDetails.UniqueKeySet.indexOf(key) != -1) {
+                console.log('::::::enter::existing::::');
+                
+                $scope.dayDetails.cancelbtnDisplay = false;
+                $scope.BillapleFlipDone = true;
+                
+                $scope.DuplicateMsgValue = 'This combination of Project, Project Task, Contact, Location already exist.';
+                
+                //$scope.modalStateForDuplicate = 'slds-fade-in-open';
+                //$scope.modalBackdropStateForDuplicate = 'slds-modal-backdrop--open';
+                
+                //var index = $scope.dayDetails.UniqueKeySet.indexOf(key);
+                //$scope.dayDetails.UniqueKeySet[index] = record.SelectedProject+'-'+record.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+billableValue+'-'+record.payRollItem+'-'+record.selectedLocation.Id;
+                //record.isBillable = billableValue;
+                
+            }else {
+                
+                console.log('::::new::::one::');
+                var key2 = record.SelectedProject+'-'+record.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+billableValue+'-'+record.payRollItem+'-'+record.selectedLocation.Id;
+                var index = $scope.dayDetails.UniqueKeySet.indexOf(key2);
+                
+                //console.log('::::::index:::key2:',index);
+                //console.log('::::::$scope.dayDetails.UniqueKeySet[index]:',$scope.dayDetails.UniqueKeySet[index]);
+                
+                if(!$scope.DuplicateMsgValue)
+                    $scope.dayDetails.UniqueKeySet.push(record.SelectedProject+'-'+record.SelectedProTask+'-'+$scope.dayDetails.selectedContact+'-'+record.isBillable+'-'+record.payRollItem+'-'+record.selectedLocation.Id);
+                
+                //$scope.DuplicateMsgValue = '';
+                
+                //console.log(':::fdsfdsf:::$scope.dayDetails.UniqueKeySet[index]:',$scope.dayDetails.UniqueKeySet[index]);
+                //record.isBillable = record.isBillable;
+            }
+        }
+       
+        // Method to validate Project task after selection
+        
+        $scope.TaskValidationFunction = function(record) {
+            
+            console.log(':::::TaskValidationFunction:::::',record);
+            record.PayRollItemList = [];
+            
+            var nonAdminProjectRTNames = ['EFL_Projects','CD_Projects','Linguist_Support_Projects'];
+            var fringeProRTNames = ['Admin_Projects','EFL_Projects','CD_Projects','Linguist_Support_Projects'];
+            
+            var selectedTask;
+            for(var i = 0;i < record.projectTasks.length;i++) {
+                
+                if(record.projectTasks[i].Id == record.SelectedProTask) {
+                
+                    selectedTask = record.projectTasks[i].Name;
+                    record.TaskName = record.projectTasks[i].Name;
+                    
+                    // Remove extra space in between (-) symbol
+                    if(record.TaskName.indexOf(' - '))
+                        record.TaskName = record.TaskName.split(' - ').join('-');
+                    
+                    record.TaskType = record.projectTasks[i].Project_Task_Type__c;
+                    record.isBillable = record.projectTasks[i].Billable__c;
+                    record.ParentProjectTask = record.projectTasks[i].Parent_Project_Task__c;
+                    record.PTRecordType = record.projectTasks[i].RecordType.DeveloperName;
+                    
+                    if(fringeProRTNames.indexOf(record.projectRTName) != -1 && (record.TaskType == 'Fringe' || record.TaskType == 'FMLA'
+                        || record.TaskType == 'FMLA Non-Compensatory' || record.TaskType == 'Non-Compensatory')) {
+                        
+                        console.log('::::::enter::if::tasktype:');
+                        
+                        if(record.TaskType != 'Non-Compensatory' && ($scope.dayDetails.task_PayrollItemMap[record.TaskName] || $scope.dayDetails.task_PayrollItemMap[record.TaskType+'-'+record.TaskName])) {
+                            
+                            if($scope.dayDetails.task_PayrollItemMap[record.TaskName])
+                                record.PayRollItemList = $scope.dayDetails.task_PayrollItemMap[record.TaskName];
+                            else if($scope.dayDetails.task_PayrollItemMap[record.TaskType+'-'+record.TaskName])
+                                record.PayRollItemList = $scope.dayDetails.task_PayrollItemMap[record.TaskType+'-'+record.TaskName];
+                                
+                                
+                            record.payRollItem = record.PayRollItemList.length > 0 ? record.PayRollItemList[0]:null;
+                        
+                        }else if(record.TaskType == 'Non-Compensatory' && record.TaskType != record.TaskName && $scope.dayDetails.task_PayrollItemMap[record.TaskName]) {
+                            
+                            record.PayRollItemList = $scope.dayDetails.task_PayrollItemMap[record.TaskName];
+                            record.payRollItem = record.PayRollItemList.length > 0 ? record.PayRollItemList[0]:null;
+                        
+                        }else if(record.TaskType == 'Non-Compensatory' && record.TaskType == record.TaskName && $scope.dayDetails.task_PayrollItemMap['LWOP']) {
+                            
+                            record.PayRollItemList = $scope.dayDetails.task_PayrollItemMap['LWOP'];
+                            record.payRollItem = record.PayRollItemList.length > 0 ? record.PayRollItemList[0]:null;
+                        }
+                    }else if(nonAdminProjectRTNames.indexOf(record.projectRTName) != -1 && record.TaskType != 'Language Training'
+                            && record.TaskType != 'Curriculum Development' && record.TaskType != 'Linguist Support' && record.TaskType != 'Linguist Support Services') {
+                        
+                        record.PayRollItemList = $scope.dayDetails.task_PayrollItemMap[record.TaskName];
+                        record.payRollItem = record.PayRollItemList.length > 0 ? record.PayRollItemList[0]:null;
+                    }
+                    
+                    
+                     // Get Contact Assignent related Cost Rate records for all type of projects - (Fringe & Non fringe)
+                    var conAssign = [];
+                    var payrollItem = '';
+                    
+                    if(record.projectRTName == 'Admin_Projects') {
+                        conAssign = _.filter($scope.dayDetails.contactAssign_ForPayRoll, function(data) { 
+                            if(data.Project__c == record.SelectedProject && data.Candidate_Name__c == $scope.dayDetails.selectedContact) {
+                                return data;
+                            }
+                        });
+                        
+                        if(record.TaskType == 'ADMINISTRATIVE' && record.projectTasks[i].Payroll_Item__c == 'RNB')
+                            payrollItem = record.projectTasks[i].Payroll_Item__c;
+                        
+                    }else if(nonAdminProjectRTNames.indexOf(record.projectRTName) != -1) {
+                        conAssign = _.filter($scope.dayDetails.contactAssign_ForPayRoll, function(data) {
+                            if(data.Project__c == record.SelectedProject && data.Candidate_Name__c == $scope.dayDetails.selectedContact) {
+                                return data;
+                            }
+                        });
+                    } else {
+                        
+                        // For Language Training- Preparation Project Task condition
+                        if(record.TaskName.indexOf('Language Training- Preparation') == -1) {
+                            conAssign = _.filter($scope.dayDetails.contactAssign_ForPayRoll, function(data) { 
+                                if(data.Project_Task__c == record.SelectedProTask && data.Candidate_Name__c == $scope.dayDetails.selectedContact) {
+                                    return data;
+                                }
+                            });
+                        }else {
+                            conAssign = _.filter($scope.dayDetails.contactAssign_ForPayRoll, function(data) { 
+                                if(data.Project_Task__c == record.ParentProjectTask && data.Candidate_Name__c == $scope.dayDetails.selectedContact) {
+                                    return data;
+                                }
+                            });
+                        }
+                    }
+                    
+                    console.log('::::::::conAssign::::::',conAssign[0]);
+                    
+                    if(conAssign.length > 0) {
+                        if((record.TaskType != 'Fringe' && record.TaskType != 'FMLA'
+                            && record.TaskType != 'FMLA Non-Compensatory' && record.TaskType != 'Non-Compensatory') 
+                            || (record.projectRTName != 'Admin_Projects' 
+                            && (record.projectRTName == 'EFL_Projects' && record.TaskType == 'Language Training'))
+                            || fringeProRTNames.indexOf(record.projectRTName) == -1) {
+                                                        
+                            if(record.projectRTName == 'Admin_Projects' && payrollItem) {
+                                record.payRollItem = payrollItem;
+                            }else {
+                                // Below changes for CR billale & non billable payroll item related
+                                
+                                if(conAssign[0].Rate_Card_Rate__c != null) {
+                                    record.PayRollItemList = [];
+                                    record.payRollItem = '';
+                                    
+                                    if(conAssign[0].Rate_Card_Rate__r.Payroll_Item__c)
+                                        record.PayRollItemList.push(conAssign[0].Rate_Card_Rate__r.Payroll_Item__c); 
+                                        
+                                    if(conAssign[0].Rate_Card_Rate__r.Non_Billable_Payroll_Item__c && record.PayRollItemList.indexOf(conAssign[0].Rate_Card_Rate__r.Non_Billable_Payroll_Item__c) == -1)
+                                        record.PayRollItemList.push(conAssign[0].Rate_Card_Rate__r.Non_Billable_Payroll_Item__c);
+                                        
+                                    if(conAssign[0].Rate_Card_Rate__r.Fringe_Payroll_Item__c != null && record.PTRecordType == 'Fringe' && record.TaskType == 'Fringe') {
+                                        record.PayRollItemList.unshift(conAssign[0].Rate_Card_Rate__r.Fringe_Payroll_Item__c);
+                                    }
+                                    
+                                    record.prMap = {};
+                                    record.samePayrollMap = {};
+                                    record.getBillablevalue = false;
+                                    
+                                    var billablePayroll = '';
+                                    if(conAssign[0].Rate_Card_Rate__r.Payroll_Item__c) {
+                                        record.prMap[conAssign[0].Rate_Card_Rate__r.Payroll_Item__c] = true; 
+                                        billablePayroll = conAssign[0].Rate_Card_Rate__r.Payroll_Item__c;
+                                    }
+                                           
+                                    if(conAssign[0].Rate_Card_Rate__r.Non_Billable_Payroll_Item__c) {
+                                        record.prMap[conAssign[0].Rate_Card_Rate__r.Non_Billable_Payroll_Item__c] = false; 
+                                        if(billablePayroll && billablePayroll == conAssign[0].Rate_Card_Rate__r.Non_Billable_Payroll_Item__c)
+                                            record.samePayrollMap[conAssign[0].Rate_Card_Rate__r.Non_Billable_Payroll_Item__c] = true;
+                                    }
+                                    
+                                    if(conAssign[0].Rate_Card_Rate__r.Fringe_Payroll_Item__c && record.PTRecordType == 'Fringe' && record.TaskType == 'Fringe')
+                                        record.prMap[conAssign[0].Rate_Card_Rate__r.Fringe_Payroll_Item__c] = false; 
+                                }
+                                
+                                if(record.PayRollItemList && record.PayRollItemList.length > 1) {
+                                
+                                    if(record.PTRecordType != 'Fringe' || record.TaskType != 'Fringe')
+                                        record.payRollItem = conAssign[0].Payroll_Item__c;
+                                    else if(record.PTRecordType == 'Fringe' && record.TaskType == 'Fringe')
+                                        record.payRollItem = record.PayRollItemList[0];
+                                    
+                                }else if(record.PayRollItemList) {
+                                    record.payRollItem = record.PayRollItemList[0];
+                                }
+                            }
+                        }
+                        record.contactAssignId = conAssign[0].Id;
+                        record.costRateId = conAssign[0].Rate_Card_Rate__c;
+                       
+                        // for Same payroll in CR Billbale & Non Billable field below code is used
+                        if(record.samePayrollMap && record.samePayrollMap[record.payRollItem]){
+                            $scope.billable = false;
+                            $scope.nonBillable = false;
+                            $scope.modalStateBillable = 'slds-fade-in-open';
+                            $scope.modalBackdropStateBillable = 'slds-modal-backdrop--open';
+                        }
+                    }else {
+                        record.PayRollItemList = [];
+                        record.payRollItem = '';
+                    }
+                    
+                }
+            }
+           
+            if($scope.dayDetails.selectedUserType == 'Internal') {
+                // To hide payroll item selection for all tasks except Fringe-other pay
+                if((selectedTask.indexOf('Fringe-Other Pay') != -1 || selectedTask.indexOf('FMLA Compensatory') != -1)
+                    || record.projectRTName != 'Admin_Projects') {
+                    
+                    record.disablePayRoll = false;
+                } else {
+                    record.disablePayRoll = true;
+                }
+            }
+            
+            // Prepopulate values for billable checkbox values based on CR payroll item values
+            // To disablebillable check for Non Admin projects based on Cost Rate billable & Non billable Payroll Item values
+            if(record.projectRTName != 'Admin_Projects' && record.projectRTName != 'Language_Training_Projects') {
+                record.isBillable = false;
+                
+                if((record.projectRTName != 'EFL_Projects' && record.projectRTName != 'CD_Projects') 
+                    || (record.projectRTName == 'EFL_Projects' && record.TaskType == 'Language Training')
+                    || ((record.projectRTName == 'CD_Projects' || record.projectRTName == 'Linguist_Support_Projects') && (record.TaskType == 'Curriculum Development' || record.TaskType == 'Linguist Support' 
+                        || record.TaskType == 'Linguist Support Services')
+                    )) {
+                    
+                    if(record.payRollItem)
+                        record.isBillable = record.prMap[record.payRollItem];
+                    
+                    record.hidebillableSection = true;
+                }else {
+                    record.hidebillableSection = false;
+                }
+            }else {
+                record.hidebillableSection = false;
+            }    
+        }
+        
+         // flip billable value based on payroll item change - for Non Admin projects
+        $scope.payrollItemChange = function(record) {
+            console.log('enter payroll change method');
+            if(record.projectRTName != 'Admin_Projects' && record.PayRollItemList) {
+                console.log(record.payRollItem,record.prMap[record.payRollItem]);
+                console.log(':::::::',record.samePayrollMap);
+                
+                if(record.samePayrollMap[record.payRollItem]){
+                    $scope.modalStateBillable = 'slds-fade-in-open';
+                    $scope.modalBackdropStateBillable = 'slds-modal-backdrop--open';
+                }else if(record.payRollItem) {
+                    record.isBillable = record.prMap[record.payRollItem];
+                }
+            }
+            
+        }
+        
+        // For revert button logic
+        // Capture Comment for revert btn click
+        
+        $scope.RevertactionFunction = function() {
+            
+            if($scope.dayDetails.timeCarddetails.length > 0) {
+                $scope.RevertComment = '';
+                $scope.RevertCommentError = '';
+                $scope.modalStateRevertComment = 'slds-fade-in-open';
+                $scope.modalBackdropStateRevertComment  = 'slds-modal-backdrop--open';
+            }else {
+                $scope.btnActionInfoMsg = 'There is no time entries to revert.';
+                $scope.modalStateForInfo = 'slds-fade-in-open';
+                $scope.modalBackdropStateForInfo = 'slds-modal-backdrop--open';
+            }
+        }
+        
+        $scope.okayForRevertComment = function() {
+            if($scope.RevertComment) {
+                $scope.modalStateRevertComment = '';
+                $scope.modalBackdropStateRevertComment  = '';
+                
+                $scope.SaveCallingFunction('From Revert',$scope.RevertComment);
+                
+                console.log('::$scope.RevertComment:::::::::',$scope.RevertComment);
+            }else {
+                $scope.RevertCommentError = 'slds-has-error';
+            }
+        }
+        
+        // Usertype filter on-change function call - for instructor related time entries
+        $scope.userChangeFunction = function() {
+            $scope.dayDetails.isLoaded = false;
+            console.log(':::::::::::$scope.dayDetails.selectedUserType::::::',$scope.dayDetails.selectedUserType);
+            
+            /*if($scope.dayDetails.selectedUserType == 'Instructor'){    //call lightning instructor admin time entry page
+                
+                window.location.href = '/lightning/n/Admin_Time_Entry_Instructor';
+            }else {
+                helper.getWholeWeekRanges($scope);
+            }*/
+            
+            helper.getWholeWeekRanges($scope);
+            
+        }
+        
+        //Function to validate wheather the user entered value for Billable field
+        $scope.billableFunction = function(){
+
+            if($scope.billable || $scope.nonBillable){
+                
+                $scope.billableMsg = '';
+                
+                if($scope.billable)
+                    $scope.NewlyAddedRec.isBillable = true;
+                else if($scope.nonBillable)
+                    $scope.NewlyAddedRec.isBillable = false;
+                
+                $scope.modalStateBillable = '';
+                $scope.modalBackdropStateBillable = '';
+                
+            }else if(!$scope.billable && !$scope.nonBillable){
+                $scope.billableMsg = 'Please select any one of the value';
+            }
+        }
+        
+        initial();
+    })
+    .factory('helper', function(QueryApex, $timeout) {
+        
+        function showError(scope, message) {
+            if(message) {
+                scope.options.errorMessage = message;
+                scope.options.isErrorOpen = true;
+            }
+        }
+        
+        function showSuccess(scope, message) {
+            if(message) {
+                scope.options.successMessage = message;
+                scope.options.isSuccessOpen = true;
+            }
+        }
+        
+        function getWholeWeekRanges(scope) {
+            getWeekRangeValues(scope);
+        }
+        
+        function getWeekRangeValues(scope) {
+            
+            QueryApex.getWeekRangeValues(scope.dayDetails.selectedUserType).then(function(response) {
+                scope.dayDetails.isLoaded = true;
+                scope.dayDetails.contactFilterValues = [];
+                scope.dayDetails.task_PayrollItemMap = {};
+                
+                console.log(':::::response::::',response);
+                if(response) {
+                    
+                    scope.UserPermissionForPage = response.userHaspermission;
+                    
+                    scope.dayDetails.WeekRangeList = response.weekRangeValues;
+                    var object = response.contactIdNameMap;
+                    var contactList = [];
+                    
+                    for(var key in object) {
+                        contactList.push({Id:key,Name:decodeHTML(object[key])});
+                    }
+                    scope.dayDetails.timeLockingdate = response.timelockLockingDate;
+                    
+                    scope.dayDetails.contactFilterValues = _.sortBy(contactList,'Name');
+                    
+                    scope.dayDetails.task_PayrollItemMap = response.taskName_PayrollItemMap;
+                    
+                    //console.log(':::scope.dayDetails.task_PayrollItemMap::::',scope.dayDetails.task_PayrollItemMap);
+                    
+                    if(scope.urlValues.urlContact && scope.urlValues.urlContactName) {
+                        scope.dayDetails.selectedContact = scope.urlValues.urlContact;
+                        
+                        scope.dayDetails.ContactRecord =  {Id:scope.urlValues.urlContact,Name:scope.urlValues.urlContactName};
+                        
+                    } else {
+                        scope.dayDetails.selectedContact = scope.dayDetails.contactFilterValues[0].Id;
+                        scope.dayDetails.ContactRecord = scope.dayDetails.contactFilterValues[0];
+                    }
+                }
+                
+                console.log(':::::::scope.dayDetails::::::',scope.dayDetails);
+                
+                if(scope.UserPermissionForPage) {
+                    
+                    var lastIndex = scope.dayDetails.WeekRangeList.length;
+                    
+                    if(scope.urlValues.urlWeekrange) {
+                        scope.dayDetails.selectedWeekrange = scope.urlValues.urlWeekrange;
+                    }else {
+                        scope.dayDetails.selectedWeekrange = scope.dayDetails.WeekRangeList[lastIndex - 3];
+                    }
+                    
+                    if(scope.dayDetails.WeekRangeList.length > 0) {
+                        scope.dayDetails.isLoaded = false;
+                        setDefaultValues(scope);
+                        getSpecificWeekValues(scope);
+                        
+                    }
+                }
+            }, function(error){
+                scope.dayDetails.isLoaded = true;
+                console.log('error getWeekRangeValues', error);
+                showError(scope, error.message);
+            });
+        }
+        
+        function decodeHTML(encodedStr){
+            var parser = new DOMParser;
+            var dom = parser.parseFromString(
+                '<!doctype html><body>' + encodedStr,
+                'text/html');
+            var decodedString = dom.body.textContent;
+            
+            //console.log(decodedString);
+            return decodedString;
+        }
+        
+        function setDefaultValues(scope) {
+            scope.dayDetails.dateLableArray = [];
+            scope.dayDetails.DaysList = [];
+            scope.dayDetails.timeCarddetails = [];
+            scope.dayDetails.timeSnapshotRecords = [];
+            scope.dayDetails.commentsList = [];
+            scope.dayDetails.UniqueKeySet = [];
+            scope.dayDetails.UnpostedRecordIds = [];
+            scope.UpdationRecordList = [];
+        }
+        
+        function getSpecificWeekValues(scope) {
+            
+            setDefaultValues(scope);
+            
+            var dt1 = moment(scope.dayDetails.selectedWeekrange.split(' to ')[0]).format('YYYY-MM-DD');
+            var dt2 = moment(dt1).add(6,'days').format('YYYY-MM-DD');
+            
+            var WeekStart = moment(dt1);
+            var WeekEnd = moment(WeekStart).add(6,'days').format('YYYY-MM-DD');
+            
+            while(WeekStart.isBefore(WeekEnd) || WeekStart.isSame(WeekEnd)) {
+               scope.dayDetails.DaysList.push(WeekStart.format('YYYY-MM-DD'));
+               scope.dayDetails.dateLableArray.push(WeekStart.format('MM/DD/YY'));
+               WeekStart.add(1, 'days').format('YYYY-MM-DD');
+            }
+            
+            QueryApex.getspecificeWeekRecords(dt1,dt2,scope.dayDetails.selectedContact,scope.dayDetails.selectedUserType).then(function(response) {
+                scope.dayDetails.isLoaded = true;
+                console.log(':::::response::::specificWeek::::',response);
+                if(response) {
+                    scope.dayDetails.timeCarddetails = response.timeCardDayRecords;
+                    scope.dayDetails.timeSnapshotRecords = response.timeSnapshotDetails;
+                    scope.dayDetails.UserTimezoneValue =  response.UserTimezoneValue;
+                    scope.UserName = response.UserName;
+                    scope.dayDetails.HomeDepartId = response.HomeDeptProId;
+                    
+                    scope.dayDetails.payRollItems = response.payRollItemList;
+                    
+                    var selectObj = {Id:'--Select--',Name:'--Select--'};
+                    
+                    scope.dayDetails.ProjectList = response.projects;
+                    scope.dayDetails.ProjectTaskList = response.projectTasks;
+                    scope.dayDetails.contactAssign_ForPayRoll = response.contactAssignements;                   
+                    
+                    console.log('::::::::::scope.dayDetails.contactAssign_ForPayRoll::::::::',scope.dayDetails.contactAssign_ForPayRoll);
+                    
+                    scope.dayDetails.ProjectList.unshift(selectObj);
+                    
+                    notesSectionformation(scope.dayDetails.timeSnapshotRecords,scope.dayDetails);
+                    
+                    for(var i = 0;i < scope.dayDetails.timeCarddetails.length;i++) {
+                        totalHrsCalculation(scope.dayDetails.timeCarddetails[i]);
+                        scope.dayDetails.timeCarddetails[i].Flag = true;
+                        scope.dayDetails.timeCarddetails[i].disableBillable = true;
+                        
+                        var key = scope.dayDetails.timeCarddetails[i].SelectedProject+'-'+scope.dayDetails.timeCarddetails[i].SelectedProTask+'-'+scope.dayDetails.selectedContact+'-'+scope.dayDetails.timeCarddetails[i].isBillable+'-'+scope.dayDetails.timeCarddetails[i].payRollItem+'-'+scope.dayDetails.timeCarddetails[i].locationId;
+                    
+                        if(scope.dayDetails.UniqueKeySet.indexOf(key) == -1) {
+                            scope.dayDetails.UniqueKeySet.push(key);
+                        }
+                        
+                        scope.dayDetails.timeCarddetails[i].Day1 = millisecondToString(scope.dayDetails.timeCarddetails[i].Day1);
+                        scope.dayDetails.timeCarddetails[i].Day2 = millisecondToString(scope.dayDetails.timeCarddetails[i].Day2);
+                        scope.dayDetails.timeCarddetails[i].Day3 = millisecondToString(scope.dayDetails.timeCarddetails[i].Day3);
+                        scope.dayDetails.timeCarddetails[i].Day4 = millisecondToString(scope.dayDetails.timeCarddetails[i].Day4);
+                        scope.dayDetails.timeCarddetails[i].Day5 = millisecondToString(scope.dayDetails.timeCarddetails[i].Day5);
+                        scope.dayDetails.timeCarddetails[i].Day6 = millisecondToString(scope.dayDetails.timeCarddetails[i].Day6);
+                        scope.dayDetails.timeCarddetails[i].Day7 = millisecondToString(scope.dayDetails.timeCarddetails[i].Day7);
+                        
+                        // populate dlsclass no
+                        var arr = _.filter(scope.dayDetails.ProjectList,function(data) {
+                            if(data.Id == scope.dayDetails.timeCarddetails[i].SelectedProject)
+                                return data;
+                        });
+                        
+                        if(arr.length > 0)
+                            scope.dayDetails.timeCarddetails[i].dlsClassNo = arr[0].DLS_Class__c;
+                        
+                        // Forming project,Task,Payroll & Billable combination of single property
+                        var billableName = '';
+                        if(scope.dayDetails.timeCarddetails[i].isBillable)
+                            billableName = 'Billable';
+                        else
+                            billableName = 'Non-billable';
+                            
+                        var location = '';
+                        if(scope.dayDetails.timeCarddetails[i].locationName)
+                            location = scope.dayDetails.timeCarddetails[i].locationName;
+                        else
+                            location = 'N/A';
+                            
+                        var uniqueValue = scope.dayDetails.timeCarddetails[i].ProjectName+' / '+scope.dayDetails.timeCarddetails[i].TaskName+' / '+scope.dayDetails.timeCarddetails[i].payRollItem+' / '+billableName+' / '+location;
+                        
+                        scope.dayDetails.timeCarddetails[i].project_Task_Payroll_Billable_Location = uniqueValue;
+                        
+                        // Different charge code for Instructor time entry
+                        scope.dayDetails.timeCarddetails[i].project_Task_Location = scope.dayDetails.timeCarddetails[i].dlsClassNo+' / '+scope.dayDetails.timeCarddetails[i].ProjectName+' / '+scope.dayDetails.timeCarddetails[i].TaskName+' / '+scope.dayDetails.timeCarddetails[i].payRollItem+' / '+billableName+' / '+location;
+                        
+                        // For Unposted record IDs capture
+                        if(scope.dayDetails.timeCarddetails[i].status1 == 'Unposted') scope.dayDetails.UnpostedRecordIds.push(scope.dayDetails.timeCarddetails[i].Hrs1Day1Id);
+                        if(scope.dayDetails.timeCarddetails[i].status2 == 'Unposted') scope.dayDetails.UnpostedRecordIds.push(scope.dayDetails.timeCarddetails[i].Hrs2Day2Id);
+                        if(scope.dayDetails.timeCarddetails[i].status3 == 'Unposted') scope.dayDetails.UnpostedRecordIds.push(scope.dayDetails.timeCarddetails[i].Hrs3Day3Id);
+                        if(scope.dayDetails.timeCarddetails[i].status4 == 'Unposted') scope.dayDetails.UnpostedRecordIds.push(scope.dayDetails.timeCarddetails[i].Hrs4Day4Id);
+                        if(scope.dayDetails.timeCarddetails[i].status5 == 'Unposted') scope.dayDetails.UnpostedRecordIds.push(scope.dayDetails.timeCarddetails[i].Hrs5Day5Id);
+                        if(scope.dayDetails.timeCarddetails[i].status6 == 'Unposted') scope.dayDetails.UnpostedRecordIds.push(scope.dayDetails.timeCarddetails[i].Hrs6Day6Id);
+                        if(scope.dayDetails.timeCarddetails[i].status7 == 'Unposted') scope.dayDetails.UnpostedRecordIds.push(scope.dayDetails.timeCarddetails[i].Hrs7Day7Id);
+                        
+                        if(scope.dayDetails.timeCarddetails[i].timeCardId) {
+                            scope.timeCardId = scope.dayDetails.timeCarddetails[i].timeCardId;    
+                        }
+                    }
+                    
+                    scope.previousValues = {
+                        weekRange: scope.dayDetails.selectedWeekrange,
+                        Contact: scope.dayDetails.selectedContact
+                    };
+                    
+                }
+                
+            }, function(error){
+                scope.dayDetails.isLoaded = true;
+                console.log('error getspecificeWeekRecords', error);
+                showError(scope, error.message);
+            });
+        }
+        
+        function millisecondToString(millisecond) {
+            var date = new Date(millisecond);            
+            date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            if(day < 10) {
+                day = '0' + day;
+            }
+            if(month < 10) {
+                month = '0' + month;
+            }
+            return date.getFullYear() + '-' +month + '-' + day;
+        }
+        
+        function totalHrsCalculation(record) {
+            
+            var hrs = 0;
+         
+            if($.isNumeric(record.Hours1)){
+                if(isNaN(record.Hours1)) {
+                
+                }else if(record.Hours1 != null) {
+                    hrs = parseFloat(record.Hours1) + parseFloat(hrs);
+                }
+            }   
+            if($.isNumeric(record.Hours2)){
+                if(isNaN(record.Hours2)) {
+                
+                }else if(record.Hours2 != null) {
+                    hrs = parseFloat(record.Hours2) + parseFloat(hrs);
+                }
+            }
+            if($.isNumeric(record.Hours3)){
+                if(isNaN(record.Hours3)) {
+                
+                }else if(record.Hours3 != null) {
+                    hrs = parseFloat(record.Hours3) + parseFloat(hrs);
+                }
+            }   
+            if($.isNumeric(record.Hours4)){
+                if(isNaN(record.Hours4)) {
+                
+                }else if(record.Hours4 != null) {
+                    hrs = parseFloat(record.Hours4) + parseFloat(hrs);
+                }
+            }   
+            if($.isNumeric(record.Hours5)){
+                if(isNaN(record.Hours5)) {
+                
+                }else if(record.Hours5 != null) {
+                    hrs = parseFloat(record.Hours5) + parseFloat(hrs);
+                }
+            }   
+            if($.isNumeric(record.Hours6)){
+                if(isNaN(record.Hours6)) {
+                
+                }else if(record.Hours6 != null) {
+                    hrs = parseFloat(record.Hours6) + parseFloat(hrs);
+                }
+            }   
+            if($.isNumeric(record.Hours7)){
+                if(isNaN(record.Hours7)) {
+                
+                }else if(record.Hours7 != null) {
+                    hrs = parseFloat(record.Hours7) + parseFloat(hrs);
+                }
+            }    
+            record.TotalHours = hrs.toFixed(2);
+        }
+        
+        function notesSectionformation(snapshotValues,dayDetails) {
+            
+            commentFormationList = [];
+            var commentMap = {};
+            
+            for(var i = 0;i < snapshotValues.length;i++) {
+            
+                if(snapshotValues[i].Time_Card_Day__c 
+                        && snapshotValues[i].Time_Card_Line__c && snapshotValues[i].Time_Card_Line__r.AcctSeed__Time_Card__c
+                        && snapshotValues[i].Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__c == dayDetails.selectedContact 
+                   ) {
+                    var commentObj = {
+                        UserName: snapshotValues[i].CreatedBy.Name,
+                        Edited: millisecondToDateTimeString(snapshotValues[i].CreatedDate,dayDetails),
+                        ChargeCode: snapshotValues[i].Time_Card_Line__r.AcctSeed__Project_Task__r.AcctSeed__Project__r.Name,
+                        TaskName: snapshotValues[i].Time_Card_Line__r.AcctSeed__Project_Task__r.Name,
+                        NewHrs: snapshotValues[i].Time_Card_Day__r.Total_Hours_Before_Approved__c,
+                        OldHrs: snapshotValues[i].Total_Hours_Before_Approved__c,
+                        OldStatus: snapshotValues[i].TCD_Status__c,
+                        Comment: snapshotValues[i].Internal_Comment__c ? decodeHTML(snapshotValues[i].Internal_Comment__c) : snapshotValues[i].Internal_Comment__c,
+                        Date: millisecondToString(snapshotValues[i].Date__c),
+                        ReferenceId: snapshotValues[i].Reference_Id__c,
+                        NewStatus: snapshotValues[i].TCD_New_Status__c,
+                        createdDate: snapshotValues[i].CreatedDate,
+                        Instructor: snapshotValues[i].Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__c
+                    };
+                    //console.log(snapshotValues[i]);
+                    //console.log(commentObj);                    
+                    commentFormationList.push(commentObj);
+                }
+            }
+            
+            for(var i = 0;i < commentFormationList.length;i++) {
+                if(!commentFormationList[i].ReferenceId) {
+                    if(commentFormationList[i].Edited){
+                        var format1 = commentFormationList[i].Edited.split(' ')[0].split('-')[1]+'/'+commentFormationList[i].Edited.split(' ')[0].split('-')[2]+'/'+commentFormationList[i].Edited.split(' ')[0].split('-')[0];
+                        
+                        commentFormationList[i].DateTime = format1+commentFormationList[i].Edited.split(' ')[1]+commentFormationList[i].Edited.split(' ')[2];
+                    }
+                    
+                    dayDetails.commentsList.push(commentFormationList[i]);
+                }else {
+                    if(!commentMap[commentFormationList[i].ReferenceId]) {
+                        commentMap[commentFormationList[i].ReferenceId] = [];
+                        var rec = commentFormationList[i];
+                        rec.ChargeCode = '';
+                        rec.Edited = '';
+                        rec.TaskName = '';
+                        rec.Date = '';
+                        rec.NewHrs = '';
+                        rec.OldHrs = '';
+                        rec.OldStatus = '';
+                        rec.NewStatus = '';
+                        rec.UserName = '';
+                        rec.DateTime = commentFormationList[i].ReferenceId.split(' ')[1]+commentFormationList[i].ReferenceId.split(' ')[2]+commentFormationList[i].ReferenceId.split(' ')[3];
+                        dayDetails.commentsList.push(rec);
+                    } else {
+                        commentMap[commentFormationList[i].ReferenceId].push(commentFormationList[i]);
+                    } 
+                }
+            }
+            
+            //console.log('::::dayDetails.commentsList:::::',JSON.stringify(dayDetails.commentsList));
+        }
+        
+        function millisecondToDateTimeString(millisecond,dayDetails) {
+            return moment.tz(millisecond, dayDetails.UserTimezoneValue).format('YYYY-MM-DD h:mm:ss a');
+        }
+        
+        function millisecondToString(millisecond) {
+            var date = new Date(millisecond);            
+            date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            if(day < 10) {
+                day = '0' + day;
+            }
+            if(month < 10) {
+                month = '0' + month;
+            }
+            return date.getFullYear() + '-' +month + '-' + day;
+        }
+        
+        // Get existing time card day combination for the selected values
+        function getExistingdayRecord(dayRecord,scope) {
+            
+            if(dayRecord.SelectedProject != '--Select--' && dayRecord.SelectedProTask != '--Select--'
+                && scope.dayDetails.selectedContact && dayRecord.payRollItem && dayRecord.selectedLocation.Id) {
+                var key = dayRecord.SelectedProject+'-'+dayRecord.SelectedProTask+'-'+scope.dayDetails.selectedContact+'-'+dayRecord.isBillable+'-'+dayRecord.payRollItem+'-'+dayRecord.selectedLocation.Id;
+                
+                if(scope.dayDetails.UniqueKeySet.indexOf(key) == -1) {
+                    scope.dayDetails.UniqueKeySet.push(key);
+                    //console.log('::::::UniqueKeySet:::::::',scope.dayDetails.UniqueKeySet);
+                    
+                    // To add Task Name 
+                    
+                    var selectedProTask = _.filter(dayRecord.projectTasks, function(data){ 
+                        if(data.Id == dayRecord.SelectedProTask)
+                            return data; 
+                    });
+                    
+                    if(selectedProTask.length > 0) {
+                        dayRecord.TaskName = selectedProTask[0].Name;
+                        dayRecord.TaskType = selectedProTask[0].Project_Task_Type__c;
+                    }
+                    
+                    var dt1 = moment(scope.dayDetails.selectedWeekrange.split(' to ')[0]).format('YYYY-MM-DD');
+                    var dt2 = moment(dt1).add(6,'days').format('YYYY-MM-DD');
+                    
+                    QueryApex.getExistingdayRecord(dayRecord.SelectedProject,dayRecord.SelectedProTask,scope.dayDetails.selectedContact,dt1,dt2,dayRecord.isBillable,dayRecord.payRollItem).then(function(response) {
+                        scope.dayDetails.isLoaded = true;
+                        console.log(':::::response::::getExistingdayRecord::::',response);
+                        if(response) {
+                            $timeout(function() {
+                                dayRecord = response[0];
+                                console.log(':::::dayRecord:::::',dayRecord);
+                                totalHrsCalculation(dayRecord);
+                                
+                                dayRecord.Day1 = millisecondToString(dayRecord.Day1);
+                                dayRecord.Day2 = millisecondToString(dayRecord.Day2);
+                                dayRecord.Day3 = millisecondToString(dayRecord.Day3);
+                                dayRecord.Day4 = millisecondToString(dayRecord.Day4);
+                                dayRecord.Day5 = millisecondToString(dayRecord.Day5);
+                                dayRecord.Day6 = millisecondToString(dayRecord.Day6);
+                                dayRecord.Day7 = millisecondToString(dayRecord.Day7);
+                            });
+                        }
+                        
+                    }, function(error){
+                        scope.dayDetails.isLoaded = true;
+                        console.log('error getspecificeWeekRecords', error);
+                        showError(scope, error.message);
+                    });
+                }else {
+                    //console.log('billable',dayRecord.isBillable);
+                    scope.dayDetails.duplicateRecord = {};
+                    
+                    var msgpart = '';
+                    var inverseMsg = '';
+                    if(dayRecord.isBillable) {
+                        msgpart = 'Billable';
+                        inverseMsg = 'Non-billable';
+                    } else { 
+                        msgpart = 'Non-billable';
+                        inverseMsg = 'Billable';
+                    }
+                    
+                    var keyIndex = scope.dayDetails.UniqueKeySet.indexOf(key);
+                    var key2 = dayRecord.SelectedProject+'-'+dayRecord.SelectedProTask+'-'+scope.dayDetails.selectedContact+'-'+!dayRecord.isBillable+'-'+dayRecord.payRollItem+'-'+dayRecord.selectedLocation.Id;
+                    var keyIndex2 = scope.dayDetails.UniqueKeySet.indexOf(key2);
+                    
+                    if(keyIndex != -1 && keyIndex2 != -1) {
+                        scope.dayDetails.cancelbtnDisplay = false;
+                        scope.dayDetails.DuplicateMsgValue = 'This combination of Project, Project Task, Contact, Location already exist.';
+                    } else {
+                        scope.dayDetails.cancelbtnDisplay = true;
+                        scope.dayDetails.DuplicateMsgValue = 'This combination of Project, Project Task, Contact, Location and '+ msgpart+' already exist. Do you want '+inverseMsg+' for the same combination?';
+                    }
+                    
+                    scope.dayDetails.duplicateRecord = dayRecord;
+                    
+                    //scope.modalStateForDuplicate = 'slds-fade-in-open';
+                    //scope.modalBackdropStateForDuplicate = 'slds-modal-backdrop--open';
+                    
+                }
+            }
+        }
+        
+        //Dml operation function call
+        
+        function dmlOperationFunction(operationalRecords,scope,actionType,Comment) {
+            
+            var dt1 = moment(scope.dayDetails.selectedWeekrange.split(' to ')[0]).format('YYYY-MM-DD');
+            var dt2 = moment(dt1).add(6,'days').format('YYYY-MM-DD');
+            
+            //To Avoid Apex heap size error on class level deserialize action
+            for(var i = 0;i < operationalRecords.length;i++){
+                delete operationalRecords[i].projects;
+                delete operationalRecords[i].projectTasks;
+                delete operationalRecords[i].PayRollItemList;
+            }
+            console.log(dt1, dt2);
+            QueryApex.dmlOperationFunction(operationalRecords,dt1,dt2,scope.dayIdsForSaveCheck,scope.dayDetails.selectedContact,actionType,Comment).then(function(response) {
+                scope.dayDetails.isLoaded = true;
+                scope.errorAccoured = false;
+                scope.dayIdsForSaveCheck = [];
+                
+                //showSuccess(scope,'Time entries created Successfully.');
+                scope.openLastactivityWeek();
+            }, function(error){
+                scope.dayDetails.isLoaded = true;
+                console.log('error dmlOperationFunction', error);
+                showError(scope, error.message);
+            });
+        }
+        
+        // Qry contact related user records
+        function getContactUser(scope) {
+            QueryApex.getContactUser(scope.dayDetails.selectedContact).then(function(response) {
+                scope.dayDetails.isLoaded = true;
+                if(response) {
+                    console.log('::::::::response::::::',response);
+                    scope.dayDetails.usrAlreadyExist = response;
+                }
+            }, function(error){
+                scope.dayDetails.isLoaded = true;
+                console.log('error getContactUser', error);
+                showError(scope, error.message);
+            });
+        }
+        
+        return {
+            getWholeWeekRanges: getWholeWeekRanges,
+            getWeekRangeValues: getWeekRangeValues,
+            getSpecificWeekValues: getSpecificWeekValues,
+            notesSectionformation: notesSectionformation,
+            totalHrsCalculation: totalHrsCalculation,
+            getExistingdayRecord: getExistingdayRecord,
+            dmlOperationFunction: dmlOperationFunction,
+            getContactUser: getContactUser,
+            decodeHTML : decodeHTML
+        }
+    })
+    .factory('QueryApex', function($q) {
+        
+        //Get Week Range filter values on Page load
+        function getWeekRangeValues(userType) {
+            var def = $q.defer();
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.TimeKeeping_Admin_Controller.getWholeWeekRangeValues}',
+              userType,
+              function(response, ev) {
+                  resolveResponse(response, ev, def);
+              },
+              {escape: true}
+            );
+
+            return def.promise;
+        }
+        
+        //Get Specific Week time card day records
+        function getspecificeWeekRecords(date1,date2,contactId,userType) {
+            
+            var def = $q.defer();
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.TimeKeeping_Admin_Controller.getspecificeWeekRecords}',
+              date1,date2,contactId,userType,
+              function(response, ev) {
+                  resolveResponse(response, ev, def);
+              },
+              {escape: true}
+            );
+
+            return def.promise;
+            
+        }
+        
+        // Get existing day for for the selected combination of values
+        
+        function getExistingdayRecord(projectId,TaskId,contactId,date1,date2,billable,payroll) {
+            var def = $q.defer();
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.TimeKeeping_Admin_Controller.getExistingdayRecord}',
+              projectId,TaskId,contactId,date1,date2,billable,payroll,
+              function(response, ev) {
+                  resolveResponse(response, ev, def);
+              },
+              {escape: true}
+            );
+
+            return def.promise;
+        }
+        
+        function dmlOperationFunction(operationalRecords,dt1,dt2,dayIdsForSaveCheck,contactId,actionType,Comments) {
+            var def = $q.defer();
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.TimeKeeping_Admin_Controller.dmlOperationFunction}',
+              JSON.stringify(operationalRecords),dt1,dt2,dayIdsForSaveCheck,contactId,actionType,Comments,
+              function(response, ev) {
+                  resolveResponse(response, ev, def);
+              },
+              {escape: true}
+            );
+
+            return def.promise;
+        }
+        
+        // get Contact related users
+        function getContactUser(contactId) {
+            var def = $q.defer();
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.TimeKeeping_Admin_Controller.getContactRelatedUser}',
+              contactId,
+              function(response, ev) {
+                  resolveResponse(response, ev, def);
+              },
+              {escape: true}
+            );
+
+            return def.promise;
+        }
+        
+        //Resolve Responses
+        function resolveResponse(response, ev, def) {
+            if(ev.status) {
+                def.resolve(response);
+            } else {
+                def.reject(ev);
+            }
+        }
+        return {
+            getWeekRangeValues: getWeekRangeValues,
+            resolveResponse: resolveResponse,
+            getspecificeWeekRecords: getspecificeWeekRecords,
+            getExistingdayRecord: getExistingdayRecord,
+            dmlOperationFunction: dmlOperationFunction,
+            getContactUser: getContactUser
+        }
+        
+    })
+    
+    // Directive for Lookup Search option
+        .service('ApexQuery', function($q) {
+                    
+            //Resolve Responses
+            function resolveResponse(response, ev, def) {
+                if(ev.status) {
+                    def.resolve(response);
+                } else {
+                    def.reject(ev);
+                }
+            }        
+            
+            //Get lookup record from a specific object
+            var getLookups = function(objectName, searchString, condition) {
+                var def = $q.defer();
+                if(!condition) { condition = ''; }
+                if(!searchString) { searchString = ''; }
+                Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.TimeKeeping_Admin_Controller.getLookupRecords}',
+                    objectName,
+                    searchString,
+                    condition,
+                    function(response, ev) {
+                        resolveResponse(response, ev, def);
+                    },
+                    {escape: true}
+                );
+                return def.promise;
+            }
+            
+            return {
+                getLookups: getLookups
+            }
+        })
+        .directive('lookup',function($document, ApexQuery, $timeout){
+            return {
+                restrict: 'E',
+                templateUrl:'lookup1.html',
+                replace:true,
+                scope: {
+                  data: '=',
+                  disabled: '=',
+                  object: '=',
+                  placeholder: '=',
+                  condition: '=',
+                  onChange: '=',
+                  parameter: '=',
+                  type: '=',
+                  status: '='
+                },
+                controller:function($scope, $timeout){
+                  
+                    $scope.accounts = [];
+                    $scope.searchTxt = '';
+                    $scope.objectName = '';
+                    $scope.isDropDownHidden = true;
+                    $scope.showLoadingDiv = false;
+                    
+                    $scope.$watch('data',function(newVal,oldVal){
+                        if(newVal && $scope.data && $scope.data.Name){
+                            $scope.searchTxt = $scope.data.Name;
+                        }else {
+                            $scope.searchTxt = '';
+                        }
+                    },true);
+                    
+                    $scope.fetchAccounts = function(){
+                        $scope.showLoadingDiv = true;
+                        $scope.accounts = [];
+                        
+                        if($scope.type == 'Internal') {
+                            
+                            if($scope.status && $scope.status != 'All') {
+                                $scope.condition = 'RecordType.DeveloperName = \'DLS_Employee\' AND Instructor_Status__c = \''+$scope.status+'\'';
+                            }else if($scope.status && $scope.status == 'All') {
+                                $scope.condition = 'RecordType.DeveloperName = \'DLS_Employee\'';
+                            }
+                            
+                            /*if(!$scope.parameter) {
+                                $scope.condition = 'RecordType.DeveloperName = \'DLS_Employee\' AND Active_DLS_Employee__c = true';
+                            }else {
+                                $scope.condition = 'RecordType.DeveloperName = \'DLS_Employee\'';
+                            }*/
+                        }else if($scope.type == 'Instructor') {
+                            if($scope.status && $scope.status != 'All') {
+                                $scope.condition = 'RecordType.DeveloperName = \'Candidate\' AND Instructor_Status__c = \''+$scope.status+'\'';
+                            }else if($scope.status && $scope.status == 'All') {
+                                $scope.condition = 'RecordType.DeveloperName = \'Candidate\'';
+                            }
+                        }
+                        
+                        $timeout(function(){
+                            ApexQuery.getLookups($scope.object, $scope.searchTxt, $scope.condition).then(
+                                function(data){
+                                    for(var i = 0;i < data.length;i++){
+                                        data[i].Name = decodeHTML(data[i].Name);
+                                    }
+                                    $scope.accounts = data;
+                                    $scope.showLoadingDiv = false;
+                                },function(error){}
+                            );
+                        },400);
+                    };
+                    
+                    function decodeHTML(encodedStr){
+                        var parser = new DOMParser; 
+                        var dom = parser.parseFromString(
+                            '<!doctype html><body>' + encodedStr,
+                            'text/html');
+                        var decodedString = dom.body.textContent;
+                        return decodedString;
+                    }
+                    
+                    $scope.updateDataModelAttr = function(selAcc){
+                        $scope.data = selAcc;
+                        $scope.searchTxt = selAcc.Name;
+                        $scope.toggleDropDown();
+                        console.log('inside project change', typeof $scope.change);
+                        $timeout(function() {
+                            if(typeof $scope.onChange == 'function') {
+                                $scope.onChange($scope.parameter);
+                            }
+                        }, 0);
+                    };
+                    
+                     // Added by Sukanya for close dropdown list
+                    
+                    $scope.closeDropdownList = function(event) {
+                        if(!$scope.data) {
+                           $scope.isDropDownHidden = true;
+                        }
+                        event.stopPropagation();
+                    }
+                    
+                    window.addEventListener('click', function(event) {
+                        console.log('window clicked.');
+                        $scope.isDropDownHidden = true;
+                        $scope.$apply();
+                    });
+                },
+                link:function(scope,element,attr,ctrl) {
+                    
+                    scope.toggleDropDown = function(){
+                        scope.isDropDownHidden = !scope.isDropDownHidden;
+                        if(scope.isDropDownHidden){
+                            $document.bind('click', function(event){
+                                //var isClickedElementChildOfPopup = $('#lookuplist')
+                                //  .find(event.target)
+                                //  .length > 0;
+                                var isClickedElementChildOfPopup = event.target;
+                                if(isClickedElementChildOfPopup) {
+                                    return;
+                                }
+                                scope.isDropDownHidden = true;
+                                scope.$apply();
+                                $document.unbind('click');
+                            }); 
+                        }
+                        else{
+                             $document.unbind('click');
+                        }
+                    };
+                }
+            };
+        });
+    
+    </script>
+</apex:page>

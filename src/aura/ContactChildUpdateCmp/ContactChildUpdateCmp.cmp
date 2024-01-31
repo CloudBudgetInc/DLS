@@ -1,0 +1,303 @@
+<aura:component controller="ContactChildUpdateController" implements="lightning:hasPageReference,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,lightning:isUrlAddressable,force:hasSObjectName,force:lightningQuickAction" >
+    
+    <!-- Attributes -->
+    <aura:attribute name="recordId" type="String" description="Contact id "/>
+    <aura:attribute name="profileInfo" type="InstructorMyProfileController.MyProfileWrapper" description="Holding the Contact Profile Information" access="PUBLIC"/>
+    <aura:attribute name="contactRec" type="Map" access="PUBLIC" description="Holding Contact information copy"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="PUBLIC"/>
+    <!-- Table Values List -->
+    <aura:attribute name="languageTableColumns" type="List" description="Language Table attribute" access="PUBLIC"/>
+    <aura:attribute name="skillTableColumns" type="List" description="Language Table attribute" access="PUBLIC"/>
+    <aura:attribute name="workExpColumns" type="List" description="Work Experience Table attribute" access="PUBLIC"/>
+    <aura:attribute name="educationTableColumns" type="List" description="Education Table attribute" access="PUBLIC"/>
+    <!-- Table configurations -->
+    <aura:attribute name="tableConfig" type="Map" description="Data table configuration attribute" access="PUBLIC"/>
+    <aura:attribute name="eduTableConfig" type="Map" description="Education and ExperiaData table configuration attribute" access="PUBLIC"/>
+    <aura:attribute name="experienceTableConfig" type="Map" description="Data table configuration attribute" access="PUBLIC"/>
+    
+    <aura:attribute name="selectedRec" type="Map" description="selected record to edit in table"/>
+    <aura:attribute name="action" type="String" description="selected action name"/>
+    <aura:attribute name="fieldsList" type="List" description="New and old values map"/>
+    <aura:attribute name="rowIndex" type="List" description="selected row index"/>
+    <aura:attribute name="isRowUpdated" type="boolean" description="check whether fields are changed or not " default="false"/>
+    <aura:attribute name="viewMode" type="Boolean" default="true" access="PUBLIC" description="To switch between view and edit mode"/>
+    <aura:attribute name="updatedRecords" type="Map" description="Records  for final update " default="{'skill':[],'experience':[],'education':[],'languages':[]}"/>
+    
+    <!-- fieldname api name Maps -->
+    <aura:attribute name="skillWrapper" type="Map" description="wrapper key value pair" default="{'name':'name','From_Language_LU__c':'fromLanguage','To_Language_LU__c':'toLanguage','Rating__c':'rating','Skill_Verification__c':'skillVerification','DLI_Qualified__c':'dliQualified'}"/>
+    <aura:attribute name="educationWrapper" type="Map" description="wrapper key value pair" default="{'name':'name','College_School__c':'collegeSchool','College_School_Type__c':'collegeSchoolType','Degree__c':'degree','Degree_Level__c':'degreeLevel','Field_of_Concentration__c':'fieldOfConcentration','Year_of_Completion__c':'yearOfCompletion'}"/>
+    <aura:attribute name="expWrapper" type="Map" description="wrapper key value pair" default="{'name':'name','Name_of_Company__c':'nameOfCompany','Role_Title__c':'roleTitle','Start_Date__c':'stardDateStr','End_Date__c':'endDateStr','Services__c':'services','City__c':'city','State__c':'state','Country__c':'country','FT_PT__c':'ftPt','Average_Hrs_Per_Week__c':'averageHrsPerWeek','Total_Hours_Performed__c':'totalHoursPerformed','Description__c':'description'}"/>
+    <aura:attribute name="languageWrapper" type="Map" description ="wrapper key value pair" default="{'name':'name','Speaking_Proficiency__c':'speaking','Listening_Proficiency__c':'listening','Language_Name__c':'languageName','Native_Language__c':'nativeLanguage','Language__c':'languageName'}"/>
+    
+    <aura:attribute name="activeSections" type="List" description="section name sthat are initially open" default="['Education','Skill','Known Language','Experience','Contact']"/>
+    
+    <ltng:require styles="{!$Resource.SLDS_2_1_3 + '/assets/styles/lightning-design-system-ltng.css'}"/>
+    
+    <!-- Handlers -->    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" Description="Initial action of this component"/>
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClicked}"/>
+    
+    <aura:if isTrue="{!v.profileInfo != null}">
+        <lightning:card>
+           
+            <lightning:accordion aura:id="accordion" activeSectionName="{!v.activeSections}" allowMultipleSectionsOpen="true">
+                <lightning:accordionSection name="Contact" label="Contact">
+                    
+                    <!-- Contact Information -->
+                    
+                    <lightning:card class="slds-p-around_small">
+                        <aura:set attribute="title">
+                            Contact Information
+                        </aura:set>
+                        <aura:set attribute="actions">
+                            <aura:if isTrue="{!v.viewMode}">
+                                <lightning:button variant="brand" label="Edit" onclick="{!c.editContactInfo}"/> 
+                                    <lightning:button variant="brand" label="Go Back" onclick="{!c.cancel}"/>
+                                <aura:set attribute="else">
+                                    <lightning:button variant="brand" label="Save" onclick="{!c.saveContact}"/>
+                                    <lightning:button variant="brand" label="Cancel" onclick="{!c.cancelEdit}"/>
+                                      <lightning:button variant="brand" label="Go Back" onclick="{!c.cancel}"/>
+                                </aura:set>
+                            </aura:if>
+                        </aura:set>
+                        <aura:set attribute="body">
+                            <lightning:layout class="slds-p-around_small">
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_x-small">
+                                            <p class="label">Salutation :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input value="{!v.profileInfo.contactRec.salutation}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_-small">
+                                            <p class="label">First Name :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.firstName}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <lightning:layout class="slds-p-around_small">
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_x-small">
+                                            <p class="label">Middle Name :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.middleName}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_-small">
+                                            <p class="label">Last Name :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.lastName}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <lightning:layout class="slds-p-around_small">
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_x-small">
+                                            <p class="label">Email :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.email}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium ">
+                                            <p class="label">Preferred Phone :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.preferredPhone}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <lightning:layout class="slds-p-around_small">
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_x-small">
+                                            <p class="label">Phone :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.phone}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_-small">
+                                            <p class="label">Mobile Phone :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.mobilePhone}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <lightning:layout class="slds-p-around_small">
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_x-small">
+                                            <p class="label">Home Phone :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.homePhone}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_-small">
+                                            <p class="label">Mailing Street :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.mailingStreet}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <lightning:layout class="slds-p-around_small">
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_x-small">
+                                            <p class="label">Mailing City :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.mailingCity}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_-small">
+                                            <p class="label">Mailing State :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.mailingState}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <lightning:layout class="slds-p-around_small">
+                                <lightning:layoutItem size="6" >
+                                    <lightning:layout>
+                                        <lightning:layoutItem size="2" class="slds-p-top_medium slds-p-left_x-small">
+                                            <p class="label">Postal Code :</p>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="8" >
+                                            <lightning:input label="" value="{!v.profileInfo.contactRec.mailingPostalCode}" disabled="{!v.viewMode}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                        </aura:set>
+                    </lightning:card>                 
+                </lightning:accordionSection>
+                
+                <!-- know language section -->
+                
+                <lightning:accordionSection name="Known Language" label="Known Language">
+                    
+                    <div class="buttonClass">
+                        <lightning:button label="Save" name="Known Language" variant="brand" onclick="{!c.finalSubmit}"/>
+                    </div>
+                    <ldt:datatableDev aura:id="Known Language"
+                                      dataRows="{!v.profileInfo.languageList}" header="{!v.languageTableColumns}"
+                                      config="{!v.tableConfig}"/>
+                </lightning:accordionSection>
+                
+                <!-- Skill section -->
+                <lightning:accordionSection name="Skill" label="Skill">
+                    <div class="buttonClass">
+                        <lightning:button label="Save" name="Skill" variant="brand" onclick="{!c.finalSubmit}"/>
+                    </div>
+                    <ldt:datatableDev aura:id="Skill"
+                                      dataRows="{!v.profileInfo.skillList}" header="{!v.skillTableColumns}"
+                                      config="{!v.tableConfig}"/>
+                </lightning:accordionSection>
+                <!-- Education section -->
+                
+                <lightning:accordionSection name="Education" label="Education">
+                    
+                    <div class="buttonClass">
+                        <lightning:button label="Save" name="Education"  variant="brand" onclick="{!c.finalSubmit}"/>
+                    </div>
+                    <ldt:datatableDev aura:id="Education"
+                                      dataRows="{!v.profileInfo.educationList}" header="{!v.educationTableColumns}"
+                                      config="{!v.eduTableConfig}"/>
+                    
+                </lightning:accordionSection>
+                
+                <!-- Experience section -->
+                
+                <lightning:accordionSection name="Experience" label="Experience">
+                    <div class="buttonClass">
+                        <lightning:button label="Save" name="Experience" variant="brand" onclick="{!c.finalSubmit}"/>
+                    </div>
+                    <ldt:datatableDev aura:id="Experience"
+                                      dataRows="{!v.profileInfo.workExperianceList}" header="{!v.workExpColumns}"
+                                      config="{!v.experienceTableConfig}"/>
+                </lightning:accordionSection>
+            </lightning:accordion>
+        </lightning:card>
+    </aura:if>
+    <c:ApexService aura:id="server"/>
+    
+    <!-- Row edit Modal -->
+    
+    <aura:if isTrue="{!v.action == 'EditAction'}">
+        <c:sldsModal aura:id="EditModal" >
+            <aura:set attribute="header">
+                {!v.selectedRec.name}
+            </aura:set>
+            <aura:set attribute="content">
+                <c:ContactChildUpdateTableCmp isRowUpdated = "{!v.isRowUpdated}" selectedRec="{!v.selectedRec}" fieldsList="{!v.fieldsList}"/>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Submit" variant="brand" onclick="{!c.saveFieldChanges}"/>
+                <lightning:button label="Cancel"  variant="brand" onclick="{!c.closeEdit}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Delete confirmation modal -->
+    
+    <aura:if isTrue="{!v.action  == 'DeleteAction'}">
+        <c:sldsModal aura:id="delete" >
+            <aura:set attribute="header">
+                Delete Record
+            </aura:set>
+            <aura:set attribute="content">
+                <div aura:id="editForm">
+                    Are you sure you want to delete this Record?
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Delete" variant="brand" onclick="{!c.deleteRecord}"/>
+                <lightning:button label="Cancel"  variant="brand" onclick="{!c.closeEdit}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <div>
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+        </aura:if>
+    </div>
+    
+</aura:component>

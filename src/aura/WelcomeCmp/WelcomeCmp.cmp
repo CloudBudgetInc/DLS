@@ -1,0 +1,25 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="EventListViewController" >
+    
+    
+    <aura:attribute name="community" type="String" default=""/>
+    <aura:attribute name="displayDevice" type="string"/>
+    <aura:attribute name="welcomeMsg" type="String" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>  
+    
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <div class="card-deck">
+        <div class="card">
+            <div class="card-body">
+                <center><img src="{!$Resource.DLS_Logo_v1}" style="padding-bottom: 1.5rem;"></img></center>
+                <center><h1 class="card-title">WELCOME TO DLS ONLINE!</h1></center>
+                <div style="{!v.displayDevice != 'Mobile' ? 'font-size:1.125rem;padding-left:5rem;padding-right:5rem;' : 'font-size:1.125rem;padding-left:1rem;padding-right:1rem;'}">
+                    <center><span>{!v.welcomeMsg}</span></center>
+                </div>                                
+            </div>
+        </div>
+    </div>
+</aura:component>

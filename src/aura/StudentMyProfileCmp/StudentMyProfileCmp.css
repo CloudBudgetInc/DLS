@@ -1,0 +1,9 @@
+.THIS abbr[title] {
+    text-decoration: none !important;
+}
+.THIS input[type=text] {
+    padding: 0.50rem 1.5rem !important;
+}
+.THIS .nav-tabs{
+    display: inline-flex !important;
+}

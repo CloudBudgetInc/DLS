@@ -1,0 +1,8 @@
+.THIS .wrap {
+    word-break: break-all !important;
+}
+@media(max-width:48em){
+    .THIS .card-body{
+        padding: .50rem !important;
+    }
+}

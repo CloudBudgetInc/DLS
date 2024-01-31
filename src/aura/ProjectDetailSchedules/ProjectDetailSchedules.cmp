@@ -1,0 +1,70 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" controller="ListViewController">
+    <aura:attribute name="projectRec" type="String" access="PUBLIC"/>
+    <aura:attribute name="schStatusValue" type="List" access="PUBLIC"/>
+    <aura:attribute name="statusSelected" type="String" default="Active" access="PUBLIC"/>
+    <aura:attribute name="scheduleList" type="List" access="PUBLIC"/>
+    <aura:attribute name = "showSpinner" type = "Boolean" access = "PUBLIC" default = "false"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" access="PUBLIC"/>
+    
+    <div class="card-deck">
+        <div class="card">
+            <span class="card-body">
+                <h5 class="card-title">SCHEDULES</h5>
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="12" smallDeviceSize="10" mediumDeviceSize="3" largeDeviceSize="3">
+                        <lightning:select  label="Status" value="{!v.statusSelected}" onchange="{!c.doInit}">
+                            <aura:iteration items="{!v.schStatusValue}" var="status">
+                                <option value="{!status}" selected="{!status==v.statusSelected}">{!status}</option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                </lightning:layout><br/>
+                <aura:if isTrue="{!v.scheduleList.length > 0}">
+                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                        <thead class="thead-light">
+                            <tr class="slds-text-title_caps">
+                                <!--th class="wrap">Name</th-->
+                                <th class="wrap">DLS Class</th>
+                                <th class="wrap">Days</th>
+                                <th class="wrap" >Training Dates</th>
+                                <th class="wrap">Time</th>
+                                <th class="wrap">Project Task</th>
+                                <th class="wrap" >Instructor</th>
+                                <th class="wrap">Room</th>
+                                <th class="wrap">Hours per Session</th>
+                                <th class="wrap">Total Scheduled Hours</th>
+                                <!--th class="wrap">Unit</th-->
+                                <th class="wrap" style="border-right: 1px solid #055e89;width:12%;" >Timezone</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!v.scheduleList}" var="schedule">
+                                <tr>
+                                    <!--td data-label="Name" class="wrap">{!schedule.name}</td-->
+                                    <td data-label="DLS Class" class="wrap">{!schedule.dlsClass}</td>
+                                    <td data-label="Days" class="wrap" style="word-break: break-word;">{!schedule.days}</td>
+                                    <td data-label="Training Dates" class="wrap" style="word-break: break-word;">{!schedule.startDate} - {!schedule.endDate} </td>
+                                    <td data-label="Time" class="wrap">{!schedule.startTime} - {!schedule.endTime}</td>
+                                    <td data-label="Project Task" class="wrap" style="word-break: break-word;">{!schedule.projectTask}</td>
+                                    <td data-label="Instructor" class="wrap">{!schedule.instructor}</td>
+                                    <td data-label="Room" class="wrap">{!schedule.room}</td>
+                                    <td data-label="Hours per Session" class="wrap">{!schedule.totalHoursPerSession}</td>
+                                    <td data-label="Total Scheduled Hours" class="wrap">{!schedule.totalHours}</td>
+                                    <!--td data-label="Unit" class="wrap">{!schedule.unit}</td-->
+                                    <td data-label="Timezone" class="wrap" style="word-break: break-word;">{!schedule.timezone}</td>
+                                </tr>
+                            </aura:iteration>
+                        </tbody>
+                    </table>
+                    
+                    <aura:set attribute="else">
+                        <center style="font-size:0.875;">No records to display</center>
+                    </aura:set>
+                </aura:if>
+            </span>
+        </div>
+    </div>
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+    </aura:if>
+</aura:component>

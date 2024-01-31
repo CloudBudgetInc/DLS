@@ -1,0 +1,275 @@
+<aura:component extends="c:CommunityComponentVisibilityUtil" controller="ListViewController" implements="forceCommunity:availableForAllPageTypes" access="global">
+    <aura:attribute name="projectRec" type="Map" access="PUBLIC"/>
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="displayDevice" type="string" access="PUBLIC" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="ca" type="Contact_Assignments__c"/>    
+    <aura:attribute name="projCmpVisibility" type="Map"/>
+    <aura:attribute name="studentCAs" type="List"/>
+    <aura:attribute name="config" type="Map" />
+    <aura:attribute name="policyAndProcedureHeader" type="List" />
+    <aura:attribute name="certificateHeader" type="List" />
+    
+    <aura:handler name="change" value="{!v.communityCmpVisibilities}" action="{!c.handleCommunityCmpVisibilitiesChange}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue = "{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" class="slds-is-fixed"  alternativeText="Loading"/>
+    </aura:if>
+    
+    <br/>
+    
+    <!--div align="right">
+        <lightning:button variant="brand" label="Back"  class="btn btn-primary" title="back" onclick="{!c.back}" />
+    </div-->
+    <aura:if isTrue="{!v.projCmpVisibility}">
+        <div>
+            <span class="backCls">
+                <div style="float: left;">
+                    <div class="slds-grid">
+                        <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.back}" ></i></span>
+                        <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                    </div>
+                </div>
+                <!--<aura:if isTrue="{!v.communityName == 'instructor'}">
+             <div style="float: right;">
+                    <lightning:button variant="brand" label="Authorize VR"  class="btn btn-primary" onclick="{!c.authorizeVRDevice}" />
+                </div>
+            </aura:if>-->
+            </span>
+            <aura:if isTrue="{!v.displayDevice  == 'Mobile'}">
+                <br/><br/><br/>
+            </aura:if>
+            <center><h5 class="card-title" style=" font-size:2rem !important;">PROJECT DETAIL</h5></center><br/>
+        </div>
+        
+        <aura:if isTrue="{!v.projCmpVisibility.Summary}">
+            <div class="card-deck">
+                <div class="card"> 
+                    <span class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                <thead class="thead-light">
+                                    <tr class="slds-line-height_reset">
+                                        <th  class="wrap" scope="col">DLS Class #</th>    
+                                        <th  class="wrap" scope="col">Start Date</th>  
+                                        <th  class="wrap" scope="col">End Date</th>  
+                                        <th  class="wrap" scope="col">Project Manager</th>  
+                                        <th  class="wrap" scope="col">Training Location</th>  
+                                        <th  class="wrap"  scope="col">Status</th>  
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="slds-hint-parent">
+                                        <td class="wrap" data-label="DLS Class #">{!v.projectRec.dlsClass}</td>
+                                        <td class="wrap" data-label="Start Date">{!v.projectRec.startDate}</td>
+                                        <td class="wrap" data-label="End Date">{!v.projectRec.endDate}</td>
+                                        <td class="wrap" data-label="Project Manager">{!v.projectRec.projectManager}</td>
+                                        <td class="wrap" data-label="Training Location">{!v.projectRec.trainingLocation}</td>
+                                        <td class="wrap" data-label="Status">{!v.projectRec.status}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </span>
+                </div>
+            </div>
+        </aura:if>
+        <br/>
+        <!-- CA Section-->
+        <aura:if isTrue="{!v.projCmpVisibility.Contact_Assignments}">
+            <aura:if isTrue="{!not(empty(v.projectRec.projectId))}">
+                <c:CommunityCATabView  projectId="{!v.projectRec.projectId}"/>
+            </aura:if>
+        </aura:if>
+        <!--Budget Section -->
+        <aura:if isTrue="{!v.projCmpVisibility.Budget}">
+            <aura:if isTrue="{!and((not(empty(v.projectRec.projectId))), (v.projectRec.dliProjectType != 'EI'))}">
+                <c:BudgetCommunityListView projectId="{!v.projectRec.projectId}" communityName="{!v.communityName}"/>
+            </aura:if>
+        </aura:if>
+        
+        <br/>
+        <!-- Schedule List -->
+        <aura:if isTrue="{!v.projCmpVisibility.Schedule}">
+            <aura:if isTrue="{!not(empty(v.projectRec.projectId))}">
+                <c:ProjectDetailSchedules projectRec="{!v.projectRec}"/>
+            </aura:if>
+        </aura:if>
+        
+        <br/>
+        <aura:if isTrue="{!v.projCmpVisibility.PlannedDaysOff}">
+            <aura:if isTrue="{!v.projectRec.projectId}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Planned Days Off</h5>                    
+                            <c:ProjectPDOCmp recordId="{!v.projectRec.projectId}"/>
+                        </span>
+                    </div>
+                </div>        
+            </aura:if>
+        </aura:if>
+        <br/>
+        <!-- Time Summary Section-->
+        <aura:if isTrue="{!v.projCmpVisibility.Time_Summary}">
+            <aura:if isTrue="{!not(empty(v.projectRec.projectId))}">
+                <c:TimeSummaryCmp  projectId="{!v.projectRec.projectId}"/><!--displayDevice="{!v.displayDevice}"-->
+            </aura:if>
+        </aura:if>
+        <!-- Payments Section-->
+        <aura:if isTrue="{!not(empty(v.projectRec.projectId))}">
+            <aura:if isTrue="{!v.projCmpVisibility.Funding}">
+                <aura:if isTrue="{!or(v.communityName == 'client' ,and(v.communityName == 'student',or(v.projectRec.parentAccountName == 'PVT',v.projectRec.accountName == 'PVT')))}">
+                    <br/>
+                    <c:FundingListView projectId="{!v.projectRec.projectId}" communityName="{!v.communityName}"/>
+                </aura:if> 
+            </aura:if>
+            
+            <!--Quotes Section -->
+            <aura:if isTrue="{!v.projCmpVisibility.Quote}">
+                <aura:if isTrue="{!or(v.communityName == 'client' ,and(v.communityName == 'student',or(v.projectRec.parentAccountName == 'PVT',v.projectRec.accountName == 'PVT')))}">
+                    <br/>
+                    <c:QuoteListView projectId="{!v.projectRec.projectId}" communityName="{!v.communityName}"/>
+                </aura:if>
+            </aura:if>
+        </aura:if>
+        
+        <br/>
+        <aura:if isTrue="{!v.projCmpVisibility.Lesson_Plan}">
+            <aura:if isTrue="{!v.projectRec.projectId}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Lesson Plans</h5>
+                            <c:LessonPlanListView communityName="{!v.communityName}" projectId="{!v.projectRec.projectId}"/>
+                        </span>
+                    </div>
+                </div>
+            </aura:if>    
+        </aura:if>
+        <br/>
+        
+        <aura:if isTrue="{!v.projCmpVisibility.Language_Testing}">
+            <aura:if isTrue="{!v.projectRec.projectId}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Tests</h5>
+                            <c:LanguageTestingCommunityListView projectId="{!v.projectRec.projectId}"/>
+                        </span>
+                    </div>
+                </div>
+            </aura:if>    
+        </aura:if>
+        <br/>
+        
+        <aura:if isTrue="{!v.projCmpVisibility.Training_Reports}">
+            <aura:if isTrue="{!v.projectRec.projectId}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Training Reports</h5>
+                            <c:AssessmentsListView projectId="{!v.projectRec.projectId}"/>
+                        </span>
+                    </div>
+                </div>
+            </aura:if>
+        </aura:if>
+        <br/>
+        <aura:if isTrue="{!and(v.projCmpVisibility.Policy_and_Procedure, v.projectRec.projectId)}">
+            <br></br>
+            <aura:if isTrue="{!and(v.ca != null, v.ca.Policies_and_Procedure_Box_Share_URL__c != null)}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Policies and Procedure</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th  class="wrap" scope="col">Policy Name</th>                                      
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Policy Name"><a href="javascript:void(0);" data-boxlink="{!v.ca.Policies_and_Procedure_Box_Share_URL__c}" onclick="{!c.previewPolicy}">View Policies and Procedures</a></td>                                
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </span>
+                    </div>
+                </div>                
+            </aura:if>
+            <aura:if isTrue="{!v.studentCAs}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Policies and Procedure</h5>
+                            <aura:if isTrue="{!v.studentCAs.length > 0}"><br/>
+                                <div class="ldtTableCls">
+                                <ldt:datatableDev  aura:id="contactAssignTable" 
+                                                  config="{!v.config}" 
+                                                  dataRows="{!v.studentCAs}"
+                                                  header="{!v.policyAndProcedureHeader}"/>
+                                </div>
+                                <aura:set attribute="else"><br/>
+                                    <p><center> No records Found </center></p>
+                                </aura:set>
+                            </aura:if>
+                        </span>
+                    </div>
+                </div>
+            </aura:if>
+        </aura:if>        
+        <aura:if isTrue="{!and(v.projCmpVisibility.Certificate, v.projectRec.projectId)}">
+            <br></br>
+            <aura:if isTrue="{!and(v.ca != null, v.ca.Certificate_Box_Share_URL__c != null)}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Certificate</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th  class="wrap" scope="col">Certificate Name</th>                                      
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent">
+                                            <td class="wrap" data-label="Certificate Name"><a href="javascript:void(0);" data-boxlink="{!v.ca.Certificate_Box_Share_URL__c}" onclick="{!c.previewPolicy}">View Certificate</a></td>                                
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </span>
+                    </div>
+                </div>                
+            </aura:if>
+            <aura:if isTrue="{!v.studentCAs}">
+                <div class="card-deck">
+                    <div class="card">
+                        <span class="card-body">
+                            <h5 class="card-title">Certificate</h5>
+                            <aura:if isTrue="{!v.studentCAs.length > 0}"><br/>
+                                <div class="ldtTableCls">
+                                <ldt:datatableDev  aura:id="certificateCATable" 
+                                                  config="{!v.config}" 
+                                                  dataRows="{!v.studentCAs}"
+                                                  header="{!v.certificateHeader}"/>
+                                </div>
+                                <aura:set attribute="else"><br/>
+                                    <p><center> No records Found </center></p>
+                                </aura:set>
+                            </aura:if>
+                        </span>
+                    </div>
+                </div>
+            </aura:if>
+        </aura:if>
+    </aura:if>
+</aura:component>

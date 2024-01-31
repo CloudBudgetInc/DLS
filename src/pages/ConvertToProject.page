@@ -1,0 +1,1037 @@
+<apex:page standardController="Opportunity" extensions="ConvertToProject">
+    <apex:includeScript value="{!URLFOR($Resource.ProjectTimeSchedule,'jquery.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS090, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    <link rel="stylesheet" type="text/css" href="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css"/>
+    <!--<script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>-->
+    <script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+
+    <script type="text/javascript"> 
+        function queryQuoteLineItemJSFun() {
+            queryQuoteLineItemAF();   
+            $('#schedulePanel').show(); 
+        }
+        
+        function calculateTotal() {
+                                   
+           $(".projectTaskClass").each(function() {
+                                       
+                var cRate = parseFloat($(this).find('.currentRateClass').val());
+                
+                var cQuan = parseFloat($(this).find('.quantityClass').val());
+                
+                if(isNaN(cRate) || isNaN(cQuan)){
+                    alert('please enter a valid number');
+                } else {
+                    var total = cRate*cQuan;
+                    $(this).find('.totalClass').text(total.toFixed(2));
+                }               
+            });
+              
+        } 
+       function createProjectJS() {
+           createProjectAndProjectTaskAF();
+           $('#ltsSpinner').show();
+        }   
+        
+    </script>
+
+
+    <style>
+        .sked-required {
+            
+            color:red;
+            font-size:12px;
+        }
+        .slds-spinner--small {
+                z-index: 999;
+                width: 100% !important ;
+                height: 100% !important;
+                top: 0;
+                left: 0;
+               // display: none;
+                position: absolute;             
+                background-color: #cccccc;
+                color: #aaaaaa;
+                opacity: .4;
+                filter: alpha(opacity = 50);
+             
+        }
+        .img{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            height: 5%;
+            width: 5%;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+        }
+        
+        /* Edited by Melbin 2016-02-29 */
+        .hide {
+            display: none;
+        }
+         /*.slds .slds-table td {
+            white-space: normal;
+        }*/
+        .nowrapStyle {
+            white-space: normal !important;
+        }
+    </style>
+
+    <apex:form Id="convertToProjectForm">
+        <apex:pageMessages />
+        
+        <div class="slds">
+            <apex:outputPanel rendered="{!projectExist}">
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                        <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                            <div class="slds-media__body">                        
+                                <h2>Project already Exist</h2>
+                                
+                                <apex:commandLink action="/{!oldProjectId}" value="Click here to view the Project" />
+                            </div>
+                        </div>
+                        <div class="slds-no-flex">
+                            <div class="slds-button-group">
+                                <apex:commandButton action="{!toOpportunity}" value="Back" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>  
+                            </div>
+                        </div>
+                    </div>
+                    <!--<div class="slds-card__body">
+                        <div class="slds-media__body">                        
+                            <p></p>
+                        </div>    
+                    </div>-->    
+                </div>        
+            </apex:outputPanel>
+
+            <apex:outputPanel Id="project" rendered="{!IF(oldProjectId != NULL, false, true)}">
+                <div class="slds-is-relative" id="ToastMessage">
+                    <div  style="color: rgb(254, 147, 57);height: 2rem;padding:.5rem;">
+                        <h2><b>Please verify the DLS Location &amp; Classification.</b></h2>
+                    </div>
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!materialNotExist}">
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                        <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                            <div class="slds-media__body">                        
+                                <apex:outputText value="{!msgForMaterialNotExist}" escape="false"/>                             
+                            </div>
+                        </div>
+                        <div class="slds-no-flex">
+                            <div class="slds-button-group">
+                                <apex:commandButton action="{!toOpportunity}" value="Back" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>  
+                            </div>
+                        </div>
+                    </div>
+                </div>        
+            </apex:outputPanel> 
+            
+            <apex:outputPanel rendered="{!IF(OR(lTProductNotExist,testOppStudentCANotExist),true,false)}">
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                        <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                            <div class="slds-media__body">   
+                                <apex:outputText rendered="{!IF(AND(testOppStudentCANotExist,msgForTestOppStudentCANotExist != null),true,false)}" value="{!msgForTestOppStudentCANotExist}" escape="false"/><br/>
+                                <apex:outputText rendered="{!IF(AND(lTProductNotExist,msgForProductNotExist != null),true,false)}" value="{!SUBSTITUTE(JSENCODE(msgForProductNotExist), '\n', '<br/>')}" escape="false"/>
+                                <apex:repeat value="{!unAvailableProd}" var="uA" rows="1">
+                                    <span>{!uA}</span><br/>
+                                </apex:repeat>                                                               
+                            </div>
+                        </div>
+                        <div class="slds-no-flex">
+                            <div class="slds-button-group">
+                                <apex:commandButton action="{!toOpportunity}" value="Back" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>  
+                            </div>
+                        </div>
+                    </div>                     
+                </div>        
+            </apex:outputPanel>
+            
+            <apex:outputPanel id="createProjPanel" rendered="{!NOT(projectExist || lTProductNotExist || materialNotExist || testOppStudentCANotExist)}">
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                        <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                            <div class="slds-media__body">                        
+                                <h2>Project Details</h2>
+                            </div>
+                        </div>
+                        <div class="slds-no-flex">
+                            <div class="slds-button-group">
+                                <!--<apex:commandButton action="{!createProjectAndProjectTask}" onclick="$('#ltsSpinner').show();" value="Save" reRender="createProjPanel,errorMessage" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>-->
+                                <input type="button" onclick="createProjectJS();" value="Convert" class="slds-button slds-button--brand slds-m-bottom--small"/>&nbsp;
+                                <apex:commandButton action="{!toOpportunity}" value="Cancel" styleClass="slds-button slds-button--brand slds-m-bottom--small"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-card__body" id="oppDivId">
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-size_6-of-12" style="margin-left:3em;">
+                                <div class="slds-grid slds-grid_vertical">
+                                    <div class="slds-form--horizontal">
+                                        <div class="slds-col">
+                                            <label class="slds-form-element__label" for="inputSample2"><span class="sked-required">*</span>Project Name</label>
+                                            <div class="slds-form-element__control">                                   
+                                                <apex:InputField value="{!newProject.name}" required="True"/>   
+                                            </div>
+                                        </div>
+                                        <div class="slds-col" style="display:{!IF(isSDEDReq, 'inline', 'none')}">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required">*</span>Start Date</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.Start_Date__c}" required="{!isSDEDReq}" rendered="{!isSDEDReq}"/>
+                                                </div>
+                                            </div>
+                                        </div> 
+                                        <div style="display:{!IF(isSDEDReq, 'none', 'inline') }" class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><!--<span class="sked-required">*</span>--> Oral Exam Date &amp; Time</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.Oral_Exam_Date_Time__c}" required="{NOT(isSDEDReq)}" rendered="{!NOT(isSDEDReq)}"/>
+                                                </div>
+                                            </div>
+                                        </div> 
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required" style="display:{!IF((isRequired), 'inline', 'none')}">*</span>Program Type</label>
+                                                <div class="slds-form-element__control">                                   
+                                                    <apex:InputField value="{!newProject.Program_type__c}" required="{!isRequired}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label" style="white-space:pre-line;" escape="false"><span class="sked-required" style="display:{!IF((isRequired), 'inline', 'none')}">*</span>Requested Hours/Week</label>
+                                                <div class="slds-form-element__control">                                   
+                                                    <apex:InputField value="{!newProject.Hours_Week__c}" required="{!isRequired}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-form-element" style="margin-top:1em;">
+                                            <label class="slds-form-element__label"><span class="sked-required">*</span>QB Contract Type</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:InputField value="{!newProject.QB_Contract_Type__c}" required="TRUE"/> <!--{!isSDEDReq}-->
+                                            </div>
+                                        </div>
+                                        <div style="display:{!IF(isMtt, 'block', 'none')}" class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required">*</span>To #</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.TO__c}" required="{!isMtt}"/> <!-- required="{!IF((newProject.QB_Contract_Type__c == 'FED:GSA' || newProject.QB_Contract_Type__c == 'STATE:GSA'), 'true', 'false')}" -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required" style="{!IF((OR(oppRec.RecordType.DeveloperName == 'DLI_W_TO_Opportunities', oppRec.RecordType.DeveloperName == 'FSI_Opportunities')), 'display:inline;', 'display:none;')}">*</span>Award Date</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!oppRec.Enrollment_Date__c}" required="{!IF((OR(oppRec.RecordType.DeveloperName == 'DLI_W_TO_Opportunities', oppRec.RecordType.DeveloperName == 'FSI_Opportunities')), true, false)}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required" style="{!IF((isSupAndLocReq == true), 'display:inline;', 'display:none;')}">*</span>Project Manager</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.Project_Manager__c}" required="{!isSupAndLocReq}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required">*</span>Total Program Hours</label>
+                                                <div class="slds-form-element__control">                                   
+                                                    <apex:InputField value="{!newProject.Total_Program_Hours__c}" required="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>  
+                            </div>
+                            <div class="slds-col slds-size_6-of-12">
+                                <div class="slds-grid slds-grid_vertical">
+                                    <div class="slds-form--horizontal">
+                                        <div class="slds-col">
+                                            <label class="slds-form-element__label">DLS Class #</label>
+                                            <div class="slds-form-element__control">                                   
+                                                {!newProject.DLS_Class__c}
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span style="display:{!IF((isSDEDReq), 'inline', 'none')}" class="sked-required">*</span>End Date</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.End_Date__c}" required="{!isSDEDReq}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"># of Get Feedback</label>
+                                                <div class="slds-form-element__control">                                   
+                                                    {!noOfGetFeedBack}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label">Order #</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.Order__c}"/> <!-- required="{!IF((newProject.QB_Contract_Type__c == 'FED:GSA' || newProject.QB_Contract_Type__c == 'STATE:GSA'), 'true', 'false')}" -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="display:{!IF(isMtt, 'block', 'none')}; margin-top:1em" class="slds-col slds-form-element">
+                                            <label class="slds-form-element__label"><span class="sked-required">*</span>Project Type</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:InputField value="{!newProject.Project_Type__c}" required="{!isMtt}"/>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required">*</span>Billing Type</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.Billing_Type__c}" required="true"/>
+                                                </div>
+                                            </div>
+                                        </div> 
+                                        <div style="display:{!IF(is_class_Sec_Required, 'inline', 'none')}" class="slds-col slds-form-element">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required" style="{!IF((is_class_Sec_Required == true), 'display:inline;', 'display:none;')}">*</span>Classification</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.QB_Classification__c}" required="{!is_class_Sec_Required}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="display:{!IF(is_class_Sec_Required, 'inline', 'none')}" class="slds-col slds-form-element">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required" style="{!IF((is_class_Sec_Required == true), 'display:inline;', 'display:none;')}">*</span>Section</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.Section__c}" required="{!is_class_Sec_Required}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required" style="{!IF((isSupAndLocReq == true), 'display:inline;', 'display:none;')}">*</span>Training Location</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:InputField value="{!newProject.Training_Location__c}" required="{!isSupAndLocReq}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col">
+                                            <div class="slds-form-element" style="margin-top:1em;">
+                                                <label class="slds-form-element__label"><span class="sked-required" style="{!IF((oppRec.StageName == 'Ended'), 'display:none;', 'display:inline;')}">*</span>Default Cost Rate Rate Type</label>
+                                                <div class="slds-form-element__control">                                   
+                                                    <apex:InputField value="{!newProject.Default_Cost_Rate_Rate_Type__c}" required="{!IF((oppRec.StageName == 'Ended'), false, true)}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>  
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <apex:outputPanel id="ProjectTaskPanel">
+                    <apex:outputPanel Id="ProjectTaskRenderPanel" rendered="{!IF(projectTaskInnserClassList != NULL && projectTaskInnserClassList.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Project Task   
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                    <tr class="slds-text-heading--label">
+                                        <th>Name</th>
+                                        <th>Rate</th>
+                                        <th>Quantity</th>
+                                        <th>Unit</th>
+                                        <th>Budget Amount</th>
+                                        <th><span class="sked-required">*</span>Type</th>
+                                     <!--   <th>OH Applied</th>
+                                        <th>GA Applied</th> -->
+                                        <th style="{!IF(hasPrepTime, 'display:block;', 'display: none;')}">Parent Task</th>
+                                        <th>Billable</th>
+                                    </tr>
+                                    <apex:repeat value="{!projectTaskInnserClassList}" var="pt" id="QLIList">
+                                        <tr class="projectTaskClass">
+                                            <td>
+                                                <apex:OutputField value="{!pt.projTask.Name}"/>
+                                            </td>
+                                            <td>
+                                                <apex:InputField value="{!pt.projTask.Rate__c}" Id="currentRate" styleClass="slds-input currentRateClass" onblur="calculateTotal();" required="TRUE"/>
+                                                
+                                            </td>
+                                            <!--Edited by sharmila to change Quantity__c into Total_Qty_Planned__c on 13-dec-2017-->
+                                            <td>
+                                                <apex:InputField value="{!pt.projTask.Total_Qty_Planned__c}" Id="QuantityId" styleClass="slds-input quantityClass" onblur="calculateTotal();" required="TRUE"/>
+                                            </td>
+                                            <td>
+                                                <apex:InputField value="{!pt.projTask.Unit__c}" Id="unitId" styleClass="slds-select"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!pt.totalPrice}" id="totalPriceId" styleClass="totalClass">
+                                                    <!--<apex:param  value="{!pt.totalPrice}"/> {0, number, 0.00}-->
+                                                </apex:outputText>
+                                            </td>
+                                            <td>
+                                                <apex:OutputField value="{!pt.projTask.Project_Task_Type__c}" Id="projectTaskId" styleClass="slds-select"/>
+                                                <!-- <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="ProjectTaskTypeReq" style="display:none;" rendered="{!pt.error}">This field is required</apex:outputText>
+                                                </p> Commented when the product family is populated in Project Task Type   --->
+                                            </td>
+                                      <!--      <td>
+                                                <apex:InputField value="{!pt.projTask.OH_Applied__c}" Id="OH_AppliedId" styleClass="slds-input"/>
+                                            </td>
+                                            <td>
+                                                <apex:InputField value="{!pt.projTask.G_A_Applied__c}" Id="G_A_AppliedId" styleClass="slds-input"/>
+                                            </td>  -->
+                                            <td style="{!IF(hasPrepTime, 'display:block;', 'display: none;')}">
+                                                <apex:selectList Id="quoteSel1" style="width: 230px;" size="1" value="{!pt.productNameAsProjectTask}" styleClass="slds-select" required="pt.parentPTReq">
+                                                    
+                                                    <apex:selectOptions value="{!pt.parentPTList}"/>
+                                                    
+                                                </apex:selectList>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="parentProjectTask" style="display:none;" rendered="{!pt.error}">This field is required</apex:outputText>
+                                                </p>
+                                            </td>
+                                            <td>
+                                                <apex:inputCheckbox id="BillableId" value="{!pt.projTask.Billable__c}"/>
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table> 
+                                                          
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                    <apex:outputPanel Id="scheduleRenderPanel" rendered="{!IF(scheduleList != NULL && scheduleList.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Schedule   
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                    <tr  class="slds-text-heading--label">
+                                        <th>Name</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Time Zone</th>
+                                        <th>
+                                            <span class="sked-required">*</span>Project Task                                           
+                                        </th>
+                                        <th>Instructor</th>
+                                    </tr>
+                                    <apex:repeat value="{!scheduleList}" var="sch" id="schList">
+                                        <tr>
+                                            <td>
+                                                <!--<apex:outputField value="{!sch.schRec.Name}"/>-->
+                                                <a id="theLink" target="_blank" name="theLink" href="/{!sch.schRec.Id}">{!sch.schRec.Name}</a>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sch.schRec.Start_Date__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sch.schRec.End_Date__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sch.schRec.Start_Time__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sch.schRec.End_Time__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sch.schRec.Timezone__c}"/>
+                                            </td>
+                                            <td>
+
+                                                <apex:selectList Id="quoteSel" style="width: 230px;" size="1" value="{!sch.productNameAsProjectTask}" styleClass="slds-select schProjTask">
+                                                    <apex:selectOptions value="{!projectTaskNameList}"/>
+                                                </apex:selectList>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="SchProjectTaskReq" style="display:none;" rendered="{!sch.error}">This field is required</apex:outputText>
+                                                </p>
+                                            </td>
+                                            <td>
+                                                <!-- Modified by Melbin 2016-02-29 -->
+                                                <apex:selectList Id="quoteSel1" style="width: 230px;" size="1" onchange="showConflictInstructor(this.value, '{!sch.schRec.Id}')" value="{!sch.schRec.Instructor__c}" styleClass="slds-select insProjTask">
+                                                    <apex:selectOptions value="{!instructorNameList}"/>
+                                                </apex:selectList>
+                                                <!-- Modify completed -->
+                                                
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table>                           
+                            </div>
+                        </div>
+                    </apex:outputPanel>           
+                    <apex:outputPanel Id="InstructorRenderPanel" rendered="{!IF(instructorCAList != NULL && instructorCAList.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Instructor Assignment
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                    <tr class="slds-text-heading--label">
+                                        <th>Contact</th>                                   
+                                        <th style="display:{!IF(isSDEDReq, 'block', 'none')}">Start Date</th>
+                                        <th style="display:{!IF(isSDEDReq, 'none', 'block')}">Oral Exam Date &amp; Time</th>
+                                        <th>End Date</th>
+                                        <th>Position</th>
+                                        <th>Email</th>
+                                        <th>Mobile</th>
+                                        <th>
+                                            <span class="sked-required">*</span>Project Task
+                                        </th>
+                                        <!--Show the Hourly input for CR creation in convert to Project screen for specific ratetype if contact doesn't have that CR ratetype .-->
+                                        <th> 
+                                            <apex:outputPanel rendered="{!IF((isShowCRColumn),true,false)}">
+                                                 <span class="sked-required">*</span> Cost Rate({!newProject.Default_Cost_Rate_Rate_Type__c})
+                                            </apex:outputPanel>
+                                        </th>
+                                    </tr>
+                                    <apex:repeat value="{!instructorCAList}" var="iAC" id="insList">
+                                        <tr>
+                                            <td>
+                                                <!--<apex:outputField value="{!iAC.instructorCA.Candidate_Name__c}"/>-->
+                                                <a id="theLink1" target="_blank" name="theLink" href="/{!iAC.instructorCA.Candidate_Name__c}">{!iAC.instructorCA.Candidate_Name__r.Name}</a>
+
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!iAC.instructorCA.Start_Date__c}" rendered="{!isSDEDReq}"/>
+                                                <apex:outputField value="{!iAC.instructorCA.Oral_Exam_Date_Time__c}" rendered="{!NOT(isSDEDReq)}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!iAC.instructorCA.End_Date__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!iAC.instructorCA.Assignment_Position__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!iAC.instructorCA.Email__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!iAC.instructorCA.Mobile__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:selectList Id="quoteSel1" style="width: 230px;" size="1" value="{!iAC.productNameAsProjectTask}" styleClass="slds-select insProjTask">
+                                                    <apex:selectOptions value="{!projectTaskNameList}"/>
+                                                </apex:selectList>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="InstructorProjReq" style="display:none;" rendered="{!iAC.error}">This field is required</apex:outputText>
+                                                </p>
+                                            </td>
+                                            <td> 
+                                                <apex:outputPanel rendered="{!IF((iAC.isShowHourlyCR),true,false)}"> 
+                                                    <span>Hourly Cost</span>
+                                                    <apex:inputText value="{!iAC.crHourlyCost}" styleClass="slds-input" label="hi" style="display:{!IF(iAC.isShowHourlyCR, 'block;width:85%;', 'none')}"/>
+                                                    <p Class="sked-required" style="font-size:12px;">
+                                                        <apex:outputText id="hourlyCostCrReq" rendered="{!iAC.crHourlyReqError}">This field is required</apex:outputText>
+                                                    </p>
+                                                </apex:outputPanel>
+                                                
+                                                <apex:outputPanel rendered="{!IF((iAC.isShowCostRate),true,false)}">
+                                                    <apex:selectList Id="cosRate" style="width: 230px;" size="1" value="{!iAC.selectedCR}" styleClass="slds-select insProjTask">
+                                                        <apex:selectOptions value="{!iAC.costRateOption}"/>
+                                                    </apex:selectList>
+                                                    <p Class="sked-required" style="font-size:12px;">
+                                                        <apex:outputText id="CostCrReq" rendered="{!iAC.isShowCostRateReqError}">This field is required</apex:outputText>
+                                                    </p>
+                                                </apex:outputPanel>
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table>                           
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                    
+                    <!--- 
+                        Added on June 14 
+                        W-002038 - Assign Student Assignment Position in Convert To Project
+                    ----->
+                    <apex:outputPanel Id="StudentRenderPanel" rendered="{!IF(studentCAList != NULL && studentCAList.size > 1, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Student Assignment
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                    <tr class="slds-text-heading--label">
+                                        <th>Contact</th>                                   
+                                        <th style="display:{!IF(isSDEDReq, 'block', 'none')}">Start Date</th>
+                                        <th style="display:{!IF(isSDEDReq, 'none', 'block')}">Oral Exam Date &amp; Time</th>
+                                        <th>End Date</th>
+                                        <th>Email</th>
+                                        <th>Mobile</th>
+                                        <th>
+                                            <span class="sked-required">*</span>Position
+                                        </th>
+                                    </tr>
+                                    <apex:repeat value="{!studentCAList}" var="sAC" id="stdList">
+                                        <tr>
+                                            <td>
+                                                <!--<apex:outputField value="{!iAC.instructorCA.Candidate_Name__c}"/>-->
+                                                <a id="theLink1" target="_blank" name="theLink" href="/{!sAC.studentCA.Candidate_Name__c}">{!sAC.studentCA.Candidate_Name__r.Name}</a>
+
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sAC.studentCA.Start_Date__c}" rendered="{!isSDEDReq}"/>
+                                                <apex:outputField value="{!sAC.studentCA.Oral_Exam_Date_Time__c}" rendered="{!NOT(isSDEDReq)}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sAC.studentCA.End_Date__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sAC.studentCA.Email__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!sAC.studentCA.Mobile__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:selectList Id="quoteSel1" style="width: 230px;" size="1" value="{!sAC.position}" styleClass="slds-select insProjTask">
+                                                    <apex:selectOptions value="{!positionList}"/>
+                                                </apex:selectList>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="StudentPosReq" style="display:none;" rendered="{!sAC.error}">This field is required</apex:outputText>
+                                                </p>
+
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table>                           
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel Id="PaymentRenderPanel" rendered="{!IF(paymentLineList != NULL && paymentLineList.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Payment Line
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                    <tr class="slds-text-heading--label">
+                                        <th>Payment</th>                                   
+                                        <th>Payment Line</th>
+                                        <th>Opportunity Product</th>
+                                        <th><span class="sked-required">*</span>Project Task</th>
+                                        <th>Amount</th>
+                                        
+                                    </tr>
+                                    <apex:repeat value="{!paymentLineList}" var="PLL" id="paymentList">
+                                        <tr>
+                                            <td>
+                                                <a id="theLink2" target="_blank" name="theLink2" href="/{!PLL.payment.Payment__c}">{!PLL.payment.payment__r.Name}</a>
+                                            </td>
+                                            <td>
+                                                
+                                                <a id="theLink3" target="_blank" name="theLink3" href="/{!PLL.payment.Id}">{!PLL.payment.Name}</a>
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!PLL.productNameAsProjectTask}"/>
+                                            </td>
+                                            <td>
+                                                <apex:selectList Id="quoteSel1" style="width: 230px;" size="1" value="{!PLL.productNameAsProjectTask}" styleClass="slds-select insProjTask">
+                                                    <apex:selectOptions value="{!pTNameList}"/>
+                                                </apex:selectList>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="InstructorProjReq" style="display:none;" rendered="{!PLL.error}">This field is required</apex:outputText>
+                                                </p>
+
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!PLL.payment.Amount__c}"/>
+                                            </td>
+                                        </tr> 
+                                    </apex:repeat> 
+                                </table>  
+                            </div>
+                       </div>
+                    </apex:outputPanel>
+                    <apex:outputPanel Id="MatReqRenderPanel" rendered="{!IF(matReqs != NULL && matReqs.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Materials Request
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked slds-table_resizable-cols">
+                                    <tr class="slds-text-heading--label">
+                                        <th>Record #</th>
+                                        <th>Requested For</th> 
+                                        <th>Material</th>                                  
+                                        <th>Date Ordered</th>
+                                        <th>Date Delivered</th>
+                                        <th>Due Date</th>
+                                        <th>Status</th>  
+                                        <th scope="col"><span class="slds-truncate">Request Notes</span></th>                                      
+                                        <th>
+                                            <span class="sked-required">*</span>Project Task
+                                        </th>
+                                    </tr>
+                                    <apex:repeat value="{!matReqs}" var="mr" id="matReqList">
+                                        <tr>
+                                            <td>
+                                                <a id="theLink1" target="_blank" name="theLink" href="/{!mr.mrq.Id}">{!mr.mrq.Name}</a>
+                                            </td>
+                                            <td>
+                                                <a id="theLink2" target="_blank" name="theLink2" href="/{!mr.mrq.Contact__c}">{!mr.mrq.Contact__r.Name}</a>
+                                            </td>
+                                            <td class="nowrapStyle">
+                                                <div class="slds-hyphenate"><a id="theLink3" target="_blank" name="theLink3" href="/{!mr.mrq.Materials_Name__c}">{!mr.mrq.Materials_Name__r.Name}</a></div>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!mr.mrq.Date_Ordered__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!mr.mrq.Date_Delivered__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!mr.mrq.Due_Date__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputField value="{!mr.mrq.Request_Status__c}"/>
+                                            </td>
+                                            <td class="nowrapStyle slds-truncate" style="max-width:400px;">
+                                                <div class="slds-hyphenate"><apex:outputField value="{!mr.mrq.Request_Notes__c}"/></div>
+                                            </td>
+                                            <td>
+                                                <apex:selectList Id="quoteSel1" style="width: 230px;" size="1" value="{!mr.productNameAsProjectTask}" styleClass="slds-select insProjTask">
+                                                    <apex:selectOptions value="{!projectTaskNameList}"/>
+                                                </apex:selectList>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="InstructorProjReq" style="display:none;" rendered="{!mr.error}">This field is required</apex:outputText>
+                                                </p>
+
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table>                           
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                    <apex:outputPanel Id="LTRenderPanel" rendered="{!IF(lTList != NULL && lTList.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Language Testing
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                    <tr class="slds-text-heading--label">
+                                        <th>Name</th>
+                                        <th>Goal SLRW</th> 
+                                        <th>Score SLRW</th>                                  
+                                        <th>Examiner</th>
+                                        <th>Tester</th>
+                                        <th>Testee</th>
+                                        <th>Date Scheduled</th>                                  
+                                        <th>
+                                            <span class="sked-required">*</span>Project Task
+                                        </th>
+                                        <th> Is New </th>
+                                    </tr>
+                                    <apex:repeat value="{!lTList}" var="lt" id="LangTstList">
+                                        <tr>
+                                            <td>
+                                                <a id="theLink1" target="_blank" name="theLink" href="/{!lt.obj.Id}">{!lt.obj.Name}</a>
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!lt.goal_SLRW}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{!lt.score_SLRW}"/>
+                                            </td>
+                                            <td>
+                                                <a id="theLink2" target="_blank" name="theLink2" href="/{!lt.obj.Examiner__c}">{!lt.obj.Examiner__r.Name}</a>
+                                            </td>
+                                            <td>
+                                                <a id="theLink3" target="_blank" name="theLink3" href="/{!lt.obj.Tester__c}">{!lt.obj.Tester__r.Name}</a>
+                                            </td>
+                                            <td>
+                                                <a id="theLink3" target="_blank" name="theLink3" href="/{!lt.studentId}">{!lt.studentName}</a>
+                                            </td>
+                                            <td>
+                                                <!--<apex:outputText value="{!lt.obj.Date_Time_Scheduled__c}"> </apex:outputText>-->
+                                                <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                                                    <apex:param value="{!lt.obj.Date_Time_Scheduled__c }" /> 
+                                                </apex:outputText>
+                                                
+                                            </td>
+                                            <td>
+                                                <apex:selectList Id="quoteSel1" style="width: 230px;" size="1" value="{!lt.ptName}" styleClass="slds-select insProjTask">
+                                                    <apex:selectOptions value="{!projectTaskNameList}"/>
+                                                </apex:selectList>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="InstructorProjReq" style="display:none;" rendered="{!lt.error}">This field is required</apex:outputText>
+                                                </p>
+
+                                            </td>
+                                            <td>
+                                                <apex:inputCheckbox value="{!lt.isNew}" disabled="True" />
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </table>                           
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel Id="TimeLogRenderPanel" rendered="{!IF(tlList != NULL && tlList.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Time Log Summary Detail
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked" Id="timelogTableId">
+                                    <thead class="slds-text-heading--label">
+                                    <!--<tr class="slds-text-heading--label">-->
+                                        <th>Instructor</th>                                                                          
+                                        <th>Hours</th>
+                                        <th>
+                                            <span class="sked-required">*</span>Project Task
+                                        </th>
+                                    <!--</tr>-->
+                                    </thead>
+                                    <tbody>
+                                        <apex:repeat value="{!tlList}" var="tll" id="tlList">
+                                            <tr>
+                                                <td>
+                                                    <a id="theLink1" target="_blank" name="theLink" href="/{!tll.contactId}">{!tll.contName}</a>
+                                                </td>
+                                                <td>
+                                                    <apex:OutputText value="{!tll.hours}"/>                                     
+                                                </td>                                               
+                                                <td>
+                                                    <apex:selectList Id="ProjSelForTcd" style="width: 230px;" size="1" value="{!tll.newProjectTask}" styleClass="slds-select insProjTask">
+                                                        <apex:selectOptions value="{!projectTaskNameList}"/>
+                                                    </apex:selectList>
+                                                    <p Class="sked-required" style="font-size:12px;">
+                                                        <apex:outputText id="InstructorProjReq" style="display:none;" rendered="{!tll.error}">This field is required</apex:outputText>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </tbody>
+                                </table>                           
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                    <apex:outputPanel Id="EventRenderPanel" rendered="{!IF(eventList != NULL && eventList.size > 0, true, false)}">
+                        <div class="slds-card">
+                            <div class="slds-card__header slds-grid">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">                        
+                                        Events in Conflict
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">                                                       
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked">
+                                    <tr class="slds-text-heading--label">
+                                        <th>Name</th> 
+                                        <th>Contact Days Off</th>                                  
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        
+                                        <th>Current Event Date</th>
+                                        <th>Rescheduled Date</th>
+                                    </tr>
+                                    <apex:repeat value="{!eventList}" var="EL" id="eventList">
+                                        <tr>
+                                            
+                                            <td>
+                                                <apex:outputField value="{!EL.evt.Name}"/>
+                                            </td>
+                                            
+                                            <td>
+                                                {!EL.ContactRecordType}
+                                            </td>
+                                            <td>
+                                                <apex:inputField value="{!EL.evt.Start_Time__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:inputField value="{!EL.evt.End_Time__c}"/>
+                                            </td>
+                                            <td>
+                                                <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                                                    <apex:param value="{!EL.oldDate}" /> 
+                                                </apex:outputText>
+                                                
+                                            </td>
+                                            <td>
+                                                <apex:inputField value="{!EL.evt.Date__c}"/>
+                                                <p Class="sked-required" style="font-size:12px;">
+                                                    <apex:outputText id="eventErr" style="display:none;" rendered="{!EL.error}">{!EL.errorMsg}</apex:outputText>
+                                                </p>
+                                                <!--<apex:repeat value="{!oldEventDateSTETWithIdNameMap}" var="fieldKey">-->
+                                                    <apex:variable value="{!0}" var="i" />
+                                                    <apex:outputText rendered="{!EL.evntList.size > 0}">                                                        
+                                                    Event(S) :</apex:outputText> 
+                                                    <apex:repeat value="{!EL.evntList}" var="evnt"> 
+                                                                                                          
+                                                        <apex:outputText rendered="{!i != 0}" value=",">                                                        
+                                                        </apex:outputText>
+                                                        <a href="/{!evnt.Id}" target="_blank">{!evnt.Name}</a>
+                                                        
+                                                        <apex:variable value="{!i+1}" var="i" />
+                                                    </apex:repeat>
+                                                    
+                                                <!--</apex:repeat>-->
+                                                
+                                            </td>
+                                        </tr> 
+                                    </apex:repeat> 
+                                </table>  
+                            </div>
+                       </div>
+                    </apex:outputPanel>       
+                </apex:outputPanel>               
+            
+            </apex:outputPanel>
+            
+            <!-- Edited by Melbin 2016-02-29 -->
+            <div class="hide" id="instructorConflictedEventsModal">
+                <div aria-hidden="false" role="dialog" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container slds-modal--prompt">
+                        <div class="slds-modal__header slds-theme--warning slds-theme--alert-texture">
+                            <h1>Conflicts with this Instructor</h1>
+                        </div>
+                        <div class="slds-modal__content slds-max-small-buttons--stretch slds-x-small-buttons--stacked" style="text-align: center;">
+                            <div class="slds-form-element slds-is-required">
+                                <div id="instructorConflictModalContent"></div>
+                            </div>
+                            <div class="slds-m-top--x-small" style="text-align: center;">
+                                <button class="slds-button slds-button--brand" type="button" onClick="hideModal(); return false;">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop slds-modal-backdrop--open"></div>
+            </div>
+            <!-- Edit Completed -->
+            
+        </div>
+        <apex:actionFunction action="{!createProjectAndProjectTask}" name="createProjectAndProjectTaskAF" reRender="convertToProjectForm" oncomplete="$('#ltsSpinner').hide();"/>
+        
+    </apex:form>
+    <div class="slds-spinner--small" style="display:none;" id="ltsSpinner">
+        <img alt="Loading..." src="{!URLFOR($Resource.SLDS091,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img"/>
+    </div>
+    <script>
+        function showConflictInstructor(instructorId, scheduleId) {
+            console.log('instructorId', scheduleId);
+            console.log('scheduleId', scheduleId);
+            if(instructorId) {
+                getInstructorConflicts(instructorId, scheduleId);
+            }
+        }
+        
+        function getInstructorConflicts(instructorId, scheduleId) {
+             Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ConvertToProject.getInstructorConflicts}',
+                instructorId,
+                scheduleId,
+                function(response, ev) {
+                    if(ev.status) {
+                        var content = getSldsGrid(response);
+                        if(content) {
+                            showModal(content);
+                        }
+                    } else {
+                        console.log('error', error);
+                    }
+                },
+                {escape: true}
+            );
+        }
+        
+        function showModal(content) {
+            var modal = document.getElementById('instructorConflictedEventsModal');
+            var modalContent = document.getElementById('instructorConflictModalContent');
+            if(modal) {
+                console.log('found');
+                modal.className = '';
+                if(modalContent) {
+                    modalContent.innerHTML = content;
+                }    
+            } else {
+                console.log('Modal not found');
+            }
+        }
+        
+        function getSldsGrid(list) {
+            if(!list.length)
+                return null;
+            console.log('conflicts', list.length, list);
+            var content = '<strong>This instructor have ' + list.length + 'conflicts with this schedule.</strong><div class="sdls-grid">';
+            for(var i = 0; i < list.length; i++) {
+                content += getSldsRow(list[i].type, formatDate(list[i].conflictedDate));
+            }
+            return content;
+        }
+        
+        function formatDate(dateValue) {
+            var date = new Date(dateValue);
+            var day = date.getDate();
+            if(day < 10)
+                day = '0' + day;
+            var month = date.getMonth() + 1;
+            if(month < 10)
+                month = '0' + month;
+            return date.getFullYear() + '-' + month + '-' + day;
+        }
+        
+        function getSldsRow(title, date) {
+            return '<div class="slds-row slds-size--1-of-3">' + title + ' ' + date + '</div>';
+        }
+        
+        function hideModal() {
+            console.log('hide modal');
+            var modal = document.getElementById('instructorConflictedEventsModal');
+            if(modal) {
+                console.log('found');
+                modal.className = 'hide';
+            }
+        }
+    </script>
+</apex:page>

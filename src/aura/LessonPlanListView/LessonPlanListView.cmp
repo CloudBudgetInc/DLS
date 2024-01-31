@@ -1,0 +1,61 @@
+<aura:component controller="LessonPlanCmp_Ctrl">
+    <aura:attribute name="tableColumns" type="List" access="PUBLIC"/>
+    <aura:attribute name="tableConfig" type="Map" access="PUBLIC"/>
+    <aura:attribute name="lessonPlans" type="List" access="PUBLIC"/>
+    <aura:attribute name="projectId" type="string" access="PUBLIC"/>
+    <aura:attribute name="filterDate" type="Map" access="PUBLIC"/>
+    <aura:attribute name="showSpinner" type = "Boolean" access="Private" default="false"/>
+    <aura:attribute name="showLessonPlan" type="Boolean" default="false"/>
+    <aura:attribute name="selectedRecord" type="Map"/>    
+    <aura:attribute name="communityName" type="String" default=""/>
+    
+    <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClicked}"/>
+    
+    <!-- Modified By Dhinesh - 10/10/2023 - W-007894 - Request to Add Date Filters to the Lesson Plan Section in DLS Online -->
+    <ltng:require scripts="{!$Resource.moment}"                                             
+                  afterScriptsLoaded="{!c.doInit}" />
+    
+    <c:ApexService aura:id="server"/>
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div class="cardPadding">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">    
+                    <!-- Modified By Dhinesh - 10/10/2023 - W-007894 - Request to Add Date Filters to the Lesson Plan Section in DLS Online -->
+                    <lightning:layout >
+                        <lightning:layoutItem>
+                            <lightning:input type="date" label="From" value="{!v.filterDate.from}" />
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="horizontal-medium">
+                            <lightning:input aura:id="toDateInput" type="date" label="To" value="{!v.filterDate.to}" />
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="horizontal-medium" class="slds-m-top_large">
+                            <lightning:button variant="brand" label="Search" title="Search" onclick="{! c.validateDates }" class="btn btn-primary"/>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                    
+                    <aura:if isTrue="{!v.lessonPlans.length > 0}">                        
+                        <div class="ldtTableCls">                            
+                            <ldt:datatableDev aura:id="lessonPlansTable"
+                                              dataRows="{!v.lessonPlans}" header="{!v.tableColumns}"
+                                              config="{!v.tableConfig}"/>
+                        </div>
+                        <aura:set attribute="else">
+                            <br/><center><h5 style="font-size :0.875rem;">No records to display</h5><br/></center>
+                        </aura:set>
+                    </aura:if>
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!--<aura:if isTrue="{!v.showLessonPlan}">
+        <c:LessonPlanCmp showLessonPlan="{!v.showLessonPlan}" communityName="{!v.communityName}" eventId="{!v.selectedRecord.Event__c}" modalHeader="{! 'Lesson Plan ' + v.selectedRecord.dateStr}"/>        
+    </aura:if>-->
+</aura:component>

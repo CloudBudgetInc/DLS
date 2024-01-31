@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <decisions>
+        <name>Check_Condition_to_Delete_Lesson_Plans</name>
+        <label>Check Condition to Delete Lesson Plans</label>
+        <locationX>451</locationX>
+        <locationY>455</locationY>
+        <defaultConnectorLabel>Do Other Action_1</defaultConnectorLabel>
+        <rules>
+            <name>Delete_Lesson_Plans</name>
+            <conditionLogic>1 AND (2 OR 3)</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Canceled</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>No class</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Query_Lesson_Plans</targetReference>
+            </connector>
+            <label>Delete Lesson Plans</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_Insert_Update_Condition</name>
+        <label>Check Insert_Update Condition</label>
+        <locationX>176</locationX>
+        <locationY>335</locationY>
+        <defaultConnector>
+            <targetReference>Check_Condition_to_Delete_Lesson_Plans</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Is Update</defaultConnectorLabel>
+        <rules>
+            <name>Is_Insert</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Is_New</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <label>Is Insert</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_Lesson_Plan_List_Size</name>
+        <label>Check Lesson Plan List Size</label>
+        <locationX>297</locationX>
+        <locationY>695</locationY>
+        <defaultConnectorLabel>Empty Lesson Plan List</defaultConnectorLabel>
+        <rules>
+            <name>Have_Lesson_Plans</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Query_Lesson_Plans</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Delete_Lesson_Plan_Recs</targetReference>
+            </connector>
+            <label>Have Lesson Plans</label>
+        </rules>
+    </decisions>
+    <formulas>
+        <name>Is_New</name>
+        <dataType>Boolean</dataType>
+        <expression>ISNEW()</expression>
+    </formulas>
+    <interviewLabel>Event Trigger Flow_After {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Event Trigger Flow_After</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordDeletes>
+        <name>Delete_Lesson_Plan_Recs</name>
+        <label>Delete Lesson Plan Recs</label>
+        <locationX>165</locationX>
+        <locationY>815</locationY>
+        <inputReference>Query_Lesson_Plans</inputReference>
+    </recordDeletes>
+    <recordLookups>
+        <name>Query_Lesson_Plans</name>
+        <label>Query Lesson Plans</label>
+        <locationX>297</locationX>
+        <locationY>575</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_Lesson_Plan_List_Size</targetReference>
+        </connector>
+        <filters>
+            <field>Event__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Draft</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Lesson_Plan__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Insert_Update_Condition</targetReference>
+        </connector>
+        <object>Events__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

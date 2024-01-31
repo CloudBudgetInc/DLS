@@ -1,0 +1,37 @@
+<apex:component controller="New_Class_Announcement_Project_Comp_Ctrl" access="global">
+    <apex:attribute name="projectId" description="" type="String" assignTo="{!proId}"/>
+    <!--<img src="https://c.na26.content.force.com/servlet/servlet.ImageServer?id=0156000000114nn&oid=00DRT0000006o6z" alt="Company Logo" height="30%" width="100%"/>-->
+    <center><img src="https://c.na61.content.force.com/servlet/servlet.ImageServer?id=0150d000002c5Qp&oid=00DRT0000006o6z&lastMod=1524653866000" alt="Company Logo" height="10%" width="25%"/></center>
+    <p>{!proj.studName} {!proj.langName} starts on&nbsp; <apex:outputText value="{0,date,MM/dd/yy}"> <apex:param value="{!proj.sDate}" /></apex:outputText></p>
+    <a href="{!proj.recURL}" target="_blank">View Project</a> 
+    <div>Student Name: {!proj.studName}</div> 
+    <div>Agency/Organization: {!proj.acctName}</div>
+    <div>Location: {!proj.locName}</div>
+    <div>Language: {!proj.langName}</div>
+    <div>Instructor: {!proj.insName}</div>
+    <div >Start Date: 
+        <apex:outputText value="{0,date,MM/dd/yy}"> <apex:param value="{!proj.sDate}" /> </apex:outputText>
+    </div>
+    <div>End Date: 
+        <apex:outputText value="{0,date,MM/dd/yy}"> <apex:param value="{!proj.eDate}" /> </apex:outputText>
+    </div>
+    <div>Hours/Week: {!proj.hrsPerWeek}</div>
+    <div>Country Map: {!proj.ctryMap}</div>
+    <div>Materials Budget: {!proj.matBudget}</div>
+    <div>Notes: {!proj.notes}</div>   
+    <apex:variable var="i" value="{!1}"/>    
+    <table Border="1px solid black" style="width:75%">
+        <tr>
+            <th style="width:25%;">Days</th>
+            <th style="width:25%;">Start Time</th>
+            <th style="width:25%;">End Time</th>
+        </tr>
+        <apex:repeat value="{!proj.schs}" var="sc">
+            <tr>
+                <td style="text-align: center;">{!sc.Days__c}</td>
+                <td style="text-align: center;">{!sc.Start_Time__c}</td>
+                <td style="text-align: center;">{!sc.End_Time__c}</td>
+            </tr>
+        </apex:repeat>        
+    </table>
+</apex:component>

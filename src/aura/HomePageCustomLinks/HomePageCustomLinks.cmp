@@ -1,0 +1,57 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" >
+    <div>
+        <nav class="slds-nav-vertical" aria-label="Sub page">
+            <div class="slds-nav-vertical__section">
+                <h2 id="entity-header" class="slds-nav-vertical__title slds-text-title_caps">Candidates</h2>
+                <ul>
+                    <li class="slds-nav-vertical__item" onclick="{!c.candidateSearch}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Candidate Search</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.LanguageSearch}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Language Search</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.uploadResume}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Upload Resume</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.plannedOff}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Planned Days Off</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.findSchools}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Find Schools</span></li>
+                </ul>
+            </div>
+            <div class="slds-nav-vertical__section">
+                <h2 id="entity-header" class="slds-nav-vertical__title slds-text-title_caps">Project Tools</h2>
+                <ul>
+                    <li class="slds-nav-vertical__item" onclick="{!c.roomSearch}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Room Search</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.progressReport}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Create Progress Reports</span></li>
+                    <!--li class="slds-nav-vertical__item" onclick="{!c.dispositionForm}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Disposition Form Creation</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.AnalyticsTool}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Perform Analytics Tool</span></li-->
+                </ul>
+            </div>
+            <div class="slds-nav-vertical__section">
+                <h2 id="entity-header" class="slds-nav-vertical__title slds-text-title_caps">Materials</h2>
+                <ul>
+                    <li class="slds-nav-vertical__item" onclick="{!c.library}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Materials Library</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.dlsCalculator}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">DLS In-house Copy Calculator</span></li>
+                </ul>
+            </div>
+            <div class="slds-nav-vertical__section">
+                <h2 id="entity-header" class="slds-nav-vertical__title slds-text-title_caps">Accounting</h2>
+                <ul>
+                    <li class="slds-nav-vertical__item" onclick="{!c.createBilling}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Create Billings</span></li>
+                 </ul>
+            </div>
+            <div class="slds-nav-vertical__section">
+                <h2 id="entity-header" class="slds-nav-vertical__title slds-text-title_caps">Timekeeping</h2>
+                <ul>
+                    <li class="slds-nav-vertical__item" onclick="{!c.staffTimeEntry}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Timesheet Entry</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.ApprovalPage}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Timesheet Approval</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.AdminTimeEntry}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Admin Time Entry</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.timelogEntry}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Time Log Entry</span></li>
+                	<li class="slds-nav-vertical__item" onclick="{!c.timeLogLockDate}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Lock Time Log</span></li>
+                </ul>
+            </div>
+            <div class="slds-nav-vertical__section">
+                <h2 id="entity-header" class="slds-nav-vertical__title slds-text-title_caps">Other Links</h2>
+                <ul>
+                    <li class="slds-nav-vertical__item" onclick="{!c.issueLog}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Issue Log</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.unresolvedItems}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Unresolved Items</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.paycomLogin}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Paycom (login page)</span></li>
+                    <li class="slds-nav-vertical__item" onclick="{!c.teamworkLogin}"><span class="slds-nav-vertical__action" aria-describedby="entity-header" style="cursor: pointer;">Teamwork Login</span></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+</aura:component>

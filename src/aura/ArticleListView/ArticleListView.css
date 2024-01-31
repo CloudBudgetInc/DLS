@@ -1,0 +1,39 @@
+.THIS .slds-spinner_container {
+    position:fixed !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+    z-index: 1000000 !important;
+}
+.THIS .ldtdev .slds-select[size]{
+    display: inline-block ;
+    width: 100%;
+    height: calc(1.5em + 1.5rem + 2px);
+    padding: 0.25rem 2.5rem 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    vertical-align: middle;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    appearance: none;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  -webkit-appearance: menuList;
+}
+.THIS .ldtdev .select {
+    background-image: none !important;
+}
+.THIS .ldtdev .slds-input {
+display: block;
+    width: 100%;
+    height: calc(1.5em + 1.5rem + 2px);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}

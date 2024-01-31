@@ -1,0 +1,4 @@
+<aura:event type="COMPONENT">
+    <aura:attribute name="timeInput" type="MBA_Timesheet__c"/>
+    <aura:attribute name="lineNumber" type="Integer"/>
+</aura:event>

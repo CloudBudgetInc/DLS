@@ -1,0 +1,599 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="InstructorSearch_LightningCtrl">
+    <aura:attribute name="contactsList" type="Contact[]" access="public"/>
+    <aura:attribute name="header" type="List" access="public"/>
+    <aura:attribute name="serviceList" type="List" access="public"/>
+    <aura:attribute name="skillRatingList" type="List" access="public"/>
+    <aura:attribute name="foreignLangList" type="List" access="public"/>
+    <aura:attribute name="englishLangList" type="List" access="public"/>
+    <aura:attribute name="degreesList" type="List" access="public"/>
+    <aura:attribute name="citizenshipList" type="List" access="public"/>
+    <aura:attribute name="countryOfBirth" type="List" access="public"/>
+    <aura:attribute name="dlsRating" type="List" access="public"/>
+    <aura:attribute name="languageList" type="List" access="public"/>
+    <aura:attribute name="locationList" type="List" access="public"/>
+    <aura:attribute name="search" type="Object" access="public"/>
+    <aura:attribute name="displayFiltersection" type="Boolean" access="public"/>
+    <aura:attribute name="timeList" type="Boolean" access="public"/>
+    <aura:attribute name="instructorStatusList" type="List" access="public"/>
+    <aura:attribute name="displayMultiSelectFilters" type="Boolean"/>
+    <aura:attribute name="showInfoWindow" type="Boolean"/>
+    <aura:attribute name="infoMessage" type="String"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="displayZip" type="Boolean" default="false"/>
+    <aura:attribute name="contactRec" type="Contact"/>
+    <aura:attribute name="displayMoreInfoModal" type="Boolean"/>
+    <aura:attribute name="scoreMap" type="Object"/>
+    <aura:attribute name="conflictMap" type="Object"/>
+    <aura:attribute name="displayBookMarkSection" type="Boolean"/>
+    <aura:attribute name="taskTableConfig" type="Map" access="public"/>
+    <aura:attribute name="bookMarkTitle" type="String"/>
+    <aura:attribute name="userList" type="List"/>
+    <aura:attribute name="languageLabelList" type="List" default="[]"/>
+    
+    <!-- Language tab attributes -->
+    <aura:attribute name="languageDetails" type="List"/>
+    <aura:attribute name="langFieldDetails" type="List"/>
+    
+    <!-- Experience tab attributes -->
+    <aura:attribute name="experienceDetails" type="List"/>
+    <aura:attribute name="expFieldDetails" type="List"/>
+    
+    <!-- Education tab attributes -->
+    <aura:attribute name="educationDetails" type="List"/>
+    <aura:attribute name="educationFieldDetails" type="List"/>
+    
+    <!-- Cost Rate tab attributes -->
+    <aura:attribute name="costRateDetails" type="List"/>
+    <aura:attribute name="crFieldDetails" type="List"/>
+    
+    <!-- Schedule tab attributes -->
+    <aura:attribute name="scheduleDetails" type="List"/>
+    <aura:attribute name="scheduleFieldDetails" type="List"/>
+    
+    <!-- Url param related attributes to pre populate the Language filter values -->
+    <aura:attribute name="parentId" type="String" access="private" default=""/>
+    <aura:attribute name="parentType" type="String" access="private" default=""/>
+    
+    <ltng:require styles="{!$Resource.SLDS_2_1_3 + '/assets/styles/lightning-design-system-ltng.css'}"/>
+    <ltng:require styles="{!$Resource.Bookmark_Icon}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>   
+    <!--aura:handler name="getSelectedElementEvent" event="c:getSelectedElementEvent" action="{!c.handleLookupEvent}"/-->
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tableActionHandler}"/>
+    <aura:handler event="c:reloadEvent" action="{!c.bookMarkModalClose}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="large" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <lightning:card title="Filter">
+        <aura:set attribute="actions">
+            <lightning:button label="Hide Filter" onclick="{!c.hideFilter}"/>
+        </aura:set>
+        <aura:if isTrue="{!v.displayFiltersection}">
+            <div>
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="9" largeDeviceSize="9" padding="around-small">
+                        
+                        <lightning:layout multipleRows="true">                            
+                            <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="3" padding="around-small">
+                                <div class="slds-box">
+                                    <span class="boxTitle">Skills</span>
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="Service" optionsList="{!v.serviceList}" selectedvalue="{!v.search.selectedService}"/>
+                                        </aura:if> 
+                                    </div>
+                                    <div class="slds-col">
+                                        <!--lightning:select aura:id="Language" label="Language" value="{!v.search.selectedLanguage}">
+                                            <option text="Select" value=""/>
+                                            <aura:iteration items="{!v.languageList}" var="lang">
+                                                <option text="{!lang.Name}" value="{!lang.Id}"/>
+                                            </aura:iteration>
+                                        </lightning:select-->
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="Language" optionsList="{!v.languageLabelList}" selectedvalue="{!v.search.selectedLanguage}"/>
+                                        </aura:if>
+                                    </div>
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="Skill Rating" optionsList="{!v.skillRatingList}" selectedvalue="{!v.search.selectedSkillRating}"/>
+                                        </aura:if> 
+                                    </div>
+                                    <div class="slds-col slds-m-top_small">
+                                        <lightning:input type="checkbox" label="DLI Qualified" name="DLI Qualified" checked="{!v.search.dliQualified}"/><br/>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="4" padding="around-small">
+                                <div class="slds-box">
+                                    <span class="boxTitle">Education and Experience</span>
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="Degree" optionsList="{!v.degreesList}" selectedvalue="{!v.search.selectedDegree}"/>
+                                        </aura:if> 
+                                    </div>
+                                    <div class="slds-col">
+                                        <lightning:input type="text" label="Experience (in months)" placeholder="Experience in months" value="{!v.search.enteredExperience}"/>
+                                    </div>
+                                    
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="DLS Candidate Rating" optionsList="{!v.dlsRating}" selectedvalue="{!v.search.selectedDlsRating}"/>
+                                        </aura:if> 
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="4" padding="around-small">
+                                <div class="slds-box">
+                                    <span class="boxTitle">Availability</span>
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="Instructor Status" optionsList="{!v.instructorStatusList}" selectedvalue="{!v.search.selectedInstructorStatus}"/>
+                                        </aura:if>
+                                    </div>
+                                    <div class="slds-col">
+                                        <ui:inputDate class="slds-input datePickerCls" label="Availability Date" displayDatePicker="true" format="MM/dd/yyyy" value="{!v.search.selectedAvailabilityDate}"/>
+                                    </div>
+                                    <div class="slds-col">
+                                        <!--label class="slds-form-element__label">Bookmark User</label-->
+                                        <!--c:LookupSearch IconName="standard:user" type="Bookmark User" placeHolder="Select User" listOfSearchElements="{!v.userList}" searchAs="Name" selectedObject="{!v.search.selectedBookmark}"/-->
+                                        <c:LookupSearch aura:id="lookup" selection="{!v.search.selectedBookmark}" onSearch="{!c.lookupSearch}" iconName="standard:user" objectName="User" fieldName="Name" condition="" label="Bookmark User" placeholder="Select User" isMultiEntry="false"/>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="3" padding="around-small">
+                                <div class="slds-box">
+                                    <span class="boxTitle">Proficiency</span>
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="Foreign Language Proficiency" optionsList="{!v.foreignLangList}" selectedvalue="{!v.search.selectedForeignProficiency}"/>
+                                        </aura:if> 
+                                    </div>
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="English Language Proficiency" optionsList="{!v.englishLangList}" selectedvalue="{!v.search.selectedEnglishProficiency}"/>
+                                        </aura:if> 
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="4" padding="around-small">
+                                <div class="slds-box">
+                                    <span class="boxTitle">Citizenship</span>
+                                    <div class="slds-col">
+                                        <aura:if isTrue="{!v.displayMultiSelectFilters}">
+                                            <c:multiSelectCmp label="Citizenship" optionsList="{!v.citizenshipList}" selectedvalue="{!v.search.selectedCitizenship}"/>
+                                        </aura:if> 
+                                    </div>
+                                    <div class="slds-col">
+                                        <lightning:select aura:id="countryOfBirth" label="Country of Birth" value="{!v.search.selectedCountryOfBirth}">
+                                            <option text="--Select--" value=""/>
+                                            <aura:iteration items="{!v.countryOfBirth}" var="country">
+                                                <option text="{!country}" value="{!country}"/>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="4" padding="around-small">
+                                <div class="slds-box">
+                                    <span class="boxTitle">Proximity</span>
+                                    <div class="slds-col">
+                                        <div class="slds-p-bottom_small" style="float:right;"><lightning:input type="toggle" label="Zip" name="Zip" checked="{!v.displayZip}" messageToggleActive="" messageToggleInactive="" onclick="{!v.locationZipFlip}"/></div><br/>
+                                        
+                                        <aura:if isTrue="{!v.displayZip}">
+                                            <lightning:input type="text" label="Zip Code" placeholder="Zip Code" value="{!v.search.enteredZip}"/>
+                                            <aura:set attribute="else">
+                                                <div class="slds-m-top_small">
+                                                    <!--label class="slds-form-element__label">Location</label-->
+                                                    <!--c:LookupSearch IconName="standard:location" type="Location" placeHolder="Select Location" listOfSearchElements="{!v.locationList}" searchAs="Name" selectedObject="{!v.search.selectedlocation}"/-->
+                                                    <c:LookupSearch aura:id="locationLookup" selection="{!v.search.selectedlocation}" onSearch="{!c.locationLookupSearch}" iconName="standard:location" objectName="MTT_Location__c" fieldName="Name" condition="" label="Location" placeholder="Select Location" isMultiEntry="false"/>
+                                                </div>
+                                                
+                                            </aura:set>
+                                        </aura:if>  
+                                    </div>
+                                    <div class="slds-col">
+                                        <lightning:input type="text" label="Proximity Range" placeholder="Proximity Range" value="{!v.search.enteredProximity}"/>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                        
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="3" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="3" padding="around-small">
+                        <div class="slds-box slds-col slds-m-left_xx-small slds-m-right_xx-small">
+                            <span class="boxTitle">Schedule Details</span>
+                            <div class="slds-col">
+                                <ui:inputDate class="slds-input datePickerCls" label="Start Date" displayDatePicker="true" value="{!v.search.selectedStartDate}"/>
+                            </div>
+                            <div class="slds-col">
+                                <ui:inputDate class="slds-input datePickerCls" label="End Date" displayDatePicker="true" value="{!v.search.selectedEndDate}"/>
+                            </div>
+                            <div class="slds-col">
+                                <lightning:select aura:id="startTime" label="Start Time" value="{!v.search.selectedStartTime}">
+                                    <option text="--None--" value="--None--"/>
+                                    <aura:iteration items="{!v.timeList}" var="time">
+                                        <option text="{!time}" value="{!time}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-col">
+                                <lightning:select aura:id="endTime" label="End Time" value="{!v.search.selectedEndTime}">
+                                    <option text="--None--" value="--None--"/>
+                                    <aura:iteration items="{!v.timeList}" var="time">
+                                        <option text="{!time}" value="{!time}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-col slds-m-top_small">
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-col slds-m-top_small">
+                                        <lightning:input type="checkbox" label="Monday" name="Monday" checked="{!v.search.monday}"/><br/>
+                                        <lightning:input type="checkbox" label="Tuesday" name="Tuesday" checked="{!v.search.tuesday}"/><br/>
+                                        <lightning:input type="checkbox" label="Wednesday" name="Wednesday" checked="{!v.search.wednesday}"/><br/>
+                                        <lightning:input type="checkbox" label="Thursday" name="Thursday" checked="{!v.search.thursday}"/><br/>
+                                        <lightning:input type="checkbox" label="Friday" name="Friday" checked="{!v.search.friday}"/><br/>
+                                    </div>
+                                    <div class="slds-col slds-m-top_small">
+                                        <lightning:input type="checkbox" label="Saturday" name="Saturday" checked="{!v.search.saturday}"/><br/>
+                                        <lightning:input type="checkbox" label="Sunday" name="Sunday" checked="{!v.search.sunday}"/><br/>
+                                    </div>
+                                </div>          
+                                
+                            </div>
+                        </div>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+            <div class="slds-m-top_xx-small slds-align_absolute-center">
+                <lightning:button variant="brand" label="Search" onclick="{!c.searchClick}" />
+            </div>
+        </aura:if>
+    </lightning:card>
+    
+    <lightning:card title="">
+        <section class="project-task-list slds-p-top--x-small">
+            <aura:if isTrue="{!not(empty(v.contactsList))}">
+                <div class="task-list slds-p-top--medium">
+                    <ldt:datatableDev title="Candidates" aura:id="contactTable" dataRows="{!v.contactsList}" header="{!v.header}" config="{!v.taskTableConfig}"/>
+                </div>
+                <aura:set attribute="else">
+                    <span class="slds-align_absolute-center">No records to display</span>
+                </aura:set>
+            </aura:if>
+        </section>
+    </lightning:card>
+    
+    
+    <aura:if isTrue="{!v.showInfoWindow}">
+        <div aria-hidden="false" role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h1 class="slds-text-heading--small" style="font-size:14px;">Information</h1>
+                </div>
+                <div class="slds-modal__content" style="padding: 2%;"> 
+                    <p>{!v.infoMessage}</p>
+                </div>
+                <div class="slds-modal__footer">     
+                    <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnInfo}"/>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.displayMoreInfoModal}">
+        <div aria-hidden="false" role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container" style="width: 100%;max-width: 80rem;">
+                <div class="slds-modal__header">
+                    <h1 class="slds-text-heading--small" style="font-size:14px;">{!v.contactRec.Name}</h1>
+                </div>
+                <div class="slds-modal__content" style="padding: 2%;"> 
+                    <lightning:tabset>
+                        <lightning:tab label="Summary">
+                            <div class="slds-grid">
+                                <div class="slds-col">
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Name</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.Name}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Mobile</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.MobilePhone}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Email</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.Email}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Phone</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.Phone}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Mailing Address</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.MailingStreet},{!v.contactRec.MailingCity},{!v.contactRec.MailingState},{!v.contactRec.MailingCountry}</span>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="slds-col">
+                                    
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">DLS Candidate Rating</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.DLS_Candidate_Rating__c}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Score</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.score}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Active Projects</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.Active_Count_as_Instructor__c}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-has-divider--bottom">
+                                        <label class="slds-form-element__label">Conflicts</label>
+                                        <div class="slds-form-element__control">
+                                            <span class="slds-form-element__static">{!v.contactRec.conflictCount}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-form-element slds-has-divider--bottom">
+                                <label class="slds-form-element__label">Tags</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">
+                                        <aura:iteration items="{!v.contactRec.tags}" var="tag">
+                                            <span class="slds-badge">{!tag}</span>
+                                        </aura:iteration>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                        </lightning:tab>
+                        <lightning:tab label="Language">
+                            <div class="slds-card">
+                                <div class="slds-card__header slds-grid">
+                                    <div class="slds-media slds-media_center slds-has-flexi-truncate">
+                                        <div class="slds-media__body">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-card__body">
+                                    <aura:if isTrue="{!not(empty(v.languageDetails))}">
+                                        <c:TableViewCmp fieldNames="{!v.langFieldDetails}" records="{!v.languageDetails}"/>
+                                        <aura:set attribute="else">
+                                            <div style="text-align:center">No Records To Display</div>
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                            </div>
+                        </lightning:tab>
+                        <lightning:tab label="Experience">
+                            <div class="slds-card">
+                                <div class="slds-card__header slds-grid">
+                                    <div class="slds-media slds-media_center slds-has-flexi-truncate">
+                                        <div class="slds-media__body">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-card__body">
+                                    <aura:if isTrue="{!not(empty(v.experienceDetails))}">
+                                        <c:TableViewCmp fieldNames="{!v.expFieldDetails}" records="{!v.experienceDetails}"/>
+                                        <aura:set attribute="else">
+                                            <div style="text-align:center">No Records To Display</div>
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                            </div>
+                        </lightning:tab>
+                        <lightning:tab label="Education">
+                            <div class="slds-card">
+                                <div class="slds-card__header slds-grid">
+                                    <div class="slds-media slds-media_center slds-has-flexi-truncate">
+                                        <div class="slds-media__body">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-card__body">
+                                    <aura:if isTrue="{!not(empty(v.educationDetails))}">                                        
+                                        <c:TableViewCmp fieldNames="{!v.educationFieldDetails}" records="{!v.educationDetails}"/>
+                                        <aura:set attribute="else">
+                                            <div style="text-align:center">No Records To Display</div>
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                            </div>                         
+                        </lightning:tab>
+                        <lightning:tab label="Citizenship">
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Citizenship</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Citizenship__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Citizenship/VISA expiration date</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Citizenship_VISA_expiration_date__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">City and Country of Birth</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.City_and_Country_of_Birth__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Other names used</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Other_names_used__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Gender</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Gender__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Place of Birth</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Country_of_Birth__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">ID Type</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.ID_Type__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Non-US Passport Country &amp; #</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Non_US_Passport_Country__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Drivers License State</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Driver_s_License_State__c}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Preferred Airport</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Preferred_Airport__c}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Emergency Contact</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Emergency_Contact__c}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Emergency Contact Relationship</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Emergency_Contact_Relationship__c}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Emergency Contact Email</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Emergency_Email__c}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Emergency Contact Phone</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Emergency_Phone__c}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col_padded slds-size--1-of-1 slds-medium-size_1-of-2 slds-large-size_4-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01">Record updated from security info</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.Record_updated_from_security_info__c}</span>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </lightning:tab>
+                        <lightning:tab label="Metrics">
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_6-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01"># of Students Taught</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.of_Students_Taught__c}</span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_6-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01"># of Total Hours Taught (all experience)</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static"></span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_6-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01"># of Classes Taught</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static"></span>
+                                    </div>
+                                </div>
+                                <div class="slds-col_padded slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_6-of-12">
+                                    <label class="slds-form-element__label" for="text-input-01"># of Tests Performed</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.contactRec.of_Tests_Perfomed__c}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </lightning:tab>
+                        <lightning:tab label="Cost Rate">
+                            <aura:if isTrue="{!not(empty(v.costRateDetails))}">
+                                <c:TableViewCmp fieldNames="{!v.crFieldDetails}" records="{!v.costRateDetails}"/>
+                                <aura:set attribute="else">
+                                    <div style="text-align:center">No Records To Display</div>
+                                </aura:set>
+                            </aura:if>
+                        </lightning:tab>
+                        <lightning:tab label="Schedule">
+                            <aura:if isTrue="{!not(empty(v.scheduleDetails))}">
+                                <c:TableViewCmp fieldNames="{!v.scheduleFieldDetails}" records="{!v.scheduleDetails}"/>
+                                <aura:set attribute="else">
+                                    <div style="text-align:center">No Records To Display</div>
+                                </aura:set>
+                            </aura:if>
+                        </lightning:tab>
+                    </lightning:tabset>
+                    
+                </div>
+                <div class="slds-modal__footer">     
+                    <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnMoreInfo}"/>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.displayBookMarkSection}">
+        <div aria-hidden="false" role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container" style="width: 100%;max-width: 80rem;">
+                <div class="slds-modal__header">
+                    <h1 class="slds-text-heading--small" style="font-size:14px;"></h1>
+                </div>
+                <div class="slds-modal__content" style="padding: 2%;"> 
+                    <c:CreateBookmarkCmp recordId="{!v.contactRec.Id}" headerContent="{!v.bookMarkTitle}" seletcedUser="{#v.search.selectedBookmark}"/>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+    </aura:if>
+    
+</aura:component>

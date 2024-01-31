@@ -1,0 +1,14 @@
+.THIS .wrap{
+    white-space:normal !important;
+    word-break: break-word;
+}
+.THIS .textAreaCls{
+    margin-top: -0.50rem !important;
+    margin-bottom: 0.40rem !important;
+}
+.THIS .centerAlignClass{
+    text-align:center !important;
+}
+.THIS .fontCls{
+   font-size:1rem !important;
+ }

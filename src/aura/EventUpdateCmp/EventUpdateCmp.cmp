@@ -1,0 +1,128 @@
+<aura:component controller="EventTabController">
+    <aura:attribute name="projectIds" type="String[]"/>
+    <aura:attribute name="proIdString" type="String"/>
+    <aura:attribute name="contactSelected" type="Object"/>
+    <aura:attribute name="roomSelected" type="Object"/>
+    <aura:attribute name="projTaskSelected" type="List"/>
+    <aura:attribute name="selectedEvent" type="List"/>
+    <aura:attribute name="beforeUpdateSelectEvent" type="List"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="fasle"/>
+    <aura:attribute name="event" type="Object"/>
+    <aura:attribute name="valuesofEventpickList" type="Map" default="{'status':[], 'startTime':[], 'endTime':[]}"/>
+    <aura:attribute name="toastMessage" type="Map" default="{'message' : '', 'header' : ''}"/>
+    <aura:attribute name="noValidTime" type="Boolean" default="false"/>
+    <aura:attribute name="endTime" type="List"/>
+    <aura:attribute name="currentUserProfile" type="String"/>
+    <aura:attribute name="allowRoomEdit" type="Boolean"/>
+    <aura:attribute name="disableOtherValues" type="Boolean" default="false"/>
+    <aura:attribute name="projectTaskCondition" type="String"/>
+    
+    <aura:handler value="{!this}" name="init" action="{!c.doinit}"/>
+    <aura:registerEvent name="reloadEvent" type="c:reloadEvent"/>
+    
+    <!-- Modal to Update Events -->
+    <c:sldsModal aura:id="modalSlds">
+        <aura:set attribute="header">
+            <aura:if isTrue = "{!v.selectedEvent.length == 1}">
+                {!v.selectedEvent[0].Name}
+                <aura:set attribute = "else">
+                    Modifiy Information
+                </aura:set>
+            </aura:if>
+        </aura:set>
+        <aura:set attribute="content">
+            <aura:if isTrue="{!v.noValidTime}">
+                <p class="slds-text-color_error">Start Time is Greater than or Equal to End Time</p>
+            </aura:if>
+            <lightning:layout multipleRows="true">
+                <aura:if isTrue="{!v.selectedEvent.length == 1}">
+                    <lightning:layoutItem padding="around-small" size="4">
+                        <ui:inputDate label="Date" class="slds-input dateWidth"  value="{!v.event.Date__c}" displayDatePicker="true" format="MM-dd-yyyy" disabled="{!v.disableOtherValues}"/>  
+                    </lightning:layoutItem>
+                </aura:if>
+                
+                <lightning:layoutItem padding="around-small" size="4">
+                    <lightning:select label="Start Time" value="{!v.event.Start_Time__c}" onchange="{!c.setEventTimeAndDuration}" disabled="{!v.disableOtherValues}">
+                        <option value=""></option>
+                        <aura:iteration items="{!v.valuesofEventpickList.startTime}" var="stTime">
+                            <option value="{!stTime}">{!stTime}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem padding="around-small" size="4">
+                    <lightning:select label="End Time" value="{!v.event.End_Time__c}" disabled="{!v.disableOtherValues}" onchange="{!c.setEventTimeAndDuration}">
+                        <option value=""></option>
+                        <aura:iteration items="{!v.endTime}" var="enTime">
+                            <option value="{!enTime}">{!enTime}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem padding="around-small" size="4">
+                    <lightning:input aura:id="input" type="number" step="0.01" name="Duration" label="Duration" disabled="true" required="true" value="{!v.event.Duration__c}"/>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem padding="around-small" size="4">  
+                    <lightning:select label="Status" value="{!v.event.Status__c}" disabled="{!v.disableOtherValues}">
+                        <option value=""></option>
+                        <aura:iteration items="{!v.valuesofEventpickList.status}" var="status">
+                            <option value="{!status}">{!status}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem padding="around-small" size="4"> 
+                    <aura:if isTrue="{!not(v.disableOtherValues)}">
+                    	<c:LookupSearch aura:id="instructorLookup" selection="{!v.contactSelected}" onSearch="{!c.instructorLookupSearch}" iconName="standard:record" objectName="Contact" fieldName="Name" condition="{!v.proIdString}" label="Instructor" placeholder="Select Instructor" isMultiEntry="false" isRequired="false"/>
+                		<aura:set attribute="else">
+                        	<lightning:input type="text" label="Instructor" value="{!v.contactSelected[0].Name}" disabled="{!v.disableOtherValues}"/>
+                        </aura:set>
+                    </aura:if>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem padding="around-small" size="4"> 
+                    <aura:if isTrue="{!v.allowRoomEdit}">
+                    	<c:LookupSearch aura:id="roomLookup" selection="{!v.roomSelected}" onSearch="{!c.roomLookupSearch}" iconName="standard:record" objectName="Room__c" fieldName="Name" condition="" label="Room" placeholder="Select Room" isMultiEntry="false" isRequired="false"/>
+                    </aura:if>
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem padding="around-small" size="4"> 
+                    <c:LookupSearch aura:id="projectTaskLookup" selection="{!v.projTaskSelected}" onSearch="{!c.projectTaskLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project_Task__c" fieldName="Name" condition="{!v.projectTaskCondition}" label="Project Task" placeholder="Search Project Task" isMultiEntry="false" />
+                </lightning:layoutItem>
+                
+                <lightning:layoutItem padding="around-small" size="4"> 
+                    <lightning:input type="checkbox" label="No Student Approval" name="No Student Approval" checked="{!v.event.No_Student_Approval__c}"/>
+                </lightning:layoutItem>
+                
+            </lightning:layout>            
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button label="Save"  
+                              variant="brand"
+                              onclick="{!c.saveEvent}"/>
+            <lightning:button label="Cancel" 
+                              variant="brand"
+                              onclick="{!c.closeSldsModal}"/>
+        </aura:set>
+    </c:sldsModal>
+    
+    <!-- Display the error/success Messages -->
+    <c:sldsModal aura:id="statusModal">
+        <aura:set attribute="header">{!v.toastMessage.header}</aura:set>
+        <aura:set attribute="displayCloseImage" value="false">
+        </aura:set>
+        <aura:set attribute="content">
+            <p>{!v.toastMessage.message}</p>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeStatusModal}"/>
+        </aura:set>
+    </c:sldsModal>
+    
+    <!-- Spinner -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="large" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+</aura:component>

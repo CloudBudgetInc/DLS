@@ -1,0 +1,10 @@
+<aura:component controller="SendProgressReportReminderCmp_Ctrl" implements="force:hasRecordId,force:lightningQuickAction" >
+	<aura:attribute name="showSpinner" type="Boolean" default="false"/>
+   
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+</aura:component>

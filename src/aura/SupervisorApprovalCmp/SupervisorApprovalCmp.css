@@ -1,0 +1,14 @@
+.THIS .approvedclass{
+    color: green;
+    font-weight: bolder;
+}
+.THIS .rejectedclass {
+    color: red;
+    font-weight: bolder;
+}
+.THIS .headingCls {
+    display: inline-block;
+}
+.THIS .scrollerSize {
+    height: 400px;
+}

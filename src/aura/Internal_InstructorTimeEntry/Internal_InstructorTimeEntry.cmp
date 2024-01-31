@@ -1,0 +1,9 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,forceCommunity:availableForAllPageTypes">
+   	 <ltng:require scripts="{!join(',', 
+                           $Resource.DLS_Communites_CSS + '/Communites_CSS/script/jquery-3.2.1.slim.min.js')}"
+                  styles="{!join(',', $Resource.DLS_Communites_CSS + '/Communites_CSS/font-awesome/css/all.css')}"/>
+    
+    <div style="background: white;padding: 1rem;">
+        <c:InstructorTimeEntry internalView="true"/>
+    </div>
+</aura:component>

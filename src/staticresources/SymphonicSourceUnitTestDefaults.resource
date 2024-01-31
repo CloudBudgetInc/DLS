@@ -1,0 +1,11 @@
+Contact:Next_Availability__c = 
+Contact:Instructor_Status__c = Available
+Contact:Employment_Section__c = 
+Contact:Current_Account__c = 
+Contact: Account = Candidate
+Opportunity: Deadline__c = 12/29/2012
+Opportunity: CloseDate = 12/29/2012
+Opportunity: Student_Name__c = TBD
+MTT__c: Stage__c = Order
+Deployed_Instructor__c: Status__c = Deployed
+AFSAT_Instructor__c: Account__c = FSI

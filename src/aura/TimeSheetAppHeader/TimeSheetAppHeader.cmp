@@ -1,0 +1,13 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes">
+	<lightning:layout class="slds-page-header slds-page-header--object-home slds-m-around_xxx-small">
+        <lightning:layoutItem>
+            <lightning:icon iconName="standard:event" alternativeText="My TimeSheet" />
+        </lightning:layoutItem>
+        <lightning:layoutItem padding="horizontal-small">
+            <div class="page-section page-header">
+                <h1 class="slds-text-heading--label">Welcome to the Timesheet App</h1>
+                <h2 class="slds-text-heading--medium">My Timesheet</h2>
+            </div>
+        </lightning:layoutItem>
+    </lightning:layout>
+</aura:component>

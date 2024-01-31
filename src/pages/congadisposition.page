@@ -1,0 +1,54 @@
+<apex:page controller="CongaBuilderCtrller"> 
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> 
+   <script>    
+       function hideField(va){       
+          if(va.value !=''){              
+              $(".opp").prop('disabled', true);   
+              $(".lookupIcon").css("display","none");                 
+           }else{
+               $(".opp").prop('disabled', false);
+               $(".lookupIcon").css("display","");
+           }           
+       }     
+   </script>
+   
+   <apex:form id="frm" >
+        <apex:pageBlock tabStyle="Opportunity">
+            <apex:pageMessages >
+            </apex:pageMessages>
+            <apex:pageBlockSection title="Time Log">
+            </apex:pageBlockSection>
+            <table width="800px;" border="0" cellpadding="7">
+                <tr>
+                    <td style="width:80px;"> 
+                        <apex:outputLabel value="Select Range" style="font-weight:bold;"></apex:outputLabel>
+                    </td> 
+                    <td> 
+                        <apex:selectList size="1" style="margin-right:20px;" value="{!timelog}"> 
+                            <apex:selectOption itemValue="Last Month" itemLabel="Last Month"/>
+                            <apex:selectOption itemValue="This Month" itemLabel="This Month"/>
+                        </apex:selectList>
+                    </td>             
+                    <td style="width:90px;">
+                        <apex:outputLabel value="Select Account" style="font-weight:bold;"></apex:outputLabel>                        
+                    </td>
+                    <td> 
+                        <apex:selectList value="{!acc}" size="1" onchange="hideField(this);">
+                            <apex:selectOptions value="{!items}"/>                                                       
+                        </apex:selectList>                        
+                    </td>
+                    <td style="width:110px;">
+                        <apex:outputLabel value="Select Opportunity" style="font-weight:bold;" rendered="{!shouldRender}"></apex:outputLabel>                        
+                    </td>                    
+                    <td>                      
+                        <apex:inputField value="{!optlog.Opportunity__c}" required="false" rendered="{!shouldRender}" styleClass="opp"/>                
+                    </td>
+                </tr>
+            </table>
+            <div style="padding-left: 350px;">         
+                <apex:commandButton value="Submit" action="{!getDetails}" reRender="frm" oncomplete="submitMethod();"/>
+                <apex:actionfunction name="submitMethod" action="{!Pgref}"/>              
+            </div>                                            
+        </apex:pageBlock>        
+    </apex:form>  
+</apex:page>

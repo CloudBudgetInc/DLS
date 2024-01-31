@@ -1,0 +1,68 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global"  controller="OnBoardingController">
+    <aura:attribute name="showSpinner" type="Boolean" access="PUBLIC"/>
+    <aura:attribute name="openCompletedToDoItems" type="Map" default="{}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>  
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <div>
+        <div class="backCls">
+            <div style="display: inline-block;">
+                <div class="slds-grid">
+                    <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.back}" ></i></span>
+                    <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <br/><div class="card">
+            <span class="card-body">
+                <h5 class="card-title">Open To Do Items</h5><br/>
+                <aura:if isTrue="{!v.openCompletedToDoItems.openToDoItems.length > 0}">
+                    <aura:iteration items="{!v.openCompletedToDoItems.openToDoItems}" var="todo">
+                        <input type="checkbox" name="" disabled="true"/><span class="labelCls">{!todo.Subject}</span><br/>
+                    </aura:iteration>
+                    <aura:set attribute="else">
+                        <center style="font-size:0.875rem;">No Open To Do Items to display</center>
+                    </aura:set>
+                </aura:if>
+            </span>
+        </div>
+    <br/>
+    <div class="card">
+        <span class="card-body">
+            <h5 class="card-title">Completed To Do Items</h5> <br/>
+            <aura:if isTrue="{!v.openCompletedToDoItems.completedToDoItems.length > 0}">
+                <aura:iteration items="{!v.openCompletedToDoItems.completedToDoItems}" var="todo">
+                    <input type="checkbox" name="" disabled="true"/><span class="labelCls"><div style="display:inline-block;">
+                    
+                    <!--#W-004720 - User Story - Enable Instructors and Students to watch Timekeeping Training Video again-->
+                    <aura:if isTrue="{!or(todo.Subject == 'Watch Timekeeping Training Video',todo.Subject == 'Watch Timekeeping Approval Training Video')}">
+                        
+                        <aura:if isTrue="{!todo.Subject == 'Watch Timekeeping Training Video'}">
+                            <a href="https://dlsdc.wistia.com/medias/hlcb5ks3lx" target="_blank">{!todo.Subject}</a>
+                            <aura:set attribute="else">
+                                <a href="https://dlsdc.wistia.com/medias/kts88qlh4f" target="_blank">{!todo.Subject}</a>
+                            </aura:set>
+                        </aura:if>
+                        
+                        <aura:set attribute="else">
+                         {!todo.Subject}
+                        </aura:set>
+                    </aura:if>
+                   </div></span><br/>
+                </aura:iteration>
+                <aura:set attribute="else">
+                    <center style="font-size:0.875rem;">No Completed To Do Items to display</center>
+                </aura:set>
+            </aura:if>
+        </span>
+    </div>
+</aura:component>

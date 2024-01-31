@@ -1,0 +1,88 @@
+.THIS .table{
+    font-size: 0.875rem !important;
+}
+.THIS containerTable{
+    padding:1rem;
+}
+.THIS table td a:hover {
+    color: #055e89;
+}
+.THIS .labelCls{
+    margin-left: -0.5rem !important;
+    font-size:0.875rem;
+    margin-top: 0.25rem;
+}
+
+.THIS.popOverCls {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: fixed;
+}
+
+
+.THIS .footerCls {
+    border-bottom: 1px solid #ddd;
+}
+
+.THIS .popOverBodyCls {
+    height: auto;
+    max-height: 450px;
+    overflow: auto;
+    border-bottom: 1px solid #ddd;
+}
+.THIS .popOverCloseIcon {
+    float: right;    
+    cursor: pointer;
+}
+.THIS .info-window-body {
+    max-height: 350px;
+    overflow:auto;
+}
+
+.THIS.app-modal {
+    width: 350px;
+}
+.THIS.app-modal-mobile {
+    width: 300px;
+}
+.THIS .strike-word {
+    text-decoration: line-through;
+}
+.THIS .trainingClass svg{
+    fill : #1D4588;
+}
+.THIS .preparationClass svg{
+    fill : #8E24AA;
+}
+.THIS .testingClass svg{
+    fill : #ABD25A;
+}
+.THIS .pendingApproval svg{
+    fill: #6c757d;
+}
+.THIS .titleCls {
+    font-size: 20px;
+    color: #1ea4e7;
+}
+
+.THIS .approveIconCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS .rejectIconCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS .slds-icon-action-approval {
+    background-color: #ABD25A !important;
+}
+.THIS .eventWithBlueBackground{
+    background-color:  #055E89;
+}
+.THIS .smallWidthTh{
+    width: 8rem!important;
+}
+.THIS .mediumWidthTh{
+    width: 10rem!important;
+}

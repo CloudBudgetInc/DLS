@@ -1,0 +1,17 @@
+@media (max-width:48em){
+    .THIS.footerImg{
+        height:18px !important;
+    }
+    .THIS .footerLogo{
+       width:30% !important;
+    }
+    .THIS .phoneIconCls{
+        margin-bottom:1rem;
+    }
+    .THIS .iconCls{
+        margin-left:-1rem;
+    }
+}
+.THIS .phoneIconCls{
+    margin-bottom:1rem;
+}

@@ -1,0 +1,89 @@
+<aura:component implements="force:appHostable,force:lightningQuickAction" Controller="ManagePlannedHours_Controller" >
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="projectTaskList" type="List" default="[]"/>
+    <aura:attribute name="isProceedBtn" type="Boolean" default="false"/>
+    <aura:attribute name="saveContactAssignments" type="List" default="[]"/>
+    <aura:attribute name="projectId" type="string" default=""/>
+    <aura:attribute name="templateType" type="string" default=""/>
+    <aura:attribute name="isSaveAndGenAction" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand"  size="medium" alternativeText="Loading" />
+    </aura:if>
+    <lightning:card title="Manage Planned Hours">
+        <aura:set attribute="actions">
+            <aura:if isTrue="{!v.isProceedBtn}">
+                <lightning:button label="Proceed" onclick="{!c.proceedBtnClk}" />
+                <aura:set attribute="else">
+                    <lightning:button label="Save &amp; Generate Report" onclick="{!c.saveAndGenBtnClk}"/>
+                    <lightning:button label="Save" onclick="{!c.saveBtnClk}" />
+                </aura:set>
+            </aura:if>
+            <lightning:button label="Cancel" onclick="{!c.cancelBtnClk}"/>
+        </aura:set>
+    </lightning:card>
+    <aura:iteration items="{!v.projectTaskList}" var="task">
+        <lightning:card class="rowDisplayCard">
+            <aura:set attribute="title">
+                <a  name="{!task.proTaskId}" onclick="{!c.navigateToProTask}">{!task.proTaskName}</a>
+            </aura:set>
+            <aura:set attribute="actions">
+                <h1 style="font-size: 14px;">Total Hours Planned: {!task.totalQtyPlanned}</h1>
+            </aura:set>
+            <aura:if isTrue="{!task.showMsg == task.proTaskId+'-error'}">  
+                <div style="text-align: justify;" class="slds-show slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error">
+                    <div class="slds-media slds-media_center">
+                        <div class="slds-media__figure">
+                            <lightning:icon aura:id="actionIcon"  variant='inverse' iconName="utility:error" size="x-small"  />
+                        </div>
+                        <div class="slds-media__body ">
+                            <h1 style="font-size:13px;">Total Hours Of Contact Assignments are greater than the Project Task Total Planned Hours</h1>
+                        </div>
+                    </div>
+                </div>   
+            </aura:if>
+            <aura:if isTrue="{!task.showMsg == task.proTaskId+'-warning'}">
+                <div style="text-align: justify;" class="slds-show slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning">
+                    <div class="slds-media slds-media_center">
+                        <div class="slds-media__figure">
+                            <lightning:icon iconName="utility:warning" size="x-small"/>
+                        </div>
+                        <a class="slds-button slds-button--icon-inverse slds-notify__close">
+                            <lightning:icon aura:id="closeIcon" variant ='inverse' iconName="utility:close" size="small" alternativeText="{!task.proTaskId}" onclick="{!c.closeWarningIconClk}"/>
+                        </a>
+                        <div class="slds-media__body ">
+                            <h1 style="font-weight: bold;"> The Total Hours of Contact Assignments are Lesser than the Project Task Total Planned Hours</h1>
+                        </div>
+                    </div>
+                </div>   
+            </aura:if>
+            <lightning:layout multipleRows="true">
+                <lightning:layoutItem size="4">
+                    <h1 style="margin-top:20px;margin-left:10px;">Contacts</h1>
+                </lightning:layoutItem>
+                <lightning:layoutItem size="3">
+                    <h1 style="margin-top:20px;margin-left:10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Total Hours Planned</h1>
+                </lightning:layoutItem>
+            </lightning:layout>
+            <aura:iteration items="{!task.conAssignList}" var="conAssign">
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="4">
+                        <h1 style="margin-top:20px;margin-left:10px;"><a name="{!conAssign.conId}" onclick="{!c.navigateToInstructor}">{!conAssign.conName}</a></h1>
+                    </lightning:layoutItem>
+                    <aura:if isTrue="{!task.proTaskType == 'Preparation time'}">
+                        <lightning:layoutItem size="2">
+                            <lightning:input name="{!task.proTaskId}" label="" value="{!conAssign.prepTotalQtyPlanned}" onchange="{!c.hoursValidation}"/>
+                        </lightning:layoutItem>
+                        <aura:set attribute="else">
+                            <lightning:layoutItem size="2">
+                                <lightning:input name="{!task.proTaskId}" label="" value="{!conAssign.totalQtyPlanned}" onchange="{!c.hoursValidation}"/>
+                            </lightning:layoutItem>
+                        </aura:set>
+                    </aura:if>
+                </lightning:layout>
+            </aura:iteration>
+        </lightning:card>
+    </aura:iteration>
+</aura:component>

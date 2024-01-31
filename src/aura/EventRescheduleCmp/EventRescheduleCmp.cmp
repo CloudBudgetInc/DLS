@@ -1,0 +1,259 @@
+<aura:component controller="EventCalendarController">
+    <aura:attribute name="existingEventRec" type="Map" default="{}"/>
+    <aura:attribute name="showRescheduleModel" type="Boolean" default="true"/> 
+    
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="rescheduleRec" type="Map" default="{}"/>
+    <aura:attribute name="startTimeList" type="List" default="[]"/>
+    <aura:attribute name="endTimeList" type="List" default="[]"/>
+    <aura:attribute name="timeList" type="List" default="[]"/>
+    <aura:attribute name="title" type="String" default=""/>
+    <aura:attribute name="message" type="String" default=""/>
+    <aura:attribute name="isValidInput" type="Boolean" default="true"/>
+    <aura:attribute name="stuInsConflictList" type="List" default="[]"/>
+    <aura:attribute name="roomConflictList" type="List" default="[]"/>
+    <aura:attribute name="showConflict" type="Boolean" default="false"/> 
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    <aura:attribute name="oldEventRecMap" type="Map" default=""/>
+    <aura:attribute name="projectRefWithNewReqEvent" type="Map"/>
+    <aura:attribute name="projectRef" type="List" default="[]"/>
+    <aura:attribute name="selectedProject" type="String"/>
+
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <div>
+        <!--Reschedule Model -->
+        <c:sldsModal aura:id="rescheduleModal" displayCloseImage="false" modelWidth="80%" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="header">
+                
+                <aura:if isTrue="{!v.showConflict}">
+                    {!v.title}
+                    <aura:set attribute="else">
+                        {!v.rescheduleRec.title}                                          
+                    </aura:set>
+                </aura:if>
+                
+            </aura:set>
+            <aura:set attribute="content">
+                
+                <aura:if isTrue="{!!v.showConflict}">
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <div class="slds-form-element">                                
+                                <div class="slds-form-element__control">
+                                    <aura:if isTrue="{!v.projectRef.length > 0}">
+                                        <lightning:select aura:id="inputVal" label="Project" value="{!v.selectedProject}" onchange="{!c.selectedProjectChange}">
+                                            <aura:iteration items="{!v.projectRef}" var="project">
+                                                <option value="{!project}">{!project}</option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                        <aura:set attribute="else">
+                                            <label class="slds-form-element__label">Project</label>
+                                            <span class="slds-form-element__static">{!v.rescheduleRec.project}</span>
+                                        </aura:set>
+                                    </aura:if>                                    
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Project Task</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.rescheduleRec.projectTask}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                        
+                        <aura:if isTrue="{!v.communityName == 'instructor'}">
+                            <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Student Names</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.rescheduleRec.studentNames}</span>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </aura:if>
+                        
+                        <aura:if isTrue="{!v.communityName == 'student'}">
+                            <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Instructor</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.rescheduleRec.instructor}</span>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </aura:if>
+                        
+                        <aura:if isTrue="{! not(v.rescheduleRec.isForRequestEvent)}">
+                            <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">Status</label>
+                                    <div class="slds-form-element__control">
+                                        <span class="slds-form-element__static">{!v.rescheduleRec.status}</span>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </aura:if>
+
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <lightning:input type="date" aura:id="inputVal" label="Date" value="{!v.rescheduleRec.eventDate}"/>        
+                        </lightning:layoutItem>
+                        
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <lightning:select aura:id="inputVal" label="Start Time" value="{!v.rescheduleRec.startTime}" onchange="{!c.startTimeChange}">
+                                <aura:iteration items="{!v.startTimeList}" var="time">
+                                    <option value="{!time.value}" selected="{!(v.rescheduleRec.startTime == time.value)}">{!time.label}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <lightning:select aura:id="inputVal" label="End Time" value="{!v.rescheduleRec.endTime}" onchange="{!c.endTimeChange}">
+                                <aura:iteration items="{!v.endTimeList}" var="time">
+                                    <aura:if isTrue="{!and(not(empty(v.rescheduleRec.startTimeMinutes)),greaterthan(time.temp,v.rescheduleRec.startTimeMinutes))}">
+                                        <option value="{!time.value}" selected="{!(v.rescheduleRec.endTime == time.value)? true : false}">{!time.label}</option>
+                                    </aura:if>  
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <lightning:input type="number" aura:id="inputVal" label="Hours" value="{!v.rescheduleRec.duration}" formatter="decimal" step="0.01"/>        
+                        </lightning:layoutItem>
+                        
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_small'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <c:LookupSearch aura:id="room" selection="{!v.rescheduleRec.selectedRoom}" onSearch="{!c.roomLookupSearch}" iconName="" objectName="Room__c" fieldName="Name" condition="" label="Room" placeholder="Select Room" isMultiEntry="false" isrequired="true" isDisabled="true"/>
+                        </lightning:layoutItem>
+                        
+                        <lightning:layoutItem class="{!v.displayDevice == 'Mobile' ? 'slds-p-top_xxx-small' : 'slds-p-around_medium'}" size="12" smallDeviceSize="12" mediumDeviceSize="12" largeDeviceSize="3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Timezone</label>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{!v.rescheduleRec.timezone}</span>
+                                </div>
+                            </div>
+                        </lightning:layoutItem>
+                    </lightning:layout><br/><br/><br/>
+                    
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!v.isValidInput}">
+                            <p>
+                                <aura:if isTrue="{!or(v.stuInsConflictList.length > 0,v.roomConflictList.length > 0)}">
+                                    The time you are attempting to reschedule for conflicts with existing events.  Please see below for details: <br/><br/>
+                                </aura:if>
+                                <aura:if isTrue="{!v.stuInsConflictList.length > 0}">
+                                    Conflict with event(s) currently scheduled for students in the class: <br/><br/>
+                                    <div class="containerTable table-responsive">
+                                        <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                            <thead class="thead-light">
+                                                <tr class="slds-line-height_reset">
+                                                    <th scope="col" class="wrap">Date</th>  
+                                                    <th scope="col" class="wrap">Start Time</th>
+                                                    <th scope="col" class="wrap">End Time</th>
+                                                    <th scope="col" class="wrap">Student / Instructor</th>
+                                                    <th scope="col" class="wrap">DLS Class #</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <aura:iteration items="{!v.stuInsConflictList}" var="info">
+                                                    <tr class="slds-hint-parent">
+                                                        <td data-label="Date" class="wrap">{!info.eventDate}</td>
+                                                        <td data-label="Start Time" class="wrap">{!info.startTime}</td>
+                                                        <td data-label="End Time" class="wrap">{!info.endTime}</td>
+                                                        <td data-label="Student/Instructor" class="wrap">{!info.personName}</td>
+                                                        <td class="wrap" data-label="DLS Class #">{!info.dlsClass}</td>
+                                                    </tr>
+                                                </aura:iteration>
+                                            </tbody>
+                                        </table>	
+                                    </div>
+                                </aura:if>
+                                <aura:if isTrue="{!v.roomConflictList.length > 0}">
+                                    Conflict with event(s) currently scheduled in this room: <br/><br/>
+                                    <div class="containerTable table-responsive">
+                                        <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                            <thead class="thead-light">
+                                                <tr class="slds-line-height_reset">
+                                                    <th scope="col" class="wrap">Date</th>  
+                                                    <th scope="col" class="wrap">Start Time</th>
+                                                    <th scope="col" class="wrap">End Time</th>
+                                                    <th scope="col" class="wrap">Room</th>                                                    
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <aura:iteration items="{!v.roomConflictList}" var="info">
+                                                    <tr class="slds-hint-parent">
+                                                        <td data-label="Date" class="wrap">{!info.eventDate}</td>
+                                                        <td data-label="Start Time" class="wrap">{!info.startTime}</td>
+                                                        <td data-label="End Time" class="wrap">{!info.endTime}</td> 
+                                                        <td data-label="Room" class="wrap">{!info.roomName}</td>
+                                                    </tr>
+                                                </aura:iteration>
+                                            </tbody>
+                                        </table>	
+                                    </div>
+                                </aura:if>
+                                <div>
+                                    <aura:if isTrue="{!and(v.stuInsConflictList.length > 0 , v.existingEventRec.instructor != null)}">
+                                        <div>Your Instructor <b>{!v.existingEventRec.instructor}</b> has a schedule conflict with your requested reschedule time and date.</div>
+                                        <div>Would you like for your LTS to arrange for a Substitute Instructor?</div>
+                                    </aura:if>
+                                </div>
+                            </p>
+                            <aura:set attribute="else">
+                                <p><aura:unescapedHtml value="{!v.message}"/></p>    	
+                            </aura:set>
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+                
+            </aura:set>
+            <aura:set attribute="footer">
+                
+                <aura:if isTrue="{!!v.showConflict}">
+                    <lightning:button variant="brand" label="Save" class="btn btn-primary" onclick="{!c.saveReschedule}"/>
+                    <lightning:button variant="brand" label="Cancel" class="btn btn-secondary" onclick="{!c.closeReschedule}"/>
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!v.isValidInput}">
+                            <lightning:button variant="brand" label="Proceed" class="btn btn-primary" onclick="{!c.proceedClick}"/>
+                            <lightning:button variant="brand" label="Cancel" class="btn btn-secondary" onclick="{!c.closeClick}"/>
+                            <aura:set attribute="else">
+                                <lightning:button variant="brand" label="{!v.showConflict == true ? 'Close' : 'Cancel'}" class="btn btn-primary" onclick="{!c.closeClick}"/>
+                            </aura:set>
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+                
+            </aura:set>
+        </c:sldsModal>
+        
+        <c:sldsModal aura:id="successModel" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="header">
+                {!v.successTitle}
+            </aura:set>
+            <aura:set attribute="content">
+                <p class="slds-align_absolute-center">{!v.successMsg}</p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Close" class="btn btn-primary" onclick="{!c.successClose}"/>
+            </aura:set>
+        </c:sldsModal>
+                
+    </div>
+    
+</aura:component>

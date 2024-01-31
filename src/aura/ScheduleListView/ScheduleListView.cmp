@@ -1,0 +1,172 @@
+<aura:component controller="ListViewController" implements="forceCommunity:availableForAllPageTypes" access="global">
+    <aura:attribute name="tableColumns" type="List" access="PUBLIC"/>
+    <aura:attribute name="scheduleTableConfig" type="Map" access="PUBLIC"/>
+    <aura:attribute name="scheduleList" type="List" access="PUBLIC"/>
+    <aura:attribute name="dummyScheduleList" type="List" access="PUBLIC" default="[]"/>
+    <aura:attribute name="selectedStatus" type="List" default="['Active','Drafted']"/> <!--'Completed',-->
+    <aura:attribute name="oldStatusValues" type="List" default="['Active']"/>
+    <aura:attribute name="statusPicklist" type="List" default="['Active','Drafted','Completed','On Hold','Substituted']"/>
+    <aura:attribute name="projectValues" type="List" access="PUBLIC"/>
+    <aura:attribute name="showSpinner" type="Boolean" access="PUBLIC" default="false"/>
+    <aura:attribute name="showCalendar" type="Boolean" access="PUBLIC" />
+    <aura:attribute name="viewOptions" type="List" default="['Schedules','Events','Calendar']"/>
+    <aura:attribute name="selectedView" type="String" default="Calendar"/>
+    <aura:attribute name="selectedProject" type="String" />
+    <aura:attribute name="initialLoad" type="Boolean" default="false"/>
+    <aura:attribute name="fireEventChange" type="Boolean" default="false"/>
+    <aura:attribute name="community" type="String" default=""/>
+    <aura:attribute name="showRequestEventBtn" type="Boolean" access="PUBLIC" default="false" />
+    
+    <aura:attribute name="displayDevice" type="String"/>
+    <aura:attribute name="filterObj" type="Map" default="{}" description="Will comtain the filter vlues"/>
+    
+    
+    <aura:attribute name="currentViewValue" type="string" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" access="PUBLIC"/>
+    <aura:handler name="dtCellClick" event="ldt:clickedDtCell" action="{!c.tabActionClicked}"/>
+    <aura:handler name="change" value="{!v.selectedView}" action="{!c.doInit}"/>
+    <aura:handler name="change" value="{!v.fireEventChange}" action="{!c.eventStatusChange}"/>
+    
+    
+    <lightning:navigation aura:id="navService"/>
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" alternativeText="Loading"  class="slds-is-fixed"/>
+    </aura:if>    
+    
+    <lightning:layout multipleRows="true">
+        <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '10' : '12'}">
+            <center><h5 class="card-title" style="{!v.displayDevice != 'Mobile' ? 'font-size:2rem; padding-left: 10rem !important;' : 'font-size:2rem;'}">MY SCHEDULES</h5></center>
+        </lightning:layoutItem>
+        <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '2' : '12'}" alignmentBump="left">
+            
+            <aura:if isTrue="{!and(v.selectedView == 'Calendar', v.showRequestEventBtn)}">
+                <div class="{!v.displayDevice != 'Mobile' ? 'slds-float_right' : 'slds-align_absolute-center'}">
+            		<lightning:button label="Request Event"  variant="Brand" class="btn btn-primary" onclick="{!c.handleRequestEvent}"/>
+                </div>
+            </aura:if>
+        </lightning:layoutItem>
+    </lightning:layout>
+    <br/>
+    <div class="schedule">
+        <aura:if isTrue="{!v.selectedView == 'Schedules'}">
+            <!--lightning:card title="Schedules">
+            <aura:set attribute="actions">
+                <lightning:select label="View" class="viewSelectClass" value="{!v.selectedView}" onchange="{!c.handleFilterChange}">
+                    <aura:iteration items="{!v.viewOptions}" var="view">
+                        <option value="{!view}" selected="{!(v.selectedView == view)}">{!view}</option>
+                    </aura:iteration>
+                </lightning:select>
+            </aura:set>
+            <aura:set attribute="body">
+                <lightning:layout>
+                    <lightning:layoutItem padding="around-small" size="3">
+                        <lightning:select label="Status" value="{!v.selectedStatus}" onchange="{!c.handleFilterChange}">
+                            <option value="">All</option>
+                            <aura:iteration items="{!v.statusPicklist}" var="status">
+                                <option value="{!status.value}" selected="{!(v.selectedStatus == status.value)}">{!status.label}</option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                </lightning:layout>
+                
+                <div class = "slds-p-left_small slds-p-right_small">
+                    <aura:if isTrue="{!not(empty(v.scheduleList))}">
+                        <ldt:datatableDev aura:id="scheduleTable" dataRows="{!v.scheduleList}" header="{!v.tableColumns}" config="{!v.scheduleTableConfig}"/>
+                    </aura:if>
+                </div>
+            </aura:set>
+        </lightning:card-->
+            <lightning:layout multipleRows="true">
+                <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '2' : '12'}">
+                    <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                        <div style="padding:1rem;">
+                            <div class="slds-m-top_small">
+                                <h5 class="card-title">My Schedules</h5>
+                            </div>
+                            <div class="slds-m-top_small">
+                                <lightning:select label="View"  value="{!v.selectedView}" onchange="{!c.handleFilterChange}">
+                                    <aura:iteration items="{!v.viewOptions}" var="view">
+                                        <option value="{!view}" selected="{!(v.selectedView == view)}">{!view}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-m-top_small">
+                                <lightning:select label="Project" value="{!v.selectedProject}" onchange="{!c.handleFilterChange}">
+                                    <aura:iteration items="{!v.projectValues}" var="project">
+                                        <option value="{!project.value}" selected="{!(v.selectedProject == project.value)}">{!project.label}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-m-top_small">
+                                <c:multiSelectCmp label="Status" ischevrondownIcon="true" optionsList="{!v.statusPicklist}" selectedvalue="{!v.selectedStatus}" handleChange="{!v.fireEventChange}"/>
+                            </div>
+                        </div>
+                        <aura:set attribute="else">
+                            <div class="slds-m-top_medium slds-m-left_large">
+                                <h5 class="card-title">My Schedules</h5>
+                            </div>
+                            <div class="slds-m-top_medium slds-m-left_large">
+                                <lightning:select label="View" class="viewSelectClass" value="{!v.selectedView}" onchange="{!c.handleFilterChange}">
+                                    <aura:iteration items="{!v.viewOptions}" var="view">
+                                        <option value="{!view}" selected="{!(v.selectedView == view)}">{!view}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            
+                            <!-- Project picklist -->
+                            <div class="slds-m-top_medium slds-m-left_large">
+                                <lightning:layout>
+                                    <lightning:select label="Project" class="viewSelectClass" value="{!v.selectedProject}" onchange="{!c.handleFilterChange}">
+                                        <aura:iteration items="{!v.projectValues}" var="project">
+                                            <option value="{!project.value}" selected="{!(v.selectedProject == project.value)}">{!project.label}</option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </lightning:layout>
+                            </div>
+                            <div class="slds-m-top_medium slds-m-left_large">
+                                <lightning:layout class="slds-p-bottom_medium viewSelectClass">
+                                    <c:multiSelectCmp label="Status" ischevrondownIcon="true"  optionsList="{!v.statusPicklist}" selectedvalue="{!v.selectedStatus}" handleChange="{!v.fireEventChange}"/>
+                                </lightning:layout>
+                            </div>
+                        </aura:set>
+                    </aura:if>
+                    <div class="slds-m-top_medium slds-m-left_large">
+                        <lightning:layout>
+                            <lightning:input class="training" aura:id="training" checked="{!v.filterObj.training}" type="checkbox" label="" onchange="{!c.filterEvents}"/><span class="labelCls">Language Training</span>
+                        </lightning:layout>
+                        <aura:if isTrue="{!v.community != 'student'}">
+                            <lightning:layout>
+                                <lightning:input class="preparation" aura:id="preparation" checked="{!v.filterObj.preparation}" type="checkbox" label="" onchange="{!c.filterEvents}"/><span class="labelCls">Preparation Time</span>
+                            </lightning:layout>
+                        </aura:if>
+                    </div>
+                    
+                </lightning:layoutItem>
+                <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '10' : '12'}">
+                    <br/>
+                    <aura:if isTrue="{!or(v.displayDevice != 'Mobile' ,and(v.displayDevice == 'Mobile',v.dummyScheduleList.length > 0))}">
+                        <div class = "ldtTableCls">
+                            <ldt:datatableDev aura:id="scheduleTable" dataRows="{!v.dummyScheduleList}" header="{!v.tableColumns}" config="{!v.scheduleTableConfig}"/>
+                        </div>
+                        <aura:set attribute="else"><br/>
+                            <center>No records to display.</center>
+                        </aura:set>
+                    </aura:if>
+                </lightning:layoutItem>
+            </lightning:layout>
+        </aura:if>
+    </div>
+    
+    <aura:if isTrue="{!v.selectedView == 'Calendar'}">
+        <c:EventCalendarCmp aura:id="eventCalendarCmp" showRequestEventBtn="{!v.showRequestEventBtn}" selectedView="{!v.selectedView}"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.selectedView == 'Events'}">
+        <c:EventListView selectedView="{!v.selectedView}"/>
+    </aura:if>
+    
+    <c:ApexService aura:id="server"/>
+</aura:component>

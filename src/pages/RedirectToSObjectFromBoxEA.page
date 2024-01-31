@@ -1,0 +1,47 @@
+<apex:page controller="RedirectToSObjectFromBoxEACtrl" lightningStyleSheets="true">
+    <apex:slds />
+    <style>
+        body .bPageBlock, .slds-vf-scope .bPageBlock{
+        	margin-bottom: 0 !important;
+    		border: 0 !important;
+        	box-shadow: 0 !important;
+        	-webkit-box-shadow: 0 !important;
+        	padding: 0 !important;
+        }
+    </style>
+    <script>
+    	if("{!sObjectId}" && "{!sObjectId}" != ''){
+            try{                
+                sforce.one.navigateToSObject("{!sObjectId}", detail);           
+            }catch(err) {
+                window.location.href = '/' + "{!sObjectId}";
+            }
+        }
+    	
+        function closeWindow(){            
+            window.close();
+        }    	
+    </script>
+    
+    <div class="slds-scope">
+    	<apex:pageBlock rendered="{!showErrorMessage}">
+            <div>
+                <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">                            
+                            <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Error</h2>                            
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                            <p class="slds-align_absolute-center">Record not found</p>
+                        </div>
+						<footer class="slds-modal__footer">                            
+                          <button class="slds-button slds-button_brand" onclick="closeWindow()">OK</button>
+                        </footer>                        
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>                
+            </div>
+        </apex:pageBlock>
+    </div>
+    
+</apex:page>

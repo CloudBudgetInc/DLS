@@ -1,0 +1,65 @@
+<apex:component controller="LanguageSearchController">
+    
+    <body style="height:200px;">
+    
+        <apex:form id="form1">
+        
+            <script>
+                var selctOptionId = '';
+            </script>
+           
+            <div id="div1" class="div1">
+              
+                <apex:OutPutLabel style="color: #fff; font-weight: bold;">Language Search</apex:OutPutLabel>
+                
+            </div>
+                
+            <div id="div2" class="div2">
+            
+                <p>Language</p>
+                <apex:selectList id="lang1Id" multiselect="false" value="{!lang1}" size="1">
+                    <apex:selectOptions value="{!Languages}" />
+                </apex:selectList>
+                <script>
+                    selctOptionId  = '{!$Component.lang1Id}';
+                </script>
+                
+                <!--<p>Filter by</p>
+                <apex:selectList id="filterId" multiselect="false" value="{!filter}" size="1" style="width: 92%;">
+                    <apex:selectOptions value="{!filterOptions}" />   
+                </apex:selectList>
+                <script>
+                    filterId  = '{!$Component.filterId}';
+                </script>-->
+                
+                 <input type="button" value="Search" onclick="searchVal();" class="button"/>
+               
+                <apex:outputPanel id="tableblk" rendered="{!conList != null && conList.size > 0}" style="padding:5px;
+    margin-top: 4%;">
+                    
+                    <table id="table" style="margin-top: 4%;">
+                        <tbody>
+                            <apex:repeat var="con" value="{!conList}">
+                                <tr>
+                                    <td>
+                                        <apex:outputLink target="_blank" value="/{!con.Contact__r.Id}">{!con.Contact__r.Name}</apex:outputLink>
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                        </tbody>
+                    </table>
+                </apex:outputPanel>
+                
+                <apex:outputPanel id="nodataBlock" rendered="{!conList != null && conList.size == 0}" style="padding:5px;">
+                   <p>No Results found</p>
+                </apex:outputPanel>
+                    
+                <apex:outputLink target="_parent" value="/apex/LanguageSearchFullList?param1={!lang1}" rendered="{!conlist1 != null && conlist1.size >5}" style="color: #1797C0;">View All</apex:outputLink>
+                <apex:actionFunction name="search" action="{!searchContact}"/>
+            </div>
+            
+    
+        </apex:form>
+    </body>
+  
+</apex:component>

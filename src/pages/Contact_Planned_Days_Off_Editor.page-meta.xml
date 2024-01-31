@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>36.0</apiVersion>
+    <availableInTouch>true</availableInTouch>
+    <confirmationTokenRequired>false</confirmationTokenRequired>
+    <description>A Page to edit Planned Days off. This will be a inline page to the Contact details page.</description>
+    <label>Contact Planned Days Off Editor</label>
+</ApexPage>

@@ -1,0 +1,25 @@
+<apex:component controller="WeeklyGetfeedbackCompController" access="global">
+    
+    <apex:attribute name="contactId" description="" type="String" assignTo="{!conId}"/>
+    <apex:attribute name="parentId" description="" type="String" assignTo="{!proId}"/> 
+    
+    <center><img src="https://c.na26.content.force.com/servlet/servlet.ImageServer?id=015600000010LrM&oid=00DRT0000006o6z" alt="Company Logo" height="200" width="200"/></center>
+    <!--<p>Dear {!opp.Student_Name__r.Name} {!conAssign.Candidate_Name__r.Name},</p><br/>-->
+    <!--<apex:outputPanel rendered="{!IF(conAssign.Candidate_Name__r.Name != null)}">
+    
+    </apex:outputPanel>-->
+    <p>Dear &nbsp;<apex:outputText value="{!IF(conAssign.Candidate_Name__r.Name != null,conAssign.Candidate_Name__r.Name,'')}"></apex:outputText>, </p><br/> 
+    
+    <p>  We hope that the first part of your course is going well. Your feedback is really important to us, so we would love to hear how things have gone for you so far. Please help us by filling out this very short, three-questions survey. The feedback will ONLY be shared with your language training supervisor.</p>
+    
+    <!--<p><a href="https://www.getfeedback.com/r/sqybzLAc?ContactID={!opp.Student_Name_ID__c}&OPPORTUNITY_ID={!opp.Id}&User_ID={!opp.Supervisor__c}&Contact_ID={!conAssign.Candidate_Name__c}">Please click here to fill feedback</a></p><br/>-->
+    <!-- commented by shalini for sendFeedForm from Pro <p><a href="https://www.getfeedback.com/r/DhW9Anmq?ContactID={!conAssign.Candidate_Name__c}&OPPORTUNITY_ID={!opp.Id}&User_ID={!opp.Supervisor__c}">Please click here to fill feedback</a></p><br/> -->
+    <!--Sandbox Get Feedback link
+    <p><a href="https://www.getfeedback.com/r/DhW9Anmq?ContactID={!conAssign.Candidate_Name__c}&OPPORTUNITY_ID={!pro.AcctSeed__Opportunity__c}&PROJECT_ID={!pro.Id}&CONASSIGN_ID={!conAssign.Id}">Please click here to fill feedback</a></p><br/> <!--Added for Project--> 
+    <!--<p>Please click the following link for the survey: <a href="https://www.getfeedback.com/r/DhW9Anmq?ContactID={!conAssign.Candidate_Name__c}&OPPORTUNITY_ID={!opp.Id}&User_ID={!opp.Supervisor__c}">Please click here to fill feedback</a></p>-->
+
+    <p><a href="https://www.getfeedback.com/r/sqybzLAc?ContactID={!conAssign.Candidate_Name__c}&OPPORTUNITY_ID={!pro.AcctSeed__Opportunity__c}&PROJECT_ID={!pro.Id}&CONASSIGN_ID={!conAssign.Id}">Please click here to fill feedback</a></p><br/> <!--Added for Project--> 
+
+    <p>Thank you again for taking the time to fill this out!</p>
+
+</apex:component>

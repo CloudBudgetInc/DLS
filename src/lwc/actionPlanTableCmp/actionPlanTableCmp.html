@@ -1,0 +1,62 @@
+<template>
+    
+    <lightning-layout>    
+            <lightning-layout-item size="9">
+                <h2 class="slds-section__title slds-theme_shade">
+                    <span class="slds-truncate  slds-p-vertical_large" title="ACTION PLAN">ACTION PLAN</span>
+                </h2>                
+            </lightning-layout-item>
+
+            <lightning-layout-item size="3" alignment-bump="left">                                                
+                <template if:false={viewMode}>             
+                    <div class="slds-p-vertical_large slds-float_right">
+                        <button class="slds-button slds-button_brand btn btn-primary" onclick={addActionPlan}>Add</button>
+                    </div>                    
+                </template>
+            </lightning-layout-item>              
+    </lightning-layout> 
+    <template if:true={showErrMsgOnValidation}>
+        <center style="color: red;font-size:0.875;">Add at least one Action Plan</center>
+    </template>
+    <template if:false={showErrMsgOnValidation}>
+        <template if:true={isActionPlanAvailable}>
+            <table class="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th scope="col">
+                            <div class="slds-truncate" title="Activity">Activity</div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="From Date">From Date</div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="To Date">To Date</div>
+                        </th>
+                        <th scope="col" if:false={viewMode}>
+                            <div class="slds-truncate" title="Action">Action</div>
+                        </th>                
+                    </tr>
+                </thead>
+                <tbody>                
+                    <tr class="slds-hint-parent" for:item="actionPlan" for:each={transformedActionPlanRecords} key={actionPlan.customId} for:index="index">
+                        <td data-label="Activity">
+                            <lightning-input required type="text" data-id={actionPlan.customId} name="Activity__c" disabled={viewMode} value={actionPlan.Activity__c} variant="label-hidden" label="activity" onchange={handleInputChange}></lightning-input>
+                        </td>
+                        <td data-label="From Date">
+                            <lightning-input required date-style="short" type="date" data-id={actionPlan.customId} name="From_Date__c" disabled={viewMode} value={actionPlan.From_Date__c} variant="label-hidden" label="from date" onchange={handleInputChange}></lightning-input>
+                        </td>
+                        <td data-label="To Date">
+                            <lightning-input required date-style="short" type="date" data-id={actionPlan.customId} name="To_Date__c" disabled={viewMode} value={actionPlan.To_Date__c} variant="label-hidden" label="to date" onchange={handleInputChange}></lightning-input>
+                        </td>
+                        <td data-label="Action" if:false={viewMode}>
+                            <lightning-button-icon data-index={index} onclick={deleteActionPlan} icon-name="utility:delete"></lightning-button-icon>
+                        </td>                   
+                    </tr>                         
+                </tbody>
+            </table>
+        </template>
+        <template if:false={isActionPlanAvailable}>                
+            <center style="font-size:0.875;">No records to display</center>                
+        </template>  
+    </template>   
+</template>

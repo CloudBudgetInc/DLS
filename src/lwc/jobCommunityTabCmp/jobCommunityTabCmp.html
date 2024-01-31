@@ -1,0 +1,50 @@
+<template>
+    <template if:true={showSpinner}>
+        <lightning-spinner variant='brand' alternative-text="Loading"></lightning-spinner>
+    </template>
+    <template if:true={jobList}>
+
+        <div class="card-deck">
+            <div class="card">
+                <div class="card-body">
+                    <lightning-layout>
+                        <lightning-layout-item size="12" small-device-size="6" medium-device-size="12"
+                            large-device-size="12">
+                            <div class="containerTable table-responsive">
+                                <table
+                                    class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                    <thead class="thead-light">
+                                        <tr class="slds-line-height_reset">
+                                            <th class="wrap" scope="col" width="45%">
+                                                Job Title
+                                            </th>
+                                            <th class="wrap" scope="col" width="20%">Date Posted</th>
+                                            <th class="wrap" scope="col" width="35%">Location</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={jobList} for:item="job">
+                                            <tr class="slds-hint-parent" key={job.Id}>
+                                                <td data-label="Job Title">
+                                                    <div class="wrap"><a href="javascript:void(0)" name={job.Id}
+                                                            onclick={navToJobDetailPage}>{job.bpats__Job_Title__c}</a>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Posted Date">
+                                                    <div class="wrap">{job.postedDate}</div>
+                                                </td>
+                                                <td data-label="Location">
+                                                    <div class="wrap">{job.Location__c}</div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

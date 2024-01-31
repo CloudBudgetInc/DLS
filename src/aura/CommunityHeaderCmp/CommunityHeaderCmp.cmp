@@ -1,0 +1,57 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" >
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="backgroundImageURL" type="string" />
+    <aura:attribute name="search" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="profileMenu" type="Aura.Component[]" required="false"/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <ltng:require scripts="{!join(',', 
+                           $Resource.DLS_Communites_CSS + '/Communites_CSS/script/jquery-3.2.1.slim.min.js')}"
+                  styles="{!join(',', 
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/styles.css',
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/bootstrap.css',
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/font-awesome/css/all.css')}"/>
+    <!--div class="py-4">        
+   <div class="custom-header">
+    <header class="w-100" >
+     <div class="container d-flex align-items-center h-100">
+      
+      <div class="search-bar d-flex">
+                            <input class="form-control" placeholder="Search" type="search"/>
+       <button href="#!" class="btn btn-primary" type="submit">Search</button>
+      </div>
+      <div class="icons">
+       <i class="fal fa-bell"></i>
+       <i class="fal fa-user-circle"></i>
+      </div>
+     </div>
+    </header>
+   </div>
+  </div-->
+    <div class="custom-header">
+        <header class="w-100 customHeader" style="{!'background:' +' url(' + v.backgroundImageURL +') no-repeat;background-position: top center;background-size: cover;'}">
+            <div class="container d-flex align-items-center h-100">
+                <br/>
+                <br/>
+                <div class="col-sm-12 col-md-2 text-center text-md-left">
+                    <div class="main-logo">
+                        <img src="{!$Resource.CommunityDlsLogo}" class="headerLogoImg" style="width: 100%;"  alt="DLS Logo" onclick="{!c.redirectToHome}"/>
+                    </div>
+                </div>
+                <div class="searchWebCls">
+                    <div class="search-bar d-flex">
+                        {!v.search}
+                    </div>
+                </div>
+                <div class="notifyCls">  
+                    <forceCommunity:notifications/>
+                </div>
+                <div class="profileMenuCls">
+                    {!v.profileMenu}
+                </div>
+            </div>
+        </header>
+    </div>
+</aura:component>

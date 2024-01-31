@@ -1,0 +1,30 @@
+.THIS .outerGroup lightning-radio-group > fieldset > div{
+    display: flex;
+}
+.THIS .slds-modal__container {
+    /*max-width: 80rem !important;
+    width: 68% !important;*/
+}
+.THIS .datePickerClass{
+    /*width : 93% !important;*/
+}
+.THIS .datePickerError {
+    border-color: rgb(194, 57, 52);
+    box-shadow: rgb(194, 57, 52) 0 0 0 1px inset;
+}
+.THIS .selectReq .slds-select, 
+.THIS .slds-input {
+    border-left-color: red !important;
+    border-left-width: 3px !important;
+}
+.THIS .requiredClass {
+    border-left-color: red !important;
+    border-left-width: 3px !important;
+}
+.THIS .checkboxClass {
+    margin-top: 1rem;
+}
+.THIS .notesClass .slds-textarea{
+    border-left-color: red !important;
+    border-left-width: 3px !important;
+}

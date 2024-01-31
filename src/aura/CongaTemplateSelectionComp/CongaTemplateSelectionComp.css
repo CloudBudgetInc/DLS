@@ -1,0 +1,8 @@
+.THIS .slds-card__header{
+    padding-left: 0px !important;
+}
+.THIS .slds-spinner_container {
+    position:fixed !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+    z-index: 1000000 !important;
+}

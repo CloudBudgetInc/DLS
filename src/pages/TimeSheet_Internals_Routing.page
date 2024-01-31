@@ -1,0 +1,38 @@
+<apex:page standardStylesheets="false" sidebar="false" showHeader="false">
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+    <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+    <script src="{!URLFOR($Resource.Filter)}"/>
+    <c:RemoteActionTk ></c:RemoteActionTk>
+    
+     <apex:form >
+        <div class="slds ng-cloak" ng-app="myApp" ng-controller="TimeSheet_InternalController">
+        </div>
+     </apex:form>
+     
+     <script>
+  
+    var force = new remotetk.Client();
+    
+    var app = angular.module('myApp', ['ngRoute']);
+    app.controller('TimeSheet_InternalController', function($scope,$timeout,$routeParams,$location,$route) {
+       
+       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+       if (isMobile) {
+         
+           console.log(':::::enter browser::::',isMobile);
+          window.location.href = '/apex/TimeSheet_Internals_Mobile';
+       }else if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) ) {
+            // Salesforce1 navigation
+            console.log(':::::enter s1 app::::');
+            window.location.href = '/apex/TimeSheet_Internals_Mobile';
+        }
+        else {
+            console.log(':::::enter web::::');
+            // Set the window's URL using a Visualforce expression
+            window.location.href = '/apex/TimeSheet_Internals';
+        }
+       
+    });
+    </script>
+  
+</apex:page>

@@ -1,0 +1,62 @@
+<aura:component controller="CreateExpenses_Ctrl">
+    <aura:attribute name="expense" type="Object" required="true"/>
+    
+    <aura:method name="selectAll" action="{!c.toggleSelectAll}"> 
+        <aura:attribute name="checked" type="Boolean"/>         
+    </aura:method>
+    <aura:method name="getSelectedExpense" action="{!c.getSelectedExpenseRec}"></aura:method>    
+    
+    <tr class="slds-hint-parent">
+        <td style="width: 2.5rem !important;">
+            <lightning:input type="checkbox" aura:id="selectExpenses" label=""/>
+        </td>
+        <td class="wrap">
+            <div>{!v.expense.postDate}</div>                                
+        </td>
+        <td class="wrap">
+            <div>{!v.expense.vendorName}</div>                                
+        </td>
+        <td class="wrap">
+            <div>{!v.expense.referenceNo}</div>                                
+        </td>
+        <td class="wrap">
+            <aura:if isTrue="{!!(v.expense.isPayablev.expenseExist)}">
+                <div style="margin-top:-1rem;">
+                    <c:LookupSearch aura:id="projectId"  selection="{!v.expense.projectLookup}" onSearch="{!c.projectLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project__c" fieldName="DLS_Ref__c" label="" placeholder="Search Project" isMultiEntry="false"/><!--selectedIndex="{!index}"-->
+                </div>                                        
+                <aura:set attribute="else">
+                    <div class="marginCls">{!v.expense.projectName}</div>
+                </aura:set>
+            </aura:if>
+        </td>
+        <td class="wrap">
+            <aura:if isTrue="{!empty(v.expense.AcctSeed__Project_Task__c)}">
+                <aura:if isTrue="{!!v.expense.isPayablev.expenseExist}">
+                    <aura:if isTrue="{!or(!empty(v.expense.AcctSeed__Project__c),v.expense.projectLookup.length > 0)}">
+                        <div style="margin-top:-1rem;">
+                            <c:LookupSearch aura:id="projectTaskId" selection="{!v.expense.proTaskLookup}" onSearch="{!c.projectTaskLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project_Task__c" fieldName="Name" condition="{!v.expense.projectTaskCondition}" label="" placeholder="Search Project Task" isMultiEntry="false" />
+                        </div>
+                    </aura:if>
+                </aura:if>
+                <aura:set attribute="else">
+                    <div class="marginCls">{!v.expense.projectTaskName}</div>
+                </aura:set>
+            </aura:if>
+        </td>
+        <td class="wrap">
+            <div class="marginCls">{!v.expense.Internal_Comment}</div>
+        </td>
+        <td class="wrap">
+            <div class="marginCls">{!v.expense.Expense_GL_Account}</div>
+        </td>
+        <td class="wrap">
+            <div class="marginCls">{!v.expense.GL_Account_Variable_1}</div>
+        </td>
+        <td class="wrap">
+            <div class="marginCls">{!v.expense.invoiceComment}</div>
+        </td>
+        <td class="wrap">
+            <div class="marginCls">{!v.expense.total}</div>
+        </td>                            
+    </tr> 
+</aura:component>

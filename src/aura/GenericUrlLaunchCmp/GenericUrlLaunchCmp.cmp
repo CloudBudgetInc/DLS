@@ -1,0 +1,95 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 07/20/2023
+  @last modified by  : Dhinesh Kumar
+-->
+<aura:component extends="c:BoxFolderCreationUtilCmp"
+    implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName,force:lightningQuickActionWithoutHeader"
+    access="global" Controller="GenericUrlLaunch_Ctrl">
+    <aura:attribute name="sObjectName" type="String" />
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="showErrorMsg" type="Boolean" default="false" />
+    <aura:attribute name="showSpinner" type="Boolean" default="false" />
+    <aura:attribute name="card" type="Map" default="{'title' : '', 'message' : ''}" />
+    <aura:attribute name="congaUrl" type="String" default="" />
+    <aura:attribute name="title" type="String" default="" />
+    <aura:attribute name="isLoad" type="Boolean" default="false" />
+    <aura:attribute name="channel" type="String" default="/event/Box_FRUP__e" />
+    <aura:attribute name="subscription" type="Object" default="{}" />
+    <aura:attribute name="userId" type="String" default="" />
+    <aura:attribute name="modalActionName" type="String" default="Student" />
+
+    <!-- Added By Dhinesh - 18/04/2022 - W-007424 -->
+    <aura:attribute name="isShowClose" type="Boolean" default="true" />
+    <aura:attribute name="assessmentReport" type="Object" />
+    <aura:attribute name="ca" type="List" />
+
+    <!-- Added By Dhinesh - 20/07/2023 -->
+    <aura:attribute name="isShowProceed" type="Boolean" default="false"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <aura:handler event="c:boxFolderCreationEvt" action="{!c.doInit}" />
+
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server" />
+
+    <lightning:empApi aura:id="empApi" />
+
+    <aura:if isTrue="{!!v.showErrorMsg}">
+        <aura:if isTrue="{!v.isLoad}">
+            <lightning:card>
+                <aura:set attribute="title">
+                    <p style="font-size: 1.5rem;;" class="slds-align_absolute-center slds-p-bottom_xx-small">Submit to
+                        {!v.modalActionName}</p>
+                </aura:set>
+                <div style="font-size: 1rem;text-align: center;"><br /><br />
+                    Would you like to generate &amp; Submit the Progress Report to {!v.modalActionName}?
+                    <br /><br /> <br />
+                </div>
+                <aura:set attribute="footer">
+                    <lightning:button label="Okay" title="Neutral action" variant="brand" onclick="{!c.launchUrl}" />
+                    <lightning:button variant="brand" label="Close" onclick="{!c.closeAction}" />
+                </aura:set>
+            </lightning:card>
+        </aura:if>
+        <aura:set attribute="else">
+            <lightning:card>
+                <aura:set attribute="title">
+                    <p style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">
+                        {!v.card.title}</p>
+                </aura:set>
+                <br /><br />
+                <p style="font-size:1rem;">
+                    <lightning:formattedRichText value="{!v.card.message}" />
+                </p><br /><br />
+                <aura:set attribute="footer">
+                    <aura:if isTrue="{!v.isShowProceed}">
+                        <lightning:button label="Proceed" onclick="{!c.launchUrl}" />
+                        <lightning:button label="Cancel" onclick="{!c.closeAction}" />
+                        <aura:set attribute="else">
+                            <aura:if isTrue="{!v.isShowClose}">
+                                <lightning:button class="slds-float_right" variant="brand" label="Close"
+                                    onclick="{!c.closeAction}" />
+                                <aura:set attribute="else">
+                                    <div class="slds-float_right">
+                                        <lightning:button variant="brand" label="Yes" onclick="{!c.yesAction}" />
+                                        <lightning:button label="Proceed without change" onclick="{!c.launchUrl}" />
+                                        <lightning:button label="Cancel" onclick="{!c.closeAction}" />
+                                    </div>
+                                </aura:set>
+                            </aura:if>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+            </lightning:card>
+        </aura:set>
+    </aura:if>
+</aura:component>

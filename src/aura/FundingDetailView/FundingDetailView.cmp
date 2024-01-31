@@ -1,0 +1,90 @@
+<aura:component controller="FundingListController" implements="forceCommunity:availableForAllPageTypes"  access="global" >
+    <aura:attribute name="fundingRec" type="Map" />
+    <aura:attribute name="fundingItemList" type="list"/>
+    <aura:handler name="init" value="{!this}" action="{!c.getFundingItemList}"/>
+    
+    
+    <div>
+        <div class="backCls">
+            <div style="display: inline-block;">
+                <div class="slds-grid">
+                    <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.back}" ></i></span>
+                    <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                </div>
+            </div>
+        </div>
+    </div><br/>
+    
+    <div class="card"> 
+        <span class="card-body">
+            <div class="table-responsive">
+                <h5 class="card-title">PAYMENT DETAIL</h5>
+                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                    <thead class="thead-light">
+                        <tr class="slds-line-height_reset">
+                            <th  class="wrap" scope="col">Transaction #</th>    
+                            <th  class="wrap" scope="col">Payment Date</th>  
+                            <th  class="wrap" scope="col">Payment Type</th>  
+                            <th  class="wrap" scope="col">Method Of Payment</th>
+                            <th  class="wrap" scope="col">Auth/last 4 digits</th>
+                            <th  class="wrap" scope="col">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="slds-hint-parent">
+                            <aura:if isTrue ="{!(not(empty(v.fundingRec)))}">
+                                <td class="wrap" data-label="Transaction #">{!v.fundingRec.transactionName}</td>
+                                <td class="wrap" data-label="Payment Date">{!v.fundingRec.paymentDate}</td>
+                                <td class="wrap" data-label="Payment Type">{!v.fundingRec.type}</td>
+                                <td class="wrap" data-label="Method Of Payment">{!v.fundingRec.modeOfPayment}</td>
+                                <td class="wrap" data-label="Auth/last 4 digits">{!v.fundingRec.authorizedDigits}</td>
+                                <td class="wrap" data-label="Total Amount">{!v.fundingRec.totalAmount}</td>
+                                <aura:set attribute="else">
+                                    <td colspan="6" class="slds-text-align_center">No records to display</td>  
+                                </aura:set>
+                            </aura:if>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </span>
+    </div>
+    <br/><br/>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">PAYMENT ITEMS</h5> 
+            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                <thead class="thead-light">
+                    
+                    <tr class="slds-text-title_caps">
+                        <th class="wrap">Project Task</th>
+                        <th class="wrap">Quantity</th>
+                        <th class="wrap">Rate per Quantity</th>
+                        <th class="wrap">Project Task Unit</th>
+                        <th class="wrap">Amount</th>                  
+                    </tr>
+                </thead>
+                <tbody>                        
+                    <aura:if isTrue="{!v.fundingItemList.length > 0}">
+                        <aura:iteration items="{!v.fundingItemList}" var="item">
+                            <tr>
+                                <td data-label="Project task name" class="wrap">{!item.projectTaskName}</td>
+                                <td data-label="Quantity" class="wrap">{!item.quantity}</td>
+                                <td data-label="rate per quantity" class="wrap">{!item.ratePerQty}</td>
+                                <td data-label="Project Task Unit" class="wrap">{!item.projectTaskUnit}</td>
+                                <td data-label="Amount" class="wrap">{!item.amount}</td>
+                            </tr>
+                        </aura:iteration>
+                        <aura:set attribute="else">
+                            <tr>
+                                <td colspan="5" class="slds-text-align_center">No records to display</td>
+                            </tr>
+                        </aura:set>
+                    </aura:if>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <c:ApexService aura:id="server"/>
+</aura:component>

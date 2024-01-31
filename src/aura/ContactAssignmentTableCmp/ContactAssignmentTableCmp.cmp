@@ -1,0 +1,328 @@
+<aura:component  controller="ContactAssignmentLightningCtrl">
+    <aura:attribute name="contactAssignList" type="List" />
+    <aura:attribute name="header" type="List" />
+    <aura:attribute name="config" type="Map" />
+    <aura:attribute name="contactId" type="String" />
+    <aura:attribute name="statusPickList" type="List" />
+    <aura:attribute name="contactAssignTempList" type="List" />
+    <aura:attribute name="sObjectName" type="String" />
+    <aura:attribute name="selectedTab" type="String" />
+    <aura:attribute name="projectRecordId" type="String" />
+    <aura:attribute name="isDisplayAction" type="boolean" />
+    <aura:attribute name="selectedStatus" type="String" default="All" />
+    <aura:attribute name="displayViewMoreInstructor" type="Boolean" default="false"/>
+    <aura:attribute name="displayViewMoreTab" type="Boolean" default="false"/>
+    <aura:attribute name="displayAddModal" type="Boolean" default="false"/>
+    <aura:attribute name="CAId" type="String" default=""/>
+    <aura:attribute name="RecordType" type="String"/>
+    <aura:attribute name="actionPerform" type="String" default=""/>
+    <aura:attribute name="parentId" type="String"/>
+    <aura:attribute name="fieldsEmpty" type="List" default="[]"/>
+    <aura:attribute name="ConditionFailed" type="String" default=""/>
+    <aura:attribute name="parentRecordType" type="string" default=""/>
+    <aura:attribute name="displayPlannedOffDays" type="Boolean" default="false"/>
+    <aura:attribute name="defaultCR" type="String"/>
+    <aura:attribute name="costRateRecord" type="Map" default="{}" description="Used for PayRateModification"/>
+    <aura:attribute name="caRecord" type="Map" default="{}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="isPayRateModifyAction" type="Boolean" default="false"/>
+    <aura:attribute name="payRateModifyPermission" type="Boolean"/>
+    <aura:attribute name="isAdditionalCompModal" type="Boolean" default="false"/>
+    <aura:attribute name="isSendTesterPaymentModal" type="Boolean" default="false"/>
+    <aura:attribute name="isDisplayExistCAAddComp" type="Boolean" default="false"/>
+    <aura:attribute name="insIdWithTotalEventSumMap" type="Map"/>
+    <aura:attribute name="isPayRateModifyCRRateTypes" type="Boolean" default=""/>
+    <aura:attribute name="isLangTestingFlow" type="Boolean" default="false"/>
+    <aura:attribute name="fulLoadAmtFlag" type="Boolean" default="false"/>
+    <aura:attribute name="fulLoadAmt" type="Decimal" default="0.00"/>
+    <aura:attribute name="studentTransferCAMap" type="Map" default="{selectedCLCAId:'',studentCANames:[],isShowTransferStuCAVal:false,isTransferStudentCA:false,projectLookup:[],transferCASTDate:'',transferCAOldEDDate :'',projectName:'',isShowConfirmationModal:false,transferCAValMsg:''}"/>
+
+
+    <aura:attribute name="addCompCARecord" type="Map" default="{}"/>
+    <aura:attribute name="addCompinputsMap" type="Map" default="{'isDisplayAddCompInputs':false,'TotalEligibleDayAddComp':0}"/>
+    
+
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClick}"/>
+    
+    <aura:handler  name="updateCAEvent" event="c:childClickEvent" action="{!c.childActionEvent}"/>
+    
+    <aura:registerEvent name="reloadEvent" type="c:reloadEvent"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    
+    <div>
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner variant="brand"  size="medium" alternativeText="Loading" />
+        </aura:if>
+        <lightning:card>
+            <lightning:select  label="Status" aura:id="statusId" value="{!v.selectedStatus}" onchange="{!c.statusChange}" class="selectSize">
+                <aura:iteration items="{!v.statusPickList}" var="option" >
+                    <option text="{!option}" value="{!option}" />
+                </aura:iteration>
+            </lightning:select>
+            <div style="margin-top: -2rem;float: right;margin-right: 1rem;">
+                <aura:if isTrue="{!or(and((v.isDisplayAction) , v.sObjectName=='Opportunity'),or(v.sObjectName=='AcctSeed__Project__c',v.sObjectName=='Contract'))}">
+                    <lightning:button variant="brand" label="{!('Add '+v.selectedTab)}" title="Brand action" onclick="{! c.addBtnClick }" />
+                    
+                    <aura:if isTrue="{!or(v.selectedTab == 'Instructor', v.selectedTab == 'Direct Labor')}">
+                        <lightning:button variant="brand" label="{!('Search '+v.selectedTab)}" title="Brand action" onclick="{! c.searchBtnClick }" />
+                    </aura:if>
+                </aura:if>
+            </div>
+            <aura:if isTrue="{!and(not(v.isDisplayAction) , v.sObjectName=='Opportunity')}">
+                <a href="{!('/'+v.projectRecordId)}"  style="margin-left: 85%;font-size:14px;">Go to Project</a>
+                &nbsp;<lightning:helptext content="This opportunity already has Project." class="helpTextClass"/>
+            </aura:if>
+            <div class="tableCls">
+                <aura:if isTrue="{!v.contactAssignTempList.length > 0}"><br/>
+                    <ldt:datatableDev  aura:id="contactAssignTable" 
+                                      config="{!v.config}" 
+                                      dataRows="{!v.contactAssignTempList}"
+                                      header="{!v.header}"/>
+                    <aura:set attribute="else"><br/>
+                        <p><center> No records Found </center></p>
+                    </aura:set>
+                </aura:if>
+            </div>
+        </lightning:card>
+        
+        <aura:if isTrue="{!v.displayViewMoreInstructor}" >
+            <c:CAInstructorViewMoreCmp sObjectName="{!v.sObjectName}" conAssignId="{!v.CAId}" recordType="{!v.RecordType}"  contactId="{!v.contactId}"/> 
+        </aura:if>    
+        <aura:if isTrue="{!v.displayViewMoreTab}" >
+            <c:CAViewMore  conAssignId="{!v.CAId}" recordType="{!v.RecordType}" parentRecordType="{!v.parentRecordType}"/>   
+        </aura:if> 
+        <aura:if isTrue="{!v.displayAddModal}"  >
+            <c:CAAddEditCmp  recordTypeName="{!v.RecordType}" tabName="{!v.selectedTab}" parentId="{!v.parentId}" sObjectName="{!v.sObjectName}" caRecordId="{!v.CAId}" displayAddModal="{!v.displayAddModal}" actionPerform="{!v.actionPerform}"/>   
+        </aura:if>
+        <aura:if isTrue="{!v.displayPlannedOffDays}">
+            <c:PlannedDaysOffCmp  sObjectName = "Contact"  recordId="{!v.contactId}"  isFromContactAssignment = 'true'/>
+        </aura:if>
+        
+        <c:Modal modelWidth="20%" aura:id="fieldsEmpty" closeAction="{!c.closefieldsEmpty}" hasCloseIcon="false">
+            <aura:set attribute="header">
+                <h4>Error</h4>    
+            </aura:set>
+            <aura:set attribute="content">
+                <h1>Please populate values for the following fields:</h1><br/>
+                <aura:iteration items="{!v.fieldsEmpty}" var="i">  
+                    {!i}<br/>
+                </aura:iteration>
+            </aura:set>
+            <aura:set attribute="footer">        
+                <lightning:button label="Okay" onclick="{!c.closefieldsEmpty}" />
+            </aura:set>
+        </c:Modal>
+        
+        <c:Modal modelWidth="20%" aura:id="ConditionFailed" closeAction="{!c.closeConditionFailed}" hasCloseIcon="false">
+            <aura:set attribute="header">
+                <h4>Error</h4>    
+            </aura:set>
+            <aura:set attribute="content">    
+                <h1>{!v.ConditionFailed}</h1> 
+            </aura:set>
+            <aura:set attribute="footer">           
+                <lightning:button label="Okay" onclick="{!c.closeConditionFailed}" />
+            </aura:set>
+        </c:Modal>
+        
+        <aura:if isTrue="{!v.isPayRateModifyAction}">
+            <c:Modal modelWidth="25%" aura:id="payRateModify" closeAction="{!c.closePayRateModificationClk}" hasCloseIcon="false">
+                <aura:set attribute="header">
+                    <h1>Pay Rate Modification</h1>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!and(v.isPayRateModifyCRRateTypes,v.payRateModifyPermission)}">
+                        <aura:if isTrue="{!not(empty(v.caRecord.End_Date__c))}">
+                            <h1><b>Please select an Effective Date of either the 1st or 16th of the month, or the Start Date of a New Project.</b></h1>
+                            <lightning:input type="decimal" name="Hourly Cost" aura:id="crInput" label="Hourly Cost" value="{!v.costRateRecord.AcctSeed__Hourly_Cost__c}" required="true" onchange="{!c.getFullyLoadedValues}"/>
+                            <ui:inputDate label="Effective Date" aura:id ="crInputs" class="field" displayDatePicker="true" format="MM-dd-yyyy" value="{!v.costRateRecord.Effective_Date__c}" required="true"/> 
+                            <ui:inputTextArea label="Notes/ Reason for Change" aura:id="crInputs" value="{!v.costRateRecord.Notes_Reasons_for_Change__c}" required="true"/>
+                         
+                            <aura:if isTrue="{!v.fulLoadAmtFlag}">
+                                <h1> Fully Loaded Rate : {!v.fulLoadAmt}  </h1>
+                            </aura:if>
+                            <aura:set attribute="else">
+                                <center><h1>Please fill End Date inorder to perform Pay Rate Modification</h1></center>
+                            </aura:set>
+                        </aura:if>
+                        <aura:set attribute="else">
+                            <aura:if isTrue="{!and((!v.isPayRateModifyCRRateTypes),v.payRateModifyPermission == false)}">
+                                <h1>This process can only be done for <b>LT</b> , <b>Non-SCA CD</b> and <b>Non-SCA CD (1099)</b> Rate Types and You don't have sufficient privileges to perform this action, Please contact HR</h1>
+                            </aura:if>
+                            <aura:if isTrue="{!and(v.isPayRateModifyCRRateTypes,v.payRateModifyPermission == false)}">
+                                <center><h1>You don't have sufficient privileges to perform this action, Please contact HR</h1></center> 
+                            </aura:if>
+                            <aura:if isTrue="{!and((!v.isPayRateModifyCRRateTypes),v.payRateModifyPermission)}">
+                                <center><h1>This process can only be done for <b>LT</b> , <b>Non-SCA CD</b> and <b>Non-SCA CD (1099)</b> Rate Types</h1></center> 
+                            </aura:if>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">   
+                    <aura:if isTrue="{!and(v.isPayRateModifyCRRateTypes,and(v.payRateModifyPermission,not(empty(v.caRecord.End_Date__c))))}">
+                        <lightning:button label="Save" onclick="{!c.savePayRateModificationClk}" />
+                    </aura:if>
+                    <lightning:button label="Close" onclick="{!c.closePayRateModificationClk}" />
+                </aura:set>
+            </c:Modal>
+        </aura:if>
+        
+        <!--Work - W-001862
+         Hiring Process: Additional Compensation (End of Training Bonuses, Client Site Travel Reimbursement, etc.)-->
+        <aura:if isTrue="{!v.isAdditionalCompModal}">
+            <c:Modal modelWidth="{!v.isDisplayAddCompInputs == true ? '20%':'35%'}" aura:id="addCompensation" closeAction="{!c.addcompCloseClk}" hasCloseIcon="false">
+                <aura:set attribute="header">
+                    <h1>Additional Compensation</h1>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!!v.isDisplayExistCAAddComp}">
+                        <lightning:recordEditForm objectApiName="Contact_Assignments__c"  onload="{!c.handleLoad}">
+                            <lightning:messages />
+                            <aura:if isTrue="{!v.addCompinputsMap.isDisplayAddCompInputs}">
+                                <aura:if isTrue="{!v.addCompinputsMap.bonusAmtInput}">
+                                    <div style="width:300px; margin-left:150px;">
+                                        <lightning:input type="number" aura:id="addCompInputs" name="input2" label="Bonus Amount" step="0.01" value="{!v.addCompCARecord.Bonus_Amount__c}"/>
+                                    </div>
+                                    <div style="width:300px; margin-left:150px;">
+                                        <lightning:input type="text" aura:id="addCompInputs" name="input2" label="Additional Compensation Reason" value="{!v.addCompCARecord.Additional_Compensation_Reason__c}"/>
+                                    </div>
+                                </aura:if>
+                                <aura:if isTrue="{!v.addCompinputsMap.DailyTravelAmtInput}">
+                                    <div style="width:300px; margin-left:150px;">
+                                        <lightning:input type="number" aura:id="addCompInputs" name="input2" label="Daily Travel Reimbursement Amount" step="0.01" value="{!v.addCompCARecord.Daily_Travel_Reimbursement_Amount__c}"/>
+                                    </div><br/>
+                                    <div style="width:300px; margin-left:150px;">
+                                        Total # of Days Eligible is  <b>{!v.addCompinputsMap.TotalEligibleDayAddComp}</b>
+                                    </div>
+                                </aura:if>
+                                <aura:set attribute="else">
+                                    <lightning:layout multipleRows="true">
+                                        <lightning:layoutItem size="8" padding="around-small">
+                                            <lightning:inputField class="addComp" aura:id="additionalComp" fieldName="Additional_Compensation_Type__c" value="{!v.addCompCARecord.Additional_Compensation_Type__c}"/>
+                                        </lightning:layoutItem> 
+                                    </lightning:layout>
+                                    <br/><br/><br/><br/>
+                                </aura:set>
+                            </aura:if>
+                        </lightning:recordEditForm>
+                        <aura:set attribute="else">
+                            <center><h1>Additional Compensation exist for this Instructor</h1></center> 
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">    
+                    <aura:if isTrue="{!!v.isDisplayExistCAAddComp}">
+                        <lightning:button label="Proceed" onclick="{!c.addCompProceedClk}" />
+                    </aura:if>
+                    <aura:if isTrue="{!!v.addCompinputsMap.isDisplayAddCompInputs}">
+                        <lightning:button label="Close" onclick="{!c.addCompCloseClk}" />
+                        <aura:set attribute="else">
+                            <lightning:button label="Back" onclick="{!c.addCompBackClk}" />
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+            </c:Modal>
+        </aura:if>
+    </div>
+    <!-- if Contact Supervisor name is empty ,the display SendTesterPayment WarningModal -->
+    <aura:if isTrue="{!v.isSendTesterPaymentModal}">
+        <c:Modal modelWidth="20%" aura:id="sendTesterPaymentWarningModal" closeAction="{!c.sendTesterPaymentClose}" hasCloseIcon="false">
+            <aura:set attribute="header">
+                <h4>Warning!</h4>    
+            </aura:set>
+            <aura:set attribute="content">    
+               <center><h1>Please populate the Contact Superviser Name.</h1></center> 
+            </aura:set>
+            <aura:set attribute="footer">           
+                <lightning:button label="Close" onclick="{!c.sendTesterPaymentClose}" />
+            </aura:set>
+        </c:Modal>
+    </aura:if>
+    
+    <div class="langTestCls">
+        <aura:if isTrue="{!v.isLangTestingFlow}">
+            <c:sldsModal aura:id="langTesting" modelHeight="100% !important" closeAction="{!c.closeLangTestingFlowModal}" displayCloseImage="true" showFooter="false">
+                <aura:set attribute="header">
+                    <h4>Language Testing Creation</h4>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <lightning:flow aura:id="flowData" onstatuschange="{!c.closeLangTestingFlow}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+    </div>
+    
+    <div class="">
+        <aura:if isTrue="{!v.studentTransferCAMap.isTransferStudentCA}">
+            <c:Modal modelWidth="50%" aura:id="transferCA" closeAction="{!c.closeTransferStuCA}" hasCloseIcon="false">
+                <aura:set attribute="header">
+                    <h4>Transfer Student Contact Assignment</h4>    
+                </aura:set>
+                <aura:set attribute="content">   
+                    <aura:if isTrue="{!v.studentTransferCAMap.isShowConfirmationModal}">         
+                        <h1>A new Contact Assignment will be created on Project <b>{!v.studentTransferCAMap.projectName}</b> and all Goals, Training Reports, and Language Testing records will be transferred to the new Project.
+                            Would you like to Proceed?</h1>
+                        <aura:set attribute="else">
+                            <aura:if isTrue="{!v.studentTransferCAMap.isShowTransferStuCAVal}">
+                                <h1><aura:unescapedHtml value="{!v.studentTransferCAMap.transferCAValMsg}"/></h1>
+                                <aura:set attribute="else">
+                                    <div class="transferCAClass">
+                                        <lightning:layout multipleRows="true">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <div>End Date for the <b>current</b> Project Contact Assignment</div>
+                                                <ui:inputDate aura:id="transferDt" value="{!v.studentTransferCAMap.transferCAOldEDDate}" label="End Date for the current Project Contact Assignment" displayDatePicker="true" format="MM/dd/yyyy"/>
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <aura:if isTrue="{!v.studentTransferCAMap.studentCANames.length > 0}">
+                                                    <div>Select anyone student as Class Leader for <b>current</b> project</div>
+                                                    <div style="margin-top: -1rem;">
+                                                        <lightning:select name="" label="" required="false" aura:id="stuTransfer" value="{!v.studentTransferCAMap.selectedCLCAId}">
+                                                            <option value=""></option>
+                                                            <aura:iteration items="{!v.studentTransferCAMap.studentCANames}" var="i">
+                                                                <option value="{!i.Id}">{!i.Candidate_Name__r.Name}</option>
+                                                            </aura:iteration>
+                                                        </lightning:select>
+                                                    </div>
+                                                </aura:if>
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <div>Project for the <b>new</b> Contact Assignment</div>
+                                                <div style="margin-top: -1rem;">
+                                                    <c:LookupSearch selectedIndex="" aura:id="projectId" selection="{!v.studentTransferCAMap.projectLookup}" onSearch="{!c.projectLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project__c" fieldName="Name" condition="" label="" placeholder="Search Project" isMultiEntry="false" />
+                                                </div>
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                  <div>Start Date for the <b>new</b> Project Contact Assignment</div>
+                                                    <ui:inputDate aura:id="transferDt" value="{!v.studentTransferCAMap.transferCASTDate}" label="Start Date for the new Project Contact Assignment" displayDatePicker="true" format="MM/dd/yyyy"/>
+                                            </lightning:layoutItem>
+                                        </lightning:layout>
+                                        <br/>
+                                        <br/>
+                                    </div>
+                                </aura:set>
+                            </aura:if>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <aura:if isTrue="{!v.studentTransferCAMap.isShowTransferStuCAVal}">
+                        <lightning:button label="Close" variant="brand" onclick="{!c.closeTransferStuCA}" />
+                        <aura:set attribute="else">
+                            <lightning:button label="Cancel" onclick="{!c.closeTransferStuCA}" />
+                            <aura:if isTrue="{!v.studentTransferCAMap.isShowConfirmationModal}">
+                                <lightning:button label="Yes" variant="brand"  onclick="{!c.proceedToTransferStuCA}" />
+                                <aura:set attribute="else">
+                                    <lightning:button label="Save" variant="brand"  onclick="{!c.TransferStuCAValCheck}" />
+                                </aura:set>
+                            </aura:if>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+            </c:Modal>
+        </aura:if>
+    </div>
+    
+    
+</aura:component>

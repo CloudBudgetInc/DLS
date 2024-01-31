@@ -1,0 +1,55 @@
+.THIS .slds-form-element__label {
+    color:black !important;
+    font-size: 1.1rem !important;
+}
+.THIS .strikeThrough{
+    text-decoration: line-through;
+}
+.THIS input[type="checkbox"] {
+    width: 2rem !important;
+    height: 1.3rem  !important;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    border-width: 1px;
+    border-style: solid;
+    border-image: initial;
+    background: rgb(255, 255, 255);
+    transition: border 0.1s linear 0s, background-color 0.1s linear 0s;
+    background-color: rgb(233, 234, 236);
+    border-color: rgb(196, 198, 202);
+    margin-right: 0.5rem;
+}
+.THIS .slds-spinner_container {
+    position:fixed !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+    z-index: 1000000 !important;
+}
+.THIS .center-screen {
+    /*display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;*/
+    min-height: 19vh;
+    text-align: center;
+    padding-top:5rem;
+}
+.THIS .card-body {
+    padding-bottom:0px !important;
+}
+
+.THIS .todoItemClass {
+    height:auto;
+    min-height:15.7rem;
+    font-size:1.2rem;
+    padding-top: 1rem;
+}
+
+.THIS .todoItemClass1 {
+    height:auto;
+    min-height:14.5rem;
+    min-height:100%;
+    font-size:1.2rem;
+    padding-top: 1rem;
+}

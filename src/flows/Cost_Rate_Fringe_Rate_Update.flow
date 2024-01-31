@@ -1,0 +1,957 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>0.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision</name>
+        <label>myDecision</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>myDecision4</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_1</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_1</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_1_A1</targetReference>
+            </connector>
+            <label>Rate Type - DLI - 16 SCA LT+5, CD+5</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>3.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision12</name>
+        <label>myDecision12</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_13</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_13</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_13_A1</targetReference>
+            </connector>
+            <label>Clear Fringe Rate when Rate Type is empty</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision4</name>
+        <label>myDecision4</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>myDecision8</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_5</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_5</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_5_A1</targetReference>
+            </connector>
+            <label>Rate type - Non-SCA LT, CD, PT Hourly</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>2.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision8</name>
+        <label>myDecision8</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>myDecision12</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_9</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_9</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_9_A1</targetReference>
+            </connector>
+            <label>Rate Type - Salary, FT Hourly Benefits</label>
+        </rules>
+    </decisions>
+    <description>To Update the Fringe Rate (Stored in Custom Label) based on Rate Type Field.</description>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>VALUE($Label.LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits ) </stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_10_myRule_9_A1_5049201309</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits} )</expression>
+        <scale>18</scale>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>VALUE($Label.LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits ) </stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_11_myRule_9_A1_4673755096</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_FT_Salary_FT_Hourly_Benefits} )</expression>
+        <scale>18</scale>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>VALUE($Label.LCR_Fringe_Rate_DLI_16_SCA_LT_CD_LT_5_CD_5 ) </stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_2_myRule_1_A1_3868843345</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_DLI_16_SCA_LT_CD_LT_5_CD_5} )</expression>
+        <scale>18</scale>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>VALUE($Label.LCR_Fringe_Rate_DLI_16_SCA_LT_CD_LT_5_CD_5 ) </stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_3_myRule_1_A1_1777966865</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_DLI_16_SCA_LT_CD_LT_5_CD_5} )</expression>
+        <scale>18</scale>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>VALUE($Label.LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly ) </stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_6_myRule_5_A1_7114285402</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly} )</expression>
+        <scale>18</scale>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>VALUE($Label.LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly ) </stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_7_myRule_5_A1_1701100207</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!$Label.LCR_Fringe_Rate_Non_SCA_LT_CD_PT_Hourly} )</expression>
+        <scale>18</scale>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>AND (
+	IF (         
+		ISNEW(),
+                NOT(ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;&apos;)),
+                 	        			
+		AND ( 
+        	         ISCHANGED([AcctSeed__Cost_Rates__c].Rate_Type__c),
+                	 NOT(ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c ,&apos;&apos;)) 
+        	)
+	),
+        OR (
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-16 SCA LT&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-16 SCA CD&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-16 SCA LT +5&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-16 SCA CD +5&apos;), 
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-20 SCA LT&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-20 SCA CD&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-20 SCA LT +5&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-20 SCA CD +5&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-21 SCA LT&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-21 SCA CD&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-21 SCA LT +5&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-21 SCA CD +5&apos;)
+        )
+)</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_1</name>
+        <dataType>Boolean</dataType>
+        <expression>AND (
+	IF (         
+		ISNEW(),
+                NOT(ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;&apos;)),
+                 	        			
+		AND ( 
+        	         ISCHANGED({!myVariable_current.Rate_Type__c}),
+                	 NOT(ISPICKVAL({!myVariable_current.Rate_Type__c} ,&apos;&apos;)) 
+        	)
+	),
+        OR (
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-16 SCA LT&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-16 SCA CD&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-16 SCA LT +5&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-16 SCA CD +5&apos;), 
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-20 SCA LT&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-20 SCA CD&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-20 SCA LT +5&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-20 SCA CD +5&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-21 SCA LT&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-21 SCA CD&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-21 SCA LT +5&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-21 SCA CD +5&apos;)
+        )
+)</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>OR (
+	IF (         
+		ISNEW(),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;&apos;),
+                 	        			
+		AND ( 
+        	         ISCHANGED([AcctSeed__Cost_Rates__c].Rate_Type__c),
+                	 ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;&apos;) 
+        	)
+	),
+        OR (
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-16 SCA MTT&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-20 SCA MTT&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-21 SCA MTT&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;International Salary&apos;),
+		ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;Non-SCA Testing&apos;),
+		ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-16 SCA MTT +5&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-20 SCA MTT +5&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;DLI-21 SCA MTT +5&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;Non-SCA Translation (Per Word)&apos;),
+		ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;Non-SCA Translation (Per Hour)&apos;),
+       		ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;Non-SCA Interpretation (Per Hour)&apos;)
+                 
+        )
+)</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_13</name>
+        <dataType>Boolean</dataType>
+        <expression>OR (
+	IF (         
+		ISNEW(),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;&apos;),
+                 	        			
+		AND ( 
+        	         ISCHANGED({!myVariable_current.Rate_Type__c}),
+                	 ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;&apos;) 
+        	)
+	),
+        OR (
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-16 SCA MTT&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-20 SCA MTT&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-21 SCA MTT&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;International Salary&apos;),
+		ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;Non-SCA Testing&apos;),
+		ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-16 SCA MTT +5&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-20 SCA MTT +5&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;DLI-21 SCA MTT +5&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;Non-SCA Translation (Per Word)&apos;),
+		ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;Non-SCA Translation (Per Hour)&apos;),
+       		ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;Non-SCA Interpretation (Per Hour)&apos;)
+                 
+        )
+)</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>AND (
+	IF (         
+		ISNEW(),
+                NOT(ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;&apos;)),
+                 	        			
+		AND ( 
+        	         ISCHANGED([AcctSeed__Cost_Rates__c].Rate_Type__c),
+                	 NOT(ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c ,&apos;&apos;)) 
+        	)
+	),
+        OR (
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;Non-SCA LT&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;Non-SCA CD&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;PT Hourly (OH &amp; G&amp;A)&apos;) 
+        )
+)
+</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_5</name>
+        <dataType>Boolean</dataType>
+        <expression>AND (
+	IF (         
+		ISNEW(),
+                NOT(ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;&apos;)),
+                 	        			
+		AND ( 
+        	         ISCHANGED({!myVariable_current.Rate_Type__c}),
+                	 NOT(ISPICKVAL({!myVariable_current.Rate_Type__c} ,&apos;&apos;)) 
+        	)
+	),
+        OR (
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;Non-SCA LT&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;Non-SCA CD&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;PT Hourly (OH &amp; G&amp;A)&apos;) 
+        )
+)</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>AND (
+	IF (         
+		ISNEW(),
+                NOT(ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;&apos;)),
+                 	        			
+		AND ( 
+        	         ISCHANGED([AcctSeed__Cost_Rates__c].Rate_Type__c ),
+                	 NOT(ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;&apos;)) 
+        	)
+	),
+        OR (
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;FT Salary &amp; Benefits&apos;),
+                ISPICKVAL([AcctSeed__Cost_Rates__c].Rate_Type__c , &apos;FT Hourly &amp; Benefits&apos;) 
+        )
+)</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_9</name>
+        <dataType>Boolean</dataType>
+        <expression>AND (
+	IF (         
+		ISNEW(),
+                NOT(ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;&apos;)),
+                 	        			
+		AND ( 
+        	         ISCHANGED({!myVariable_current.Rate_Type__c} ),
+                	 NOT(ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;&apos;)) 
+        	)
+	),
+        OR (
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;FT Salary &amp; Benefits&apos;),
+                ISPICKVAL({!myVariable_current.Rate_Type__c} , &apos;FT Hourly &amp; Benefits&apos;) 
+        )
+)</expression>
+    </formulas>
+    <interviewLabel>Cost_Rate_Fringe_Rate_Update-3_InterviewLabel</interviewLabel>
+    <label>Cost Rate - Fringe Rate Update</label>
+    <processMetadataValues>
+        <name>ObjectType</name>
+        <value>
+            <stringValue>AcctSeed__Cost_Rates__c</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>ObjectVariable</name>
+        <value>
+            <elementReference>myVariable_current</elementReference>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OldObjectVariable</name>
+        <value>
+            <elementReference>myVariable_old</elementReference>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>TriggerType</name>
+        <value>
+            <stringValue>onAllChanges</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Workflow</processType>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>criteria</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[AcctSeed__Cost_Rates__c]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_13_A1</name>
+        <label>Update Fringe Rate</label>
+        <locationX>1300</locationX>
+        <locationY>200</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>inputDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>operatorDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <numberValue>0.0</numberValue>
+            </value>
+        </filters>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <value>
+                <numberValue>0.0</numberValue>
+            </value>
+        </inputAssignments>
+        <object>AcctSeed__Cost_Rates__c</object>
+    </recordUpdates>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>criteria</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[AcctSeed__Cost_Rates__c]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_1_A1</name>
+        <label>Update Fringe Rate</label>
+        <locationX>100</locationX>
+        <locationY>200</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>inputDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>operatorDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <elementReference>formula_2_myRule_1_A1_3868843345</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <value>
+                <elementReference>formula_3_myRule_1_A1_1777966865</elementReference>
+            </value>
+        </inputAssignments>
+        <object>AcctSeed__Cost_Rates__c</object>
+    </recordUpdates>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>criteria</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[AcctSeed__Cost_Rates__c]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_5_A1</name>
+        <label>Update Fringe Rate</label>
+        <locationX>500</locationX>
+        <locationY>200</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>inputDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>operatorDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <elementReference>formula_6_myRule_5_A1_7114285402</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <value>
+                <elementReference>formula_7_myRule_5_A1_1701100207</elementReference>
+            </value>
+        </inputAssignments>
+        <object>AcctSeed__Cost_Rates__c</object>
+    </recordUpdates>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>criteria</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[AcctSeed__Cost_Rates__c]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_9_A1</name>
+        <label>Update Fringe Rate</label>
+        <locationX>900</locationX>
+        <locationY>200</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>inputDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>operatorDataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <elementReference>formula_10_myRule_9_A1_5049201309</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Number</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Fringe Rate</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Fringe_Rate__c</field>
+            <value>
+                <elementReference>formula_11_myRule_9_A1_4673755096</elementReference>
+            </value>
+        </inputAssignments>
+        <object>AcctSeed__Cost_Rates__c</object>
+    </recordUpdates>
+    <startElementReference>myDecision</startElementReference>
+    <status>Obsolete</status>
+    <variables>
+        <name>myVariable_current</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+        <objectType>AcctSeed__Cost_Rates__c</objectType>
+    </variables>
+    <variables>
+        <name>myVariable_old</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <objectType>AcctSeed__Cost_Rates__c</objectType>
+    </variables>
+</Flow>

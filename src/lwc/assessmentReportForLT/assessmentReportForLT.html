@@ -1,0 +1,233 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 03/08/2023
+  @last modified by  : Dhinesh Kumar
+-->
+<template>
+
+    <c-custom-spinner if:true={showSpinner}></c-custom-spinner>
+    
+    <div>
+        <div class="slds-p-bottom_medium" if:true={showErrorToast}>
+            <c-toast type="warning"
+                message="Your previous answers from the last Report have been pre-filled. Please update your answers to reflect this Report Period."
+                onclose={closeToast}
+                show-type-icon="false"
+                mode="sticky"></c-toast>     
+        </div>
+        <div>            
+            <div class="slds-p-bottom_medium" if:true={showEditButton}>
+                <c-button-group-for-assessment-reports view-mode={viewMode} ontogglemode={toggleMode} onsaveassessmentreport={saveAssessmentReport}></c-button-group-for-assessment-reports>        
+            </div>
+        </div>
+        <div class="slds-box">        
+            <lightning-layout multiple-rows>
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <span if:true={assessmentReport.Training_officer__c}>
+                        <lightning-input label="Training Officer" disabled value={assessmentReport.Training_officer__r.Name}></lightning-input>
+                    </span>
+                    <span if:false={assessmentReport.Training_officer__c}>
+                        <lightning-input label="Training Officer" disabled value={assessmentReport.Training_officer__c}></lightning-input>
+                    </span>                                                         
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                                               
+                    <span if:true={assessmentReport.Student__c}>
+                        <lightning-input label="Student" disabled value={assessmentReport.Student__r.Name}></lightning-input>
+                    </span>
+                    <span if:false={assessmentReport.Student__c}>
+                        <lightning-input label="Student" disabled value={assessmentReport.Student__c}></lightning-input>
+                    </span>                                            
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                                                  
+                    <span if:true={assessmentReport.Sponser__c}>
+                        <lightning-input label="Sponsor" disabled value={assessmentReport.Sponser__r.Name}></lightning-input>
+                    </span> 
+                    <span if:false={assessmentReport.Sponser__c}>
+                        <lightning-input label="Sponsor" disabled value={assessmentReport.Sponser__c}></lightning-input>
+                    </span>                                         
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">  
+                    <span if:true={assessmentReport.Language_LU__c}>
+                        <lightning-input label="Language" disabled value={assessmentReport.Language_LU__r.Name}></lightning-input>
+                    </span> 
+                    <span if:false={assessmentReport.Language_LU__c}>
+                        <lightning-input label="Language" disabled value={assessmentReport.Language_LU__c}></lightning-input>
+                    </span>                                          
+                </lightning-layout-item>  
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <lightning-input label="Due Date" disabled value={assessmentReport.Report_Date__c} date-style="short" type="date"></lightning-input>                                                
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <lightning-input label="Training Type" disabled value={assessmentReport.Type_of_Training__c}></lightning-input>                              
+                </lightning-layout-item> 
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <lightning-input label="Language Training Status" disabled value={assessmentReport.Language_Training_Status__c}></lightning-input>                              
+                </lightning-layout-item> 
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                                                 
+                    <lightning-input label="Hours Trained" disabled value={assessmentReport.Total_Hours_Used__c}></lightning-input>                             
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <lightning-input label="Total Hours" disabled value={assessmentReport.Total_Hours__c}></lightning-input>                            
+                </lightning-layout-item> 
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <lightning-input  label="Reporting Period from" disabled value={assessmentReport.Evaluation_Period_From__c} date-style="short" type="date"></lightning-input>     
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <lightning-input label="Reporting Period to" disabled value={assessmentReport.Evaluation_Period_To__c} date-style="short" type="date"></lightning-input>                                    
+                </lightning-layout-item>
+
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                        
+                    <lightning-input label="Program Period from" disabled value={assessmentReport.Training_Date_From__c} date-style="short" type="date"></lightning-input>
+                </lightning-layout-item> 
+                                
+                <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                    <lightning-input label="Program Period to" disabled value={assessmentReport.Training_Date_To__c} date-style="short" type="date"></lightning-input>
+                </lightning-layout-item>
+
+            </lightning-layout> 
+        </div>
+        
+        <div class="slds-p-top_large">
+            <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+                
+                <lightning-accordion-section name="PROFICIENCY SCORES" label="PROFICIENCY SCORES">
+                    <lightning-layout multiple-rows>
+                        
+                        <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-input label="Initial Proficiency Speaking" disabled value={assessmentReport.Initial_Proficiency_Speaking__c}></lightning-input>
+                        </lightning-layout-item> 
+
+                        <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-input label="Initial Proficiency Listening" disabled value={assessmentReport.Initial_Proficiency_Listening__c}></lightning-input>
+                        </lightning-layout-item>
+
+                        <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-input label="Initial Proficiency Reading" disabled value={assessmentReport.Initial_Proficiency_Reading__c}></lightning-input>
+                        </lightning-layout-item>
+
+                        <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-input label="Proficiency Speaking Goal" disabled value={assessmentReport.Proficiency_Objective_Speaking__c}></lightning-input>
+                        </lightning-layout-item>
+
+                        <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-input label="Proficiency Listening Goal" disabled value={assessmentReport.Proficiency_Objective_Listening__c}></lightning-input>
+                        </lightning-layout-item>
+
+                        <lightning-layout-item padding="around-small"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-input label="Proficiency Reading Goal" disabled value={assessmentReport.Proficiency_Objective_Reading__c}></lightning-input>
+                        </lightning-layout-item>
+
+                    </lightning-layout>
+                </lightning-accordion-section>
+
+                <lightning-accordion-section name="CURRENT LANGUAGE PROFICIENCY SCORES (ILR 0-5)" label="CURRENT LANGUAGE PROFICIENCY SCORES (ILR 0-5)">
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Speaking" options={picklistOptions.Current_Estimated_ILR_Rating_Speaking__c} name="Current_Estimated_ILR_Rating_Speaking__c" value={assessmentReport.Current_Estimated_ILR_Rating_Speaking__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                        
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Listening" options={picklistOptions.Current_Estimated_ILR_Rating_Listening__c} name="Current_Estimated_ILR_Rating_Listening__c" value={assessmentReport.Current_Estimated_ILR_Rating_Listening__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">                            
+                            <lightning-combobox label="Reading" options={picklistOptions.Current_Estimated_ILR_Rating_Reading__c} name="Current_Estimated_ILR_Rating_Reading__c" value={assessmentReport.Current_Estimated_ILR_Rating_Reading__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>  
+    
+                        <lightning-layout-item padding="around-medium"  size="12"  small-device-size="12" medium-device-size="6" large-device-size="12">                    
+                            <c-custom-radio-group label="Scores Based Upon" options={picklistOptions.Scores_Based_Upon__c} name="Scores_Based_Upon__c"  value={assessmentReport.Scores_Based_Upon__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></c-custom-radio-group>
+                        </lightning-layout-item>                           
+                    </lightning-layout>
+                </lightning-accordion-section>
+
+                <lightning-accordion-section name="QUALITATIVE FACTORS" label="QUALITATIVE FACTORS">
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Motivation" options={picklistOptions.Motivation1__c}  name="Motivation1__c" value={assessmentReport.Motivation1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>                            
+                        </lightning-layout-item>
+    
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Attendance" options={picklistOptions.Attendance1__c}  name="Attendance1__c" value={assessmentReport.Attendance1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>                            
+                        </lightning-layout-item>
+    
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Preparation" options={picklistOptions.Preparation1__c}  name="Preparation1__c" value={assessmentReport.Preparation1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>                            
+                        </lightning-layout-item> 
+                    </lightning-layout>
+                </lightning-accordion-section>
+
+                <lightning-accordion-section name="PERFORMANCE IN THE SKILLS" label="PERFORMANCE IN THE SKILLS">
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Pronunciation" options={picklistOptions.Pronunciation1__c} name="Pronunciation1__c" value={assessmentReport.Pronunciation1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Fluency" options={picklistOptions.Fluency1__c} name="Fluency1__c" value={assessmentReport.Fluency1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                        
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Grammar" options={picklistOptions.Grammar1__c} name="Grammar1__c" value={assessmentReport.Grammar1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                        
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Vocabulary" options={picklistOptions.Vocabulary_Retention1__c} name="Vocabulary_Retention1__c" value={assessmentReport.Vocabulary_Retention1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                        
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Syntax" options={picklistOptions.Syntax1__c} name="Syntax1__c" value={assessmentReport.Syntax1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                        
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Listening Comprehension" options={picklistOptions.Listening_Comprehension1__c} name="Listening_Comprehension1__c" value={assessmentReport.Listening_Comprehension1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>
+                        
+                        <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="4">
+                            <lightning-combobox label="Reading Comprehension" options={picklistOptions.Reading_Comprehension1__c} name="Reading_Comprehension1__c" value={assessmentReport.Reading_Comprehension1__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-combobox>
+                        </lightning-layout-item>                
+                    </lightning-layout>
+                </lightning-accordion-section>
+            </lightning-accordion>                
+        </div>
+        <div class="slds-p-top_large">
+            <lightning-layout multiple-rows>                
+                <lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="6">
+                    <lightning-textarea label="Instructor Comments" name="Instructor_Comment__c" value={assessmentReport.Instructor_Comment__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-textarea>
+                </lightning-layout-item>
+                
+                <!--<lightning-layout-item padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="6">
+                    <lightning-textarea label="Student Comments" name="Student_Comments__c" value={assessmentReport.Student_Comments__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-textarea>
+                </lightning-layout-item>-->
+
+                <lightning-layout-item if:false={isLTDODA} padding="around-medium"  size="12" small-device-size="12" medium-device-size="6" large-device-size="6">
+                    <lightning-textarea label="Test Comments" name="Test_Comments__c" value={assessmentReport.Test_Comments__c}  class="requiredCls" disabled={viewMode} onchange={handleinputchange}></lightning-textarea>
+                </lightning-layout-item>
+            </lightning-layout>            
+        </div>
+    </div>
+
+    <div class="slds-p-bottom_medium" if:true={showEditButton}>
+        <c-button-group-for-assessment-reports view-mode={viewMode} ontogglemode={toggleMode} onsaveassessmentreport={saveAssessmentReport}></c-button-group-for-assessment-reports>        
+    </div>
+
+    <c-modal-cmp header={toastMsg.header} show-header show-footer show={toastMsg.show}>
+        <div slot="footer">
+            <button class="slds-button slds-button_neutral btn btn-secondary" onclick={closeToastMsg} name="OK">OK</button>                            
+        </div>
+        <div slot="body">
+            <p class="slds-align_absolute-center slds-p-around_large">{toastMsg.message}</p>
+        </div>
+    </c-modal-cmp>
+</template>

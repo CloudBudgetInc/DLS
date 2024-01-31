@@ -1,0 +1,69 @@
+<aura:component extends="c:BoxFolderCreationUtilCmp" implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName,force:lightningQuickAction" access="global" Controller="GenericUrlLaunch_Ctrl">
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="errorLog" type="Map" default="{'showError' : false}"/>
+    <aura:attribute name="sObjectName" type="String"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="congaDetailList" type="List" default="[]"/>
+    <aura:attribute name="sessionCongaUrl" type="String" default=""/>
+    <aura:attribute name="selectedStudent" type="String" default=""/>
+    <aura:attribute name="showWarningMsg" type="String" default=""/>
+    <aura:attribute name="channel" type="String" default="/event/Box_FRUP__e"/>
+    <aura:attribute name="subscription" type="Object" default="{}"/>
+    <aura:attribute name="userId" type="String" default=""/>
+    <aura:attribute name="obJRecordId" type="String" default=""/>
+    <aura:attribute name="conAssign" type="List"/>
+    <aura:attribute name="conAssignIdWithCongaUrlMap" type="Map"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:handler event="c:boxFolderCreationEvt" action="{!c.doInit}"/>
+    
+    <lightning:empApi aura:id="empApi"/>
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!!v.errorLog.showError}">
+        <aura:if isTrue="{!v.sObjectName == 'Opportunity'}">
+            <aura:if isTrue="{!(not(empty(v.showWarningMsg)))}">
+                <div style="text-align: justify;" class="slds-show slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning">
+                    <div class="slds-media slds-media_center">
+                        <div class="slds-media__figure">
+                            <lightning:icon iconName="utility:warning" size="small"/>
+                        </div>
+                        <div class="slds-media__body ">
+                            <h1 style="font-weight: bold;">{!v.showWarningMsg}</h1>
+                        </div>
+                    </div>
+                </div>
+            </aura:if>
+            
+            <lightning:select aura:id="studentCA" label="Student Contact" required="true" value="{!v.selectedStudent}" onchange="{!c.studentChange}">
+                <option value="">--None--</option>
+                <aura:iteration items="{!v.congaDetailList}" var="ca" indexVar="index">
+                    <option value="{!ca.value}">{!ca.label}</option>
+                </aura:iteration>                
+            </lightning:select>
+            
+            <aura:if isTrue="{!v.selectedStudent}"><br/>
+                <lightning:button  variant="brand" name="" label="Send" class="styleCls" onclick="{!c.launchConga}"/>
+            </aura:if>
+
+            <aura:set attribute="else">
+                <c:SendStudentPolicyAndProcedureCmp conAssign="{!v.conAssign}" conAssignIdWithCongaUrlMap="{!v.conAssignIdWithCongaUrlMap}"/>
+            </aura:set>
+        </aura:if>            
+        
+        <aura:set attribute="else">
+            <br/>
+            <p style="font-size:1rem;">{!v.errorLog.message}</p>
+            <br/>
+        </aura:set>
+    </aura:if>
+    
+</aura:component>

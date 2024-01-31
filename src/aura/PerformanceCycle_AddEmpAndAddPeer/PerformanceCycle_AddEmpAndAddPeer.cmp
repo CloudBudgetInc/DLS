@@ -1,0 +1,72 @@
+<aura:component controller="PerformanceCycleCmp_Ctrl" implements="flexipage:availableForRecordHome,force:hasSObjectName,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="selectedEmployees" type="List" default="[]"></aura:attribute>
+    <aura:attribute name="employeeFilterCondition" type="String" default="RecordType.DeveloperName = 'DLS_Employee'"/>
+    <aura:attribute name="actionName" type="String" default="Employees"/>
+    <aura:attribute name="showAddEmployees" type="Boolean"/>   
+    <aura:attribute name="showSpinner" type="Boolean" default="false"></aura:attribute>
+    <aura:attribute name="formResponse" type="Object"/>
+    <aura:attribute name="performanceCycleRec" type="Performance_Cycle__c"/>
+    <aura:attribute name="showAllEmpTable" type="Boolean" default="false"/>
+    <aura:attribute name="showNewHiresTable" type="Boolean" default="false"/>
+    <aura:attribute name="employeesMap" type="Map"/>
+    
+    <aura:attribute name="tableColumns" type="List"/>
+    <aura:attribute name="tableConfig" type="Map"/>
+    <aura:attribute name="tableRecords" type="List"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <ltng:require styles="/resource/QuickActionFullPage"></ltng:require>
+
+    <aura:if isTrue="{!v.sObjectName != 'Form_Response__c'}">
+        <force:recordData aura:id="recordLoader"
+                          recordId="{!v.recordId}"
+                          fields="Name,Status__c"
+                          targetFields="{!v.performanceCycleRec}"
+                          />    
+    </aura:if>    
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <!--<aura:if isTrue="{!or(v.sObjectName == 'Form_Response__c', v.performanceCycleRec.Status__c != 'Deployed')}">-->
+        <aura:if isTrue="{!v.showAddEmployees}">
+            <lightning:layout multipleRows="true">
+                <lightning:layoutItem padding="around-small" size="6">
+                    <c:LookupSearch aura:id="employeeLookup" selection="{!v.selectedEmployees}" onSearch="{!c.lookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="{!v.employeeFilterCondition}" label="{!v.actionName}" placeholder="{!'Select '+ v.actionName}" isMultiEntry="true" allowMultiSelect="true" isRequired="true"/>                                            
+                </lightning:layoutItem>
+                <aura:if isTrue="{!v.actionName != 'Peers'}">
+                    <lightning:layoutItem padding="around-small" size="3">
+                        <div class="slds-p-around_medium slds-align_absolute-center">
+                            <lightning:input type="checkbox" name="active" label="Show All Employees" checked="{!v.showAllEmpTable}" onchange="{!c.initTable}"/>
+                        </div>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem padding="around-small" size="3">
+                        <div class="slds-p-around_medium slds-align_absolute-center">
+                            <lightning:input type="checkbox" name="new" label="Show New Hires" checked="{!v.showNewHiresTable}" onchange="{!c.initTable}"/>
+                        </div>
+                    </lightning:layoutItem>
+                </aura:if>
+                <lightning:layoutItem padding="around-small" size="6" alignmentBump="left">
+                    <div class="slds-p-around_medium slds-align_absolute-center">
+                        <lightning:button label="{! 'Add ' + v.actionName}"  variant="brand"  onclick="{!c.handleAction}"></lightning:button>
+                    </div>                
+                </lightning:layoutItem>
+            </lightning:layout>       
+        </aura:if>   
+        
+        <aura:if isTrue="{!and(v.tableRecords.length > 0, (or(v.showNewHiresTable, v.showAllEmpTable)))}">
+            <div class="ldtTableCls slds-p-top_small">
+                <ldt:datatableDev aura:id="formResponseTable" title="{!v.actionName}"
+                                  dataRows="{!v.tableRecords}" header="{!v.tableColumns}"
+                                  config="{!v.tableConfig}"/>
+            </div>
+            <aura:if isTrue="{!not(v.tableRecords.length > 0)}">
+                <br/><center style="font-size :0.875rem;">No records to display</center>
+            </aura:if>
+        </aura:if>
+        <!--<aura:set attribute="else">
+            <h1 class="slds-align_absolute-center">Performance Cycle Record is already deployed.</h1>
+        </aura:set>
+    </aura:if>-->
+</aura:component>

@@ -1,0 +1,123 @@
+<apex:page showHeader="false" controller="WeeklyLessonPlanExportPDF_Ctrl" renderAs="advanced_pdf" standardStylesheets="false" applyBodyTag="false" applyHtmlTag="false">
+    <html>  
+        <head>
+            <style>
+                table, th, td {
+                  border: 1px solid black;
+                  border-collapse: collapse;
+                  padding: 10px;
+                }
+                .pageheader{
+                    height: 3rem;
+                    background-color: #3A74B5;
+                    color: white;
+                    font-size: 18pt;
+                }
+                .align-center{
+                     text-align: center;                    
+                }
+                .word-wrap{
+                    word-wrap: break-word !important;
+                }
+                @page {
+                    size:landscape;
+                }
+                
+                .richTextStyle{
+                    display: inline-block;
+                    word-wrap: break-word;
+                    white-space: pre-wrap;
+                }
+                
+            </style>
+        </head>
+        <div class="align-center">
+            <apex:image value="{!URLFOR($Resource.DLS_logo)}"/>
+        </div>
+        <hr></hr>
+        <div style="margin-top: 30px;"></div>
+        <table  style="width:100%">         
+          <tr class="pageheader align-center">
+            <td colspan="3">{!weeklyLessonPlansWrap.headerStr}</td>
+          </tr>
+          <tr>
+            <td>Class #: {!weeklyLessonPlansWrap.classNum}</td>
+            <td>Student Name(s): {!weeklyLessonPlansWrap.studentName}</td>
+            <td>Instructor Name: {!weeklyLessonPlansWrap.insName}</td>
+          </tr>
+        </table>
+        <div style="margin-top: 30px;"></div>
+        <table  style="width:100%">                    
+          <tr style="background-color:#404040; color: white;">
+            <apex:repeat value="{!weeklyLessonPlansWrap.dateStr}" var="dateStr">
+                <th width="10%" class="align-center">{!dateStr}</th>
+            </apex:repeat>
+          </tr>  
+         <tr>
+            <td class="align-center">Objective(s)</td>
+            <apex:repeat value="{!weeklyLessonPlansWrap.lessonPlans}" var="lp">
+                <td width="20%">{!lp.Objectives__c}</td>
+            </apex:repeat>
+          </tr>  
+          <tr>
+            <td class="align-center">Topic(s)</td>
+            <apex:repeat value="{!weeklyLessonPlansWrap.lessonPlans}" var="lp">
+                <td class="word-wrap" width="20%">{!lp.Topics__c}</td>
+            </apex:repeat>
+          </tr>  
+          <tr>
+            <td class="align-center">Materials</td>
+            <apex:repeat value="{!weeklyLessonPlansWrap.lessonPlans}" var="lp">
+                <td class="word-wrap" width="10%">
+                    <div class="word-wrap">
+                        <apex:outputText value="{!lp.Materials__c}" escape="false" styleClass="richTextStyle"/>
+                    </div>
+                </td>
+            </apex:repeat>
+          </tr>  
+          <apex:repeat value="{!weeklyLessonPlansWrap.lessonPlanHrs}" var="lphrs">
+              <tr>  
+                  <td class="align-center">{!lphrs.name}</td>            
+                  <apex:repeat value="{!lphrs.lessonPlanHrs}" var="lph">
+                     <td class="word-wrap" width="10%">
+                         <div class="word-wrap">
+                             <apex:outputText styleClass="word-wrap" value="Skill Focus: {!lph.Skill_Focus__c}" rendered="{!lph.Skill_Focus__c != null}"/> <br/>
+                             <apex:outputText styleClass="word-wrap" value="Activities: {!lph.Activities__c}" rendered="{!lph.Activities__c != null}"/>
+                         </div>
+                      </td> 
+                   </apex:repeat>
+               </tr>
+          </apex:repeat>
+          <tr>
+           <td class="align-center">Assessment Type</td>
+            <apex:repeat value="{!weeklyLessonPlansWrap.lessonPlans}" var="lp">
+                <td class="word-wrap" width="20%">
+                    <div class="word-wrap">
+                        {!lp.Assessment_Type__c}
+                    </div>
+                </td>
+            </apex:repeat>
+          </tr>
+          <tr>
+           <td class="align-center">Assessment</td>
+            <apex:repeat value="{!weeklyLessonPlansWrap.lessonPlans}" var="lp">
+                <td class="word-wrap" width="10%">
+                    <div class="word-wrap">
+                        <apex:outputText value="{!lp.Assessment__c}" escape="false" styleClass="richTextStyle"/>
+                    </div>
+                </td>
+            </apex:repeat>
+          </tr>  
+          <tr>
+            <td class="align-center">Homework</td>
+            <apex:repeat value="{!weeklyLessonPlansWrap.lessonPlans}" var="lp">
+                <td width="10%" class="word-wrap">
+                    <div class="word-wrap">
+                        <apex:outputText value="{!lp.Homework__c}" escape="false" styleClass="richTextStyle"/>
+                    </div>
+                </td>
+            </apex:repeat>
+          </tr>                   
+        </table>        
+    </html>                    
+</apex:page>

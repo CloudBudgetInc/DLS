@@ -1,0 +1,325 @@
+<!--
+  @description       : 
+  @author            : Vasanthram
+  @group             : 
+  @last modified on  : 09-15-2023
+  @last modified by  : Vasanthram
+-->
+<aura:component extends="c:CommunityComponentVisibilityUtil" implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global" Controller="BudgetCommunityListView_Controller" >
+    <aura:attribute name="projectId" type="String"/>
+    <aura:attribute name="activityChecked" type="Boolean"  default="false" access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="serviceSectionList" type="List" default ="[]"/>
+    <aura:attribute name="materialSectionList" type="List" default ="[]"/>
+    <aura:attribute name="materialRequestSectionList" type="List" default ="[]"/>
+    <aura:attribute name="materialLoanSectionList" type="List" default ="[]"/>
+    <aura:attribute name="activeTab" type="String" default="Services"/>
+    <aura:attribute name="matReqLoanTab" type="String" default="Request"/>
+    <aura:attribute name="projectRTName" type="String" default=""/>
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="budgetCmpVisibility" type="Map"/>
+    <aura:attribute name="showBudgetSection" type="Boolean" default="true"/>
+    
+    <aura:handler name="change" value="{!v.communityCmpVisibilities}" action="{!c.handleCommunityCmpVisibilitiesChange}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>   
+    <aura:if isTrue="{!and(v.budgetCmpVisibility, v.showBudgetSection)}">
+        <aura:if isTrue="{!v.communityName == 'client'}"> <!--Removed DLI W Project - By Dhinesh - 15/09/2023 - W-007878 - v.projectRTName == 'DLI_W_LT_Projects', -->
+            <aura:if isTrue="{!v.budgetCmpVisibility.Budget}">
+                <div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">BUDGET</h5>
+                            <div><br/>
+                                <aura:if isTrue="{!v.serviceSectionList.length > 0}">
+                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                        <thead class="thead-light">   
+                                            <tr>
+                                                <th class="slds-truncate" style="width:20%;"><div>Product</div>Name</th>
+                                                <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                    <th class="wrap"><div>Qty</div>Planned</th>
+                                                </aura:if>
+                                                <th class="slds-truncate"><div>Qty</div>Paid</th>
+                                                <th class="slds-truncate"><div>Qty</div>Scheduled</th>
+                                                <th class="slds-truncate"><div>Qty</div>Used</th>
+                                                <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                    <th class="wrap"><div>Qty</div><div>Planned</div>Remaining</th>
+                                                </aura:if>
+                                                <th class="slds-truncate"><div>Qty</div><div>Paid</div>Remaining</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <aura:iteration items="{!v.serviceSectionList}" var="service"  indexVar="rowIndex">
+                                                <aura:if isTrue = "{!service.productName != null}">
+                                                    <tr>
+                                                        <td data-label="Product Name" class="slds-truncate" style="white-space:pre-wrap;">{!service.productName}</td>
+                                                        <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                            <td data-label="Qty Planned" class="wrap">{!service.qtyPlanned}</td>
+                                                        </aura:if>
+                                                        <td data-label="Qty Paid" class="slds-truncate">{!service.qtyPaid}</td>
+                                                        <td data-label="Qty Scheduled" class="slds-truncate">{!service.qtyScheduled}</td>
+                                                        <td data-label="Qty Used" class="slds-truncate">{!service.qtyUsed}</td>
+                                                        <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                            <td data-label="Qty Planned Remaining" class="wrap">{!service.qtyPlannedRemaining}</td>
+                                                        </aura:if>
+                                                        <td data-label="Qty Paid Remaining" class="slds-truncate">{!service.qtyPaidRemaining}</td>
+                                                    </tr>
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </tbody>
+                                    </table>
+                                    <aura:set attribute="else">
+                                        <center style="font-size:0.875;">No records to display</center>
+                                    </aura:set>
+                                </aura:if>
+                            </div>
+                        </div>
+                    </div>
+                </div><br/>
+            </aura:if>
+            <aura:if isTrue="{!v.budgetCmpVisibility.MATERIAL_REQUEST}">
+                <div> <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">MATERIAL REQUEST</h5><br/>
+                        <div>
+                            <aura:if isTrue="{!v.materialRequestSectionList.length > 0}">
+                                <div class="slds-scrollable" style="{!v.materialRequestSectionList.length >= 4 ? 'height:25rem;' : ''}">
+                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                        <thead class="thead-light">   
+                                            <tr>
+                                                <th class="slds-truncate">Request #</th>
+                                                <th class="slds-truncate">Request Status</th>
+                                                <th class="slds-truncate">Date Delivered</th>
+                                                <th class="slds-truncate" style="width:15%;">Material Title</th>
+                                                <th class="slds-truncate">Qty</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <aura:iteration items="{!v.materialRequestSectionList}" var="mr">
+                                                <tr>
+                                                    <td data-label="Request #" class="slds-truncate">{!mr.request}</td>
+                                                    <td data-label="Request Status" class="slds-truncate">{!mr.requestStatus}</td>
+                                                    <td data-label="Date Delivered" class="slds-truncate"><ui:outputDateTime format="MM/DD/YYYY" value="{!mr.dateDelivered}"/></td>
+                                                    <td data-label="Material Title" class="slds-truncate" style="white-space:pre-wrap;">{!mr.materialTitle}</td>
+                                                    <td data-label="Qty" class="slds-truncate">{!mr.qty}</td>
+                                                </tr>
+                                            </aura:iteration>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <aura:set attribute="else">
+                                    <center style="font-size:0.875;">No records to display</center>
+                                </aura:set>
+                            </aura:if> 
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </aura:if>            
+            <aura:set attribute="else">                
+                <aura:if isTrue="{!or(v.projectRTName != 'DLI_W_LT_Projects' , and(v.projectRTName != 'DLI_W_LT_Projects', v.communityName != 'instructor'))}">                    <br/> 
+                    <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">BUDGET</h5>
+                        <div>
+                            <div class="card">
+                                <div class="card-body">
+                                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="{!v.activeTab == 'Services' ? 'nav-link active' : 'nav-link'}"  name="Services" onclick="{!c.tabClick}">Services</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a  class="{!v.activeTab == 'Material' ? 'nav-link active' : 'nav-link'}" name="Material" onclick="{!c.tabClick}">Materials</a>
+                                        </li>
+                                        <li style="position:absolute; right:1rem; display: flex;"><span class="slds-text-align_right" >
+                                            <aura:if isTrue="{!v.activeTab == 'Material'}">
+                                                <div class="marginCls">
+                                                    <div class="custom-control custom-switch">
+                                                        <span class="fontCls">Activity View</span>
+                                                        <input type="checkbox" class="custom-control-input" checked="{!v.activityChecked}" id="customSwitch1" onclick="{!c.activityCheckedClk}"/>
+                                                        <label class="custom-control-label" for="customSwitch1"></label>
+                                                    </div>
+                                                    <!--c:toogle toogleLabel="Activity View" checked="{!v.activityChecked}"/-->
+                                                </div>
+                                            </aura:if>
+                                            </span>
+                                        </li>
+                                    </ul><br/>
+                                    <div class="tab-content" id="myTabContent">
+                                        <aura:if isTrue="{!v.activeTab == 'Services'}">
+                                            <div>
+                                                <aura:if isTrue="{!v.serviceSectionList.length > 0}">
+                                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                                        <thead class="thead-light">   
+                                                            <tr>
+                                                                <th class="slds-truncate" style="width:20%;"><div>Product</div>Name</th>
+                                                                <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                                    <th class="slds-truncate"><div>Qty</div>Planned</th>
+                                                                </aura:if>
+                                                                <th class="slds-truncate"><div>Qty</div>Paid</th>
+                                                                <th class="slds-truncate"><div>Qty</div>Scheduled</th>
+                                                                <th class="slds-truncate"><div>Qty</div>Used</th>
+                                                                <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                                    <th class="slds-truncate"><div>Qty</div><div>Planned</div>Remaining</th>
+                                                                </aura:if>
+                                                                <th class="slds-truncate"><div>Qty</div><div>Paid</div>Remaining</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <aura:iteration items="{!v.serviceSectionList}" var="service"  indexVar="rowIndex">
+                                                                <aura:if isTrue = "{!service.productName != null}">
+                                                                    <tr>
+                                                                        <td data-label="Product Name" class="slds-truncate" style="white-space:pre-wrap;">{!service.productName}</td>
+                                                                        <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                                            <td data-label="Qty Planned" class="slds-truncate">{!service.qtyPlanned}</td>
+                                                                        </aura:if>
+                                                                        <td data-label="Qty Paid" class="slds-truncate">{!service.qtyPaid}</td>
+                                                                        <td data-label="Qty Scheduled" class="slds-truncate">{!service.qtyScheduled}</td>
+                                                                        <td data-label="Qty Used" class="slds-truncate">{!service.qtyUsed}</td>
+                                                                        <aura:if isTrue="{!v.communityName != 'instructor'}">
+                                                                            <td data-label="Qty Planned Remaining" class="slds-truncate">{!service.qtyPlannedRemaining}</td>
+                                                                        </aura:if>
+                                                                        <td data-label="Qty Paid Remaining" class="slds-truncate">{!service.qtyPaidRemaining}</td>
+                                                                    </tr>
+                                                                </aura:if>
+                                                            </aura:iteration>
+                                                        </tbody>
+                                                    </table>
+                                                    <aura:set attribute="else">
+                                                        <center style="font-size:0.875;">No records to display</center>
+                                                    </aura:set>
+                                                </aura:if>
+                                            </div>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.activeTab == 'Material'}">
+                                            <aura:if isTrue="{!v.activityChecked}">
+                                                <ul class="nav nav-tabs tabspace" id="myTab1" role="tablist">
+                                                    <li class="nav-item">
+                                                        <a class="{!v.matReqLoanTab == 'Request' ? 'nav-link active' : 'nav-link'}" data-toggle="tab" role="tab" name="Request" onclick="{!c.matReqLoanTabClk}">Request</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="{!v.matReqLoanTab == 'Loan' ? 'nav-link active' : 'nav-link'}"  data-toggle="tab" role="tab" name="Loan" onclick="{!c.matReqLoanTabClk}">Loan</a>
+                                                    </li>
+                                                </ul><br/>
+                                                <aura:if isTrue="{!v.matReqLoanTab == 'Request'}">
+                                                    <!-- Material Request Table-->
+                                                    <aura:if isTrue="{!v.materialRequestSectionList.length > 0}">
+                                                        <div class="slds-scrollable" style="{!v.materialRequestSectionList.length >= 4 ? 'height:25rem;' : ''}">
+                                                            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                                                <thead class="thead-light">   
+                                                                    <tr>
+                                                                        <th class="slds-truncate">Request #</th>
+                                                                        <th class="slds-truncate">Request Status</th>
+                                                                        <th class="slds-truncate">Date Delivered</th>
+                                                                        <th class="slds-truncate">Sales Tax</th>
+                                                                        <th class="slds-truncate" style="width:15%;">Material Title</th>
+                                                                        <th class="slds-truncate">Qty</th>
+                                                                        <th class="slds-truncate">Dls Total</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <aura:iteration items="{!v.materialRequestSectionList}" var="mr">
+                                                                        <tr>
+                                                                            <td data-label="Request #" class="slds-truncate">{!mr.request}</td>
+                                                                            <td data-label="Request Status" class="slds-truncate">{!mr.requestStatus}</td>
+                                                                            <td data-label="Date Delivered" class="slds-truncate"><ui:outputDateTime format="MM/DD/YYYY" value="{!mr.dateDelivered}"/></td>
+                                                                            <td data-label="Sales Tax" class="slds-truncate">{!mr.materialSalesTax}</td>
+                                                                            <td data-label="Material Title" class="slds-truncate" style="white-space:pre-wrap;">{!mr.materialTitle}</td>
+                                                                            <td data-label="Qty" class="slds-truncate">{!mr.qty}</td>
+                                                                            <td data-label="Dls Total" class="slds-truncate">{!mr.dlsTotal}</td>
+                                                                        </tr>
+                                                                    </aura:iteration>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <aura:set attribute="else">
+                                                            <center style="font-size:0.875;">No records to display</center>
+                                                        </aura:set>
+                                                    </aura:if>
+                                                </aura:if>
+                                                <aura:if isTrue="{!v.matReqLoanTab == 'Loan'}">
+                                                    <!-- Material Loan Table-->
+                                                    <aura:if isTrue="{!v.materialLoanSectionList.length > 0}">
+                                                        <div class="slds-scrollable" style="{!v.materialLoanSectionList.length >= 4 ? 'height:25rem;' : ''}">
+                                                            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                                                <thead class="thead-light">   
+                                                                    <tr>
+                                                                        <th class="slds-truncate">Request #</th>
+                                                                        <th class="slds-truncate" style="width:25%;">Material Title</th>
+                                                                        <th class="slds-truncate">Contact</th>
+                                                                        <th class="slds-truncate">Loan Status</th>
+                                                                        <th class="slds-truncate">Date Loaned Out</th>
+                                                                        <th class="slds-truncate">Date Returned</th>
+                                                                        <th class="slds-truncate">Qty</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <aura:iteration items="{!v.materialLoanSectionList}" var="ml">
+                                                                        <tr>
+                                                                            <td data-label="Request #" class="slds-truncate">{!ml.request}</td>
+                                                                            <td data-label="Material Title" class="slds-truncate" style="white-space:pre-wrap;">{!ml.materialTitle}</td>
+                                                                            <td data-label="Contact" class="slds-truncate">{!ml.contact}</td>
+                                                                            <td data-label="Loan Status" class="slds-truncate">{!ml.loanStatus}</td>
+                                                                            <td data-label="Date Loaned Out" class="slds-truncate"><ui:outputDateTime format="MM/DD/YYYY" value="{!ml.dateLoanedOut}"/></td>
+                                                                            <td data-label="Date Returned" class="slds-truncate"><ui:outputDateTime format="MM/DD/YYYY" value="{!ml.dateReturned}"/></td>
+                                                                            <td data-label="Qty" class="slds-truncate">{!ml.qty}</td>
+                                                                        </tr>
+                                                                    </aura:iteration>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <aura:set attribute="else">
+                                                            <center style="font-size:0.875;">No records to display</center>
+                                                        </aura:set>
+                                                    </aura:if>
+                                                </aura:if>
+                                                <aura:set attribute="else">
+                                                    <!-- Material Table-->
+                                                    <div class="matCls">
+                                                        <aura:if isTrue="{!v.materialSectionList.length > 0}">
+                                                            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                                                <thead class="thead-light">   
+                                                                    <tr>
+                                                                        <th class="slds-truncate" style="width:15%">Product Name</th>
+                                                                        <th class="slds-truncate">Qty Planned</th>
+                                                                        <th class="slds-truncate">Price</th>
+                                                                        <th class="slds-truncate"><div>Extended</div> Price</th>
+                                                                        <th class="slds-truncate"><div>Material</div> <div>Budget</div> Requested</th>
+                                                                        <th class="slds-truncate"><div>Materials</div> <div>Budget</div> Paid</th>
+                                                                        <th class="slds-truncate"><div>Materials</div> <div>Budget</div> Used</th>
+                                                                        <th class="slds-truncate"><div>Materials</div> <div>Paid</div> Remaining</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <aura:iteration items="{!v.materialSectionList}" var="mat">
+                                                                        <tr>
+                                                                            <td data-label="Product Name" class="slds-truncate"  style="white-space:pre-wrap;">{!mat.productName}</td>
+                                                                            <td data-label="Qty Planned" class="slds-truncate">{!mat.qtyPlanned}</td>
+                                                                            <td data-label="Price" class="slds-truncate">${!mat.price}</td>
+                                                                            <td data-label="Extended Price" class="slds-truncate">${!mat.extendedPrice}</td>
+                                                                            <td data-label="Material Budget Requested" class="slds-truncate">${!mat.materialBudgetRequested}</td>
+                                                                            <td data-label="Material Budget Paid" class="slds-truncate">${!mat.materialBudgetPaid}</td>
+                                                                            <td data-label="Material Budget Used" class="slds-truncate">${!mat.materialBudgetUsed}</td>
+                                                                            <td data-label="Material Budget Remaining" class="slds-truncate">${!mat.materialPaidRemaining }</td>
+                                                                        </tr>
+                                                                    </aura:iteration>
+                                                                </tbody>
+                                                            </table>
+                                                            <aura:set attribute="else">
+                                                                <center style="font-size:0.875;">No records to display</center>
+                                                            </aura:set>
+                                                        </aura:if>
+                                                    </div>
+                                                </aura:set>
+                                            </aura:if>
+                                        </aura:if>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </aura:if>
+            </aura:set>
+        </aura:if>
+    </aura:if>
+</aura:component>

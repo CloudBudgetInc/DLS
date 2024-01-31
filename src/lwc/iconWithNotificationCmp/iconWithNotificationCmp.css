@@ -1,0 +1,26 @@
+.badgeSingleDigit {
+  position: relative;
+    padding-top: 1px;
+    padding-right: 6px;
+    padding-bottom: 1px;
+    padding-left: 6px;
+    font-size: smaller;
+    border-radius: 50%;
+    left: -12px;
+    top: -8px;
+    background-color: red;
+    color: white;
+}
+.badgeTwoDigit{
+    position: relative;
+    padding-top: 1px;
+    padding-right: 3px;
+    padding-bottom: 1px;
+    padding-left: 3px;
+    font-size: smaller;
+    border-radius: 50%;
+    left: -12px;
+    top: -8px;
+    background-color: red;
+    color: white;
+}

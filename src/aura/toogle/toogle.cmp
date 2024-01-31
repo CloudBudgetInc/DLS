@@ -1,0 +1,25 @@
+<aura:component >
+    <aura:attribute name="enabledLabel" type="String" access="public" Description="To Store Enable Toogle Label"/>
+    <aura:attribute name="disabledLabel" type="String" access="public" Description="To Store Disable Toogle Label"/>
+    <aura:attribute name="toogleLabel" type="String" access="public" Description="To Store Toogle Label"/>
+    <aura:attribute name="checked" type="Boolean"  access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="isLabelRight" type="Boolean" default="false" access="public" Description="To Store Ischecked"/>
+    <aura:attribute name="isLabel" type="Boolean" default="false" access="public" Description="To Store Ischecked"/>
+
+    <div class="slds-form-element">
+        <label class="slds-checkbox_toggle slds-size_1-of-1 slds-grid">
+            <span class="{!v.isLabel ? 'slds-hide' : 'slds-size_9-of-12'}">
+                <span class="{!v.isLabelRight ? 'slds-form-element__label slds-m-bottom_none labelrightfix' : 'slds-form-element__label slds-m-bottom_none'}">{!v.toogleLabel}</span>
+            </span>
+            <span class="{!v.isLabel ? 'slds-size_12-of-12' :'slds-size_3-of-12'}">
+                <input  type="checkbox" name="checkbox-toggle" checked="{!v.checked}" onclick="{!c.toogleCheckBox}"/>
+                <span  class="slds-checkbox_faux_container" >
+                    <span class="slds-checkbox_faux" ></span>
+                    <span class="slds-checkbox_on">{!v.enabledLabel}</span>
+                    <span class="slds-checkbox_off">{!v.disabledLabel}</span>
+                </span>
+            </span>
+        </label>
+    </div>
+    
+</aura:component>

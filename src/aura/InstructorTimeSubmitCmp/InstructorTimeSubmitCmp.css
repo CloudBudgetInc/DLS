@@ -1,0 +1,35 @@
+.THIS .filterAlignment {
+    padding-bottom: 0px;
+}
+.THIS .filterSpace {
+    padding-top: 1px;
+}
+.THIS .headerClass {
+    padding-top: 2.25rem;
+}
+.THIS .checkBoxCls .slds-form-element__label{
+    font-size: medium !important;
+}
+.THIS .checkBoxCls .slds-checkbox_faux {
+    border-color: #055E89;
+    border-width: 1.5px;
+}
+.THIS .needHelpClass {
+    /*margin-right: 65rem;*/
+    margin-left: 1rem;
+    background-color: #ffcd56;
+    color: black;
+}
+.THIS .form-group .slds-form-element {
+    /*margin-top: -1.5rem;*/
+}
+.THIS table {
+    font-size:0.875rem !important;
+}
+.THIS .form-element__label {
+    color: black !important;
+}
+.THIS .btnCss {
+    float: right;
+    margin-top: -3rem;
+}

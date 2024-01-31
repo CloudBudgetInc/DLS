@@ -1,0 +1,85 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="QuoteListViewController">
+    <aura:attribute name="quoteId" type="String" default=""/>
+    <aura:attribute name="projectId" type="String" default=""/>
+    <aura:attribute name="quoteDetail" type="Map" default="{}"/>
+    <aura:attribute name="quoteLineDetails" type="List" default="[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <c:ApexService aura:id="server"/>
+    
+    <div>
+        <div class="backCls">
+            <div style="display: inline-block;">
+                <div class="slds-grid">
+                    <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.backClick}" ></i></span>
+                    <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                </div>
+            </div>
+        </div>
+    </div><br/>
+    
+    <div class="card"> 
+        <span class="card-body">
+            <div class="table-responsive">
+                <h5 class="card-title">QUOTE DETAIL</h5>
+                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                    <thead class="thead-light">
+                        <tr class="slds-line-height_reset">
+                            <th  class="wrap" scope="col">Quote Name</th>    
+                            <th  class="wrap" scope="col">Quote Date</th>  
+                            <th  class="wrap" scope="col">Registrar</th>  
+                            <th  class="wrap" scope="col">Total Price</th>  
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="slds-hint-parent">
+                            <aura:if isTrue ="{!(not(empty(v.quoteDetail)))}">
+                                <td class="wrap" data-label="Quote Name">{!v.quoteDetail.quoteNumber}</td>
+                                <td class="wrap" data-label="Quote Date">{!v.quoteDetail.quoteDate}</td>
+                                <td class="wrap" data-label="Registrar">{!v.quoteDetail.registrar}</td>
+                                <td class="wrap" data-label="Total Price">{!v.quoteDetail.totalPrice}</td>
+                                <aura:set attribute="else">
+                                    <td colspan="4" class="slds-text-align_center">No records to display</td>  
+                                </aura:set>
+                            </aura:if>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </span>
+    </div>
+    <br/><br/>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">QUOTE LINE ITEMS</h5> 
+            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                <thead class="thead-light">
+                    <tr class="slds-text-title_caps">
+                        <th class="wrap">Product Name</th>
+                        <th class="wrap">Quantity</th>
+                        <th class="wrap">Sales Price</th> 
+                        <th class="wrap">Subtotal</th> 
+                    </tr>
+                </thead>
+                <tbody>                        
+                    <aura:if isTrue="{!v.quoteLineDetails.length > 0}">
+                        <aura:iteration items="{!v.quoteLineDetails}" var="line">
+                            <tr>
+                                <td data-label="Product Name" class="wrap">{!line.productName}</td>
+                                <td data-label="Quantity" class="wrap">{!line.quantity}</td>
+                                <td data-label="Sales Price" class="wrap">{!line.salesPrice}</td>
+                                <td data-label="Subtotal" class="wrap">{!line.subTotal}</td>
+                            </tr>
+                        </aura:iteration>
+                        <aura:set attribute="else">
+                            <tr>
+                                <td colspan="4" class="slds-text-align_center">No records to display</td>
+                            </tr>
+                        </aura:set>
+                    </aura:if>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</aura:component>

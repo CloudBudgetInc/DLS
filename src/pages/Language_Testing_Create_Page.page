@@ -1,0 +1,1108 @@
+<apex:page standardController="Language_Testing__c" extensions="Language_Testing_CreatePge_Ctrl">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+   
+    <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+    
+     <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+    <script src="{!URLFOR($Resource.Filter)}"/>
+    
+    <c:RemoteActionTk ></c:RemoteActionTk>
+    <!--<script src="{!URLFOR($Resource.moment)}"></script>-->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.map"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"/>
+        
+    <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+    
+    <script type="text/javascript">
+        var __sfdcSessionId = '{!GETSESSIONID()}';
+    </script>
+    
+    <script src="../../soap/ajax/35.0/connection.js" type="text/javascript"></script>
+    <script src="../../soap/ajax/35.0/apex.js" type="text/javascript"></script>
+    
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        <style>
+            /**
+             * Hide when Angular is not yet loaded and initialized
+             */
+            [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+              display: none !important;
+            }
+            
+            .slds-input {
+                float: right;
+            }
+            
+            .selectErrorClass {
+                background-color: #fff;
+                border-color: #c23934;
+                box-shadow: #c23934 0 0 0 1px inset;
+                background-clip: padding-box;
+            }
+            
+            .slds-spinner--small  {
+                    z-index: 999;
+                        //width: 100%;
+                        //height: 100%;
+                        top: 0;
+                        left: 0;
+                       // display: none;
+                        position:fixed;             
+                        background-color: #cccccc;
+                        color: #aaaaaa;
+                        opacity: .4;
+                    filter: alpha(opacity = 50);
+                 
+            }
+            .img{
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                //height: 10%;
+                -webkit-transform: translate(-50%,-50%);
+                -ms-transform: translate(-50%,-50%);
+                transform: translate(-50%,-50%);
+            }
+            
+            .testdateclass {
+               background-color: white;
+               color: #16325c;
+               border: 1px solid #d8dde6;
+               border-radius: 4px;
+               width: 100%;
+              -webkit-transition: border 0.1s linear, background-color 0.1s linear;
+               transition: border 0.1s linear, background-color 0.1s linear;
+               display: inline-block;
+               padding: 0 16px 0 12px;
+               line-height: 34px;
+               min-height: calc(34px + 2px);
+                
+            }
+            
+        </style>
+        
+         <apex:form >
+        <div class="slds ng-cloak" ng-app="myApp" ng-controller="Language_Testing_Controller">
+            <div class="slds-spinner--small" style="display:none;width:100%;height:100%;" id="spinner">
+                <img alt="Loading..." src="{!URLFOR($Resource.SLDS0_12_2,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+            </div>
+            <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                <div class="slds-grid">
+                    <div class="slds-media__figure">
+                         <!--<img src="{!URLFOR($Resource.MyTimeSheet_PackageIcon)}" style="width:60px;height:50px;"></img>-->
+                    </div>
+                    <div class="slds-media__body">
+                        <div class="slds-grid">
+                            <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="Language Testing">Language Testing</h1>
+                        </div>
+                    </div>
+                   <div class="slds-col slds-no-flex slds-align-bottom">
+                        <div style="width: 100%;text-align: center;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="SaveCallingFunction()">Save</div>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-col slds-no-flex slds-align-bottom">
+                        <div style="width: 100%;text-align: center;padding-left:17%;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="cancel()">Cancel</div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                <div class="slds-card__body">
+                     <div class="slds-grid slds-wrap">
+                     
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Opportunity</label>
+                                <div class="slds-form-element__control">
+                                    <input type="text" ng-model="OppRec.Name" class="slds-input" ng-disabled="true" ng-hide="OppLookupDisplay"/>
+                                    <lookup data="OppRec" object="'Opportunity'" placeholder="'Opportunity Name'" id="'OppId'" ng-show="OppLookupDisplay" parameter="OppRec" on-change="OpportuntiyChange"></lookup>
+                                </div>
+                             </div>  
+                        </div> 
+                         
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Stage</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.Stage__c" ng-options="i as i for i in stageList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:20px;">
+                            <label class="slds-checkbox">
+                                <input name="checkbox" type="checkbox" ng-model="LanguageRecord.Billable__c"/>
+                                <span class="slds-checkbox--faux"></span>
+                                <span class="slds-form-element__label" style="margin-left:5px;">Billable</span>
+                            </label>  
+                        </div>
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppId != null || langTestId != null">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Account Name</label>
+                                <div class="slds-form-element__control">
+                                    <input type="text" ng-model="AccountName" class="slds-input" ng-disabled="true"/>
+                                </div>
+                             </div>  
+                        </div>
+                        
+                        <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Total Hours Used</label>
+                                <div class="slds-form-element__control">
+                                    <input type="text" ng-model="LanguageRecord.Total_Hours_Used__c" class="slds-input"/>
+                                </div>
+                             </div>  
+                        </div>-->
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Testee</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.Testee__c" ng-options="i.Candidate_Name__c as i.Candidate_Name__r.Name for i in contactAssinments" ng-hide="TesteeLookupDisplay"/>
+                                    <lookup data="testees" object="'Contact'" placeholder="'Testee Name'" id="'TesteeId'" ng-show="TesteeLookupDisplay"></lookup>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Tester</label>
+                                <div class="slds-form-element__control">
+                                    <!--<select class="slds-select" ng-model="LanguageRecord.Tester__c" ng-options="i.Candidate_Name__c as i.Candidate_Name__r.Name for i in InstructorAssignment"/>-->
+                                    <lookup data="testers" object="'Contact'" placeholder="'Tester Name'" condition="'RecordType.DeveloperName=\'Candidate\''" id="'TesterId'"></lookup>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Examiner</label>
+                                <div class="slds-form-element__control">
+                                    <!--<select class="slds-select" ng-model="LanguageRecord.Examiner__c" ng-options="i.Candidate_Name__c as i.Candidate_Name__r.Name for i in ExaminerList"/>-->
+                                    <lookup data="examiners" object="'Contact'" placeholder="'Examiner Name'" condition="'RecordType.DeveloperName=\'DLS_Employee\''" id="'ExaminerId'"></lookup>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                           <label class="slds-form-element__label" style="display: inline-block;color: #54698d;font-size: 12px;line-height: 1.5;margin-right: 12px;margin-bottom: 4px;">Date / Time Scheduled</label>
+                           <datepicker date-format="yyyy-MM-dd">
+                               <input ng-model="LanguageRecord.Date_Time_Scheduled__c" type="text" class="testdateclass"/>
+                           </datepicker>
+                       </div>
+                        
+                       <!-- <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Project Task</label>
+                                <div class="slds-form-element__control">
+                                    <input class="slds-input" ng-model="LanguageRecord.Project_Task__c" type="text"/>
+                                </div>
+                             </div>  
+                        </div>-->
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Target Language</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.Target_Language_LU__c" ng-options="i.Id as i.Name for i in LanguageOptionList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Test Type</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.Test_Type__c" ng-options="i as i for i in TestType"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Test Format</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.Test_Format__c" ng-options="i as i for i in TestFormat"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.L_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">L Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.L_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                       
+                       <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.L_Goal_Score_Applicable__c">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">L Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.L_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.L_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">L Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.L_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                        </div> -->
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Overall Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.Overall_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                       <!-- <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.R_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">R Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.R_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.R_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">R Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.R_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.R_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">R Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.R_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.S_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">S Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.S_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> -->
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">Source</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.Source__c" ng-options="i as i for i in sourceList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                      <!--  <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.S_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">S Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.S_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.S_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">S Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.S_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                         </div> 
+                         
+                          <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.W_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">W Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.W_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                         </div> 
+                         
+                          <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.W_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">W Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.W_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                         </div> 
+                         
+                          <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;" ng-if="OppRec.W_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">W Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                   <select class="slds-select" ng-model="LanguageRecord.W_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                         </div> -->
+                         
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                         </div>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                <div class="slds-card__header slds-grid">
+                    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                        
+                        <div class="slds-media__body slds-truncate">
+                            <span class="slds-text-heading--small">Score/Goal Details</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="slds-card__body">
+                     <div class="slds-grid slds-wrap">
+                     
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.L_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">L Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.L_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                       
+                       <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.L_Goal_Score_Applicable__c">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">L Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.L_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.L_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">L Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.L_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                        </div>
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.R_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">R Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.R_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.R_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">R Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.R_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.R_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">R Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.R_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.S_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">S Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.S_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.S_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">S Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.S_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.S_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">S Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.S_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                         </div> 
+                         
+                          <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.W_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">W Goal</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.W_Goal__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                         </div> 
+                         
+                          <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.W_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">W Score</label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" ng-model="LanguageRecord.W_Score__c" ng-options="i as i for i in ScoreList"/>
+                                </div>
+                             </div>  
+                         </div> 
+                         
+                          <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:1%;" ng-if="OppRec.W_Goal_Score_Applicable__c">
+                             <div class="slds-form-element">
+                                <label class="slds-form-element__label">W Score vs Goal</label>
+                                <div class="slds-form-element__control">
+                                   <select class="slds-select" ng-model="LanguageRecord.W_Score_vs_Goal__c" ng-options="i as i for i in goalVsScoreList"/>
+                                </div>
+                             </div>  
+                         </div> 
+                        
+                     </div>
+                 </div>
+             </div>
+          
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                <div class="slds-card__header slds-grid">
+                    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                        
+                        <div class="slds-media__body slds-truncate">
+                            <span class="slds-text-heading--small">Examiner Signature</span>
+                        </div>
+                    </div>
+                    <div class="slds-no-flex">
+                        <button class="slds-button slds-button--neutral slds-col--bump-left" ng-click="uploadLTSImage()" ng-if="examiners.Id != null" type="button" ng-hide="LTSshowImage">Upload</button>                                
+                    </div>
+                   
+                </div>
+                        
+                <div class="slds-card__body">
+                    <div class="slds-grid slds-wrap">
+                    
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--12-of-12">
+                            <!--<img src="data:{{attachemnt.contentType}};base64,{{attachemnt.Bodycontent}}" ng-show="showImage"/>-->
+                            
+                            <img src="/servlet/servlet.FileDownload?file={{LTSfileId}}" ng-show="LTSshowImage"/>
+                            
+                            <div class="slds-card__body slds-text-align--center" ng-hide="LTSshowImage">
+                                <input class="slds-col slds-size--4-of-12" type="file" data-file="LTSresponseFile"/>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForError}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                           <p>{{errorMessageforAllSave}}</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForError()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForError}}"></div>
+            
+        <!-- for Look up code -->
+              
+          <script type="text/ng-template" id="lookup1.html">
+                <div class="slds">
+                    <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                <input id="lookupf" ng-model="searchTxt" ng-KeyPress="fetchAccounts(searchTxt)" ng-KeyDown="isDropDownHidden= false;data = ''" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" placeholder="{{placeholder}}" />
+                            </div>
+                        </div>
+                        <div class="slds-lookup__menu" role="listbox" ng-hide="isDropDownHidden" style="margin-top: 40px;">
+                            <ul class="slds-lookup__list" role="presentation" id="lookuplist">
+                                <li class="slds-lookup__item" ng-repeat="acc in accounts" ng-click="updateDataModelAttr(acc)">
+                                    <a id="{{acc.Id}}" role="option">
+                                        {{acc.Name}}
+                                    </a>
+                                </li>
+                                <li ng-if="!accounts.length && !showLoadingDiv" class="slds-text-align--center">
+                                   No match found
+                                </li>
+                                <li ng-if="showLoadingDiv" class="slds-text-align--center">
+                                   <img src="{!URLFOR($Resource.SLDS090,'/assets/images/spinners/slds_spinner_brand.gif')}" width="50" height="50"/>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </script>
+          
+          <!-- End of look up code --->
+           
+         </div>
+     </apex:form>
+    </html>
+    
+    <script>
+  
+        var force = new remotetk.Client();
+        
+        var underscore = angular.module('underscore', []);
+          underscore.factory('_', ['$window', function($window) {
+              return $window._; // assumes underscore has already been loaded on the page
+          }]);
+        
+        var app = angular.module('myApp', ['ngRoute','720kb.datepicker','underscore']);
+        
+        app.directive('file', function(){
+            
+            return {
+                scope: {
+                    file: '='
+                },
+                link: function(scope, el, attrs){
+                    el.bind('change', function(event){
+                        var files = event.target.files;
+                        var file = files[0];
+    
+                        var reader = new FileReader();
+                        reader.onload = loaded;
+                        reader.onerror = errorHandler;
+                        reader.readAsDataURL(file);
+    
+                        function loaded(evt){
+                            scope.file = {};
+                            var fileContent = String(evt.target.result);
+                            fileContent = fileContent.substr(fileContent.indexOf(',') + 1);
+                            
+                            scope.file.resultbody = fileContent;
+                            scope.file.name = file ? file.name : undefined;
+                            scope.file.contenttype = file ? file.type : undefined;
+    
+                            scope.$apply(); 
+                            //console.log(scope.file);
+                        }                            
+                        function errorHandler(evt) {
+                            if (evt.target.error.name == 'NotReadableError') {
+                                alert('File could not be read');
+                            }
+                            else {
+                                alert(evt.target.error);
+                            }
+                        }
+                    });
+                }
+            };
+        });
+        
+        app.controller('Language_Testing_Controller', function($scope,$window,$timeout,$routeParams,$location,$route,_,$rootScope) {
+            
+            document.getElementById("spinner").style.display = 'block';
+            
+            $scope.LanguageOptionList = [];
+            $scope.ScoreList = [];
+            $scope.TestFormat = [];
+            $scope.TestType = [];
+            $scope.sourceList = [];
+            $scope.stageList = [];
+            $scope.goalVsScoreList = [];
+            $scope.LanguageRecord = {};
+            $scope.OppRec = {};
+            $scope.contactAssinments = [];
+            $scope.InstructorAssignment = [];
+            $scope.ExaminerList = [];
+            
+            $scope.examinerAttachment = {};
+            
+            $scope.responseFile = {};
+            
+            $scope.showImage = false;
+            
+            $scope.LTSresponseFile = {};
+            $scope.LTSshowImage = false;
+            
+            $scope.fileId = '';
+            $scope.LTSfileId = '';
+            
+            $scope.OppLookupDisplay = false;
+            $scope.TesteeLookupDisplay = false;
+          
+            $scope.OppId = '{!OpportunityId}';
+            console.log('::::::$scope.OppId:::::::',$scope.OppId);
+            
+            $scope.langTestId = '{!LanguageTestId}';
+            console.log('::::::::::$scope.langTestId::::::::::::',$scope.langTestId);
+            
+            $scope.modalStateForError = '';
+            $scope.modalBackdropStateForError = '';
+            $scope.errorMessageforAllSave = '';
+            
+            // Get the Picklist values from Controller
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.Language_Testing_CreatePge_Ctrl.getSelectOptionValues}',
+                function(records, ev) {
+                    if(ev.status) {
+                        console.log(':::records::::picklist:::::',records);
+                        
+                        $timeout(function() {
+                            $scope.ScoreList = records.scoreList;
+                            $scope.TestFormat = records.formatList;
+                            $scope.TestType = records.typeList;
+                            $scope.sourceList = records.sourceList;
+                            $scope.stageList = records.stageList;
+                            $scope.goalVsScoreList = records.goalVsScore;
+                            $scope.LanguageOptionList = records.languageList;
+                            
+                            $scope.LanguageRecord.Test_Format__c = $scope.TestFormat[0];
+                            $scope.LanguageRecord.Test_Type__c = $scope.TestType[0];
+                            $scope.LanguageRecord.Source__c = $scope.sourceList[0];
+                            $scope.LanguageRecord.Stage__c = 'Completed';
+                            $scope.LanguageRecord.Target_Language_LU__c = $scope.LanguageOptionList[0].Id;
+                            
+                        });
+                                                        
+                    } else {
+                       console.log(':::::ev:::::::',ev);
+                    }
+                },
+                {escape: true}
+            );
+            
+            if($scope.OppId) {
+            
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.Language_Testing_CreatePge_Ctrl.getRelatedInfomation}',
+                    $scope.OppId,
+                    function(records, ev) {
+                        if(ev.status) {
+                            console.log(':::records:::::new::::',records);
+                            
+                            $timeout(function() {
+                               
+                                $scope.OppRec = records.opp;
+                                $scope.contactAssinments = records.assignments;
+                                $scope.InstructorAssignment = records.testerAssignments;
+                                $scope.ExaminerList = records.examinerAssignments;
+                                
+                                $scope.examinerAttachment = records.ExaminerAttachment;
+                              
+                                if($scope.examinerAttachment.Bodycontent != null){
+                                    $scope.LTSshowImage = true;
+                                    $scope.LTSfileId = $scope.examinerAttachment.attachemntId;
+                                }else{
+                                    $scope.LTSshowImage = false;
+                                }
+                                
+                                // Added by Sukanya on November 18 2016
+                                if($scope.OppRec.AccountId) {
+                                    $scope.LanguageRecord.Account_Name__c = $scope.OppRec.AccountId;
+                                    $scope.AccountName = $scope.OppRec.Account.Name;
+                                }
+                                
+                                if($scope.OppRec.Language__c) {
+                                    console.log(':::::langu::::',$scope.OppRec.Language__c);
+                                    var rec = _.filter($scope.LanguageOptionList, function(data){ return data.Name == $scope.OppRec.Language__c; });
+                                    console.log(':::::::rec::::',rec);
+                                    
+                                    if(rec.length > 0)
+                                        $scope.LanguageRecord.Target_Language_LU__c = rec[0].Id;
+                                }
+                                //End of add
+                                
+                                $scope.LanguageRecord.L_Goal__c = $scope.OppRec.ILR_L_Goal__c;
+                                $scope.LanguageRecord.R_Goal__c = $scope.OppRec.ILR_R_Goal__c;
+                                $scope.LanguageRecord.S_Goal__c = $scope.OppRec.ILR_S_Goal__c;
+                                
+                                if($scope.contactAssinments.length > 0)
+                                    $scope.LanguageRecord.Testee__c =  $scope.contactAssinments[0].Candidate_Name__c;
+                                
+                                //console.log(':::::$scope.LanguageRecord:::::::',$scope.LanguageRecord);
+                                
+                                document.getElementById("spinner").style.display = 'none';
+                            });
+                                                            
+                        } else {
+                           console.log(':::::ev:::::::',ev);
+                        }
+                    },
+                    {escape: true}
+                );
+            }else if($scope.langTestId) {
+            
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.Language_Testing_CreatePge_Ctrl.getExistingLanguageTesting}',
+                    $scope.langTestId,
+                    function(records, ev) {
+                        if(ev.status) {
+                            //console.log(':::records:::existing::::::',records);
+                            
+                            $timeout(function() {
+                               
+                                $scope.OppRec = records.opp;
+                                $scope.contactAssinments = records.assignments;
+                                $scope.InstructorAssignment = records.testerAssignments;
+                                $scope.ExaminerList = records.examinerAssignments;
+                                
+                                $scope.examinerAttachment = records.ExaminerAttachment;
+                                
+                                $scope.LanguageRecord = records.langTesting;
+                                
+                                // Added by Sukanya on November 18 2016
+                                
+                                if(!records.langTesting.Account_Name__c && records.opp.AccountId) {
+                                    $scope.LanguageRecord.Account_Name__c = records.opp.AccountId;
+                                    $scope.AccountName = records.opp.Account.Name;
+                                }else {
+                                    $scope.AccountName = $scope.LanguageRecord.Account_Name__r.Name;
+                                }
+                                
+                                if($scope.LanguageRecord.Date_Time_Scheduled__c)
+                                    $scope.LanguageRecord.Date_Time_Scheduled__c = millisecondToString($scope.LanguageRecord.Date_Time_Scheduled__c);
+                                
+                                if(records.langTesting.Tester__c != null){
+                                    $scope.testers = { 'Name':records.langTesting.Tester__r.Name,
+                                                        'Id' :records.langTesting.Tester__c };
+                                }
+                               
+                                if(records.langTesting.Examiner__c != null){
+                                    $scope.examiners = { 'Name':records.langTesting.Examiner__r.Name,
+                                                        'Id' :records.langTesting.Examiner__c };
+                                }
+                                
+                                if($scope.examinerAttachment.Bodycontent != null){
+                                    $scope.LTSshowImage = true;
+                                    $scope.LTSfileId = $scope.examinerAttachment.attachemntId;
+                                }else{
+                                    $scope.LTSshowImage = false;
+                                }
+                                
+                                console.log(':::::$scope.LanguageRecord:::::::',$scope.LanguageRecord);
+                                document.getElementById("spinner").style.display = 'none';
+                            });
+                                                            
+                        } else {
+                           console.log(':::::ev:::::::',ev);
+                        }
+                    },
+                    {escape: true}
+                );
+            }else {
+                $scope.OppLookupDisplay = true;
+                $scope.TesteeLookupDisplay = true;
+                document.getElementById("spinner").style.display = 'none';
+            }
+            
+            // Added by Sukanya on October 27 2016 for on change of opportunity get testee details
+            
+            $scope.OpportuntiyChange = function(opp) {
+                
+                console.log(':::::opp:::::',opp);
+                
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.Language_Testing_CreatePge_Ctrl.getTesteeDetails}',
+                    opp.Id,
+                    function(records, ev) {
+                        if(ev.status) {
+                            console.log(':::records::::testee:::::',records);
+                            
+                            $timeout(function() {
+                                
+                                $scope.contactAssinments = records;
+                                
+                                if($scope.contactAssinments.length > 0)
+                                    $scope.LanguageRecord.Testee__c =  $scope.contactAssinments[0].Candidate_Name__c;
+                                    
+                                $scope.TesteeLookupDisplay = false;
+                            });
+                                                            
+                        } else {
+                           console.log(':::::ev:::::::',ev);
+                        }
+                    },
+                    {escape: true}
+                );
+            }
+            
+            function millisecondToString(millisecond) {
+                var date = new Date(millisecond);            
+                //date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+                var day = date.getDate();
+                var month = date.getMonth() + 1;
+                if(day < 10) {
+                    day = '0' + day;
+                }
+                if(month < 10) {
+                    month = '0' + month;
+                }
+                //return month + '-' + day + '-' + date.getFullYear();
+                return date.getFullYear() + '-' +month + '-' + day;
+            }
+            
+            $scope.SaveCallingFunction = function() {
+            
+                document.getElementById("spinner").style.display = 'block';
+                
+                    var langArray =  [];
+                    
+                    if(!$scope.LanguageRecord.Opportunity__c && $scope.OppRec)
+                        $scope.LanguageRecord.Opportunity__c = $scope.OppRec.Id;
+                    
+                    if(!$scope.LanguageRecord.Name) {
+                        var langName = _.findWhere($scope.LanguageOptionList, {Id:$scope.LanguageRecord.Target_Language_LU__c}) 
+                        console.log(':::::langName:::::',langName);
+                        $scope.LanguageRecord.Name = langName.Name;
+                    }
+                    
+                    if($scope.examiners) {
+                        $scope.LanguageRecord.Examiner__c = $scope.examiners.Id;
+                    }
+                    
+                    if($scope.testers) {
+                        $scope.LanguageRecord.Tester__c = $scope.testers.Id;
+                    }
+                    
+                    if($scope.testees)
+                        $scope.LanguageRecord.Testee__c = $scope.testees.Id;
+                    
+                    langArray.push($scope.LanguageRecord);
+                    
+                    console.log(':::::::::langArray::::::',langArray);
+                    
+                    Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.Language_Testing_CreatePge_Ctrl.LanguageTestCreateOrUpdate}',
+                    JSON.stringify(langArray),
+                    function(records, ev) {
+                        if(ev.status) {
+                            console.log(':::records:::::::::',records);
+                            
+                            $timeout(function() {
+                                
+                                document.getElementById("spinner").style.display = 'none';
+                                window.location.href = '/'+records.Id;
+                            });
+                                                            
+                        } else {
+                           console.log(':::::ev:::::::',ev);
+                           $scope.errorMessageforAllSave = ev.message;
+                           $scope.modalStateForError = 'slds-fade-in-open';
+                           $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                           document.getElementById("spinner").style.display = 'none';
+                           $scope.$apply();
+                        }
+                    },
+                    {escape: true}
+                );
+                
+            }
+            
+            $scope.OkayForError =  function() {
+            
+                $scope.modalStateForError = '';
+                $scope.modalBackdropStateForError = '';
+            }
+            
+            $scope.uploadLTSImage = function() {
+            
+                var attachmentlist = [];
+                try {
+                            
+                    var attach = new sforce.SObject("Attachment");
+                    attach.Name        = 'Signature';
+                    attach.Body        = $scope.LTSresponseFile.resultbody;
+                    attach.ContentType = $scope.LTSresponseFile.contenttype;
+                    attach.ParentId    = $scope.examiners.Id;
+                    attach.IsPrivate   = false;
+                    attachmentlist.push( attach );
+                    
+                    attachment_result = sforce.connection.create(attachmentlist);
+                    $scope.LTSfileId = attachment_result[0].id;
+                    $scope.LTSshowImage = true;
+                }
+                catch(error){
+                    console.log(':::errror:::',error);
+                }
+            }
+            
+            $scope.cancel = function() {
+                
+                if($scope.langTestId)
+                    window.location.href = '/'+$scope.langTestId;
+                else
+                    window.location.href = '/'+$scope.OppId;
+            
+            }
+        
+        })
+        
+        // Added by Sukanya on October 26 2016 for Look up search
+        
+        .service('ApexQuery', function($q) {
+                    
+        //Resolve Responses
+        function resolveResponse(response, ev, def) {
+            if(ev.status) {
+                def.resolve(response);
+            } else {
+                def.reject(ev);
+            }
+        }        
+        
+        //Get lookup record from a specific object
+        var getLookups = function(objectName, searchString, condition) {
+            var def = $q.defer();
+            if(!condition) { condition = ''; }
+            if(!searchString) { searchString = ''; }
+            Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.Language_Testing_CreatePge_Ctrl.getLookupRecords}',
+                objectName,
+                searchString,
+                condition,
+                function(response, ev) {
+                    resolveResponse(response, ev, def);
+                },
+                {escape: true}
+            );
+            return def.promise;
+        }
+        
+        return {
+            getLookups: getLookups
+        }
+    })
+    .directive('lookup',function($document, ApexQuery, $timeout){
+        return {
+            restrict: 'E',
+            templateUrl:'lookup1.html',
+            replace:true,
+            scope: {
+              data: '=',
+              disabled: '=',
+              object: '=',
+              placeholder: '=',
+              condition: '=',
+              onChange: '=',
+              parameter: '=',
+              id: '='
+            },
+            controller:function($scope, $timeout){
+              
+                $scope.accounts = [];
+                $scope.searchTxt = '';
+                $scope.objectName = '';
+                $scope.isDropDownHidden = true;
+                $scope.showLoadingDiv = false;
+                
+                $scope.$watch('data',function(newVal,oldVal){
+                    if($scope.data && $scope.data.Name){
+                        $scope.searchTxt = $scope.data.Name;
+                    }
+                },true);
+                
+                $scope.fetchAccounts = function(){
+                    $scope.showLoadingDiv = true;
+                    $scope.accounts = [];
+                    $timeout(function(){
+                        ApexQuery.getLookups($scope.object, $scope.searchTxt, $scope.condition).then(
+                            function(data){
+                                $scope.accounts = data;
+                                $scope.showLoadingDiv = false;
+                            },function(error){}
+                        );
+                    },400);
+                };
+                
+                
+                $scope.updateDataModelAttr = function(selAcc){
+                    $scope.data = selAcc;
+                    $scope.searchTxt = selAcc.Name;
+                    $scope.toggleDropDown();
+                    console.log('inside project change', typeof $scope.change);
+                    $timeout(function() {
+                        if(typeof $scope.onChange == 'function') {
+                            $scope.onChange($scope.parameter);
+                        }
+                    }, 0);
+                };
+                
+                // Added by Sukanya for close dropdown list
+                
+                $scope.closeDropdownList = function(event) {
+                    if(!$scope.data) {
+                       $scope.isDropDownHidden = true;
+                    }
+                    event.stopPropagation();
+                }
+                
+                window.addEventListener('click', function(event) {
+                    console.log('window clicked.');
+                    $scope.isDropDownHidden = true;
+                    $scope.$apply();
+                });
+                
+            },
+            link:function(scope,element,attr,ctrl){
+                
+                scope.toggleDropDown = function(){
+                    scope.isDropDownHidden = !scope.isDropDownHidden;
+                    if(scope.isDropDownHidden){
+                        $document.bind('click', function(event){
+                            var isClickedElementChildOfPopup = $('#lookuplist')
+                              .find(event.target)
+                              .length > 0;
+                              
+                            if(isClickedElementChildOfPopup) {
+                                return;
+                            }
+                            scope.isDropDownHidden = true;
+                            scope.$apply();
+                            $document.unbind('click');
+                        }); 
+                    }
+                    else{
+                         $document.unbind('click');
+                    }
+                };
+            }
+        };
+    })
+        
+    </script>
+</apex:page>

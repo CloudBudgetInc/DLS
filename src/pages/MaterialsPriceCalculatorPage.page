@@ -1,0 +1,325 @@
+<apex:page showHeader="true" sidebar="true" controller="PriceCalculator">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+        <script src="{!URLFOR($Resource.Filter)}"/>
+        <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        <style>
+            .img{
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                //height: 10%;
+                -webkit-transform: translate(-50%,-50%);
+                -ms-transform: translate(-50%,-50%);
+                transform: translate(-50%,-50%);
+            }
+        </style>
+        <apex:form >
+            
+            <div class="slds" ng-app="myApp" ng-controller="myCtrl">
+                
+                <div style="background-color: rgba(222, 230, 230, 0.6);width: 100%; height: 100%;z-index:1000; position: fixed; left: 0;top: 0; overflow: hidden;text-align: center; vertical-align: middle;" ng-show="spinner">
+                    <img alt="Loading..." src="{!URLFOR($Resource.SLDS0_12_2,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+                </div>    
+                
+                <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                    <div class="slds-media__body">
+                        <div class="slds-grid">
+                            <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="DLS Staff Time">DLS In-house Copy Cost Calculator</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-card">
+                    <div class="slds-page-header " role="banner">
+                        <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                            <div class="slds-media__body">
+                                <h2 class="slds-truncate width: 100%;text-align: center; slds-text-heading--label">Print: </h2>
+                            </div>
+                        </div>
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Type: </label> 
+                                <select ng-model="printvalue" class="slds-select" ng-options="i as i for i in printFilter" ng-change="printFilterFun()"></select>   
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Paper Type: </label> 
+                                <select ng-model="subTypevalue" class="slds-select" ng-options="i as i for i in subTypeList" ></select>   
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Dimensions: </label> 
+                                <select ng-model="dimensionvalue1" class="slds-select" ng-options="i as i for i in dimensions1" ng-change="calculatePrintRate()"></select>   
+                            </div>
+                        </div>
+                        <br/>
+                        <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                            <div class="slds-media__body">
+                                <h2 class="slds-text-heading--label">Binding and Finishing: </h2>
+                            </div>
+                        </div>
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Type: </label> 
+                                <select ng-model="bindingvalue" class="slds-select" ng-options="i as i for i in bindingList" ></select>   
+                            </div>
+                            <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Dimensions: </label> 
+                                <select ng-model="dimensionvalue2" class="slds-select" ng-options="i as i for i in dimensions2" ng-change="calculateBindingRate()"></select>   
+                            </div>
+                        </div>   
+                    </div>    
+                </div>    
+                
+                <div class="slds-card">
+                    
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-left: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Price per Content Sheets: </label>
+                                <input disabled="true" type="text" class="slds-input" ng-model="pricecalval1.PricePerConSheet | currency"/>
+                            </div>
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-right: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Numbers of Content Sheets: </label>
+                                <input type="text" class="slds-input" ng-model="pricecalval1.NumOfConSheet" ng-change="calculateRate()"/>
+                            </div>
+                        </div>
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-left: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Front Cover: </label>
+                                <input disabled="true" type="text" class="slds-input" ng-model="pricecalval1.FrontCover | currency"/>
+                            </div>
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-right: 3%;">
+                                <div class="slds-form-element">
+                                    
+                                    <div class="slds-form-element__icon">
+                                        <a href="" ng-click="showPopover()">
+                                            <div id="help" class="slds-popover slds-popover--tooltip slds-nubbin--bottom-left" role="tooltip" aria-live="polite" style="position:absolute;bottom:30px;left:130px;margin-left:-1rem;width:20rem;" ng-show="show">
+                                                <div class="slds-popover__body slds-text-longform" style="font-size:15px;">
+                                                    <p>This value is sum of Transparency Cover($1.00), Rare leather stock($1.00) and Binding Comb($0.50).</p>
+                                                </div>
+                                            </div>
+                                            <p title="This value is sum of Transparency Cover($1.00), Rare leather stock($1.00) and Binding Comb($0.50).">
+                                                <label class="slds-form-element__label slds-text-body--regular">Standard Binding: </label>
+                                                <svg class="slds-icon slds-icon--x-small slds-icon-text-default" aria-hidden="true" style="width:25px;height:25px;">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3,'/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                                </svg>
+                                            </p>
+                                        </a>
+                                    </div>
+                                </div>
+                                <input disabled="true" type="text" class="slds-input" ng-model="pricecalval1.StandBinding | currency"/>
+                            </div>
+                        </div>
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-left: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Handling and Processing: </label>
+                                <input disabled="true" type="text" class="slds-input" ng-model="pricecalval1.HandAndProce | currency" />
+                            </div>
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-right: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Audio CD: </label>
+                                <input type="text" class="slds-input" ng-model="pricecalval1.AudioCD"/>
+                            </div>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                        <div class="slds-media__body">
+                            <div style="width: 100%;text-align: center;">
+                                <input type="button" class="slds-button slds-button--neutral " ng-click="calculatebtnClickFunction()" value="Calculate"/><br/>
+                            </div>
+                        </div>
+                    </div>
+                     <br/>
+                     <br/>
+                    <div style="width: 100%;text-align: center; font-weight:bold;">
+                        Calculated Price : {{pricecalval1.Total | currency}}
+                    </div>    
+                </div>
+             </div>
+        </apex:form>
+    </html>
+    
+    <script>
+
+        var app = angular.module('myApp', []);
+        app.controller('myCtrl', function ($scope,$timeout) {
+            <!--document.getElementById("spinner").style.display = 'block';-->
+            $scope.pricecalval1 = {};
+            priceList = [];
+            $scope.subTypeList = [];
+            $scope.dimensions1 = [];
+            $scope.dimensions2 = [];
+            $scope.bindingList = [];
+            $scope.printvaluemap = {};
+            $scope.pricecalval1.AudioCD = 0;
+            $scope.whitepaperdime = [];
+            $scope.colourpaperdime = [];
+            $scope.map={};
+            $scope.map['TamilNadu']='Chennai';
+            console.log('::::$scope.map:::::',$scope.map);
+            $scope.bindingvalue= '----select-----';
+            $scope.subTypevalue = '----select-----';
+            $scope.dimensionvalue1 = '----select-----';
+            $scope.dimensionvalue2 = '----select-----';
+            <!--$scope.printFilter = ['Text - White paper','Text - Thick paper or colored paper'];-->
+            $scope.printFilter = [];
+            $scope.printvalue = '----select-----';
+            $scope.spinner = true;
+            
+            Visualforce.remoting.Manager.invokeAction(  
+               '{!$RemoteAction.PriceCalculator.getPriceList}',
+               function(result,ev){
+                   if(ev.status){
+                       
+                       $timeout(function(){
+                           $scope.pricecalval1.StandBinding = 0;
+                           priceList = result;
+                           for(var i = 0;i < priceList.length;i++) {
+                                    
+                                if(priceList[i].Price_For__c == 'Print') {
+                                    if($scope.subTypeList.indexOf(priceList[i].Sub_Type__c) == -1){
+                                        $scope.subTypeList.push(priceList[i].Sub_Type__c);
+                                    }
+                                    if($scope.printFilter.indexOf(priceList[i].Type__c) == -1){
+                                        $scope.printFilter.push(priceList[i].Type__c);
+                                    }
+                                }
+                                
+                                if(priceList[i].Type__c == 'Text - White paper') {
+                                    if($scope.whitepaperdime.indexOf(priceList[i].Dimension__c) == -1){
+                                        $scope.whitepaperdime.push(priceList[i].Dimension__c);
+                                    }
+                                }
+                                if(priceList[i].Type__c == 'Text - Thick paper or colored paper') {
+                                    if($scope.colourpaperdime.indexOf(priceList[i].Dimension__c) == -1){
+                                        $scope.colourpaperdime.push(priceList[i].Dimension__c);
+                                    }
+                                }
+                                if(priceList[i].Price_For__c == 'Binding & Finishing'){
+                                    if($scope.bindingList.indexOf(priceList[i].Type__c) == -1 && (priceList[i].Type__c == 'Color Cover stock' || priceList[i].Type__c == 'White Cover stock')){
+                                        $scope.bindingList.push(priceList[i].Type__c);
+                                    }
+                                    if($scope.dimensions2.indexOf(priceList[i].Dimension__c) == -1 && !angular.isUndefined(priceList[i].Dimension__c)){
+                                        $scope.dimensions2.push(priceList[i].Dimension__c);
+                                    }
+                                }
+                                if(priceList[i].Type__c == 'Transparency Cover' || priceList[i].Type__c == 'Rare leather stock' || priceList[i].Type__c == 'Binding Comb'){
+                                    
+                                    $scope.pricecalval1.StandBinding = $scope.pricecalval1.StandBinding+priceList[i].Rate__c;
+                                    
+                                }
+                                
+                                      
+                            }
+                            $scope.printvaluemap['Text - White paper'] = $scope.whitepaperdime;
+                            $scope.printvaluemap['Text - Thick paper or colored paper'] = $scope.colourpaperdime;
+                            console.log('::::$scope.printvaluemap::::::',$scope.printvaluemap);
+                           console.log('::::subTypeList::::::::',$scope.subTypeList); 
+                           console.log('::::priceList::::::::',result);
+                           $scope.spinner = false;
+
+                       },0);
+                   } else {
+                        console.log('::::ev::::',ev);
+                        
+                        $scope.spinner = false;
+                   }
+               }, 
+               {escape: false}  
+            );
+            
+            $scope.calculateRate = function() {
+                
+                $scope.pricecalval1.HandAndProce = $scope.pricecalval1.NumOfConSheet*0.1;
+                $scope.spinner = false;
+
+            }
+            
+            
+            $scope.printFilterFun = function() {
+                
+                $scope.dimensions1 = [];
+                for(var i = 0;i < priceList.length;i++) {
+                    
+                    if($scope.printvalue == 'Text - White paper') {
+                        
+                        $scope.dimensions1 = $scope.whitepaperdime; 
+                        
+                    }
+                    if($scope.printvalue == 'Text - Thick paper or colored paper') {
+                        $scope.dimensions1 = $scope.colourpaperdime; 
+                    }
+                    console.log('::::$scope.dimensions1::::',$scope.dimensions1);
+                }
+                console.log('::::dimensions1::::',$scope.dimensions1);
+                $scope.spinner = false;
+     
+            } 
+        
+            $scope.calculatebtnClickFunction = function() {
+                $scope.spinner = true;
+                
+                console.log('::::::calculate::::::::');
+                Visualforce.remoting.Manager.invokeAction(  
+                   '{!$RemoteAction.PriceCalculator.PriceCalculation}',$scope.pricecalval1,
+                   function(result,ev){
+                       if(ev.status){
+                           $timeout(function(){
+                               $scope.pricecalval1 =  result;
+                               
+                               $scope.pricecalval1.Total =  result.Total;
+                               console.log('::::result::::::::',result);
+                               console.log(':::::::::::::::::::',result.Total);
+                               console.log(':::::::pricecalval1.Total::::::::::',$scope.pricecalval1.Total);
+                               $scope.spinner = false;
+                           },0);
+                       } else {
+                            console.log('::::ev::::',ev);
+                            $scope.spinner = false;
+                            
+                       }
+                   }, 
+                   {escape: false}  
+               );
+                
+            }
+            $scope.calculatePrintRate = function() {
+                
+                for(var i = 0;i < priceList.length;i++) {
+                    
+                    if(priceList[i].Price_For__c == 'Print' && $scope.printvalue == priceList[i].Type__c && $scope.subTypevalue == priceList[i].Sub_Type__c &&  $scope.dimensionvalue1 == priceList[i].Dimension__c){
+                        $scope.pricecalval1.PricePerConSheet = priceList[i].Rate__c;
+                    }
+                }
+                $scope.spinner = false;
+
+            } 
+            $scope.calculateBindingRate = function() {
+                
+                for(var i = 0;i < priceList.length;i++) {
+                    if(priceList[i].Price_For__c == 'Binding & Finishing' && $scope.bindingvalue == priceList[i].Type__c && $scope.dimensionvalue2 == priceList[i].Dimension__c){
+                        $scope.pricecalval1.FrontCover = priceList[i].Rate__c;
+                    }
+                    
+                }
+                $scope.spinner = false;
+
+            }
+            
+            $scope.showPopover = function(){
+                
+                if($scope.show == true){
+                    $scope.show = false;
+                }
+                else{
+                    $scope.show = true;
+                }
+                console.log('::::::::$scope.show:::::::::::',$scope.show);
+                $scope.spinner = false;
+
+            }
+            
+        });
+    </script>
+</apex:page>

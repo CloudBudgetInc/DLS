@@ -1,0 +1,12 @@
+<template>
+    <template if:true={showAnyMsg}>
+        <div class={notificationThemeClass} role="alert">
+            <span class="slds-assistive-text">{type}</span>
+            <span class={notificationContainerClass}>
+                <lightning-icon if:true={showTypeIcon} icon-name={iconName} size="small" variant="inverse"></lightning-icon>
+            </span>
+            <h2>{message}</h2>
+            <lightning-icon class="pointer" icon-name="utility:close" alternative-text="close!" title="Close" onclick={closeToast} size="small" variant="inverse"></lightning-icon>
+        </div>
+    </template>
+</template>

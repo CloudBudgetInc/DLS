@@ -1,0 +1,18 @@
+<aura:component implements="force:lightningQuickAction,force:hasRecordId" controller="ZoomUtil">
+    <aura:attribute name="loading" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.loading}">
+        <div class="slds-spinner_container">
+            <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+    </aura:if>
+    
+</aura:component>

@@ -1,0 +1,130 @@
+.THIS .inputClass {
+    /*margin-top: -1.25rem;*/
+    text-align: center;
+    /*border-radius: 0 !important;*/
+}
+.THIS .slds-input {
+    border-radius: 0 !important;
+}
+.THIS .totalHrsClass{
+    margin-top: -1.25rem;
+}
+.THIS .headerClass {
+    padding-top: 2.25rem;
+}
+
+.THIS .selectspacing{
+    margin-top: -1.25rem;
+}
+.THIS .totalHrsClass .slds-input {
+    /*padding: 0px 1rem 0px 3rem;*/
+    text-align: center;
+    width: 5.3rem;
+}
+.THIS .selectClass .slds-select {
+    /*padding-left: 2rem;*/
+    text-align-last: center;
+    padding-right: .5rem;
+}
+.THIS .fontClass {
+    font-weight: bolder;
+}
+.THIS .approvedClass {
+    background-color: #ABD25A !important;
+    color: white !important;
+}
+.THIS .rejectedClass {
+    background-color: #fa8072 !important;
+    color: white !important;
+}
+.THIS .changedColor {
+    background-color: yellow !important;
+    /*color: white;*/
+}
+.THIS .needHelpClass {
+    /*margin-right: 65rem;*/
+    margin-left: 1rem;
+    background-color: #ffcd56;
+    color: black;
+}
+.THIS .editIconcls{
+    /*position: absolute;
+    right: 1rem;
+    margin-top: .50rem;*/
+    /*left: 29rem;
+    position: absolute;
+    margin-top: .50rem;*/
+    position: absolute;
+    margin-top: 2.5rem;
+    margin-left: -1.5rem;
+    top: -2.5rem;
+}
+.THIS .darkborder {
+    border-bottom: 3px solid black !important;
+}
+.THIS .filterAlignment {
+    padding-bottom: 0px;
+}
+.THIS .filterSpace {
+    padding-top: 1px;
+}
+.THIS .notesCls {
+    padding-top: 2rem;
+}
+.THIS input[type=number]::-webkit-inner-spin-button, 
+.THIS input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0; 
+}
+.THIS .errorClass {
+    background-color: rgb(255, 255, 255) !important;
+    box-shadow: rgb(194, 57, 52) 0px 0px 0px 1px inset;
+    background-clip: padding-box;
+    border-color: rgb(194, 57, 52);
+}
+
+.THIS .supervisorRejectCls{
+    border: 2px solid #fa8072 !important;
+}
+
+.THIS .form-group .slds-form-element {
+    margin-top: -1.5rem;
+}
+.THIS .labelCls{
+    font-size: 0.875rem !important;
+}
+.THIS .wrap {
+    white-space:pre-line !important;
+}
+
+.THIS .notesLabelCls b {
+    color: #055E89;
+    font-weight: bold;
+    font-size: 1rem;
+}
+.THIS .notesContentCls {
+    font-size: .875rem;
+    font-weight: 600;
+    font-family: "Lato";
+}
+.THIS .startTimeCls {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.THIS .endTimeCls {
+    padding-top: 1.5rem;
+}
+
+.THIS .notesLinkClass {
+    color: red !important;
+    text-decoration-line: underline;
+}
+
+.THIS .inputWithoutLabel {
+    top: -1rem;
+}
+.THIS .pointerCursorCls {
+    cursor: pointer !important;
+}

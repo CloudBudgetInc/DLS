@@ -1,0 +1,66 @@
+<aura:component controller="PerformanceCycleCmp_Ctrl" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickActionWithoutHeader" access="global" >
+    <aura:attribute name="showSpinner" type="Boolean" default="false"></aura:attribute>
+    <aura:attribute name="formResponse" type="Form_Response__c"/>
+    <aura:attribute name="formTemplate" type="Form_Template__c"/>
+    <aura:attribute name="currentQuestionNo" type="Integer" default="0"/>
+    <aura:attribute name="formTemplateId" type="String"/>
+    <aura:attribute name="formTempEleIdWithResponseForUniqueResponse" type="Object"/>
+    <aura:attribute name="formTempEleIdwithOptionLimit" type="Object"/>    
+    <aura:attribute name="formTempIdWithFormResElement" type="Map"/>
+    <aura:attribute name="IsShareWithEmployee" type="Boolean" default="false"/>
+    
+    <ltng:require scripts="{!join(',', 
+                           $Resource.FullCalendar + '/fullcalendar-3.10.0/fullCalendar/moment.js',
+                           $Resource.moment_timezone_data)}"
+                  styles="/resource/QuickActionFullPage"
+                  
+                  afterScriptsLoaded="{!c.doInit}" /> 
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.formResponse}">
+        <lightning:card title="{!v.formResponse.Name}">            
+            <div class="slds-p-horizontal_medium">
+                <aura:iteration items="{!v.formTemplate.Form_Template_Elements__r}" var="formTempElement">
+                    <div class="{! 'slds-p-around_medium ' + (v.currentQuestionNo == _index ? 'slds-show': 'slds-hide')}">
+                        <c:FormResponseElementCmp aura:id="formResElement" formTempElement="{!formTempElement}" 
+                                                  formTempEleIdwithOptionLimit="{!v.formTempEleIdwithOptionLimit}" 
+                                                  formTempEleIdWithResponseForUniqueResponse="{!v.formTempEleIdWithResponseForUniqueResponse}"
+                                                  formTempIdWithFormResElement="{!v.formTempIdWithFormResElement}"
+                                                  formResponseId="{!v.recordId}"/>
+                    </div>                    
+                </aura:iteration>
+                <div class="slds-p-vertical_medium slds-clearfix">
+                    <div class="slds-float_right" >
+                        <lightning:button label="Previous" variant="neutral" name="previous" disabled="{!v.currentQuestionNo == 0}" onclick="{!c.changeQuestion}"/>
+                        <lightning:button label="Next" variant="neutral" name="next" disabled="{!(v.formTemplate.Form_Template_Elements__r.length == (v.currentQuestionNo + 1))}" onclick="{!c.changeQuestion}"/>
+                    </div>
+                </div>
+                
+                <aura:if isTrue="{!and((v.formTemplate.Form_Template_Elements__r.length == (v.currentQuestionNo + 1)), v.formResponse.Form_Feedback_Type__c == 'Peer Summary')}">  
+                    <div class="slds-p-top_medium">
+                        <lightning:accordion aura:id="accordion">
+                            <lightning:accordionSection name="A" label="Privacy Details">
+                                Answers will not be shared with {!v.formResponse.Feedback_About__r.Name} unless you check the box below.<br/>
+                                Review the privacy of each answer before submitting.<br/>
+                                <lightning:input type="checkbox" label="{! 'Share the feedback with ' + v.formResponse.Feedback_About__r.Name + '.'}" checked="{!v.IsShareWithEmployee}"/>                                                
+                            </lightning:accordionSection>
+                        </lightning:accordion>
+                    </div>
+                </aura:if>
+            </div>                       
+            
+            <aura:set attribute="footer">
+                <div class="slds-align_absolute-center"> 
+                    <lightning:button label="Save as Draft" name="Draft" variant="neutral" onclick="{!c.validateAndSaveFormResponse}"/>
+                    <lightning:button label="Decline" name="Declined" variant="destructive-text" onclick="{!c.validateAndSaveFormResponse}"/>
+                    <aura:if isTrue="{!(v.formTemplate.Form_Template_Elements__r.length == (v.currentQuestionNo + 1))}">
+                        <lightning:button label="Submit" name="Submitted" variant="brand" onclick="{!c.validateAndSaveFormResponse}"/>
+                    </aura:if>                     
+                </div>                
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+</aura:component>

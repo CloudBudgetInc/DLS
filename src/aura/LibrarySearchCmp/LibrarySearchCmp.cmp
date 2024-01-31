@@ -1,0 +1,580 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global" controller="LibrarySearchController">
+    <aura:attribute name="userType" type="String" default=""/>
+    <aura:attribute name="displayObj" type="Map" default="{}"/>
+    <aura:attribute name="filterObj" type="Map" default="{}" access="public"/>
+    <aura:attribute name="filterValues" type="Map" default="{}"/>
+    <aura:attribute name="wholeContents" type="List" default="[]"/>
+    <aura:attribute name="wholeMaterials" type="List" default="[]"/>
+    <aura:attribute name="displayContents" type="List" default="[]"/>
+    <aura:attribute name="displayMaterials" type="List" default="[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    <aura:attribute name="showMobileViewFilterModel" type="Boolean" default="false"/>
+    <aura:attribute name="tabIcons" type="Map" default="{'searchtabIcon' : 'utility:chevronright','materialTabIcon' : 'utility:chevronright','showSearchTab':false,'showMaterialTab':false}" />
+
+    
+    <!-- For display detail cmp display -->
+    <aura:attribute name="selectedRecordId" type="String" default=""/>
+    <aura:attribute name="displayMaterialDetail" type="Boolean" default="false"/>
+    <aura:attribute name="displayContentDetail" type="Boolean" default="false"/>
+    <aura:attribute name="displaySearchResult" type="Boolean" default="false"/>
+    
+    <!-- Attributes from child cmp -->
+    <aura:attribute name="fromDetail" type="Boolean" default="false"/>
+    
+    <!-- For Favorite, Top Rated Cmps display -->
+    <aura:attribute name="displayFavoriteDetails" type="Boolean" default="false"/>
+    <aura:attribute name="displayTopRatedDetails" type="Boolean" default="false"/>
+    
+    <aura:attribute name="tabName" type="String" default="myMaterials"/>
+    
+    <ltng:require scripts="{!join(',', 
+                           $Resource.MomentjsResource, 
+                           $Resource.MomentTimezone_Data)}"/>
+    
+    <!--aura:if isTrue="{!v.userType != 'Internal'}">
+        <ltng:require scripts="{!join(',', 
+                               $Resource.DLS_Communites_CSS + '/Communites_CSS/script/jquery-3.2.1.slim.min.js')}"
+                      styles="{!join(',', 
+                              $Resource.LibraryInternalCSS ,
+                              $Resource.DLS_Communites_CSS + '/Communites_CSS/bootstrap.css',
+                              $Resource.DLS_Communites_CSS + '/Communites_CSS/font-awesome/css/all.css')}"/>
+    </aura:if-->
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:handler name="change" value="{!v.displaySearchResult}" action="{!c.BackFromDetailPage}"/>
+    <aura:handler name="childClickEvent" event="c:childClickEvent" action="{!c.redirectToDetailFromHomePage}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner"  variant="brand" alternativeText="Loading..." size="medium" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div aura:id="searchCard" style="background-color: #fff;">
+        
+        <div style="{!v.userType == 'Internal' ? 'padding: 0.5rem;' : ''}">
+            <aura:if isTrue="{!and(v.displayDevice != 'Mobile',v.displayObj.searchEnabled)}">
+                <span class="backCls">
+                    <div style="float: left;">
+                        <div class="slds-grid">
+                            <span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.clearFilter}" ></i></span>
+                            <span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                        </div>
+                    </div>
+                </span>
+            </aura:if>
+            <center><h5 class="card-title" style="font-size:2rem;text-transform: uppercase !important;">Library</h5></center><br/>
+        </div>
+        
+        <div class="card-deck">
+            <div class="card">
+                <div class="card-body">
+                    <div class="c-container">
+                        
+                        <aura:if isTrue="{!or(v.userType == 'Instructor',v.userType == 'Student')}">
+                            <aura:if isTrue="{!v.displayDevice =='PC'}">
+                                <div>   
+                                    <center>
+                                        <ul class="nav nav-tabs">
+                                            <li class="nav-item">
+                                                <a class="{!v.tabName == 'searchInfo' ? 'nav-link active' : 'nav-link'}"   data-toggle="tab" role="tab" onclick="{!c.searchTabClick}">Search the Library</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a  class="{!v.tabName == 'myMaterials' ? 'nav-link active' : 'nav-link'}" data-toggle="tab"  role="tab"  onclick="{!c.myMaterialTabClick}">My Materials</a>
+                                            </li>
+                                        </ul>
+                                    </center>
+                                </div>
+                            </aura:if>
+                            <div class="tab-content" style="{!v.displayDevice == 'PC' ? 'padding-top:1rem;' : ''}">
+                                <!-- Search the Library Accordian Mobile View-->
+                                
+                                <ul class="slds-accordion">
+                                    <li class="slds-accordion__list-item">
+                                        <section class="slds-accordion__section slds-is-open">
+                                            <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                                                <br/> <div class="slds-accordion__summary">
+                                                <h2 class="slds-accordion__summary-heading">
+                                                    <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-controls="referenceId-39" aria-expanded="true" name="Search the Library" title="Accordion summary" onclick="{!c.mobileTabHandleChange}">
+                                                        <lightning:icon iconName="{!v.tabIcons.searchtabIcon}" alternativeText="Search the Library" size="small"/>
+                                                        <span class="slds-accordion__summary-content">&nbsp;Search the Library</span>
+                                                    </button>
+                                                </h2>
+                                                </div>
+                                            </aura:if>
+                                            <div class="slds-accordion__content">
+                                                <aura:if isTrue="{!or(and(v.displayDevice == 'Mobile',v.tabIcons.showSearchTab),v.tabName == 'searchInfo')}">
+                                                    <aura:if isTrue="{!and(v.displayDevice =='Mobile',v.displayObj.searchEnabled)}">
+                                                        <lightning:layout>
+                                                            <lightning:layoutItem size="8">
+                                                            </lightning:layoutItem>
+                                                            <lightning:layoutItem size="3">
+                                                                <div style="float: right;">Filters</div>
+                                                            </lightning:layoutItem>
+                                                            <lightning:layoutItem size="1">
+                                                                <lightning:buttonIcon iconName="utility:filterList" size ="large" class="slds-float_right" variant="bare" onclick="{!c.openMobileFilterModal }" alternativeText="Filters" />
+                                                            </lightning:layoutItem>
+                                                        </lightning:layout><br/>
+                                                    </aura:if>
+                                                    <lightning:layout multipleRows="true">
+                                                        <aura:if isTrue="{!v.displayDevice == 'PC'}">
+                                                            <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                                                                <!-- display default 4 filters -->
+                                                                <lightning:layout multipleRows="true">
+                                                                    <aura:if isTrue="{!v.displayObj.searchEnabled}">
+                                                                        <!-- view filters -->
+                                                                        <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                                                                            <h5 class="card-title">View Options</h5>
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <lightning:select label="Sort By" value="{!v.filterObj.sortingOption}">
+                                                                                    <aura:iteration items="{!v.filterValues.sortingOptionsList}" var="sort">
+                                                                                        <option value="{!sort}">{!sort}</option>
+                                                                                    </aura:iteration>
+                                                                                </lightning:select>
+                                                                            </lightning:layoutItem>
+                                                                        </div>
+                                                                        
+                                                                        <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                                                                            <h5 class="card-title">Filters</h5>
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <lightning:select label="Avg Rating" value="{!v.filterObj.seletedRating}">
+                                                                                    <aura:iteration items="{!v.filterValues.ratingOptions}" var="rate">
+                                                                                        <option value="{!rate}">{!rate}</option>
+                                                                                    </aura:iteration>
+                                                                                </lightning:select>
+                                                                            </lightning:layoutItem>
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <lightning:select label="Recently Added" value="{!v.filterObj.dateRangeSelected}">
+                                                                                    <aura:iteration items="{!v.filterValues.dateRangeOptions}" var="range">
+                                                                                        <option value="{!range}">{!range}</option>
+                                                                                    </aura:iteration>
+                                                                                </lightning:select>
+                                                                            </lightning:layoutItem>
+                                                                            
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <span onkeypress="{!c.onEnterSearchMaterials}"><lightning:input label="Search Keyword" type="search" value="{!v.filterObj.searchText}"/></span>
+                                                                            </lightning:layoutItem>
+                                                                            
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <c:LookupSearch aura:id="langId" selection="{!v.filterObj.searchLanguageList}" onSearch="{!c.lookupLanguageSearch}" iconName="" objectName="Language__c" fieldName="Name" condition="" label="Language" placeholder="Search Language" isMultiEntry="false"  isRequired="false"/>
+                                                                            </lightning:layoutItem>
+                                                            
+                                                                            <!--Book Series & dls section filter -->
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <lightning:select label="Series" value="{!v.filterObj.bookSeries}">
+                                                                                    <aura:iteration items="{!v.filterValues.bookSeriesList}" var="series">
+                                                                                        <option value="{!series.value}">{!series.label}</option>
+                                                                                    </aura:iteration>
+                                                                                </lightning:select>
+                                                                            </lightning:layoutItem>
+                                                                        </div>
+                                                                        <lightning:layoutItem size="12" padding="around-small">
+                                                                            <lightning:button label="Search" class="btn btn-primary" onclick="{!c.searchMaterials}"/>
+                                                                            <lightning:button label="Clear" class="btn btn-secondary" onclick="{!c.clearFilter}"/>
+                                                                        </lightning:layoutItem>
+                                                                    </aura:if>
+                                                                    
+                                                                    <aura:if isTrue="{!not(v.displayObj.searchEnabled)}">
+                                                                        <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                                                                            <h5 class="card-title">Filters</h5>
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <span onkeypress="{!c.onEnterSearchMaterials}"><lightning:input label="Search Keyword" type="search" value="{!v.filterObj.searchText}"/></span> 
+                                                                            </lightning:layoutItem>
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                                                                <c:LookupSearch aura:id="langId2" selection="{!v.filterObj.searchLanguageList}" onSearch="{!c.lookupLanguageSearch}" iconName="" objectName="Language__c" fieldName="Name" condition="" label="Language" placeholder="Search Language" isMultiEntry="false"  isRequired="false"/>
+                                                                            </lightning:layoutItem>
+                                                                        </div>
+                                                                        <lightning:layoutItem size="12" padding="around-small">
+                                                                            <lightning:button label="Search" class="btn btn-primary" onclick="{!c.searchMaterials}"/>
+                                                                            <lightning:button label="Clear" class="btn btn-secondary" onclick="{!c.clearFilter}"/>
+                                                                        </lightning:layoutItem>
+                                                                    </aura:if>
+                                                                </lightning:layout>
+                                                            </lightning:layoutItem>
+                                                        </aura:if>
+                                                        <lightning:layoutItem size="12" largeDeviceSize="9" mediumDeviceSize="9" smallDeviceSize="12" padding="{!v.displayDevice != 'Mobile' ? 'around-small' : ''}">
+                                                            <!-- display search result -->
+                                                            <aura:if isTrue="{!v.displayObj.searchEnabled}">
+                                                                <aura:if isTrue="{!and(v.displayObj.displaySearchResult,v.displayMaterials.length > 0)}">
+                                                                    <!-- Material Pagination -->
+                                                                    <lightning:layout multipleRows="true">
+                                                                        <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                                                                            <lightning:select label="Items Per Page" value="{!v.filterObj.pageSize}" onchange="{!c.pagenationSelections}">
+                                                                                <aura:iteration items="{!v.filterValues.paginationNumbering}" var="page">
+                                                                                    <option value="{!page}">{!page}</option>
+                                                                                </aura:iteration>
+                                                                            </lightning:select>
+                                                                        </lightning:layoutItem>
+                                                                        <lightning:layoutItem size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                                                        </lightning:layoutItem>
+                                                                        <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                                                                            <aura:if isTrue="{!v.displayDevice != 'Mobile'}"><br/></aura:if>
+                                                                            <lightning:button label="Previous" disabled="{!v.filterObj.pageNumber == 1}"  class="{!v.filterObj.pageNumber == 1 ? 'btnDisabled btn btn-primary' : 'btn btn-primary'}" onclick="{!c.navigate}"/>
+                                                                            <lightning:button label="Next" disabled="{!v.filterObj.pageSize > v.displayMaterials.length}" class="{!v.filterObj.pageSize > v.displayMaterials.length ? 'btnDisabled btn btn-secondary' : 'btn btn-secondary'}" onclick="{!c.navigate}"/>
+                                                                        </lightning:layoutItem>
+                                                                        <!-- End of Pagination code-->
+                                                                        <!-- display materials -->
+                                                                        <aura:iteration items="{!v.displayMaterials}" var="material">
+                                                                            <lightning:layoutItem size="12" largeDeviceSize="4" mediumDeviceSize="4" smallDeviceSize="12" padding="around-small">
+                                                                                <div class="bookCls" onclick="{!c.redirectToMaterialDetail}" data-value="{!material.Id}">
+                                                                                    <div>
+                                                                                        <aura:if isTrue="{!material.Book_Cover__c != null}">
+                                                                                            <lightning:formattedRichText value="{!material.Book_Cover__c}" class="imageClass"></lightning:formattedRichText>
+                                                                                            <aura:set attribute="else">
+                                                                                                <img src="{!$Resource.Cover_Not_Found_Image}" class="imageCls"></img>
+                                                                                            </aura:set>
+                                                                                        </aura:if>
+                                                                                    </div>
+                                                                                    <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                                                                        <aura:if isTrue="{!material.Average_Rating__c}">
+                                                                                            <c:RatingCmp value="{!material.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                                                                            <aura:set attribute="else">
+                                                                                                <span style="font-size: smaller;">No Ratings</span>
+                                                                                            </aura:set>
+                                                                                        </aura:if>
+                                                                                    </div>
+                                                                                    <div class="titleCls">{!material.Name}</div>
+                                                                                    <div>
+                                                                                        <aura:if isTrue="{!material.Total_Quantity_Available__c != null}">
+                                                                                            <i class="far fa-check-circle"></i>&nbsp; <span class="infoCls">Available: {!material.Total_Quantity_Available__c}</span>
+                                                                                            <aura:set attribute="else">
+                                                                                                <i class="far fa-check-circle"></i>&nbsp; <span class="infoCls">Available: N/A</span>
+                                                                                            </aura:set>
+                                                                                        </aura:if>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <aura:if isTrue="{!material.Total_Quantity_Loaned_Out__c != null}">
+                                                                                            <i class="far fa-book"></i>&nbsp; <span class="infoCls">Loaned Out: {!material.Total_Quantity_Loaned_Out__c}</span>
+                                                                                            <aura:set attribute="else">
+                                                                                                <i class="far fa-book"></i>&nbsp; <span class="infoCls">Loaned Out: N/A</span>
+                                                                                            </aura:set>
+                                                                                        </aura:if>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </lightning:layoutItem>
+                                                                        </aura:iteration>
+                                                                        <lightning:layoutItem size="12" largeDeviceSize="9" mediumDeviceSize="9" smallDeviceSize="12" padding="around-small">
+                                                                             <p style="{!v.displayDevice != 'Mobile' ? 'margin-top: 0.75rem;' : ''}" >Showing  {!v.displayObj.materialTotalCol1} to {!v.displayObj.materialTotalCol2} of {!v.displayObj.materialRecordsCnt} records</p>
+                                                                        </lightning:layoutItem>
+                                                                        <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                                                                            <lightning:button label="Previous" disabled="{!v.filterObj.pageNumber == 1}"  class="{!v.filterObj.pageNumber == 1 ? 'btnDisabled btn btn-primary' : 'btn btn-primary'}" onclick="{!c.navigate}"/>
+                                                                            <lightning:button label="Next" disabled="{!v.filterObj.pageSize > v.displayMaterials.length}" class="{!v.filterObj.pageSize > v.displayMaterials.length ? 'btnDisabled btn btn-secondary' : 'btn btn-secondary'}" onclick="{!c.navigate}"/>
+                                                                        </lightning:layoutItem>
+                                                                    </lightning:layout>
+                                                                    <aura:set attribute="else">
+                                                                        <center><span style="font-size: medium;">No Records To Display</span></center>
+                                                                    </aura:set>
+                                                                </aura:if>
+                                                                <aura:set attribute="else">
+                                                                    <center><span style="font-size: medium;">No Records To Display</span></center>
+                                                                </aura:set>
+                                                            </aura:if>
+                                                            
+                                                        </lightning:layoutItem>
+                                                        
+                                                    </lightning:layout>
+                                                </aura:if>
+                                            </div>
+                                        </section>
+                                    </li>
+                                </ul>
+                                
+                                <!-- Search the Material Tab Mobile View-->
+                                <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                                    <hr/>
+                                </aura:if>
+                                <ul class="slds-accordion" style="margin-top: -1rem;">
+                                    <li class="slds-accordion__list-item">
+                                        <section class="slds-accordion__section slds-is-open">
+                                            <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                                                <br/> <div class="slds-accordion__summary">
+                                                <h2 class="slds-accordion__summary-heading">
+                                                    <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-controls="referenceId-39" aria-expanded="true" title="Accordion summary"  name="My Materials"  onclick="{!c.mobileTabHandleChange}">
+                                                        <lightning:icon iconName="{!v.tabIcons.materialTabIcon}" alternativeText="My Materials"  size="small"/>
+                                                        <span class="slds-accordion__summary-content">&nbsp;My Materials</span>
+                                                    </button>
+                                                </h2>
+                                                </div>
+                                            </aura:if>
+                                            <div class="slds-accordion__content">
+                                                <aura:if isTrue="{!or(and(v.displayDevice == 'Mobile',v.tabIcons.showMaterialTab),and(v.displayDevice == 'PC',v.tabName == 'myMaterials'))}">
+                                                    <lightning:layout multipleRows="true">
+                                                        <lightning:layoutItem size="12" padding="{!v.displayDevice == 'Mobile' ? '' : 'around-small'}">
+                                                            <aura:if isTrue="{!or(v.userType == 'Instructor',v.userType == 'Student')}">
+                                                                <c:LibraryCommunityHomePage userType="{!v.userType}" displayDevice="{!v.displayDevice}" />
+                                                            </aura:if>
+                                                        </lightning:layoutItem>
+                                                    </lightning:layout>
+                                                </aura:if>
+                                            </div>
+                                        </section>
+                                    </li>
+                                </ul>
+                            </div>
+                        </aura:if>
+                        
+                        <aura:if isTrue="{!and(v.userType != 'Instructor',and(v.userType != 'Student',(not(empty(v.userType)))))}">
+                            <lightning:layout multipleRows="true">
+                                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                                    <!-- display default 4 filters -->
+                                    <lightning:layout multipleRows="true">
+                                        <aura:if isTrue="{!v.displayObj.searchEnabled}">
+                                            <!-- view filters -->
+                                            <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                                                <h5 class="card-title">View Options</h5>
+                                                <lightning:layoutItem size="12">
+                                                    <lightning:select label="Sort By" value="{!v.filterObj.sortingOption}">
+                                                        <aura:iteration items="{!v.filterValues.sortingOptionsList}" var="sort">
+                                                            <option value="{!sort}">{!sort}</option>
+                                                        </aura:iteration>
+                                                    </lightning:select>
+                                                </lightning:layoutItem>
+                                            </div>
+                                            
+                                            <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                                                <h5 class="card-title">Filters</h5>
+                                                <lightning:layoutItem size="12">
+                                                    <lightning:select label="Avg Rating" value="{!v.filterObj.seletedRating}" onchange="{!c.avgRatingChange}">
+                                                        <aura:iteration items="{!v.filterValues.ratingOptions}" var="rate">
+                                                            <option value="{!rate}">{!rate}</option>
+                                                        </aura:iteration>
+                                                    </lightning:select>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="12">
+                                                    <lightning:select label="Recently Added" value="{!v.filterObj.dateRangeSelected}" onchange="{!c.dateRangeChange}">
+                                                        <aura:iteration items="{!v.filterValues.dateRangeOptions}" var="range">
+                                                            <option value="{!range}">{!range}</option>
+                                                        </aura:iteration>
+                                                    </lightning:select>
+                                                </lightning:layoutItem>
+                                                
+                                                <lightning:layoutItem size="12">
+                                                    <span onkeypress="{!c.onEnterSearchMaterials}"><lightning:input label="Search Keyword" type="search" value="{!v.filterObj.searchText}"/></span>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="12">
+                                                    <c:LookupSearch aura:id="langId3" selection="{!v.filterObj.searchLanguageList}" onSearch="{!c.lookupLanguageSearch}" iconName="" objectName="Language__c" fieldName="Name" condition="" label="Language" placeholder="Search Language" isMultiEntry="false"  isRequired="false"/>
+                                                </lightning:layoutItem>
+                                                
+                                                <!--Book Series & dls section filter -->
+                                                <lightning:layoutItem size="12">
+                                                    <lightning:select label="Series" value="{!v.filterObj.bookSeries}">
+                                                        <aura:iteration items="{!v.filterValues.bookSeriesList}" var="series">
+                                                            <option value="{!series.value}">{!series.label}</option>
+                                                        </aura:iteration>
+                                                    </lightning:select>
+                                                </lightning:layoutItem>
+                                            </div>
+                                        </aura:if>
+                                        
+                                        <aura:if isTrue="{!not(v.displayObj.searchEnabled)}">
+                                            <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                                                <h5 class="card-title">Filters</h5>
+                                                <lightning:layoutItem size="12">
+                                                    <span onkeypress="{!c.onEnterSearchMaterials}"><lightning:input label="Search Keyword" type="search" value="{!v.filterObj.searchText}"/></span> 
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="12">
+                                                    <c:LookupSearch aura:id="langId4" selection="{!v.filterObj.searchLanguageList}" onSearch="{!c.lookupLanguageSearch}" iconName="" objectName="Language__c" fieldName="Name" condition="" label="Language" placeholder="Search Language" isMultiEntry="false"  isRequired="false"/>
+                                                </lightning:layoutItem>
+                                            </div>
+                                        </aura:if>
+                                        
+                                        <lightning:layoutItem size="12" padding="around-small">
+                                            <lightning:button label="Search" class="btn btn-primary" onclick="{!c.searchMaterials}"/>
+                                            <lightning:button label="Clear" class="btn btn-secondary" onclick="{!c.clearFilter}"/>
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="12" largeDeviceSize="9" mediumDeviceSize="9" smallDeviceSize="12" padding="around-small">
+                                    <aura:if isTrue="{!not(v.displayObj.searchEnabled)}">
+                                        <!-- display material request table with filters / different card views based on current user-->
+                                        <aura:if isTrue="{!or(v.userType == 'Internal',v.userType == 'Staff')}">
+                                            <c:LibraryHomePage userType="{!v.userType}"/>
+                                        </aura:if>
+                                    </aura:if>
+                                    <!-- display search result -->
+                                    <aura:if isTrue="{!v.displayObj.searchEnabled}">
+                                        <aura:if isTrue="{!and(v.displayObj.displaySearchResult,v.displayMaterials.length > 0)}">
+                                            <!-- Material Pagination -->
+                                            <lightning:layout multipleRows="true">
+                                                <!--lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                                                    <lightning:select label="Items Per Page" value="{!v.filterObj.pageSize}" onchange="{!c.pagenationSelections}">
+                                                        <aura:iteration items="{!v.filterValues.paginationNumbering}" var="page">
+                                                            <option value="{!page}">{!page}</option>
+                                                        </aura:iteration>
+                                                    </lightning:select>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12" padding="around-small">
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small"><br/>
+                                                   <lightning:button label="Previous" disabled="{!v.filterObj.pageNumber == 1}"  class="{!v.filterObj.pageNumber == 1 ? 'btnDisabled btn btn-primary' : 'btn btn-primary'}" onclick="{!c.navigate}"/>
+                                                   <lightning:button label="Next" disabled="{!v.filterObj.pageSize > v.displayMaterials.length}" class="{!v.filterObj.pageSize > v.displayMaterials.length ? 'btnDisabled btn btn-secondary' : 'btn btn-secondary'}" onclick="{!c.navigate}"/>
+                                                </lightning:layoutItem-->
+                                                
+                                                <!-- display materials -->
+                                                <aura:iteration items="{!v.displayMaterials}" var="material">
+                                                    <lightning:layoutItem  size="12" largeDeviceSize="4" mediumDeviceSize="4" smallDeviceSize="12" padding="around-small">
+                                                        <div class="bookCls" onclick="{!c.redirectToMaterialDetail}" data-value="{!material.Id}">
+                                                            <div>
+                                                                <aura:if isTrue="{!material.Book_Cover__c != null}">
+                                                                    <lightning:formattedRichText value="{!material.Book_Cover__c}" class="imageClass"></lightning:formattedRichText>
+                                                                    <aura:set attribute="else">
+                                                                        <img src="{!$Resource.Cover_Not_Found_Image}" class="imageCls"></img>
+                                                                    </aura:set>
+                                                                </aura:if>
+                                                            </div>
+                                                            <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                                                <aura:if isTrue="{!material.Average_Rating__c}">
+                                                                    <c:RatingCmp value="{!material.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                                                    <aura:set attribute="else">
+                                                                        <span style="font-size: smaller;">No Ratings</span>
+                                                                    </aura:set>
+                                                                </aura:if>
+                                                            </div>
+                                                            <div class="titleCls">{!material.Name}</div>
+                                                            <div>
+                                                                <aura:if isTrue="{!material.Total_Quantity_Available__c != null}">
+                                                                    <i class="far fa-check-circle"></i>&nbsp; <span class="infoCls">Available: {!material.Total_Quantity_Available__c}</span>
+                                                                    <aura:set attribute="else">
+                                                                        <i class="far fa-check-circle"></i>&nbsp; <span class="infoCls">Available: N/A</span>
+                                                                    </aura:set>
+                                                                </aura:if>
+                                                            </div>
+                                                            <div>
+                                                                <aura:if isTrue="{!material.Total_Quantity_Loaned_Out__c != null}">
+                                                                    <i class="far fa-book"></i>&nbsp; <span class="infoCls">Loaned Out: {!material.Total_Quantity_Loaned_Out__c}</span>
+                                                                    <aura:set attribute="else">
+                                                                        <i class="far fa-book"></i>&nbsp; <span class="infoCls">Loaned Out: N/A</span>
+                                                                    </aura:set>
+                                                                </aura:if>
+                                                            </div>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                </aura:iteration>
+                                                <!--lightning:layoutItem size="12" largeDeviceSize="9" mediumDeviceSize="9" smallDeviceSize="12" padding="around-small"><br/>
+                                                   <br/> <p>Showing  {!v.displayObj.materialTotalCol1} to {!v.displayObj.materialTotalCol2} of {!v.displayObj.materialRecordsCnt} records</p>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="12" largeDeviceSize="3" mediumDeviceSize="3" smallDeviceSize="12" padding="around-small">
+                                                    <lightning:button label="Previous" disabled="{!v.filterObj.pageNumber == 1}" class="btn btn-primary" onclick="{!c.navigate}"/>
+                                                    <lightning:button label="Next" disabled="{!v.filterObj.pageSize > v.displayMaterials.length}" class="btn btn-secondary" onclick="{!c.navigate}"/>
+                                                </lightning:layoutItem-->
+                                            </lightning:layout>
+                                            <aura:set attribute="else">
+                                                <center><span style="font-size: medium;">No Records To Display</span></center>
+                                            </aura:set>
+                                        </aura:if>
+                                    </aura:if>
+                                    
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                        </aura:if>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    
+    <!-- Display Digital Content detail cmp -->
+    <aura:if isTrue="{!v.displayContentDetail}">
+        <c:ContentDetailCmp recordId="{!v.selectedRecordId}" userType="{!v.userType}" displaySearchResult="{!v.displaySearchResult}"/>
+    </aura:if>
+    
+    <!-- Display Material detail cmp -->
+    <aura:if isTrue="{!v.displayMaterialDetail}">
+        <div class="{!v.userType == 'Internal' ? 'backGroundCls': ''}">
+            <c:MaterialDetailCmp recordId="{!v.selectedRecordId}" userType="{!v.userType}" displaySearchResult="{!v.displaySearchResult}" displayDevice="{!v.displayDevice}"/>
+        </div>
+    </aura:if>
+    
+    <!-- Favorite Materials display -->
+    <aura:if isTrue="{!v.displayFavoriteDetails}">
+        <c:FavoritesCmp userType="{!v.userType}" displaySearchResult="{!v.displaySearchResult}" displayDevice="{!v.displayDevice}"/>
+    </aura:if>
+    
+    <!-- Favorite Materials display -->
+    <aura:if isTrue="{!v.displayTopRatedDetails}">
+        <c:TopRatedMaterialsCmp userType="{!v.userType}" displaySearchResult="{!v.displaySearchResult}" displayDevice="{!v.displayDevice}"/>
+    </aura:if>
+    
+    <!-- Libaray Mobile filter -->
+    <aura:if isTrue="{!and(v.displayDevice == 'Mobile',v.showMobileViewFilterModel == true)}">
+        <c:sldsModal aura:id="mobileViewModal" displayCloseImage="true" closeAction="{!c.closeMobileViewModal}">
+            <aura:set attribute="header">
+                Filter
+            </aura:set>
+            <aura:set attribute="content">
+                <!-- display default 4 filters -->
+                <lightning:layout multipleRows="true">
+                    <aura:if isTrue="{!v.displayObj.searchEnabled}">
+                        <!-- view filters -->
+                        <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                            <h5 class="card-title">View Options</h5>
+                            <lightning:layoutItem size="12">
+                                <lightning:select label="Sort By" value="{!v.filterObj.sortingOption}">
+                                    <aura:iteration items="{!v.filterValues.sortingOptionsList}" var="sort">
+                                        <option value="{!sort}">{!sort}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                        </div>
+                        
+                        <div class="slds-grid slds-wrap containerClass" style="width: 100%;"><br/>
+                            <h5 class="card-title">Filters</h5>
+                            <lightning:layoutItem size="12">
+                                <lightning:select label="Avg Rating" value="{!v.filterObj.seletedRating}">
+                                    <aura:iteration items="{!v.filterValues.ratingOptions}" var="rate">
+                                        <option value="{!rate}">{!rate}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12">
+                                <lightning:select label="Recently Added" value="{!v.filterObj.dateRangeSelected}">
+                                    <aura:iteration items="{!v.filterValues.dateRangeOptions}" var="range">
+                                        <option value="{!range}">{!range}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="12">
+                                <span onkeypress="{!c.onEnterSearchMaterials}"><lightning:input label="Search Keyword" type="search" value="{!v.filterObj.searchText}"/></span>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="12" largeDeviceSize="12" mediumDeviceSize="12" smallDeviceSize="12">
+                                <c:LookupSearch aura:id="langId1" selection="{!v.filterObj.searchLanguageList}" onSearch="{!c.lookupLanguageSearch}" iconName="" objectName="Language__c" fieldName="Name" condition="" label="Language" placeholder="Search Language" isMultiEntry="false"  isRequired="false"/>
+                            </lightning:layoutItem>
+                            
+                            <!--Book Series & dls section filter -->
+                            <lightning:layoutItem size="12">
+                                <lightning:select label="Series" value="{!v.filterObj.bookSeries}">
+                                    <aura:iteration items="{!v.filterValues.bookSeriesList}" var="series">
+                                        <option value="{!series.value}">{!series.label}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                        </div>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!not(v.displayObj.searchEnabled)}">
+                        <div class="slds-grid slds-wrap containerClass" style="width: 100%;">
+                            <h5 class="card-title">Filters</h5>
+                            <lightning:layoutItem size="12">
+                                <span onkeypress="{!c.onEnterSearchMaterials}"><lightning:input label="Search Keyword" type="search" value="{!v.filterObj.searchText}"/></span> 
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12">
+                                <c:LookupSearch aura:id="langId5" selection="{!v.filterObj.searchLanguageList}" onSearch="{!c.lookupLanguageSearch}" iconName="" objectName="Language__c" fieldName="Name" condition="" label="Language" placeholder="Search Language" isMultiEntry="false"  isRequired="false"/>
+                            </lightning:layoutItem>
+                        </div>
+                    </aura:if>
+                </lightning:layout>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Search" class="btn btn-primary" onclick="{!c.searchMaterials}"/>
+                <lightning:button label="Clear" class="btn btn-secondary" onclick="{!c.clearFilter}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+</aura:component>

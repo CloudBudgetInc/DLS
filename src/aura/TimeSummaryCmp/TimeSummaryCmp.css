@@ -1,0 +1,13 @@
+.THIS a {
+    color: #055e89 !important;
+    text-decoration: none !important;
+}
+.THIS .breadcrumb{
+    background-color:white !important;
+    font-weight:bold !important;
+}
+@media(max-width:48em){
+    .THIS .viewHistoryCls{
+        margin-top:1rem !important;
+    }
+}

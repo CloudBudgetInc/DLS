@@ -1,0 +1,135 @@
+<!--
+  @description       : The primary component utilized by instructors to log their work hours for administrative tasks.
+  @author            : Dhinesh Kumar
+  @group             : Instructor Community
+  @last modified on  : 11-03-2023
+  @last modified by  : Vasanthram
+-->
+<template>
+    <lightning-spinner style="position: fixed;" variant="brand" lwc:if={isLoading}></lightning-spinner>
+    <div>
+    <div class="slds-align_absolute-center">
+        <center>
+            <h5 class="card-title" style="font-size:2rem;">Internal Time Entry</h5>
+        </center>
+    </div>
+
+    <div class="card-deck slds-m-top_medium">
+        <div class="card">
+            <div class="card-body">
+                <lightning-layout multiple-rows>
+                    <lightning-layout-item class="slds-p-around--small" size="12" small-device-size="12" medium-device-size="12"
+                        large-device-size="12">
+                        <!-- instructorRowDetails.displayCompleteBtn -->
+                        <div lwc:if={showCompleteBtn} class="slds-float--right">
+                            <button class="slds-button slds-button_brand btn btn-primary"
+                                onclick={handleSaveConfirmation}>Save</button>
+                            <button class="slds-button slds-button_neutral btn btn-secondary"
+                                onclick={handleCompleteConfirmation}>Complete</button>
+                        </div>
+                        <div lwc:if={showRecallBtn} class="slds-float--right">
+                            <button class="slds-button slds-button_brand btn btn-primary"
+                                onclick={handleRecall}>Recall</button>
+                            <!-- <lightning-button class="btn btn-primary" label="Recall" onclick={er}></lightning-button> -->
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="12" small-device-size="12" medium-device-size="12"
+                        large-device-size="12">
+                        <div lwc:if={filter}>
+                            <c-staff-time-entry-filter onfilterchange={handleFilterChanges}
+                            filter={filter} count={count}></c-staff-time-entry-filter>
+                        </div>
+                    </lightning-layout-item>
+                </lightning-layout>
+
+                <template if:true={showTimeEntries}>
+                    <table class="table table-bordered" style="margin-top: 1rem;">
+                        <thead class="thead-light">
+                            <tr class="slds-line-height_reset">
+                                <th scope="col" class="wrap">Charge Code</th>
+                                <template if:true={instructorRowDetails.weekDates}
+                                    for:each={instructorRowDetails.weekDates} for:item="weekDate">
+                                    <th scope="col" key={weekDate.dateValue}>
+                                        <center>{weekDate.dateValue}<div>{weekDate.dayVal}</div>
+                                        </center>
+                                    </th>
+                                </template>
+                                <th scope="col">
+                                    <center>Total Hours</center>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template if:true={instructorRowDetails.entries} for:each={instructorRowDetails.entries} for:item="day">
+                                <c-staff-time-entry-per-task key={day.id} day={day} ondaychange={handleDayChange}></c-staff-time-entry-per-task>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+            </div>
+        </div>
+    </div>
+    <div class="slds-m-top_medium">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Notes</h5>
+                <div lwc:if={notesList.length}>
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                        </thead>
+                        <tbody>
+                            <template for:each={notesList} for:item="note">
+                                <tr key={note} class="slds-hint-parent">
+                                    <td>
+                                        <span class="slds-p-top_small slds-p-bottom_small">
+                                            <div lwc:if={note.notes}>
+                                                <span style="font-weight: bold;color: #055E89;">User Name:
+                                                </span><span
+                                                    class="slds-p-right_small notesLabelCls notesContentCls">{note.userName}</span>
+                                                <span style="font-weight: bold;color: #055E89;">Comment:
+                                                </span><span
+                                                    class="slds-p-right_small notesLabelCls notesContentCls">
+                                                    <lightning-formatted-rich-text value={note.notes}></lightning-formatted-rich-text>
+
+                                                </span>
+                                            </div>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <template lwc:if={changeRange}>
+        <c-modal-cmp header="Confirmation" show-header show-footer show>
+            <div slot="body">
+                <p>If You Proceed with OK. the records you entered will not SAVE. Please Click CANCEL and save the record before Moving</p>
+            </div>
+            <div slot="footer">
+                <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleYes} name="YES">Yes</button>
+                <button class="slds-button slds-button_neutral btn btn-secondary" onclick={handleCancel}
+                    name="Cancel">Cancel</button>
+                <button class="slds-button slds-button_neutral btn btn-primary" onclick={handlePreceedWithoutSave} name="Proceed Without Save">Proceed Without Save</button>
+            </div>
+        </c-modal-cmp>
+    </template>
+    </div>
+
+    <template lwc:if={showModal}>
+        <c-modal-cmp header={modalHeader} show-header show-footer show>
+            <div slot="body">
+                <p class="slds-text-align_center">{modalBodyText}</p>
+            </div>
+            <div slot="footer">
+                <template if:false={isSuccess}>
+                    <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleModalProceed} name="Proceed">Proceed</button>
+                </template>               
+                <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleClose} name="Close">Close</button>
+            </div>
+        </c-modal-cmp>
+    </template>
+</template>

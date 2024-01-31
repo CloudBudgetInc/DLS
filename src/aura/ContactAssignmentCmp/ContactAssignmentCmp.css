@@ -1,0 +1,54 @@
+.THIS  .slds-tabs--default {
+    display: inline-block !important;
+    width: 100%;
+    background-color: rgb(228, 236, 249) !important;
+}
+
+.THIS .showSpin{
+    margin-left: -35% !important;
+    width: 171% !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+}
+
+.THIS .a{
+      color: red !important;
+}
+.THIS .slds-truncate {
+  
+    overflow: visible !important;
+    white-space: normal !important;
+}
+
+.THIS .slds-tabs_default__content{
+    
+  margin-top:-16px;
+}
+.THIS .slds-button_neutral{
+    padding-left: 0.60rem !important;
+    padding-right: 0.60rem  !important;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #dddbda;
+    
+}
+.THIS .pdoImgAction{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 2.2rem !important;
+    max-height: 2.4rem !important;
+}
+.THIS .studentTimeLineImgAction{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.8rem !important;
+    max-height: 2rem !important;
+    background-color: #5876a3 !important;
+}
+.THIS .goalImgAction{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.8rem !important;
+    max-height: 2rem !important;
+    background-color: #5DADE2 !important;
+    padding: 5.5px !important;
+}

@@ -1,0 +1,17 @@
+<template>
+    <template if:false={isLoaded}>
+        <lightning-spinner variant = 'brand' alternative-text="Loading"></lightning-spinner>
+    </template>
+    <template if:true={isLoaded}>
+            <ul class="slds-timeline">
+                <template for:each = {keys} for:index = "index" for:item = "item">
+                    <c-custom-activity-timeline-item key = {item.Id} map-key = {item} timeline-data = {mapData}  record-id = {recordId} record-name = {recordName} >
+
+                    </c-custom-activity-timeline-item>
+                </template>
+            </ul>
+            <template if:false = {isNillActivities}>
+                <div class="slds-text-align_center paddingDown">No more past activities to load.</div>
+            </template>
+    </template>
+</template>

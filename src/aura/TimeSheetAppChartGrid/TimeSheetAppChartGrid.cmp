@@ -1,0 +1,60 @@
+<aura:component controller="TimeSheetAppApexController" implements="forceCommunity:availableForAllPageTypes">
+    <!-- scripts -->
+    <ltng:require scripts="{!join(',', $Resource.amChart,
+                           $Resource.gauge)}" 
+                  afterScriptsLoaded="{!c.scriptsLoaded}"/>
+    <!-- attributes -->
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="timeTotals" type="double[]" access="public"/>
+    <aura:attribute name="chartTitle" type="string" access="public"/>
+    <aura:attribute name="chartValue" type="double" access="public"/>
+    <aura:attribute name="bandOneEnd" type="Integer" access="public"/>
+    <aura:attribute name="bandTwoEnd" type="Integer" access="public"/>
+    <aura:attribute name="bandThreeEnd" type="Integer" access="public"/>
+    <aura:attribute name="valueInterval" type="Integer" access="public"/>
+    <aura:attribute name="divId" type="string" access="public"/>
+    <aura:attribute name="chartType" type="String" default="guage" access="public"/>
+    <!-- events -->
+    <aura:registerEvent name="updateDataTable" type="c:dataTableUpdate"/>
+    <!-- handlers -->
+    <aura:handler event="c:chartUpdate" action="{!c.handleUpdateChart}"/>
+    
+    <lightning:card title="Chart Grid" footer="Click on a chart to see the details in the table below" 
+                    class="slds-m-around_xxx-small">
+        <div class="slds-grid slds-gutters slds-wrap slds-m-around_x-small">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_2-of-12 chartdiv"
+                 onclick="{!c.filterTableToday}"
+                 aura:id="todayChart">
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_2-of-12 chartdiv"
+                 onclick="{!c.filterTableYesterday}"
+                 aura:id="yesterdayChart">
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_2-of-12 chartdiv"
+                 onclick="{!c.filterTableThisWeek}"
+                 aura:id="thisWeekChart">
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_2-of-12 chartdiv"
+                 onclick="{!c.filterTableLastWeek}"
+                 aura:id="lastWeekChart">
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_2-of-12 chartdiv"
+                 onclick="{!c.filterTableThisMonth}"
+                 aura:id="thisMonthChart">
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_2-of-12 chartdiv"
+                 onclick="{!c.filterTableLastMonth}"
+                 aura:id="lastMonthChart">
+            </div>
+        </div>
+    </lightning:card>
+    <aura:if isTrue="{!v.showSpinner}">
+       <div class="slds-spinner_container spinnerFixed">
+           <div role="status" class="slds-spinner slds-spinner--medium slds-spinner--brand">
+               <span class="slds-assistive-text">Loading</span>
+               <div class="slds-spinner__dot-a"></div>
+               <div class="slds-spinner__dot-b"></div>
+           </div>
+       </div>
+   </aura:if>
+</aura:component>

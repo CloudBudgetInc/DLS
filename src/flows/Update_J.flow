@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <decisions>
+        <name>Merchant_Funds_Transfer_JE</name>
+        <label>Merchant Funds Transfer JE</label>
+        <locationX>182</locationX>
+        <locationY>395</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Merchant_Funds_Transfer_JE_found</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_JE_Name.Name</leftValueReference>
+                <operator>StartsWith</operator>
+                <rightValue>
+                    <stringValue>Merchant Funds Transfer</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_JE_Lline</targetReference>
+            </connector>
+            <label>Merchant Funds Transfer JE found</label>
+        </rules>
+    </decisions>
+    <description>1.	 On create or edit of a JE line item and the GL account is 81715 - G&amp;A Merchant Account Fees
+2.	The flow gets the name of the journal entry.
+3.	Checks to see if the name starts with “Merchant Funds Transfer”
+4.	If not, it comes to an end.
+5.	If so, it updates Glav 1 and the account.</description>
+    <interviewLabel>Update J {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Merchant Funds Transfer</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_JE_Name</name>
+        <label>Get JE Name</label>
+        <locationX>182</locationX>
+        <locationY>287</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Merchant_Funds_Transfer_JE</targetReference>
+        </connector>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.AcctSeed__Journal_Entry__r.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>AcctSeed__Journal_Entry__c</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Update_JE_Lline</name>
+        <label>Update JE Lline</label>
+        <locationX>50</locationX>
+        <locationY>503</locationY>
+        <inputAssignments>
+            <field>AcctSeed__Account__c</field>
+            <value>
+                <stringValue>0016Q00001v9qOrQAI</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>AcctSeed__GL_Account_Variable_1__c</field>
+            <value>
+                <stringValue>a3U0d000001Hr1rEAC</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_JE_Name</targetReference>
+        </connector>
+        <filters>
+            <field>AcctSeed__GL_Account__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>a410d000000tHGdAAM</stringValue>
+            </value>
+        </filters>
+        <object>AcctSeed__Journal_Entry_Line__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

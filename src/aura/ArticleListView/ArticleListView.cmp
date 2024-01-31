@@ -1,0 +1,31 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" access="global"  Controller="ArticleListView_Controller">
+    <aura:attribute name="articleTableConfig" type="map" default="{}"/>
+    <aura:attribute name="articleRowList" type="List" default="[]"/>
+    <aura:attribute name="articleTableColumns" type="List" default="[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" access="PUBLIC"/>
+    
+    <aura:handler name="dtCellClick" event="ldt:clickedDtCell" action="{!c.tabActionClicked}"/>
+    
+    
+    <div class = "slds-p-top_small slds-p-bottom_small">
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner variant="brand"  size="medium" alternativeText="Loading" />
+        </aura:if>
+        <center><h5 class="card-title" style="font-size:2rem;">ARTICLES</h5></center><br/><br/>
+        
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">
+                    <!-- Table For Article List -->
+                    <div class = "slds-p-left_small slds-p-right_small ldtTableCls">
+                        <ldt:datatableDev aura:id="articletable"
+                                          dataRows="{!v.articleRowList}" header="{!v.articleTableColumns}"
+                                          config="{!v.articleTableConfig}"/>
+                    </div>
+                </span>
+            </div>
+        </div>
+    </div>
+</aura:component>

@@ -1,0 +1,384 @@
+<aura:component controller="ContactAssignmentLightningCtrl" implements="force:appHostable">
+    <aura:attribute name="conAssignId" type="string" />
+    <aura:attribute name="contactId" type="string" />
+    <aura:attribute name="recordType" type="string" />
+    <aura:attribute name="CAViewMoreInstructor" type="List" default="[]"/>
+    <aura:attribute name="CAViewMoreInstructCitizen" type="List" default="[]"/>
+    <aura:attribute name="EquipmentDataHeader" type="List" default="[]"/>
+    <aura:attribute name="EquipmentDataRows" type="List" default="[]"/>
+    <aura:attribute name="eventTableConfig" type="Map" default="{}"/>
+    <aura:attribute name="selectTabName" type="String" default="SUMMARY"/>
+    <aura:attribute name="forceEditCheck" type="string" default="false"/>
+    <aura:attribute name="equipmentId" type="string" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="ViewModel" type="string" default="slds-show"/>
+    <aura:attribute name="ViewEditModal" type="string" default="slds-hide"/>
+    <aura:attribute name="sObjectName" type="String"/>
+    <aura:attribute name="caDetail" type="Map" default="{}"/>
+
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClicked}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">          
+        <lightning:spinner  variant="brand" alternativeText="Loading" size="medium" class="slds-is-fixed"/>
+    </aura:if>  
+    
+    <div class="{!v.ViewModel}">
+        <c:Modal modelWidth="70%" aura:id="EditRecordComponent"  hasCloseIcon="false">    
+            <aura:set attribute="header">
+                <h1> {!v.recordType} Assignment</h1>      
+            </aura:set>
+            <aura:set attribute="content">  
+                <lightning:tabset onselect="{!c.getCARelatedEquipmentInfo}" variant="default" selectedTabId="{!v.selectTabName}">
+                    <lightning:tab label="SUMMARY" id="SUMMARY">
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-01">Name</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Candidate_Name__r.Name}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                  <label class="slds-form-element__label" for="text-input-02">Rate Card Rate</label>
+                                <aura:if isTrue= "{!v.CAViewMoreInstructor[0].Rate_Card_Rate__c != null}">
+                                    <div class="slds-form-element__control"><br/>
+                                        <ui:outputText class="uiVal" value="{!v.CAViewMoreInstructor[0].Rate_Card_Rate__r.Cost_Rate_Name__c}"/>
+                                    </div>
+                                    <aura:set attribute="else">
+                                        <aura:if isTrue= "{!v.CAViewMoreInstructor[0].Drafted_Labor_Cost_Rate__c != null}">
+                                            <div class="slds-form-element__control"><br/>
+                                                <ui:outputText class="uiVal" value="{!v.CAViewMoreInstructor[0].Drafted_Labor_Cost_Rate__r.Cost_Rate_Name__c}"/>
+                                            </div>
+                                        </aura:if>
+                                    </aura:set>
+                                </aura:if>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12">
+                                <div class="slds-form-element slds-has-divider--bottom"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-03">Phone</label>
+                                <div class="slds-form-element__control"><br/>
+                                    
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].candidate_Name__r.Phone}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-04"># of Per Diem Days</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].of_Per_Diem_Days__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12">
+                                <div class="slds-form-element slds-has-divider--bottom"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-05">Email</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Email__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-06">DLS Candidate Rating</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Candidate_Name__r.DLS_Candidate_Rating__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12">
+                                <div class="slds-form-element slds-has-divider--bottom"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-07">Mailing Address</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputTextArea class="uiVal" value="{! ''+v.CAViewMoreInstructor[0].Candidate_Name__r.MailingAddress.street+','+
+                                                                            v.CAViewMoreInstructor[0].Candidate_Name__r.MailingAddress.city+','+ 
+                                                                            v.CAViewMoreInstructor[0].Candidate_Name__r.MailingAddress.state+','
+                                                                            +v.CAViewMoreInstructor[0].Candidate_Name__r.MailingAddress.country}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-08">Active count as Instructor</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Candidate_Name__r.Active_Count_as_Instructor__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12">
+                                <div class="slds-form-element slds-has-divider--bottom"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                
+                                <label class="slds-form-element__label" for="text-input-09">Payroll Item</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Payroll_Item__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-10">Training Location</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <a name="{!v.CAViewMoreInstructor[0].Location__c}" onclick="{!c.navigateToRecord}"> <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Training_Location__c}"/></a>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12">
+                                <div class="slds-form-element slds-has-divider--bottom"/>
+                            </lightning:layoutItem>
+                            <aura:if isTrue="{!v.caDetail.showObservationField}">
+                                <lightning:layoutItem size="6">
+                                    <label class="slds-form-element__label" for="text-input-10">Schedule Observation</label>
+                                    <div class="slds-form-element__control"><br/>
+                                        <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Schedule_Observation__c}"/>
+                                    </div>
+                                </lightning:layoutItem>
+                            </aura:if>
+                            <aura:if isTrue="{!v.caDetail.showAccountField}">
+                                <lightning:layoutItem size="6">
+                                    <label class="slds-form-element__label" for="text-input-10">Account</label>
+                                    <div class="slds-form-element__control"><br/>
+                                        <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructor[0].Account__r.Name}"/>
+                                    </div>
+                                </lightning:layoutItem>
+                            </aura:if>
+                            <lightning:layoutItem size="12">
+                                <div class="slds-form-element slds-has-divider--bottom"/>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                    </lightning:tab>
+                    <lightning:tab label="PROJECT TRACKING" id="PROJECT TRACKING">    
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-01">W-9 on file</label>
+                                <ui:outputText class="checkResult" value="{!v.CAViewMoreInstructor[0].W_9_on_file__c}"/>
+                            </lightning:layoutItem>   
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-02">Contract Uploaded (Word and PDF)</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Contract_Uploaded_Word_and_PDF__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-03">ACH Set up</label>
+                                <ui:outputText class="checkResult" value="{!v.CAViewMoreInstructor[0].ACH_set_up__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-04">Contract Emailed to Instructor</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Contract_Emailed_to_Instructor__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-05">Per diem info sent to Accounting</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Per_diem_info_sent_to_Accounting__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-06">Signed contract received</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Signed_contract_received__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-07">CC Auth on Hotel Detail Page</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].CC_Auth_on_Hotel_Detail_Page__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-08">Code of Conduct Received</label>
+                                <ui:outputText class="checkResult" value="{!v.CAViewMoreInstructor[0].Code_of_Conduct_Received__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-09">Base Access Letter Requested</label>
+                                <ui:outputCheckbox class="checkResult" value="{!v.CAViewMoreInstructor[0].Base_Access_Letter_Requested__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-10">Trip Details Emailed to Instructor</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Trip_Details_Emailed_to_Instructor__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-11">Base Access Letter Uploaded</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Base_Access_Letter_Uploaded__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-12">Materials Delivered to Instructor</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Materials_Delivered_to_Instructor__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-13">Flight out uploaded</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Flight_out_uploaded__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-14">Laptops Issued</label>
+                                <ui:outputText class="checkResult"  value="{!v.CAViewMoreInstructor[0].Laptops_Issued__c}"/>
+                            </lightning:layoutItem> 
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-15">Return Flight Uploaded</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Flight_out_uploaded__c}"/>
+                            </lightning:layoutItem> <lightning:layoutItem size="6">
+                            <label class="slds-form-element__label" for="text-input-16">Laptop Serial Numbers</label>
+                            <ui:outputText class="checkResult" value="{!v.CAViewMoreInstructor[0].Laptop_Serial_Numbers__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-17">Rental Car Confirmation Uploaded</label>
+                                <ui:outputCheckbox class="checkResult"  value="{!v.CAViewMoreInstructor[0].Rental_Car_Confirmation_Uploaded__c}"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-18">Laptop Returned?</label>
+                                <ui:outputCheckbox class="checkResult" value="{!v.CAViewMoreInstructor[0].Laptop_Returned__c}" />
+                                
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6">
+                                <label class="slds-form-element__label" for="text-input-19">Gas Weekly Allowance</label>
+                                <ui:outputText class="checkResult"  value="{!v.CAViewMoreInstructor[0].Gas_Weekly_Allowance__c}"/>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                    </lightning:tab> 
+                    <lightning:tab label="EQUIPMENTS" id="EQUIPMENTS">    
+                         <br/>
+                        <aura:if isTrue="{!v.EquipmentDataHeader.length > 0}">
+                            <ldt:datatableDev title="" 
+                                              aura:id="equiTable" 
+                                              dataRows="{!v.EquipmentDataRows}"
+                                              header="{!v.EquipmentDataHeader}"       
+                                              config="{!v.eventTableConfig}"  
+                                              noRecordsMessage="No Record to Display"/>
+                            <aura:set attribute="else">
+                                <div style="background-color:#fafaf9;">
+                                    <br/><br/><center>No Record to Display</center><br/><br/></div>
+                            </aura:set>
+                        </aura:if>      
+                    </lightning:tab> 
+                    <lightning:tab label="CITIZENSHIP" id="CITIZENSHIP">                            
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-01">Citizenship</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Citizenship__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-02">Citizenship/VISA expiration date</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Citizenship_VISA_expiration_date__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-03">City and Country of Birth</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.City_and_Country_of_Birth__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-04">Other names used</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Other_names_used__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-05">Gender</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Gender__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-06">Place of Birth</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Country_of_Birth__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-07">ID Type</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.ID_Type__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-08">Non-US Passport Country   &amp; #</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Non_US_Passport_Country__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-09">Drivers License State</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Driver_s_License__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-10">Preferred Airport</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Preferred_Airport__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-11">Emergency Contact</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Emergency_Contact__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-12">Emergency Contact Relationship</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Emergency_Contact_Relationship__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-13">Emergency Contact Email</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Emergency_Email__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-14">Emergency Contact Phone</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Emergency_Phone__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="4">
+                                <label class="slds-form-element__label" for="text-input-15">Record updated from security info</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputText class="uiValue" value="{!v.CAViewMoreInstructCitizen[0].Candidate_Name__r.Record_updated_from_security_info__c}"/>
+                                </div>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                    </lightning:tab> 
+                    <lightning:tab label="DESCRIPTION" id="DESCRIPTION"> 
+                        <div  style="background-color:#fafaf9;">
+                            <div  class="slds-form-element" style="margin-top:1em;"> 
+                                <label class="slds-form-element__label" for="IALDescriptionEdit">Project Assignment Description</label>
+                                <div class="slds-form-element__control"><br/>
+                                    <ui:outputTextArea  value="{!v.CAViewMoreInstructor[0].Project_Assignment_Description__c}" />
+                                    <br/> <br/> <br/>
+                                </div>   
+                            </div>
+                        </div>
+                    </lightning:tab> 
+                    
+                </lightning:tabset>
+            </aura:set>
+            <aura:set attribute="footer">
+                <center> <aura:if isTrue="{!v.selectTabName =='EQUIPMENTS'}">
+                    <lightning:button label="Cancel"  onclick="{!c.instructorClose}"/>
+                    <aura:set attribute="else">
+                        <lightning:button label="Close" onclick="{!c.instructorClose}"/>
+                    </aura:set>
+                    </aura:if>
+                </center> 
+            </aura:set>       
+        </c:Modal> 
+    </div>
+    
+    <!-- Equipment EditModel -->
+    <div class="{!v.ViewEditModal}">
+        <c:Modal modelWidth="65%" aura:id="EditEquipmentRecordComponent" closeAction="{!c.EditEquiClose}" hasCloseIcon="true">    
+            <aura:set attribute="header">
+                <h1> Edit {!v.EquipmentDataRows[0].Name}</h1>    
+            </aura:set>
+            <aura:set attribute="content">
+                <div>
+                    <aura:if isTrue="{!v.forceEditCheck}">      
+                        <force:recordEdit aura:id="editRecord" recordId="{!v.equipmentId}"/>
+                        <aura:if isTrue="{!v.showSpinner}">          
+                            <lightning:spinner class="Editspin" variant="brand" alternativeText="Loading" size="medium" />
+                        </aura:if>   
+                    </aura:if>
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Cancel"  onclick="{!c.EditEquiClose}" />
+                <lightning:button label="Save" variant="brand"  onclick="{!c.EditEquiSave}" />
+            </aura:set>
+        </c:Modal>    
+    </div>
+</aura:component>

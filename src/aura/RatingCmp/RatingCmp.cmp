@@ -1,0 +1,14 @@
+<aura:component >
+    
+    <ltng:require scripts="{!join(',',
+                           $Resource.Start_Rating + '/raty-master/vendor/jquery.js',
+                           $Resource.Start_Rating + '/raty-master/lib/jquery.raty.js')}"
+                  styles="{!$Resource.Start_Rating + '/raty-master/lib/jquery.raty.css'}" 
+        afterScriptsLoaded="{!c.afterScriptsLoaded}"/>
+    
+	<aura:attribute name="value" type="Integer" required="true"/>
+    <aura:attribute name="ready" type="Boolean" default="false"/>
+    <aura:attribute name="readOnly" type="Boolean" default="true"/>
+    
+    <div aura:id="rating"></div>
+</aura:component>

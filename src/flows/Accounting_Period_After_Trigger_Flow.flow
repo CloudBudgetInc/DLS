@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_Accounting_Period_Updation_Email</name>
+        <label>Send Accounting Period Updation Email</label>
+        <locationX>242</locationX>
+        <locationY>647</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <inputParameters>
+            <name>emailAddressesArray</name>
+            <value>
+                <elementReference>Accounting_Email_To_Address</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Accounting Period Updated from Closed to Open</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>Template_for_AP_Updation_from_Closed_To_Open</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <assignments>
+        <name>Add_Accounting_Email_ToAddress</name>
+        <label>Add Accounting Email ToAddress</label>
+        <locationX>242</locationX>
+        <locationY>539</locationY>
+        <assignmentItems>
+            <assignToReference>Accounting_Email_To_Address</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Label.Accounting_Email_To_Address</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Send_Accounting_Period_Updation_Email</targetReference>
+        </connector>
+    </assignments>
+    <decisions>
+        <name>Check_Is_Insert_or_Is_Update</name>
+        <label>Check Is Insert or Is Update</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <defaultConnector>
+            <targetReference>Email_Notification_for_Accounting_Period_updation_from_Closed_to_Open</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Is Update</defaultConnectorLabel>
+        <rules>
+            <name>Is_Insert</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Is_New</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <label>Is Insert</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Email_Notification_for_Accounting_Period_updation_from_Closed_to_Open</name>
+        <label>Email Notification for Accounting Period updation from Closed to Open</label>
+        <locationX>374</locationX>
+        <locationY>431</locationY>
+        <defaultConnectorLabel>Do Other Action 1</defaultConnectorLabel>
+        <rules>
+            <name>Send_Email_for_AP_Updation</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.LastModifiedById</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <elementReference>$Label.Accounting_Team_User_Id</elementReference>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.AcctSeed__Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Open</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.AcctSeed__Status__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Add_Accounting_Email_ToAddress</targetReference>
+            </connector>
+            <label>Send Email for AP Updation</label>
+        </rules>
+    </decisions>
+    <description>W-007832 - Email Notification Request when Accounting Period Status is changed
+    - To send an email to Shruti if someone changes the Accounting Period Status from &quot;Closed to Open&quot;.</description>
+    <formulas>
+        <name>Accounting_Period_Record_Link</name>
+        <dataType>String</dataType>
+        <expression>LEFT($Api.Enterprise_Server_URL_510, FIND( &apos;/services&apos;, $Api.Enterprise_Server_URL_510)) &amp; {!$Record.Id}</expression>
+    </formulas>
+    <formulas>
+        <name>Is_New</name>
+        <dataType>Boolean</dataType>
+        <expression>ISNEW()</expression>
+    </formulas>
+    <interviewLabel>Accounting Period After Trigger Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Accounting Period After Trigger Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Is_Insert_or_Is_Update</targetReference>
+        </connector>
+        <object>AcctSeed__Accounting_Period__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <name>Template_for_AP_Updation_from_Closed_To_Open</name>
+        <text>&lt;p&gt;Hi Shruti,&lt;/p&gt;&lt;p&gt;This is the notification to inform you that the Accounting Period has been updated from Closed to Open. Please, see the link below.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;{!Accounting_Period_Record_Link}&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;{!$Record.Name}&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Thank you,&lt;/p&gt;&lt;p&gt;System Generated Email&lt;/p&gt;</text>
+    </textTemplates>
+    <variables>
+        <name>Accounting_Email_To_Address</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

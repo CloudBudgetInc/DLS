@@ -1,0 +1,69 @@
+<aura:component controller="CandidateProfileController" implements="flexipage:availableForRecordHome,force:hasRecordId">
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:attribute name="selTabName" type="String" default="Known Language" />
+    <aura:attribute name="candidateRows" type="List" />
+    <aura:attribute name="sObjectType" type="String" default="Known_Language__c"/>
+    <aura:attribute name="candidateHeader" type="List" access="public"/>
+    <aura:attribute name="allCandidateRows" type="Map" access="public"/>
+    <aura:attribute name="recordId" type="string" default="" />
+    <aura:attribute name="recordType" type="string" default="" />
+    
+    <lightning:card>
+        <div>
+            <lightning:button label="{!'Add '+v.selTabName}"   variant="brand" class="neutral" onclick="{!c.addRecord}"/>
+        </div>
+        <lightning:tabset onselect="{!c.getCandidateRecord}" variant="default" selectedTabId="{!v.selTabName}">
+            
+            <lightning:tab label="LANGUAGE" id="Known Language">    
+                <aura:if isTrue="{!v.candidateRows.length > 0}">
+                    <c:CandidateProfileTableCmp dataRows="{!v.candidateRows}" aura:id="childTabset1"  dataHeader="{!v.candidateHeader}" selectTab="{!v.selTabName}" SobjectName="{!v.sObjectType}" ParentId="{!v.recordId}"/>
+                    <aura:set attribute="else">
+                        <div style="background-color:#fafaf9;">
+                            <br/><br/><center>No Record to Display</center><br/><br/></div>
+                    </aura:set>
+                </aura:if>
+            </lightning:tab>  
+            
+            <lightning:tab label="SKILLS" id="Skill">
+                <aura:if isTrue="{!v.candidateRows.length > 0}">
+                    <c:CandidateProfileTableCmp dataRows="{!v.candidateRows}"  aura:id="childTabset2" dataHeader="{!v.candidateHeader}" selectTab="{!v.selTabName}" SobjectName="{!v.sObjectType}" ParentId="{!v.recordId}"/>   
+                    <aura:set attribute="else">
+                        <div style="background-color:#fafaf9;">
+                            <br/><br/><center>No Record to Display</center><br/><br/></div>
+                    </aura:set>
+                </aura:if>
+            </lightning:tab>
+            
+            <lightning:tab label="EXPERIENCE" id="Experience">
+                <aura:if isTrue="{!v.candidateRows.length > 0 }">
+                    <c:CandidateProfileTableCmp dataRows="{!v.candidateRows}" aura:id="childTabset3"  dataHeader="{!v.candidateHeader}" selectTab="{!v.selTabName}" SobjectName="{!v.sObjectType}" ParentId="{!v.recordId}" RecordType="{!v.recordType}"/>   
+                    <aura:set attribute="else">
+                        <div style="background-color:#fafaf9;">
+                            <br/><br/><center>No Record to Display</center><br/><br/></div>
+                    </aura:set>
+                </aura:if>
+            </lightning:tab>
+            
+            <lightning:tab label="EDUCATION" id="Education">
+                <aura:if isTrue="{!v.candidateRows.length > 0}">
+                    <c:CandidateProfileTableCmp dataRows="{!v.candidateRows}" aura:id="childTabset4"  dataHeader="{!v.candidateHeader}" selectTab="{!v.selTabName}" SobjectName="{!v.sObjectType}" ParentId="{!v.recordId}" RecordType="{!v.recordType}"/>   
+                    <aura:set attribute="else">
+                        <div style="background-color:#fafaf9;">
+                            <br/><br/><center>No Record to Display</center><br/><br/></div>
+                    </aura:set>
+                </aura:if>
+            </lightning:tab> 
+            
+            <lightning:tab label="PROFESSIONAL PUBLICATION AND AWARDS" id="Professional Publication and Award">
+                <aura:if isTrue="{!v.candidateRows.length > 0}">
+                    <c:CandidateProfileTableCmp dataRows="{!v.candidateRows}" aura:id="childTabset5"  dataHeader="{!v.candidateHeader}" selectTab="{!v.selTabName}" SobjectName="{!v.sObjectType}" ParentId="{!v.recordId}" />   
+                    <aura:set attribute="else">
+                        <div style="background-color:#fafaf9;">
+                            <br/><br/><center>No Record to Display</center><br/><br/></div>
+                    </aura:set>
+                </aura:if>
+            </lightning:tab> 
+            
+        </lightning:tabset>
+    </lightning:card>
+</aura:component>

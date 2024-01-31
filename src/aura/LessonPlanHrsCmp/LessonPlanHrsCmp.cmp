@@ -1,0 +1,61 @@
+<aura:component >
+    <aura:attribute name="lessonPlanHrs" type="Lesson_Plan_Hour__c"/>
+    <aura:attribute name="selectedSkillFocusValues" type="List"/>
+    <aura:attribute name="selectedActivities" type="List"/>
+    <aura:attribute name="index" type="Integer"/>
+    <aura:attribute name="filterValuesMap" type="Map"/>
+    <aura:attribute name="viewMode" type="Boolean"/>
+    
+    <aura:registerEvent name="deleteLessonHrs" type="c:childClickEvent"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="change" value="{!v.selectedSkillFocusValues}" action="{!c.populateSkillFocusChange}"/>
+    <aura:handler name="change" value="{!v.selectedActivities}" action="{!c.populateActivitiesChange}"/>
+    
+    <aura:method name="validate" action="{!c.validateLessonPlanHrs}" description="To validate"></aura:method>
+    
+    <td style="width:10%;">{!v.lessonPlanHrs.Name}</td>
+    <td style="width:15%;">
+        <aura:if isTrue="{!v.viewMode}">
+            <!--W-007656 -  Lesson Plans – wrap text for saved view on "Skill Focus" and "Activities" fields. When multiple is selected it makes the Activity Details column very narrow.-->
+            <aura:if isTrue="{!v.selectedSkillFocusValues.length > 0}">
+                <aura:iteration items="{!v.selectedSkillFocusValues}" var="skills">
+                    <div>{!skills};</div>
+                </aura:iteration>
+            </aura:if>
+            <aura:set attribute="else">
+                <div class="requiredClass">
+                	<c:multiSelectCmp aura:id="inputCmp" label=""  ischevrondownIcon="false" optionsList="{!v.filterValuesMap.Skill_Focus__c}" selectedvalue="{!v.selectedSkillFocusValues}" hideLabel="true"/>        
+                </div>
+            </aura:set>
+        </aura:if>
+    </td> 
+    <td style="width:22%;">
+        <aura:if isTrue="{!v.viewMode}">
+            <aura:if isTrue="{!v.selectedActivities.length > 0}">
+                <aura:iteration items="{!v.selectedActivities}" var="activites">
+                    <div>{!activites};</div>
+                </aura:iteration>
+            </aura:if>
+            <aura:set attribute="else">
+                <div class="requiredClass">
+                	<c:multiSelectCmp aura:id="inputCmp" label="" ischevrondownIcon="false" optionsList="{! v.filterValuesMap.Activities__c }" selectedvalue="{!v.selectedActivities}" hideLabel="true"/>        
+                </div>
+            </aura:set>
+        </aura:if>       
+    </td>
+    <td style="width:45%;" class="slds-cell-wrap">
+        <aura:if isTrue="{!v.viewMode}">
+            <lightning:formattedRichText value="{!v.lessonPlanHrs.Activity_Details__c}"/>
+            <aura:set attribute="else">
+                <lightning:inputRichText onblur="{!c.onInputChange}" aura:id="input" disabled="{!v.viewMode}" value="{!v.lessonPlanHrs.Activity_Details__c}" label="1000"/>   
+            </aura:set>
+        </aura:if>
+    </td>
+    <aura:if isTrue="{! not(v.viewMode) }">
+        <td style="width:8%;">
+            <div class="slds-p-left_small">
+            	<lightning:buttonIcon iconName="utility:delete"  alternativeText="Delete" title="Delete" onclick="{!c.deleteLessonPlanHrs}"/>
+            </div>
+        </td>
+    </aura:if>
+</aura:component>

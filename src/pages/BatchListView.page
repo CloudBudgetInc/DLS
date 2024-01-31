@@ -1,0 +1,2 @@
+<apex:page standardController="AcctSeed__Billing__c" extensions="ConductorFromListViewController" recordSetVar="records" action="{!prepareConductorUrl}">
+</apex:page>

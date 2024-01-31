@@ -1,0 +1,29 @@
+.THIS .dateFix{
+	width: 95% !important;
+}
+.THIS .selHeight{
+ height: 2.5em !important;
+}
+.THIS .boxTitle {
+    font-size: 13px;
+    position: absolute;
+    top: -10px;
+    background-color: #fff;
+    padding: 0 5px;
+}
+.THIS .slds-box {
+    position: relative;
+}
+
+.THIS .slds-table thead th .slds-truncate {
+    white-space: normal !important;
+}
+.THIS .slds-table--bordered tbody td {
+    white-space: normal !important;
+}
+.THIS .datePickerCls {
+    /*width: 96% !important;*/
+}
+.THIS .nowrapStyle{
+    white-space: normal !important;
+}

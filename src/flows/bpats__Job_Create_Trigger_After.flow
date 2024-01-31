@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Runs after save because we need the autonumber that isn&apos;t generated before save.</description>
+    <label>Job Create Trigger - After (Deprecated)</label>
+    <processMetadataValues>
+        <name>AssociatedRecord</name>
+        <value/>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+</Flow>

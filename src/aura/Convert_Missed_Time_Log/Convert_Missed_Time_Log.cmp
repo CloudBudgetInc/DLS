@@ -1,0 +1,33 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="CustomButtonService">
+    <aura:attribute name="card" type="Map" default="{'title' : '', 'message' : '', 'buttonName' : ''}"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="oppId" type="String"/>
+    <aura:attribute name="record" type="Object"/>
+    <aura:attribute name="simpleRecord" type="Object"/>
+    <aura:attribute name="fieldsToQuery" type="List" default="['Name','AcctSeed__Opportunity__c','AcctSeed__Status__c']"/>
+    <aura:attribute name="recordError" type="String"/>
+    
+    <force:recordData aura:id="forceRecordCmp"
+                      recordId="{!v.recordId}"
+                      mode="VIEW"
+                      fields="AcctSeed__Opportunity__c"  
+                      targetRecord="{!v.record}"
+                      targetFields="{!v.simpleRecord}"
+                      targetError="{!v.recordError}"
+                      recordUpdated="{!c.handleRecordUpdated}"/>
+    
+    <!-- To display the message -->
+    <lightning:card>
+        <aura:set attribute="title">
+            <p style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">{!v.card.title}</p>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button class="slds-float_right"
+                              variant="brand"
+                              label="{!v.card.buttonName}"
+                              onclick="{!c.closeAction}"/>
+        </aura:set>
+        {!v.card.message}
+    </lightning:card>
+    
+</aura:component>

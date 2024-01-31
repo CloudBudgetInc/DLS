@@ -1,0 +1,26 @@
+<!--
+  @description       : Used in Instructor Community - Training Reports
+  @author            : Dhinesh Kumar
+  @group             : Training Report - DLS Online
+  @last modified on  : 05/18/2023
+  @last modified by  : Dhinesh Kumar
+-->
+<template>
+    <template if:true={viewMode}>                    
+        <lightning-layout>
+            <lightning-layout-item alignment-bump="left">                            
+                <button class="slds-button slds-button_brand btn btn-primary" onclick={toggleMode} >Edit</button>
+            </lightning-layout-item>
+        </lightning-layout>                   
+    </template>
+
+    <template if:false={viewMode}>
+        <lightning-layout>
+            <lightning-layout-item alignment-bump="left">
+                <button class="slds-button slds-button_brand btn btn-primary slds-p-right_small" onclick={saveAssessmentReport} name="Save">Save as Draft</button>
+                <button class="slds-button slds-button_brand btn btn-primary slds-p-right_small" onclick={saveAssessmentReport} name="Submit">Save & Submit</button>
+                <button class="slds-button slds-button_neutral btn btn-secondary" onclick={toggleMode} name="Cancel">Cancel</button>                            
+            </lightning-layout-item>
+        </lightning-layout>
+    </template>
+</template>

@@ -1,0 +1,295 @@
+<!--
+  @description       : 
+  @author            : Vasanthram
+  @group             : 
+  @last modified on  : 09-26-2023
+  @last modified by  : Vasanthram
+-->
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="Mobile_InstructorTimeEntryCtrl">
+    
+    <aura:attribute name="weekList" type="List" default="[]"/>
+    <aura:attribute name="projectFilter" type="List" default="[]"/>
+    <aura:attribute name="projectSupervisorMap" type="Map" default="{}"/>
+    <aura:attribute name="employeeName" type="String" default=""/>
+    <aura:attribute name="contactId" type="String" default=""/>
+    <aura:attribute name="projectManager" type="String" default=""/> 
+    <aura:attribute name="selectedWeek" type="String" default=""/>
+    <aura:attribute name="selectedProject" type="String" default=""/>
+    <aura:attribute name="oldSelectedProject" type="String" default=""/>
+    <aura:attribute name="oldSelectedWeek" type="String" default=""/>
+    <aura:attribute name="urlParams" type="Map" default="{}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="initialLoad" type="Boolean" default="false"/>
+    <aura:attribute name="topicId" type="String" default=""/>
+    
+    <!--Summary view attributes -->
+    <aura:attribute name="summaryList" type="List" default="[]"/>
+    <aura:attribute name="wholeNotes" type="List" default="[]"/>
+    <aura:attribute name="showStudentHrsColm" type="Boolean" default="false"/> 
+    <aura:attribute name="overAllHrs" type="Decimal" default="0.00"/>
+    <aura:attribute name="studentAllHrs" type="Decimal" default="0.00"/>
+    
+    <!-- Approved CR exist or not related attributes -->
+    <aura:attribute name="validCRExistINCA" type="Boolean" default="false"/>
+    <aura:attribute name="displayCRValidationModal" type="Boolean" default="false"/>
+    
+    <aura:attribute name="scheduleRecords" type="List" default="[]" description="to store the project related schedule details"/>
+    <aura:attribute name="displayScheduleModel" type="Boolean" default="false"/>
+    
+    <aura:attribute name="actionType" type="String" default=""/>
+    <aura:attribute name="showAllButtons" type="Boolean" default="true"/>
+    <aura:attribute name="showRecallBtn" type="Boolean" default="false"/>
+    <aura:attribute name="showCompleteBtn" type="Boolean" default="false"/>
+    
+    <aura:attribute name="dliWLTHolidays" type="List" default="[]"/>
+    <aura:attribute name="federalHolidays" type="List"  default="[]"/>
+    <aura:attribute name="plannedDaysOffMap" type="Map" default="{}"/>
+    <aura:attribute name="projectStuLeaderMap" type="Map" default="{}"/>
+    <aura:attribute name="projectIdTimeCompleted" type="Map" default="{}"/>
+    <aura:attribute name="studentNames" type="String" default=""/>
+    
+    <!-- time picklist related attributes -->
+    <aura:attribute name="timeList" type="List" default="[]"/>
+    <aura:attribute name="pmTimeList" type="List" default="[]"/>
+    <aura:attribute name="amTimeList" type="List" default="[]"/>
+    <aura:attribute name="attendancePickList" type="LIST"/>
+    
+    <!-- For child component -->
+    <aura:attribute name="dayRecord" type="Map" default="{}"/>
+    <aura:attribute name="selectedIndex" type="Integer" default="0"/>
+    <aura:attribute name="showDetail" type="Boolean" default="false"/>
+    <aura:attribute name="detailMap" type="Map" default="{}"/>
+    
+    <!-- Complete / Recall action attributes -->
+    <aura:attribute name="showGroupActionModal" type="Boolean" default="false"/>
+    <aura:attribute name="groupActionTitle" type="String" default=""/>
+    <aura:attribute name="groupActionMsg" type="String" default=""/>
+    <aura:attribute name="isValidEntryExist" type="Boolean" default="false"/>
+    <aura:attribute name="redirectToSubmitPage" type="Boolean" default="false"/>
+    
+    <aura:attribute name="displaySuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    
+    <!--Case creation related attributes -->
+    <aura:attribute name="displayRequestEditLink" type="Boolean" default="false"/>
+    <aura:attribute name="alreadyCaseSubmitted" type="Boolean" default="false"/>
+    <aura:attribute name="showCaseReasonModal" type="Boolean" default="false"/>
+    <aura:attribute name="reasonForEditLinkAccess" type="String" default=""/>
+                    
+    <!-- W-007882 -->
+    <aura:attribute name="defaultCostRateRateType" type="String" default="" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <aura:handler name="entryDetailAction" event="c.childClickEvent" action="{!c.handleEntryDetailActions}"/>
+    
+    <!--call server-->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="large" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!not(v.showDetail)}">
+        
+        <div>
+            <center><h5 class="card-title" style="font-size:2rem;">Instructor Time Entry</h5></center>
+        </div>
+        
+        <div class="card-deck" style="margin-top: 1rem;">
+            <div class="card">
+                <div class="card-body" style="padding-top: 0.25rem;">
+                    <form>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="labelCls">Week</label>
+                                <lightning:select name="select" label="" value="{!v.selectedWeek}" onchange="{!c.getProjectFilter}">
+                                    <aura:iteration items="{!v.weekList}" var="wk">
+                                        <option text="{!wk}"></option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="labelCls">DLS Class #</label>
+                                <lightning:select name="select" label="" value="{!v.selectedProject}" onchange="{!c.getRowDetails}">
+                                    <option value="--Select--">--Select--</option>
+                                    <aura:iteration items="{!v.projectFilter}" var="pro">
+                                        <option text="{!pro.projectName}" value="{!pro.projectId}"></option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="labelCls">Instructor Name</label>
+                                <lightning:input name="" label="" value="{!v.employeeName}" disabled="true"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="labelCls">Project Manager</label>
+                                <lightning:input name="" label="" value="{!v.projectManager}" disabled="true"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <!-- Summary Details Section -->
+                <div class="card-body" style="padding: 0rem !important;">
+                    
+                    <aura:if isTrue="{!v.summaryList.length > 0}">
+                        <table class="slds-table_bordered">
+                            <thead>
+                                <aura:if isTrue="{!not(v.showStudentHrsColm)}">
+                                	<th style="width: 6rem;"></th>
+                                    <th></th>
+                                    <th><center>Hours</center></th>
+                                    <th></th>
+                                </aura:if>
+                                <aura:if isTrue="{!v.showStudentHrsColm}">
+                                    <th></th>
+                                	<th></th>
+                                	<th><center>Instructor Hours</center></th>
+                                    <th style="padding-left: 0.25rem !important;"><center>Student Hours</center></th>
+                                </aura:if>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.summaryList}" var="summary" indexVar="index">
+                                    <tr data-value="{!index}" onclick="{!c.viewMoreClick}">
+                                        <td class="slds-p-left_small">
+                                            <div class="slds-p-top_small slds-p-bottom_small">{!summary.dateToDisplay}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="slds-p-top_small slds-p-bottom_small">{!summary.dayType}</div>
+                                        </td>
+                                        <aura:if isTrue="{!v.showStudentHrsColm}">
+                                            <td>
+                                            	<div class="{!(summary.instructorColor == 'Green' ? 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center summaryApproved' : (summary.instructorColor == 'Red' ? 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center summaryRejected' : 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center'))}">{!summary.insTotalHrs}</div>
+                                            </td>
+                                        	<aura:set attribute="else">
+                                                <td>
+                                                	<div class="{!(summary.instructorColor == 'Green' ? 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center summaryApproved' : (summary.instructorColor == 'Red' ? 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center summaryRejected' : 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center'))}">{!summary.insTotalHrs}</div>
+                                                </td>
+                                            </aura:set>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.showStudentHrsColm}">
+                                            <td>
+                                                <div class="{!(summary.studentColor == 'Green'? 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center summaryApproved' : (summary.studentColor == 'Red'? 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center summaryRejected' : 'slds-p-top_small slds-p-bottom_small slds-align_absolute-center'))}">{!summary.studentTotalHrs}</div>
+                                            </td>
+                                        </aura:if>
+                                        <td class="{!not(v.showStudentHrsColm) ? 'slds-p-left_small' : ''}">
+                                            <lightning:icon iconName="action:more" class="viewMoreCls" alternativeText="{!index}"/>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                                <tr>
+                                    <td class="slds-p-left_small">
+                                        <div class="slds-p-top_x-small slds-p-bottom_x-small"><b>Total Hours</b></div>
+                                    </td>
+                                    <td></td>
+                                    <td><div class="slds-align_absolute-center">{!v.overAllHrs}</div></td>
+                                    <aura:if isTrue="{!v.showStudentHrsColm}">
+                                        <td><center>{!v.studentAllHrs}</center></td>
+                                    </aura:if>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </aura:if>
+                </div>
+            </div>
+            
+            <!--week range action buttons-->
+            <div>
+                <center><aura:if isTrue="{!and(v.showCompleteBtn,v.validCRExistINCA)}">
+                    <lightning:button class="btn btn-primary" label="Complete" onclick="{!c.completeBtnClick}"/>
+                    </aura:if>
+                    <aura:if isTrue="{!v.showRecallBtn}">
+                        <lightning:button class="btn btn-primary" label="Recall" onclick="{!c.recallBtnClick}"/>
+                    </aura:if>
+                    <aura:if isTrue="{!v.displayRequestEditLink}">
+                        <a onclick="{!c.requestEditLinkClick}" style="font-family: Montserrat;font-size: large;">Request Edit</a>
+                    </aura:if>
+                </center>
+            </div>
+            
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showDetail}">
+        <c:Mobile_InstructorDetailCmp dayRecord="{!v.dayRecord}" index="{!v.selectedIndex}" detailMap="{!v.detailMap}" attendancePickList="{!v.attendancePickList}"/>
+    </aura:if>
+    
+    <!-- Complete / Recall action model -->
+    <aura:if isTrue="{!v.showGroupActionModal}">
+        <c:sldsModal aura:id="groupActionModal" header="{!v.groupActionTitle}" displayCloseImage="false">
+            <aura:set attribute="content">
+                <p style="padding-left: 1rem;font-size: medium;">
+                    <aura:unescapedHtml value="{!v.groupActionMsg}"/>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.isValidEntryExist}">
+                    <lightning:button label="Proceed" class="btn btn-primary" onclick="{!c.proceedOnConfirmation}"/>
+                    <lightning:button label="Cancel" class="btn btn-secondary" onclick="{!c.cancelOnConfirmation}"/>
+                </aura:if>
+                <aura:if isTrue="{!not(v.isValidEntryExist)}">
+                	<lightning:button label="Close" class="btn btn-primary" onclick="{!c.cancelOnConfirmation}"/>
+                </aura:if>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!--Submit, Save & Recall action success /  error modal -->
+    <aura:if isTrue="{!v.displaySuccessModal}">
+        <c:sldsModal aura:id="successModal">
+            <aura:set attribute="header">{!v.successTitle}</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <center><p style="font-size: medium;word-break: break-word;">{!v.successMsg}</p></center>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeClickOnSuccess}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Model to get the reason for requesting the Edit Link -->
+    <aura:if isTrue="{!v.showCaseReasonModal}">
+        <c:sldsModal aura:id="caseReasonModal">
+            <aura:set attribute="header">
+                <aura:if isTrue="{!not(v.alreadyCaseSubmitted)}">
+                    Submit a Case
+                    <aura:set attribute="else">
+                        Warning
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <p>
+                    <aura:if isTrue="{!not(v.alreadyCaseSubmitted)}">
+                        <lightning:textarea aura:id="caseReason" label="Please write in detail what changes need to be made" value="{!v.reasonForEditLinkAccess}" rows="3"/>
+                        <aura:set attribute="else">
+                            A request has already been submitted for this timesheet and a staff member will contact you as soon as possible
+                        </aura:set>
+                    </aura:if>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!not(v.alreadyCaseSubmitted)}">
+                    <lightning:button label="Submit" class="btn btn-primary" onclick="{!c.submitCase}"/>
+                    <lightning:button label="Cancel" class="btn btn-secondary" onclick="{!c.cancelSubmitCase}"/>
+                    <aura:set attribute="else">
+                        <lightning:button label="Close" class="btn btn-primary" onclick="{!c.cancelSubmitCase}"/>
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+</aura:component>

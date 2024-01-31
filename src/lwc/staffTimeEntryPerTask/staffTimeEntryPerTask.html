@@ -1,0 +1,33 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 11-03-2023
+  @last modified by  : Vasanthram
+-->
+<template>
+    <td>
+        <div style="width: 15rem;">
+            <div>{_day.chargeCode1}</div>
+        </div>
+    </td>
+    <template lwc:if={_day.dayEntries} for:each={_day.dayEntries} for:item="dayEntry" for:index="index">
+        <td lwc:if={dayEntry.dateVal} key={dayEntry.dateVal}>
+            <div lwc:if={dayEntry.showEditIcon} onclick={handleEdit} data-name={dayEntry.dateVal}>
+                <i class="pointerCursorCls far fa-edit editIconcls btnIconOverlay" style="padding-left: .5%;"></i>
+            </div>
+            <lightning-input variant="label-hidden" disabled={dayEntry.isHrsDisabled} type="number"
+                name={dayEntry.dateVal}  data-name={dayEntry.dateVal} data-chargecode={dayEntry.chargeCode} value={dayEntry.dayHours} formatter="decimal" step="0.01"
+                onchange={handleHrsChange} onclick={handleAfterEditClick}>
+            </lightning-input>
+        </td>
+    </template>
+    <td>
+        <div style="width: 5.5rem;">
+            <lightning-input disabled type="number" variant="label-hidden" name="day" value={_day.totalHours}
+                formatter="decimal" step="0.01" title={_day.totalHours}></lightning-input>
+        </div>
+    </td>
+    <c-staff-time-entry-day-edit lwc:if={editModal.show} edit-modal={editModal} onclose={handleCancel} comment={comment}
+        onok={handleEditChange} ondelete={handleDelete}></c-staff-time-entry-day-edit>
+</template>

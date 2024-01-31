@@ -1,0 +1,339 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="LibrarySearchController">
+    <aura:attribute name="recordId" type="String" default="" access="Public"/>
+    <aura:attribute name="userType" type="String" default="" access="Public"/>
+    <aura:attribute name="contentDetails" type="Map" default="{}"/>
+    <aura:attribute name="showFavouriteIcon" type="Boolean" default="false"/>
+    <aura:attribute name="showUnFavouriteIcon" type="Boolean" default="false"/>
+    <aura:attribute name="contentSize" type="Decimal" default=""/>
+    <aura:attribute name="disableDescriptionEdit" type="Boolean" default="false"/>
+    <aura:attribute name="displayRatingInfo" type="Boolean" default="true"/>
+    <aura:attribute name="displayNewRatingSection" type="Boolean" default="false"/>
+    <aura:attribute name="displayUpdateRatingSection" type="Boolean" default="false"/>
+    <aura:attribute name="ratingObj" type="Map" default="{}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <!--For parent cmp usage -->
+    <aura:attribute name="displaySearchResult" type="Boolean" default="false" access="Public"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    
+    <div style="background-color: #e3e3e3;padding: 10px;">
+        <lightning:card title="Content Details">
+            <aura:set attribute="actions">
+                <lightning:button label="Back" variant="brand" onclick="{!c.backToHomePage}"/>
+            </aura:set>
+            <p class="slds-p-horizontal_small">
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="3" padding="around-small">
+                        <div>
+                            <aura:if isTrue="{!v.contentDetails.contentRec.Copyright__c == 'DLS'}">
+                                <img src="{!$Resource.DLSDigitalContentImage}" class="imageCls"></img>
+                            </aura:if>
+                            <aura:if isTrue="{!v.contentDetails.contentRec.Copyright__c != 'DLS'}">
+                                <img src="{!$Resource.Non_DLSDigitalContentImage}" class="imageCls"></img>
+                            </aura:if>
+                        </div>
+                        <!--<div>
+                            <aura:if isTrue="{!v.contentDetails.contentRec.Average_Rating__c}">
+                                <c:RatingCmp value="{!v.contentDetails.contentRec.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                <aura:set attribute="else">
+                                    <span style="margin-left: 1rem;">No Ratings</span>
+                                </aura:set>
+                            </aura:if>
+                        </div>-->
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="9" padding="around-small">
+                        
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem size="12" padding="around-small">
+                                <span style="font-weight: bold;font-size: 1.75em;">
+                                    {!v.contentDetails.contentRec.Title}.{!v.contentDetails.contentRec.FileType}
+                                </span>
+                                <span>
+                                    <aura:if isTrue="{!v.showFavouriteIcon}">
+                                        <img src="{!$Resource.Favourite_Icon}" class="favouriteCls" onclick="{!c.removeFavourite}"/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.showUnFavouriteIcon}">
+                                        <img src="{!$Resource.UnFavourite_Icon}" class="favouriteCls" onclick="{!c.markAsFavourite}"/>
+                                    </aura:if>
+                                </span>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="3" padding="around-small">
+                                <label class="slds-form-element__label">Content Size</label><br/>
+                                <span class="contentCls">{!v.contentSize}</span>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="3" padding="around-small">
+                                <label class="slds-form-element__label">Category</label><br/>
+                                <span class="contentCls">{!v.contentDetails.workSpaceDetail.Name}</span>
+                            </lightning:layoutItem>
+                            
+                            <lightning:layoutItem size="3" padding="around-small">
+                                <label class="slds-form-element__label">Avg Rating</label><br/>
+                                <lightning:layout multipleRows="true">
+                                    <lightning:layoutItem size="7">
+                                        <aura:if isTrue="{!v.contentDetails.contentRec}">
+                                            <c:RatingCmp value="{!v.contentDetails.contentRec.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                        </aura:if>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="3">
+                                        <span style="font-size: medium;"><ui:outputNumber value="{!v.contentDetails.contentRec.Average_Rating__c}" format=".0"/></span>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
+                                
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="3" padding="around-small">
+                                <label class="slds-form-element__label">Download Count</label><br/>
+                                <span class="contentCls">{!v.contentDetails.downloadCount}</span>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="3" padding="around-small">
+                                <label class="slds-form-element__label">CopyRight</label><br/>
+                                <span class="contentCls">{!v.contentDetails.contentRec.Copyright__c}</span>
+                            </lightning:layoutItem>
+                            
+                            <!-- LTS description section -->
+                            <aura:if isTrue="{!v.userType == 'Internal'}">
+                                <lightning:layoutItem size="6" padding="around-small">
+                                    <lightning:textarea label="LTS Description" value="{!v.contentDetails.contentRec.LTS_Description__c}" disabled="{!v.disableDescriptionEdit}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="3" padding="around-small">
+                                    <aura:if isTrue="{!not(v.disableDescriptionEdit)}">
+                                        <lightning:button label="Save" variant="brand" class="btnClass" onclick="{!c.saveLTSDescription}"/>
+                                    </aura:if>
+                                </lightning:layoutItem>
+                            </aura:if>
+                        </lightning:layout>
+                        
+                    </lightning:layoutItem>
+                    
+                </lightning:layout>
+            </p>
+        </lightning:card>
+        <lightning:card title="Related HardCopy Details">
+            <p class="slds-p-horizontal_small">
+                <center>No Record To Display</center>
+            </p>
+        </lightning:card>
+        
+        
+        <aura:if isTrue="{!v.displayRatingInfo}">
+            <lightning:card title="Reviews">
+                <aura:set attribute="actions">
+                    <aura:if isTrue="{!v.userType != 'Internal'}">
+                        <aura:if isTrue="{!v.contentDetails.displayNewReviewBtn}">
+                            <lightning:button label="Add Review" variant="brand" onclick="{!c.addReviewBtnClick}"/>
+                        </aura:if>
+                        <aura:if isTrue="{!v.contentDetails.overAllRatingDetails.length > 0}">
+                            <lightning:button label="Update Review" variant="brand" onclick="{!c.updateReviewBtnClick}"/>
+                        </aura:if>
+                    </aura:if>
+                </aura:set>
+                <p class="slds-p-horizontal_small">
+                    <aura:if isTrue="{!v.contentDetails.overAllRatingDetails.length > 0}">
+                        <table class="slds-table slds-table--bordered">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Commented By</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Comments</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Rating</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Date</span>
+                                    </th>
+                                    <aura:if isTrue="{!v.userType == 'Internal'}">
+                                        <th scope="col">
+                                            <span class="slds-truncate">Action</span>
+                                        </th>
+                                    </aura:if>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.contentDetails.overAllRatingDetails}" var="rating">
+                                    <tr class="slds-hint-parent">
+                                        <td data-label="Commented By">
+                                            <span class="slds-truncate">{!rating.Contact__r.Name}</span>
+                                        </td>
+                                        <td data-label="Comments">
+                                            <span class="slds-truncate">{!rating.Review__c}</span>
+                                        </td>
+                                        <td data-label="Rating">
+                                            <c:RatingCmp value="{!rating.Ratings__c}" readOnly="true"></c:RatingCmp>
+                                        </td>
+                                        <td data-label="Date">
+                                            <ui:outputDate aura:id="oDate" value="{!rating.Date__c}" format="MM/DD/YYYY"/>
+                                        </td>
+                                        <aura:if isTrue="{!v.userType == 'Internal'}">
+                                            <td data-label="Action">
+                                                <aura:if isTrue="{!not(rating.Hide_to_Community__c)}">
+                                                    <a onclick="{!c.updateRatingByInternal}" data-index="{!index}" data-type="include">Include</a>
+                                                    
+                                                    <aura:set attribute="else">
+                                                        <a onclick="{!c.updateRatingByInternal}" data-index="{!index}" data-type="exclude">Exclude</a>
+                                                    </aura:set>
+                                                </aura:if>
+                                            </td>
+                                        </aura:if>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                    </aura:if>
+                    <aura:if isTrue="{!v.contentDetails.overAllRatingDetails.length == 0}">
+                        <center><span>No Records To Display</span></center>
+                    </aura:if>
+                </p>
+            </lightning:card>
+        </aura:if>
+        
+        <!-- Add section for adding new reviews -->
+        <aura:if isTrue="{!v.displayNewRatingSection}">
+            <lightning:card title="New Review">
+                <aura:set attribute="actions">
+                    <lightning:button label="Save" variant="brand" onclick="{!c.saveNewRating}"/>
+                    <lightning:button label="Cancel" variant="brand" onclick="{!c.cancelNewRating}"/>
+                </aura:set>
+                <aura:if isTrue="{!v.displayNewRatingSection}">
+                    <table class="slds-table slds-table--bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <span class="slds-truncate">Comments</span>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Rating</span>
+                                </th>
+                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                    <th scope="col">
+                                        <span class="slds-truncate">Hide in Community</span>
+                                    </th>
+                                </aura:if>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent">
+                                <td data-label="Comments">
+                                    <lightning:textarea label="" value="{!v.ratingObj.Review__c}"/>
+                                </td>
+                                <td data-label="Rating">
+                                    <c:RatingCmp value="{!v.ratingObj.Ratings__c}" readOnly="false"></c:RatingCmp>
+                                </td>
+                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                    <td data-label="Hide in Community">
+                                        <lightning:input type="checkbox" label="" checked="{!v.ratingObj.Hide_to_Community__c}" />
+                                    </td>
+                                </aura:if>
+                            </tr>
+                        </tbody>
+                    </table>
+                </aura:if>
+            </lightning:card>
+        </aura:if>
+        
+        <!-- Section for Update Review -->
+        <aura:if isTrue="{!v.displayUpdateRatingSection}">
+            <lightning:card title="Update Review">
+                <aura:set attribute="actions">
+                    <lightning:button label="Save" variant="brand" onclick="{!c.updateRating}"/>
+                    <lightning:button label="Cancel" variant="brand" onclick="{!c.cancelUpdateRating}"/>
+                </aura:set>
+                <aura:if isTrue="{!v.displayUpdateRatingSection}">
+                    <table class="slds-table slds-table--bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <span class="slds-truncate">Comments</span>
+                                </th>
+                                <th scope="col">
+                                    <span class="slds-truncate">Rating</span>
+                                </th>
+                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                    <th scope="col">
+                                        <span class="slds-truncate">Hide in Community</span>
+                                    </th>
+                                </aura:if>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent">
+                                <td data-label="Comments">
+                                    <lightning:textarea label="" value="{!v.ratingObj.Review__c}"/>
+                                </td>
+                                <td data-label="Rating">
+                                    <c:RatingCmp value="{!v.ratingObj.Ratings__c}" readOnly="false"></c:RatingCmp>
+                                </td>
+                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                    <td data-label="Hide in Community">
+                                        <lightning:input type="checkbox" label="" checked="{!v.ratingObj.Hide_to_Community__c}" />
+                                    </td>
+                                </aura:if>
+                            </tr>
+                        </tbody>
+                    </table>
+                </aura:if>
+            </lightning:card>
+        </aura:if>
+        
+        <lightning:card title="Books Requests">
+            <aura:set attribute="actions">
+                <div onclick="{!c.downloadContent}">
+                    <lightning:icon iconName="utility:download" />
+                </div>
+            </aura:set>
+            <aura:if isTrue="{!v.contentDetails.bookRequestDetails.length > 0}">
+                <table class="slds-table slds-table--bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <span class="slds-truncate">Name</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">DLS Class #</span>
+                            </th>
+                            <aura:if isTrue="{!v.userType == 'Internal'}">
+                                <th scope="col">
+                                    <span class="slds-truncate">Contact</span>
+                                </th>
+                            </aura:if>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <aura:iteration items="{!v.contentDetails.bookRequestDetails}" var="request">
+                            <tr class="slds-hint-parent">
+                                
+                                <td data-label="Name">
+                                    <span class="slds-truncate">{!request.Name}</span>
+                                </td>
+                                <td data-label="DLS Class #">
+                                    <span class="slds-truncate">{!request.Project__r.DLS_Class__c}</span>
+                                </td>
+                                <aura:if isTrue="{!v.userType == 'Internal'}">
+                                    <td data-label="Contact">
+                                        <span class="slds-truncate">{!request.Contact__r.Name}</span>
+                                    </td>
+                                </aura:if>
+                                <td data-label="Date">
+                                    <ui:outputDate value="{!request.Date__c}" format="MM/DD/YYYY"/>
+                                </td>                              
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+                <aura:set attribute="else">
+                    <center><span>No Records To Display</span></center>
+                </aura:set>
+            </aura:if>
+        </lightning:card>
+    </div>
+    
+</aura:component>

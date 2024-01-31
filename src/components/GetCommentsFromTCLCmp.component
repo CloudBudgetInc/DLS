@@ -1,0 +1,5 @@
+<apex:component controller="TimeKeeping_Admin_Controller" access="global">
+  
+    <apex:attribute name="timecardId" description="" type="String" assignTo="{!timecardIdVal}"/>
+    {!commentsVal}
+</apex:component>

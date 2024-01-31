@@ -1,0 +1,27 @@
+<aura:component controller="EventListViewController" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="recordId" type="String" default=""/>
+    <aura:attribute name="plannedOffRows" type="List" default="[]"/>
+    <aura:attribute name="tableColumns" type="List" default="[]"/>
+    <aura:attribute name="tableConfig" type="Map"  default="{}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <div class="cardPadding">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">
+                    <aura:if isTrue="{!v.plannedOffRows.length > 0}">
+                        <div class="ldtTableCls">
+                            <ldt:datatableDev aura:id="plannedOffTable"
+                                              dataRows="{!v.plannedOffRows}" header="{!v.tableColumns}"
+                                              config="{!v.tableConfig}"/>
+                        </div>
+                        <aura:set attribute="else">
+                            <br/><center style="font-size :0.875rem;">No records to display</center>
+                        </aura:set>
+                    </aura:if>
+                </span>
+            </div>
+        </div>
+    </div>
+</aura:component>

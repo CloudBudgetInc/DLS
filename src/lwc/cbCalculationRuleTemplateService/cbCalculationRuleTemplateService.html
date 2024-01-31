@@ -1,0 +1,33 @@
+<template>
+
+	<lightning-card title="Calculation Rule Service">
+		<lightning-layout>
+			<lightning-layout-item size="10">
+			</lightning-layout-item>
+			<lightning-layout-item size="2">
+				<lightning-layout>
+					<lightning-layout-item>
+						<lightning-combobox
+								name="budgetYearId"
+								label="Budget Year"
+								value={budgetYearId}
+								placeholder="Select Budget Year"
+								options={budgetYears}
+								onchange={handleChange}></lightning-combobox>
+					</lightning-layout-item>
+					<lightning-layout-item>
+						<div class="slds-p-top_large">
+							<lightning-button label="Update/Create" onclick={generateCalculationRules} variant="success" disabled={generateButtonDisabled}
+											  title="Create or update Calculation Rules based on templates for the selected budget year">
+							</lightning-button>
+						</div>
+					</lightning-layout-item>
+				</lightning-layout>
+			</lightning-layout-item>
+		</lightning-layout>
+		<template if:true={showSpinner}>
+			<lightning-spinner alternative-text="Loading"></lightning-spinner>
+		</template>
+	</lightning-card>
+
+</template>

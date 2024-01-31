@@ -1,0 +1,349 @@
+<!--This Page is For the Validation purpose Where the Validation is made with the Total Planned Hours Of Project Task and their
+Active Contact Assignment's Total Planned Hours. The Validation outcomes with the result of Error when the Total Planned 
+Hours of Active Contact Assignments was greater than the Project Task's Total Planned Hours.Similarly a Warning 
+before save for lesser hours and direct save when the Hours are Equal----> 
+<apex:page controller="contactAssignmentHoursValidation_Ctrl" standardStylesheets="false" sidebar="false" showHeader="true">
+    
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <apex:form id="form">
+            <head>
+                <apex:stylesheet value="{!URLFOR($Resource.SLDS_2_1_3, 'assets/styles/salesforce-lightning-design-system.css')}" />
+            </head>
+            <style>
+                .modal {
+                position:   fixed;
+                z-index:    25000;
+                top:        0;
+                left:       0;
+                height:     100%;
+                width:      100%;
+                background: rgba(230, 233, 239, 0.91) 
+                url('{!URLFOR($Resource.SLDS_2_1_3,'assets/images/spinners/slds_spinner_brand.gif')}') 
+                50% 50% 
+                no-repeat; 
+                background-size: 60px 60px; 
+                }
+                .slds-button{
+                background:     white;
+                
+            </style>
+            <body>
+                <div class="slds"> 
+                    <div class = "modal" style="display:none;" id="spin">    
+                    </div>
+                    <div class="slds-page-header" style="background-color: rgb(22, 50, 92);color: white;">
+                        <div class="slds-media">
+                            <div class="slds-media__body">
+                                <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Manage Planned Hours" >Manage Planned Hours</h1>
+                            </div>
+                            <div>
+                                <!-- Start of Header Buttons-->
+                                <button class="slds-button slds-button_neutral" type="button" onClick="cancelButtonFun()" style="float:right;margin-right: 5px;padding-left:8px;padding-right:8px;" id="cancelButton"> Cancel </button>
+                                <button class="slds-button slds-button_brand" type="button" onClick="warningSave()" style = "display:none;float:right;margin-right: 5px;padding-left:8px;padding-right:8px;" id="warningSaveButton"> Proceed </button>
+                                <button class="slds-button slds-button_brand" type="button" onClick="save('save')" id="actualSaveButton" style="float:right;margin-right: 5px;padding-left:8px;padding-right:8px;"> Save </button>
+                                <button class="slds-button slds-button_brand" type="button"  onClick="saveAndGenerateReport()" id="generateReportSaveButton" style="float:right;margin-right: 5px;padding-left:8px;padding-right:8px;"> Save &amp; Generate Report </button>
+                                
+                                <!-- End of Header Buttons-->
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <!--Start of div when no Active Contact Assignments are left under the Project---->
+                    <apex:outputPanel id="emptyMsg" rendered="{!emptyList}" >
+                        <div id = "emptyDiv" class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning" role="alert">
+                            <span class="slds-assistive-text">warning</span>
+                            <span class="slds-icon_container slds-icon-utility-warning slds-m-right_x-large" title="Description of icon when needed">
+                                <h2>
+                                    <apex:image value="/img/msg_icons/warning32.png" />
+                                      {!displayMessage}
+                                </h2>                         
+                            </span>
+                        </div>
+                    </apex:outputPanel>
+                    <!--End of No Active contact assignments div-->
+                </div>
+                <!--- Start of the div Where the Project task and their Active Contact Assignments are Listed with their Total Planned Hours--->             
+                <div>
+                    <apex:variable var="parent" value="{!0}"/>
+                    <apex:repeat value="{!projectTaskList}" var="task">
+                        <div class="slds-box">
+                            <div class="slds-card">
+                                <div class="slds-card__header slds-grid">
+                                    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                                        <div class="slds-media__body">
+                                            <h2>
+                                                <span class="slds-text">
+                                                    <apex:outputLink value="/{!task}" target="_blank" >{!task.Name}
+                                                    </apex:outputLink>
+                                                </span>
+                                            </h2>
+                                        </div>
+                                    </header>
+                                    <div class="slds-no-flex">
+                                        <span>Total Hours Planned: </span>
+                                        <span id="{!task.Id}">{!task.Total_Qty_Planned__c}</span>
+                                    </div>
+                                </div>
+                                <apex:outputPanel id="validationMsg">
+                                    <div id = "{!task.Id}-warning" class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning" role="alert"  Style="display:none;">
+                                        <button class="slds-button slds-button_icon slds-notify__close slds-button_icon-inverse" title="Close" type="button" onClick="warningClose('{!task.Id}')">
+                                            <svg class="slds-button__icon" aria-hidden="true">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, 'assets/icons/utility-sprite/svg/symbols.svg#close')}"/>
+                                            </svg>
+                                            <span class="slds-assistive-text">Close</span>
+                                        </button>
+                                        <span class="slds-assistive-text">warning</span>
+                                        <span class="slds-icon_container slds-icon-utility-warning slds-m-right_x-large" title="Description of icon when needed">
+                                            <h2>
+                                                <apex:image value="/img/msg_icons/warning32.png" />
+                                                The Total Hours of Contact Assignments are Lesser than the Project Task Total Planned Hours
+                                            </h2>
+                                            
+                                        </span>
+                                    </div>
+                                    <div class="slds-modal__content slds-p-around_medium slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert" id= "{!task.Id}-error" Style="display:none;">
+                                        <h2>
+                                            <apex:image value="/img/msg_icons/error32.png"/>
+                                            Total Hours Of Contact Assignments are greater than the Project Task Total Planned Hours
+                                        </h2>
+                                        
+                                    </div>
+                                </apex:outputPanel>
+                                
+                                <div class="slds-card__body">
+                                    
+                                    <table class="slds-table slds-table_fixed-layout slds-table_bordered slds-no-row-hover slds-table_cell-buffer">
+                                        <thead>
+                                            <tr class="slds-text-title_caps">
+                                                
+                                                <th scope="col">
+                                                    <div class="slds-truncate" title="Name">Contacts</div>
+                                                </th>
+                                                
+                                                <th scope="col">
+                                                    <div class="slds-truncate" title="Company">Total Hours Planned</div>
+                                                </th>
+                                                
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            
+                                            <apex:variable value="{!0}" var="child"/>
+                                            <apex:repeat value="{!task.Contact_Assignments__r}" var="con">   
+                                                <tr class="slds-hint-parent">
+                                                    <th scope="row">
+                                                        <div class="slds-truncate" title="Contacts">
+                                                            <apex:outputLink value="/{!con.Candidate_Name__c}" target="_blank" >{!con.Candidate_Name__r.Name}
+                                                            </apex:outputLink>
+                                                        </div>
+                                                    </th>
+                                                    <td>
+                                                        <div class="slds-truncate" title="Total Hours Planned">
+                                                            <apex:inputField value="{!con.Total_Qty_Planned__c}" styleClass="slds-input" style="width:20%" onkeyPress="messagesClose('{!task.Id}')"/>
+                                                            <span id="{!child}-{!task.Id}" style="display:none"/><br/>
+                                                            
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <apex:variable value="{!child + 1}" var="child"/>
+                                            </apex:repeat>
+                                            <span id="{!task.Id}+{!parent}" style="display:none;">{!child}</span>
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <apex:variable var="parent" value="{!parent + 1}"/>
+                    </apex:repeat>
+                    
+                    <script>
+                    
+                    var messageClose = 0;
+                    var empty = '{!emptyList}';
+                    console.log(empty);
+                    if(empty == 'true'){
+                        console.log('true');
+                        document.getElementById('actualSaveButton').style.display = "none";
+                        document.getElementById('generateReportSaveButton').style.display = "none";
+                    } 
+                    var FromWebservice = '{!fromWebService}';
+                    console.log(FromWebservice);
+                    
+                    function save(action){
+                        
+                        var obj = "{!projectTaskList}".split(",");
+                        var error = 0;
+                        var warning = 0;
+                        var warningList = [];
+                        var errorList = []; 
+                        
+                        console.log(JSON.stringify(obj));
+                        
+                        for(var i = 0;i < obj.length ; i++){
+                            
+                            var projectId = (obj[i].replace("[",'').replace("]",'').replace(" ",''));
+                            var totalhrs = document.getElementById(projectId).innerHTML;
+                            console.log(totalhrs);
+                            var noOfChild = document.getElementById(projectId+'+'+i).innerHTML;
+                            console.log(noOfChild);
+                            var hrs = 0;
+                            for(var j = 0;j < noOfChild;j++){
+                                
+                                console.log(document.getElementById(j+'-'+projectId).previousElementSibling.value);
+                                hrs += Number(document.getElementById(j+'-'+projectId).previousElementSibling.value);
+                                console.log(hrs);
+                                
+                            }
+                            if(totalhrs < hrs){
+                                error += 1;
+                                errorList.push(projectId);
+                            }
+                            if(totalhrs > hrs){
+                                
+                                warning += 1;
+                                warningList.push(projectId);
+                                
+                            }
+                            console.log(warningList);
+                            console.log(errorList);
+                            
+                        }
+                        if(error > 0 || warning > 0){
+                            
+                            console.log('warning::::'+warning);
+                            console.log('error:::::'+error);
+                            if(error > 0){
+                                
+                                for(var i = 0;i < error;i++){
+                                    
+                                    console.log(errorList[i]+'+'+'error');     
+                                    document.getElementById(errorList[i]+'-'+'error').style.display = 'block';
+                                }
+                                messageClose++;
+                                document.getElementById('actualSaveButton').style.display = "none";
+                                document.getElementById('generateReportSaveButton').style.display = "none";
+                                
+                            }
+                            if(warning > 0){
+                                console.log('warning::::'+warning);   
+                                for(var i = 0;i < warning;i++){
+                                    
+                                    console.log(warningList[i]+'+'+'warning');     
+                                    document.getElementById(warningList[i]+'-'+'warning').style.display = 'block';
+                                }
+                                if(error == 0 && warning > 0){
+                                    
+                                    console.log('proceed');
+                                    document.getElementById('warningSaveButton').style.display = "block";
+                                    document.getElementById('actualSaveButton').style.display = "none";
+                                    document.getElementById('generateReportSaveButton').style.display = "none";
+                                }
+                                
+                                messageClose++;
+                            }
+                        }else {
+                            
+                            spinOpen();
+                            
+                            for(var i = 0;i < warning;i++){
+                                console.log(warningList[i]+'+'+'warning');     
+                                document.getElementById(warningList[i]+'-'+'warning').style.display = 'none';
+                            }
+                            
+                            actualSave();
+                            if(action == 'save'){
+                                if(FromWebservice == 'true'){
+                                    window.open('/'+'{!IdFromPage}','_self');
+                                }
+                            }else{
+                                iFrameClose();
+                            }
+                            console.log('actualSave');
+                        }
+                    }
+                    
+                    function warningClose(a){
+                        
+                        var warningProjectId = a;
+                        
+                        console.log(warningProjectId);     
+                        document.getElementById(warningProjectId+'-'+'warning').style.display = 'none';
+                        document.getElementById('warningSaveButton').style.display = "none";
+                        document.getElementById('actualSaveButton').style.display = "block";
+                        document.getElementById('generateReportSaveButton').style.display = "block";
+                        
+                    }
+                    function warningSave(){
+                        
+                        spinOpen();
+                        console.log('warningSave');
+                        actualSave();
+                        
+                    }
+                    
+                    function messagesClose(msgID){
+                        console.log(msgID);
+                        if(messageClose != 0){
+                            
+                            console.log('msgclose');
+                            document.getElementById(msgID+'-'+'warning').style.display = "none";
+                            document.getElementById(msgID+'-'+'error').style.display = "none";
+                            document.getElementById('actualSaveButton').style.display = "block";
+                            document.getElementById('warningSaveButton').style.display = "none";
+                            document.getElementById('generateReportSaveButton').style.display = "block";
+                            
+                        }
+                        
+                    }
+                    function cancelButtonFun(){
+                        console.log('cancel');
+                        location.reload();
+                        if(FromWebservice == 'true'){
+                            window.open('/'+'{!IdFromPage}','_self');
+                        }
+                        parent.closeIFrame();   
+                    }
+                    
+                    function spinOpen(){
+                        
+                        console.log('on')
+                        document.getElementById('spin').style.display = "block";
+                        
+                    }     
+                    function spinClose(){
+                        
+                        document.getElementById('spin').style.display = "none"; 
+                        
+                    }     
+                    function iFrameClose(){
+                        
+                        var congaQuery = JSON.parse('{!congaQueryMap}');
+                        var congaTemplate = JSON.parse('{!congaTempMap}');
+                        
+                        spinClose();
+                        console.log('iframeclose');
+                        console.log(parent);
+                        location.reload();
+                        
+                        if(FromWebservice == 'true'){
+                            //window.parent.postMessage({message: 'Post'}, 'https://cs13.salesforce.com/');
+                          window.open('https://composer.congamerge.com?sessionId={!$Api.Session_ID}&serverUrl={!$Api.Partner_Server_URL_290}&id={!IdFromPage}&templateId='+congaTemplate['Job Summary Report - Labor Planned']+'&queryId=[Pro]'+congaQuery['Project Query for Job Summary Report']+'?pv0={!IdFromPage},[Ins]'+congaQuery['ContactAssign Query for Job Summary Report']+'?pv0={!IdFromPage}&OFN=Job Summary Report - (Labor Planned) -{!projectName}','_self','toolbar=yes, scrollbars=yes, resizable=yes, top=50, left=300, width=700, height=525' );
+                        }
+                        parent.closeIFrame();
+                    }
+                    
+                    function saveAndGenerateReport(){
+                        save('save&GenerateReport');
+                    }
+                    
+                    </script>
+                </div>
+                <!--- End of the div Where the Project task and their Active Contact Assignments are Listed with their Total Planned Hours--->                    
+            </body>
+            
+            <apex:actionFunction name="actualSave" action="{!hourSave}" reRender="none" oncomplete="iFrameClose()"/> 
+            
+        </apex:form>
+    </html>
+</apex:page>

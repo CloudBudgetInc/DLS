@@ -1,0 +1,9 @@
+.THIS {
+}
+.THIS .buttonCls {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.THIS .headingCls {
+    display: inline-block;
+}

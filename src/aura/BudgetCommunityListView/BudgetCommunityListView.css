@@ -1,0 +1,21 @@
+.THIS .slds-tabs_scoped__content {
+    border: 0 !important;
+}
+.THIS .tabspace{
+    padding-left:2.50rem !important;
+}
+.THIS .fontCls{
+    font-size:0.875rem;
+    padding-right:3rem;
+}
+.THIS .marginCls{
+    margin-top:8px;
+}
+@media (max-width: 48em) {
+    .THIS .marginCls{
+        margin-top:50px;
+    }
+    .THIS .matCls{
+        margin-top:1rem !important;
+    }
+}

@@ -1,0 +1,454 @@
+.THIS .training .slds-checkbox_faux{
+    background-color: #1D4588 !important;
+}
+.THIS .testing .slds-checkbox_faux{
+    background-color: #ABD25A !important;
+}
+.THIS .preparation .slds-checkbox_faux{
+    background-color: #8E24AA !important;
+}
+.THIS .holiday .slds-checkbox_faux{
+    background-color: #4D4D4D !important;
+}
+.THIS .instructorDaysOff .slds-checkbox_faux{
+    background-color: #F37321 !important;
+}
+.THIS .studentDaysOff .slds-checkbox_faux{
+    background-color: #8B0000 !important;
+}
+.THIS .pendingApproval .slds-checkbox_faux{
+    background-color: #6C757D !important;
+}
+
+.THIS .holiday .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .studentDaysOff .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .instructorDaysOff .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .training .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .testing .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .pendingApproval .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+
+.THIS .preparation .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .studentDaysOff .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .instructorDaysOff .slds-checkbox_faux:after {
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;
+}
+.THIS .slds-checkbox [type=checkbox]:checked+.THIS .slds-checkbox_faux:after,
+.THIS .slds-checkbox [type=checkbox]:checked+.THIS .slds-checkbox--faux:after
+{
+    border-bottom: 2px solid rgb(250, 250, 249) !important;
+    border-left: 2px solid rgb(250, 250, 249)!important;  
+}
+
+.THIS .trainingClass td:nth-child(1) > span{
+    visibility: hidden;
+}
+.THIS .preparationClass td:nth-child(1) > span{
+    visibility: hidden;
+}
+.THIS .holidayClass td:nth-child(1) > span{
+    visibility: hidden;
+}
+.THIS .studentPDOClass td:nth-child(1) > span{
+    visibility: hidden;
+}
+.THIS .instructorPDOClass td:nth-child(1) > span{
+    visibility: hidden;
+}
+.THIS .pendingApproval td:nth-child(1) > span{
+    visibility: hidden;
+}
+.THIS .trainingClass td:nth-child(1) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #1D4588 !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #1D4588 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-top:0.8rem !important;
+}
+.THIS .testingClass td:nth-child(1) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #ABD25A !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #ABD25A !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-top:0.8rem !important;
+}
+
+.THIS .holidayClass td:nth-child(1) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #4D4D4D !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #4D4D4D !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-top:0.8rem !important;
+}
+
+.THIS .preparationClass td:nth-child(1) > span:before {
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #8E24AA !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #8E24AA !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-top:0.8rem !important;
+}
+.THIS .instructorPDOClass td:nth-child(1) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #F37321 !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #F37321 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-top:0.8rem !important;
+}
+.THIS .studentPDOClass td:nth-child(1) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #8B0000 !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #8B0000 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-top:0.8rem !important;
+}
+.THIS .pendingApproval td:nth-child(1) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #6C757D !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #8B0000 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-top:0.8rem !important;
+}
+
+.THIS thead th{
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+.THIS tbody td{
+    white-space: normal !important;
+}
+.THIS .slds-truncate {
+    white-space: normal !important;
+}
+
+/*Table Bordered*/
+.THIS tbody td:not(:last-child) {
+    border-right: 1px solid #979797 !important;
+}
+/*Table Striped*/
+.THIS tbody tr:nth-of-type(odd) {
+    background-color: transparent !important;
+}
+.THIS .ldtdev tbody tr:nth-of-type(even) {
+    background-color: #F9F9F9 !important;
+}
+.THIS .slds-th__action:hover {
+    background-color: #e6eff3 !important;
+}
+.THIS .slds-th__action:focus {
+    background-color: #e6eff3 !important;
+}
+.THIS  .slds-is-sortable{
+    background-color: #e6eff3 !important;
+}
+
+.THIS  .slds-is-sortable{
+    background-color: #e6eff3 !important;
+}
+
+.THIS .cardPadding{
+    padding:2rem;
+}
+.THIS.ldtPadding {
+    padding-left:1rem;
+    padding-right:1rem;
+}
+.THIS .ldtdev .slds-table_cell-buffer tr > th:first-child{
+    border-right: 0px solid #979797!important;
+}
+.THIS .ldtdev .slds-table_cell-buffer tr > th:nth-child(2){
+    border-left: 0px solid #979797!important;
+}
+.THIS .ldtdev .slds-table_cell-buffer tr > td:nth-child(2){
+    border-left: 0px solid #979797!important;
+    border-color: white;
+}
+.THIS .ldtdev .slds-table_cell-buffer tr > td:first-child{
+    border-right: 0px solid #979797!important;
+    text-overflow:unset !important;
+}
+.THIS .itemMenuContainer{
+    display: none !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(6){
+    width: 10rem !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(5){
+    width: 10rem !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(9){
+    width:8rem !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(7){
+    width:8rem !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(8){
+    width:7rem !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(4){
+    width:7rem !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(3){
+    width:7rem !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(2){
+    width:7rem !important;
+}
+.THIS .labelCls{
+    margin-left: -0.5rem !important;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+.THIS .studentPDOClass td:not(:first-child) ,.THIS .instructorPDOClass td:not(:first-child){
+    padding-top: 1.5rem !important;
+}
+.THIS .imgAction1{
+    max-width: 29px !important;
+    max-height: 28px !important;
+}
+.THIS .imgAction2{
+    max-width: 35px !important;
+    max-height: 35px !important;
+}
+
+.THIS .zoomActionFont{
+    font-size: smaller !important;
+}
+.THIS input[type="date"]{
+    border-radius: 0rem !important;
+}
+
+.THIS.popOverCls {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: fixed;
+    z-index: 9999;
+}
+.THIS .footerCls {
+    border-bottom: 1px solid #ddd;
+}
+.THIS .popOverBodyCls {
+    height: auto;
+    max-height: 450px;
+    overflow: auto;
+    border-bottom: 1px solid #ddd;
+}
+.THIS .popOverCloseIcon {
+    float: right;    
+    cursor: pointer;
+}
+.THIS .info-window-body {
+    max-height: 350px;
+    overflow:auto;
+}
+
+.THIS.app-modal {
+    width: 350px;
+}
+.THIS.app-modal-mobile {
+    width: 300px;
+}
+.THIS .strike-word {
+    text-decoration: line-through;
+}
+.THIS .titleCls {
+    font-size: 20px;
+    color: #1ea4e7;
+}
+.THIS .pendingApproval {
+    /*color: #6c757d;*/
+}
+.THIS .approveIconCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS .rejectIconCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS .slds-icon-action-approval {
+    background-color: #ABD25A !important;
+}
+
+.THIS .rescheduleCls {
+    margin-right: 5px;
+    cursor: pointer;
+}
+.THIS .footerCls {
+    border-bottom: 1px solid #ddd;
+}
+
+.THIS .popOverCloseIcon {
+    float: right;    
+    cursor: pointer;
+}
+
+.THIS .fc-row table thead tr th {
+    white-space: inherit !important;
+    word-break: initial !important;
+    font-size: 0.875rem !important;
+}
+
+.THIS .fc-row table thead tr th a{
+   color: rgb(37, 116, 169);
+}
+
+.THIS.app-modal {
+    width: 350px;
+}
+.THIS.app-modal-mobile {
+    width: 300px;
+}
+.THIS.backdrop{
+    z-index: 8000 !important;
+}
+.THIS .info-window {
+    background-color:#fff;
+    position: absolute; 
+    width: 300px; 
+    z-index: 9999;
+    height:auto;
+    display: none;
+}
+.THIS .pendingApproval td:nth-child(4) {
+    font-weight: 700 !important;
+}
+.THIS .eventWithBlueBackground{
+    background-color: #055E89;
+}
+.THIS .Mobile td:nth-child(1) {
+    display:none !important;
+}
+
+.THIS .Mobile .trainingClass td:nth-child(2) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #1D4588 !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #1D4588 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-right: 2.5rem !important;
+}
+.THIS .Mobile .testingClass td:nth-child(2) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #ABD25A !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #ABD25A !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-right: 2.5rem !important;
+}
+
+.THIS .Mobile .holidayClass td:nth-child(2) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #4D4D4D !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #4D4D4D !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-right: 2.5rem !important;
+}
+
+.THIS .Mobile .preparationClass td:nth-child(2) > span:before {
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #8E24AA !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #8E24AA !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-right: 2.5rem !important;
+}
+.THIS .Mobile .instructorPDOClass td:nth-child(2) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #F37321 !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #F37321 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-right: 2.5rem !important;
+}
+.THIS .Mobile .studentPDOClass td:nth-child(2) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #8B0000 !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #8B0000 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-right: 2.5rem !important;
+}
+.THIS .Mobile .pendingApproval td:nth-child(2) > span:before{
+    width: 1rem !important;
+    height: 1rem !important;
+    background: #6C757D !important;
+    border-radius: 50% !important;
+    content: "" !important;
+    color: #8B0000 !important;
+    visibility: visible !important; 
+    display: inline-block !important;
+    margin-right: 2.5rem !important;
+}

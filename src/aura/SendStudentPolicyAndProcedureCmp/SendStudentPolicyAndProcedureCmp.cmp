@@ -1,0 +1,22 @@
+<aura:component Controller="GenericUrlLaunch_Ctrl">
+    <aura:attribute name="conAssign" type="List"/>
+    <aura:attribute name="conAssignIdWithCongaUrlMap" type="Map"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <c:CAUtilTableForCongaCmp aura:id="CAUtilTable" 
+        contactAssignments="{!v.conAssign}" 
+        showActionCol="false" 
+        showSentBadge="true"
+        fieldAPINameToShowBadge="DLS_P_and_P_Generated_Date__c"/>
+    <div class="slds-p-around_medium slds-float_right">
+        <lightning:button  variant="brand" label="Send" onclick="{!c.updateCA}"/>
+    </div>
+</aura:component>

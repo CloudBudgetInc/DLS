@@ -1,0 +1,14 @@
+:host {
+    display: table-row;
+}
+
+.btnIconOverlay {
+    position: absolute;
+    z-index: 1;
+    margin: calc(1.35em + 0rem + -8px);
+    margin-left: 4rem;
+    cursor: pointer;
+}
+.edited{
+    --slds-c-input-color-background: yellow;
+}

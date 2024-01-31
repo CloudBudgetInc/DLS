@@ -1,0 +1,983 @@
+<!-- Created by Sukanya on Feb 13 2017:To make separate component for each Page & Controller
+    This component refers to - FindPartnerSchool - findPartnerSchoolCtrl in ResourcesPageComponents
+-->
+<apex:component controller="FindPartnerSchool_Compo_Ctrl">
+    <script>
+        app.controller('findPartnerSchoolCtrl',function($scope,$timeout, $log, $http,uiGmapGoogleMapApi, $route,$routeParams,searchboxService,filterService) {
+            $log.doLog = true
+            $scope.toggleMap = function () {
+                $scope.searchbox.options.visible = !$scope.searchbox.options.visible
+            }
+ 
+            $scope.defaultBounds = new google.maps.LatLngBounds(new google.maps.LatLng(40.82148, -73.66450),new google.maps.LatLng(40.66541, -74.31715));      
+          
+            
+            $scope.defaultBounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(40.82148, -73.66450),
+              new google.maps.LatLng(40.66541, -74.31715));
+        
+            $scope.map = {
+              control: {},
+              center: {
+                 latitude: 40.74349,
+                 longitude: -73.990822
+              },
+              zoom: 4,
+              dragging: false,
+              //idkey: 'place_id',
+              bounds: {},
+              markers: [],
+              events: {
+                idle: function (map) {
+                           
+                },
+                dragend: function(map) {
+                  //update the search box bounds after dragging the map
+                  var bounds = map.getBounds();
+                  var ne = bounds.getNorthEast();
+                  var sw = bounds.getSouthWest(); 
+                  $scope.searchbox.options.bounds = new google.maps.LatLngBounds(sw, ne);
+                  //$scope.searchbox.options.visible = true;
+                }
+              }
+           }
+           
+           $scope.map.bounds = {
+              northeast: {
+                latitude:$scope.defaultBounds.getNorthEast().lat(),
+                longitude:$scope.defaultBounds.getNorthEast().lng()
+              },
+              southwest: {
+                latitude:$scope.defaultBounds.getSouthWest().lat(),
+                longitude:-$scope.defaultBounds.getSouthWest().lng()
+        
+              }
+            }
+           
+           $scope.searchbox = {
+              template: 'searchbox.tpl.html',
+              position:'top-left',
+              options: {
+                bounds: {},
+                visible: true
+              },
+              events: {
+              
+                places_changed: function (searchBox) {
+                
+                    var places = searchBox.getPlaces();
+                    if (!place || place == 'undefined' || place.length == 0) {
+                        console.log('no place data :(');
+                    }
+                  
+                  console.log('::place:::',places);
+                    // For each place, get the icon, place name, and location.
+                  newMarkers = [];
+                 
+                  var bounds = new google.maps.LatLngBounds();
+                  
+                  for (var i = 0, place; place = places[i]; i++) {
+                    // Create a marker for each place.
+                    var marker = {
+                      id:i,
+                      place_id: place.place_id,
+                      name: place.name,
+                      latitude: place.geometry.location.lat(),
+                      longitude: place.geometry.location.lng(),
+                      templateurl:'window.tpl.html',
+                      templateparameter: place,
+                      events: {
+                        
+                        click: function (marker) {
+                          
+                          $scope.window.coords = {
+                            latitude: marker.model.latitude,
+                            longitude: marker.model.longitude
+                          }
+                          $scope.window.templateparameter = marker.model.templateparameter;
+                          $scope.window.show = true;
+                          
+                        }
+                      }
+                    };
+                    newMarkers.push(marker);
+                    console.log(':::googleMarker:::',marker);
+                    $scope.selectedSchool = 'All';
+                    $scope.filteredSchool = {};
+                    $scope.dlssite = true;
+                    $scope.partnersite = true;
+                    $scope.clientsite = true;
+                    $scope.candidates = false;
+                    $scope.hotellocations = true;
+                    $scope.ActiveProjectLocations = false;
+                    $scope.AllProjectLocations = false;
+                    $scope.selectedMiles = '25';
+                    $scope.totalResultsCount = 0;
+                    runMap(marker.latitude,marker.longitude,marker);
+                    bounds.extend(place.geometry.location);
+                  }
+                  
+                  $scope.map.bounds = {
+                    northeast: {
+                      latitude: bounds.getNorthEast().lat(),
+                      longitude: bounds.getNorthEast().lng()
+                    },
+                    southwest: {
+                      latitude: bounds.getSouthWest().lat(),
+                      longitude: bounds.getSouthWest().lng()
+                    }
+                  } 
+                  /*            
+                  for(var i = $scope.map.markers.length - 1; i >= 0; i--){
+                        if($scope.map.markers[i]['place_id']){
+                            $scope.map.markers.splice(i,1);
+                        }
+                  }
+                  console.log('::$scope.map.markers:::::',$scope.map.markers);
+                  var fullMarkers = $scope.map.markers.concat(newMarkers);
+                  $scope.map.markers = fullMarkers;*/
+                  console.log('::newMarkers:::::',newMarkers);            
+                 } 
+              }               
+            }         
+                      
+            $scope.searchbox.options['bounds'] = new google.maps.LatLngBounds($scope.defaultBounds.getNorthEast(), $scope.defaultBounds.getSouthWest());
+         
+            $scope.window = {
+              show: false,
+              options: {
+                pixelOffset: { width: 0, height: -40 }
+              },
+              templateurl:'window.tpl.html',
+              templateparameter: {},
+              closeClick: function () {
+                $scope.window.show = false;
+              }
+            }
+            
+            searchboxService.setMapOptions($scope.searchbox);
+            
+            $scope.typename = $routeParams.TypeName;         
+            $scope.stateorcountry = $routeParams.StateOrCountry;
+            $scope.userLocation = {latitude:0,longitude:0};
+            
+            
+            $scope.options = {
+              scrollwheel: false
+            };
+            
+            $scope.map.markers = [];
+            $scope.map.filteredMarkers = [];
+            $scope.street = '';
+            $scope.city = '';
+            $scope.state = '';
+            $scope.country = '';
+            $scope.zipcode = '';
+            var wholelocationlist = [];
+            $scope.locationlist = [];
+           
+            $scope.totalResultsCount = 0;
+            
+            $scope.data =  [
+                          {id: '5', name: '5'},
+                          {id: '10', name: '10'},
+                          {id: '15', name: '15'},
+                          {id: '25', name: '25'},
+                          {id: '50', name: '50'},
+                          {id: '75', name: '75'},
+                          {id: '100', name: '100'},
+                          {id: '500', name: '500'}
+                        ];
+                        
+            $scope.schooldata =  [
+                          {id: 'All', name: 'All'},
+                          {id: 'DLS-Site', name: 'DLS-Site'},
+                          {id: 'Partner-Site', name: 'Partner-Site'},
+                          {id: 'Client-Site' , name: 'Client-Site'}        
+                        ];
+          
+           $scope.languageData = [{id: '--None--', name: '--None--'}];          
+           $scope.dialectData = [{id: '--None--', name: '--None--'}];
+           
+           $scope.selectedLanguage = '--None--'; 
+           $scope.selectedDialect = '--None--'; 
+           
+          $scope.model = {
+              modelState2:'',
+              backDropeOpen2:'',
+              modelState4:'',
+              backDropeOpen4:''
+          };
+          
+          
+          filterService.setModelOptions($scope.model);
+          
+          $scope.selectedMarker = {};      
+          $scope.tabname = 'tabOne';
+                            
+          function deg2rad(deg) {
+              return deg * (Math.PI/180)
+          }              
+          
+          function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2,units) {
+          
+              var R = 6371; // Radius of the earth in km
+              var dLat = deg2rad(lat2-lat1);  
+              var dLon = deg2rad(lon2-lon1); 
+              var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
+              var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+              var d = R * c; 
+              var miles = d / 1.609344; 
+              if ( units == 'km' ) {  
+                return d; 
+              } else {
+                return miles;
+              }
+           }
+           
+           function loadPicklistvalues(){
+               
+               force.describePicklistVal('Opportunity','Language__c',function(data) {
+                    
+                    
+                        angular.forEach(data, function(value, key) {
+                            
+                            var pickdata = {id:value,name:value};
+                            $scope.languageData.push(pickdata);
+                        });
+                        //console.log(':::picklist::::',data);
+                        
+                        force.describePicklistVal('Opportunity','Dialects__c',function(data) {
+                    
+                    
+                            angular.forEach(data, function(value, key) {
+                                
+                                    var picknewdata = {id:value,name:value};
+                                    $scope.dialectData.push(picknewdata);
+                                });
+                                    //console.log(':::picklist::::',data);
+                            },function(error) {
+                                console.log(':::picklist::::'+error);
+                            }
+                      );
+                        
+                    },function(error) {
+                        console.log(':::picklist::::'+error);
+                    }
+                );            
+           }
+           
+           $scope.findLatLong = function(street,city,state,county,zipcode) {
+                
+                $scope.typename = '';
+                $scope.stateorcountry = '';
+                $scope.map.markers = [];
+                $scope.locationlist = [];
+                wholelocationlist = [];
+                
+                Visualforce.remoting.Manager.invokeAction(
+                   '{!$RemoteAction.FindPartnerSchool_Compo_Ctrl.geoCodeFinder}',
+                    street,city,state,county,zipcode,
+                    function(response, ev) {
+                      if(ev.status) {
+                      
+                           var geoboject = JSON.parse(response);
+                           $scope.userLocation.latitude = geoboject.Lat;
+                           $scope.userLocation.longitude = geoboject.Lng;
+                           runMap(geoboject.Lat,geoboject.Lng);                        
+                      } else {
+                          console.log(ev);
+                      }
+                  },
+                  {escape: false}
+               );
+            }
+            
+            $scope.latitudeval = '';
+            $scope.longitudeval = '';
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.FindPartnerSchool_Compo_Ctrl.getUserRelatedContactdetail}',
+                function(response, ev) {                        
+                    console.log(':::responseuser::',response);
+                    if(ev.status) {
+                        $timeout(function(){
+                            populateDefaultLocation(response);                            
+                            document.getElementById("spinner").style.display = 'none';                        
+                        });                        
+                    } 
+                },
+                {escape: true}
+            );
+            
+            function getSclRec(locationIdset){                
+                console.log('::getsclrec locationIdset::',locationIdset);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.FindPartnerSchool_Compo_Ctrl.getMttLocationRec}',
+                    locationIdset,
+                    function(response, ev) {                        
+                        console.log(':::responsecontact::',response);
+                        if(ev.status) {
+                            $timeout(function(){
+                                //runHotelQuery(response.hotelList);
+                                //runSuiteQuery(response.floorsuiteList);
+                                document.getElementById("spinner").style.display = 'none';                        
+                            });                        
+                        } 
+                    },
+                    {escape: true}
+                );
+            }
+           $scope.contactRec = [];
+           function populateDefaultLocation(contactRec){
+               console.log(':::contactRec',contactRec); 
+               
+              $scope.contactRec = contactRec;
+              if(contactRec && contactRec.length > 0) {
+                  $scope.contactId = $scope.contactRec[0].Id;
+                  if($scope.contactRec[0].MailingStreet)
+                      $scope.street = $scope.contactRec[0].MailingStreet;
+                  if($scope.contactRec[0].MailingCity)
+                      $scope.city = $scope.contactRec[0].MailingCity;
+                  if($scope.contactRec[0].MailingState)
+                      $scope.state = $scope.contactRec[0].MailingState;
+                  if($scope.contactRec[0].MailingCountry)
+                      $scope.country = $scope.contactRec[0].MailingCountry;
+                  if($scope.contactRec[0].MailingPostalCode)
+                      $scope.zipcode = $scope.contactRec[0].MailingPostalCode;
+              }
+              $scope.$apply();
+              if($scope.street || $scope.city || $scope.state || $scope.country || $scope.zipcode) {
+                  $scope.findLatLong($scope.street,$scope.city,$scope.state,$scope.country,$scope.zipcode);
+                  $scope.searchtext = $scope.street +', '+ $scope.city + ', '+ $scope.state + ', '+ $scope.country + ', '+ $scope.zipcode;
+              }
+        }
+            
+            // Commented by NS 
+            /*function runHotelQuery(hotelRec){
+                
+                var locIdAndHotels = {};
+                angular.forEach(hotelRec, function(value, key) {                       
+                   var hotel = [];
+                   var distance = 0;
+                   distance = getDistanceFromLatLonInKm(Number(value.MTT_Location__r.Location_GeoCode__Latitude__s),Number(value.MTT_Location__r.Location_GeoCode__Longitude__s),Number(value.Hotel_GeoCode__Latitude__s),Number(value.Hotel_GeoCode__Longitude__s),'mi');
+                   value['Proximity'] = distance;
+                   
+                   if(!locIdAndHotels[value.MTT_Location__c])
+                   locIdAndHotels[value.MTT_Location__c] = [];
+                   locIdAndHotels[value.MTT_Location__c].push(value);
+                });
+                angular.forEach($scope.map.markers, function(value, key){
+                    
+                    if(locIdAndHotels[value.id]){
+                        value['content']['Hotels'] = locIdAndHotels[value.id];
+                    }
+                });                    
+            }
+            
+            function runSuiteQuery(floorsuiteRec){
+                
+                var locIdAndDoorCodes = {};
+                angular.forEach(floorsuiteRec, function(value, key) {
+                    
+                    if(!locIdAndDoorCodes[value.Location__c])
+                    locIdAndDoorCodes[value.Location__c] = [];
+                    locIdAndDoorCodes[value.Location__c].push(value);
+                });
+                angular.forEach($scope.map.markers, function(value, key) {
+                    
+                    if(locIdAndDoorCodes[value.id]){
+                        value['content']['DoorCodes'] = locIdAndDoorCodes[value.id];
+                    }
+                });                    
+            }*/
+            
+            function runLocationQuery(mttLocationRec,latitudeVal,longitudeVal){                    
+                          
+                var locationIds = [];
+                angular.forEach(mttLocationRec, function(value, key) {
+                  
+                  var distance = 0;
+                  if($scope.typename ) {
+                      
+                      if(latitudeVal){
+                          distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                      }else{
+                          distance = 0;
+                      }
+                  } else if(latitudeVal && longitudeVal){
+                      distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                  }
+                  
+                  locationIds.push('\''+value.Id+'\'');
+                  
+                  var location = {
+                                Id: value.Id,
+                                Name: value.Name,
+                                Street: value.Street__c,
+                                City: value.City_and_State__c,
+                                State: value.State__c,
+                                Country: value.Country__c,
+                                ZipCode: value.Zip_Code__c,
+                                Type:'DLS',
+                                Website:'',
+                                Proximity:distance,
+                                WifiCode:value.Wifi_Password__c,
+                                Count: value.of_Projects_per_Location__c != null ? value.of_Projects_per_Location__c : 0,
+                                ActiveCount: value.of_Active_Projects_per_Location__c != null ? value.of_Active_Projects_per_Location__c : 0,
+                                DoorCodes:[],
+                                Hotels:[]
+                            };
+                  wholelocationlist.push(location);
+                  
+                  if($scope.dlssite && location.Proximity < $scope.selectedMiles) {
+                      $scope.locationlist.push(location);
+                  }
+                  
+                  var retnew = {
+                                latitude: value.Location_GeoCode__Latitude__s,
+                                longitude: value.Location_GeoCode__Longitude__s,
+                                id:value.Id,
+                                icon:'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                                content:location,
+                                show:false,
+                                events: {
+                                    click: function (marker,model) {
+                                        $scope.tabname = 'tabOne';
+                                        $scope.selectedMarker = marker.model;
+                                        $scope.selectedMarker.show = true;
+                                        $scope.model.modelState2 = 'slds-fade-in-open';
+                                        $scope.model.backDropeOpen2 = 'slds-modal-backdrop--open';
+                                    }
+                               }
+                            };
+                  $scope.map.markers.push(retnew);
+                  if( distance < $scope.selectedMiles && $scope.dlssite) $scope.map.filteredMarkers.push(retnew);
+                });
+                
+                /*if(locationIds.length > 0)
+                    getSclRec(locationIds);*/
+            }            
+            
+            function runPartnerQuery(partnerRec,latitudeVal,longitudeVal){                
+              
+              angular.forEach(partnerRec, function(value, key) {
+                  
+                  var distance = 0;
+                  if($scope.typename ) {
+                  
+                      if(latitudeVal){
+                        distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                      }else{
+                        distance = 0;
+                      }
+                  } else if(latitudeVal && longitudeVal){
+                      distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                  }
+               
+                  var acclocation = {
+                            Id : value.Id,
+                            Name: value.Name,
+                            Street: value.Street__c,
+                            City: value.City_and_State__c,
+                            State: value.State__c,
+                            Country: value.Country__c,
+                            ZipCode: value.Zip_Code__c,
+                            Website: '',
+                            Proximity:distance,
+                            Type:'Partner',
+                            WifiCode: value.Wifi_Password__c,
+                            Count: value.of_Projects_per_Location__c != null ? value.of_Projects_per_Location__c : 0,
+                            ActiveCount: value.of_Active_Projects_per_Location__c != null ? value.of_Active_Projects_per_Location__c : 0,
+                            DoorCodes:[],
+                            Hotels:[]
+                        };
+                 wholelocationlist.push(acclocation);
+                 
+                 if($scope.partnersite && location.Proximity < $scope.selectedMiles) {
+                     $scope.locationlist.push(acclocation);
+                 }
+                     
+                 var retnew = {
+                            latitude: value.Location_GeoCode__Latitude__s,
+                            longitude: value.Location_GeoCode__Longitude__s,
+                            id:value.Id,
+                            content:acclocation,
+                            show:false,
+                            icon:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                            events: {
+                                click: function (marker) {
+                                    $scope.tabname = 'tabOne';
+                                    $scope.selectedMarker = marker.model;
+                                    $scope.selectedMarker.show = true;
+                                    $scope.model.modelState2 = 'slds-fade-in-open';
+                                    $scope.model.backDropeOpen2 = 'slds-modal-backdrop--open';
+                                }
+                           }
+                        };
+                 $scope.map.markers.push(retnew);
+                 if( distance < $scope.selectedMiles && $scope.partnersite) $scope.map.filteredMarkers.push(retnew);
+              });
+               //$scope.locationList = wholelocationlist;
+               
+            }
+            
+            // Added by NS
+            function runHotelQuery(hotelRec,latitudeVal,longitudeVal){  
+            
+                var locationIds = [];
+                angular.forEach(hotelRec, function(value, key) {
+                  
+                  var distance = 0;
+                  if($scope.typename ) {
+                      
+                      if(latitudeVal){
+                          distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Hotel_GeoCode__Latitude__s),Number(value.Hotel_GeoCode__Longitude__s),'mi');
+                      }else{
+                          distance = 0;
+                      }
+                  } else if(latitudeVal && longitudeVal){
+                      distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Hotel_GeoCode__Latitude__s),Number(value.Hotel_GeoCode__Longitude__s),'mi');
+                  }
+                  
+                  locationIds.push('\''+value.Id+'\'');
+                  
+                  var location = {
+                                Id: value.Id,
+                                Name: decodeHTML(value.Name),
+                                Street: value.Street__c,
+                                City: value.City__c,
+                                State: value.State__c,
+                                Country: value.Country__c,
+                                ZipCode: value.Zip_Code__c,
+                                Type:'Hotel',
+                                Website:'',
+                                Count: 0,
+                                Proximity:distance
+                            };
+                  wholelocationlist.push(location);
+                  if($scope.hotellocations && location.Proximity < $scope.selectedMiles) {
+                      $scope.locationlist.push(location);
+                  }
+                  
+                  var retnew = {
+                                latitude: value.Hotel_GeoCode__Latitude__s,
+                                longitude: value.Hotel_GeoCode__Longitude__s,
+                                id:value.Id,
+                                icon:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                                content:location,
+                                show:false,
+                                events: {
+                                    click: function (marker,model) {
+                                        $scope.tabname = 'tabOne';
+                                        $scope.selectedMarker = marker.model;
+                                        $scope.selectedMarker.show = true;
+                                        $scope.model.modelState2 = 'slds-fade-in-open';
+                                        $scope.model.backDropeOpen2 = 'slds-modal-backdrop--open';
+                                    }
+                               }
+                            };
+                  $scope.map.markers.push(retnew);
+                  if( distance < $scope.selectedMiles && $scope.hotellocations) $scope.map.filteredMarkers.push(retnew);
+                });
+                /*if(locationIds.length > 0)
+                    getSclRec(locationIds);*/
+                
+            }
+            
+            // For Client-Site
+            function runClientQuery(clientRec,latitudeVal,longitudeVal){                    
+                
+                var locationIds = [];
+                angular.forEach(clientRec, function(value, key) {
+                  
+                  var distance = 0;
+                  if($scope.typename ) {
+                      
+                      if(latitudeVal){
+                          distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                      }else{
+                          distance = 0;
+                      }
+                  } else if(latitudeVal && longitudeVal){
+                      distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                  }
+                  
+                  locationIds.push('\''+value.Id+'\'');
+                  
+                  var location = {
+                                Id: value.Id,
+                                Name: value.Name,
+                                Street: value.Street__c,
+                                City: value.City_and_State__c,
+                                State: value.State__c,
+                                Country: value.Country__c,
+                                ZipCode: value.Zip_Code__c,
+                                Type:'Client',
+                                Website:'',
+                                Proximity:distance,
+                                WifiCode:value.Wifi_Password__c,
+                                Count: value.of_Projects_per_Location__c != null ? value.of_Projects_per_Location__c : 0,
+                                ActiveCount: value.of_Active_Projects_per_Location__c != null ? value.of_Active_Projects_per_Location__c : 0,
+                                DoorCodes:[],
+                                Hotels:[]
+                            };
+                  wholelocationlist.push(location);
+                  if($scope.clientsite && location.Proximity < $scope.selectedMiles) {
+                      $scope.locationlist.push(location);
+                  }
+                  
+                  var retnew = {
+                                latitude: value.Location_GeoCode__Latitude__s,
+                                longitude: value.Location_GeoCode__Longitude__s,
+                                id:value.Id,
+                                icon:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                                content:location,
+                                show:false,
+                                events: {
+                                    click: function (marker,model) {
+                                        $scope.tabname = 'tabOne';
+                                        $scope.selectedMarker = marker.model;
+                                        $scope.selectedMarker.show = true;
+                                        $scope.model.modelState2 = 'slds-fade-in-open';
+                                        $scope.model.backDropeOpen2 = 'slds-modal-backdrop--open';
+                                    }
+                               }
+                            };
+                  $scope.map.markers.push(retnew);
+                  if( distance < $scope.selectedMiles && $scope.clientsite) $scope.map.filteredMarkers.push(retnew);
+                });
+                /*if(locationIds.length > 0)
+                    getSclRec(locationIds);*/
+                
+            }
+            
+            // For Candidates informations display
+            function runCandidateQuery(candidateRec,latitudeVal,longitudeVal){  
+                var locationIds = [];
+                angular.forEach(candidateRec, function(value, key) {
+                  
+                  var distance = 0;
+                  if($scope.typename ) {
+                      
+                      if(latitudeVal){
+                          distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                      }else{
+                          distance = 0;
+                      }
+                  }else if(latitudeVal && longitudeVal){
+                      distance = getDistanceFromLatLonInKm(Number(latitudeVal),Number(longitudeVal),Number(value.Location_GeoCode__Latitude__s),Number(value.Location_GeoCode__Longitude__s),'mi');
+                  }
+                  
+                  locationIds.push('\''+value.Id+'\'');
+                  
+                  var location = {
+                                Id: value.Id,
+                                Name: decodeHTML(value.Name),
+                                City: value.MailingCity,
+                                State: value.MailingState,
+                                Country: value.MailingCountry,
+                                ZipCode: value.MailingPostalCode,
+                                Type:'Candidate',
+                                Website:'',
+                                Count: value.All_Count_as_Instructor__c != null ? value.All_Count_as_Instructor__c : 0,
+                                ActiveCount: value.Active_Count_as_Instructor__c != null ? value.Active_Count_as_Instructor__c : 0,
+                                Proximity:distance
+                            };
+                  wholelocationlist.push(location);
+                  
+                  if($scope.candidates && location.Proximity < $scope.selectedMiles) {
+                      $scope.locationlist.push(location);
+                  }
+                  
+                  var retnew = {
+                                latitude: value.Location_GeoCode__Latitude__s,
+                                longitude: value.Location_GeoCode__Longitude__s,
+                                id: value.Id,
+                                icon:'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+                                content:location,
+                                show:false,
+                                events: {
+                                    click: function (marker,model) {
+                                        $scope.tabname = 'tabOne';
+                                        $scope.selectedMarker = marker.model;
+                                        $scope.selectedMarker.show = true;
+                                        $scope.model.modelState2 = 'slds-fade-in-open';
+                                        $scope.model.backDropeOpen2 = 'slds-modal-backdrop--open';
+                                    }
+                               }
+                            };
+                  $scope.map.markers.push(retnew);
+                  if(distance < $scope.selectedMiles && $scope.candidates) $scope.map.filteredMarkers.push(retnew);
+                });
+                /*if(locationIds.length > 0)
+                    getSclRec(locationIds);*/
+                
+                //console.log(':::::::::list:::;',$scope.locationlist);
+                //console.log(':::::::::candodate:::;',$scope.map.filteredMarkers.length);
+                
+                $scope.totalResultsCount = $scope.locationlist.length;
+            }
+            
+            function decodeHTML(encodedStr) {
+                var parser = new DOMParser;
+                var dom = parser.parseFromString(
+                    '<!doctype html><body>' + encodedStr,
+                    'text/html');
+                var decodedString = dom.body.textContent;
+                
+                //console.log(decodedString);
+                return decodedString;
+            }
+            
+            $scope.backToSite = function(){
+                 window.location = '#/FindPartnerSchoolSite';
+            }
+            
+            $scope.onClick = function(marker, eventName, model) {
+                
+                console.log('::marker::::',marker);
+                $scope.tabname = 'tabOne';
+                $scope.selectedMarker = model;
+                $scope.selectedMarker.show = true;
+                $scope.windowOpt.position.lat = $scope.selectedMarker.latitude;
+                $scope.windowOpt.windowOptposition.lng = $scope.selectedMarker.longitude;
+                $scope.windowOpt.show = true;
+                $scope.modelState2 = 'slds-fade-in-open';
+                $scope.backDropeOpen2 = 'slds-modal-backdrop--open';
+            };
+            
+            $scope.submitOpp = function() {
+                
+                var d = new Date();
+                d.setDate(d.getDate() + 30);
+                var s = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+          
+                
+                $scope.enquirycomments =  'Email: '+$scope.enquiryEmail + ' Agency: '+ $scope.enquiryAgency + ' -  comments: '+$scope.enquirycomments;
+                
+                $scope.newRequestRec = {Name:$scope.enquiryName,
+                                        Language__c:$scope.selectedLanguage,
+                                        Dialects__c:$scope.selectedDialect,
+                                        StageName:'Enquiry',
+                                        CloseDate:s,
+                                        Phone__c:$scope.enquiryPhone,
+                                        Description__c:$scope.enquirycomments
+                                       };
+                
+                force.create("Opportunity", $scope.newRequestRec,function(data){
+                      console.log('::::::',data);
+                    },function(error){
+                     console.log('::::::',error);
+                    }
+                );
+                
+                $scope.modelState2 = '';
+                $scope.backDropeOpen2 = '';
+            }
+            
+            $scope.search = function(){
+                
+                $scope.model.modelState2 = '';
+                $scope.model.backDropeOpen2 = '';
+                $scope.model.modelState4 = '';
+                $scope.model.backDropeOpen4 = '';
+                $scope.map.filteredMarkers = [];
+                $scope.locationlist = [];
+                
+                console.log('::::all::active::',$scope.AllProjectLocations,$scope.ActiveProjectLocations);
+                $scope.totalResultsCount = 0;
+             
+                angular.forEach($scope.map.markers, function(value, key) {
+                    
+                    if(value['content']) {
+                        if(value.content.Proximity < Number($scope.selectedMiles)) {
+                            
+                            if($scope.dlssite && value.content.Type == 'DLS'){
+                                if(($scope.AllProjectLocations && value.content.Count > 0) || ($scope.ActiveProjectLocations && value.content.ActiveCount > 0)) {
+                                    $scope.map.filteredMarkers.push(value);
+                                } else if(!$scope.AllProjectLocations && !$scope.ActiveProjectLocations){
+                                    $scope.map.filteredMarkers.push(value);
+                                }
+                            }
+                            if($scope.partnersite && value.content.Type == 'Partner'){
+                                $scope.map.filteredMarkers.push(value);
+                            } 
+                            if($scope.clientsite && value.content.Type == 'Client') {
+                                $scope.map.filteredMarkers.push(value);
+                            }
+                            if($scope.hotellocations && value.content.Type == 'Hotel') {
+                                $scope.map.filteredMarkers.push(value);
+                            }
+                            if($scope.candidates && value.content.Type == 'Candidate') {
+                                if(($scope.AllProjectLocations && value.content.Count > 0) || ($scope.ActiveProjectLocations && value.content.ActiveCount > 0)) {
+                                    $scope.map.filteredMarkers.push(value);
+                                } else if(!$scope.AllProjectLocations && !$scope.ActiveProjectLocations){
+                                    $scope.map.filteredMarkers.push(value);
+                                }
+                            }
+                        }
+                    }else{
+                        $scope.map.filteredMarkers.push(value);
+                    }
+                });
+                
+                for(var i = 0;i < wholelocationlist.length;i++) {
+                    
+                    if(wholelocationlist[i].Proximity < Number($scope.selectedMiles)) {
+                    
+                        if($scope.dlssite && wholelocationlist[i].Type == 'DLS') {
+                            if(($scope.AllProjectLocations && wholelocationlist[i].Count > 0) || ($scope.ActiveProjectLocations && wholelocationlist[i].ActiveCount > 0)) {
+                                $scope.locationlist.push(wholelocationlist[i]);
+                            } else if(!$scope.AllProjectLocations && !$scope.ActiveProjectLocations){
+                                $scope.locationlist.push(wholelocationlist[i]);
+                            }
+                            
+                        }
+                        if($scope.partnersite && wholelocationlist[i].Type == 'Partner') {
+                            $scope.locationlist.push(wholelocationlist[i]);
+                        }
+                        if($scope.hotellocations && wholelocationlist[i].Type == 'Hotel') {
+                            $scope.locationlist.push(wholelocationlist[i]);
+                        }
+                        if($scope.clientsite && wholelocationlist[i].Type == 'Client') {
+                            $scope.locationlist.push(wholelocationlist[i]);
+                        }
+                        if($scope.candidates && wholelocationlist[i].Type == 'Candidate') {
+                            if(($scope.AllProjectLocations && wholelocationlist[i].Count > 0) || ($scope.ActiveProjectLocations && wholelocationlist[i].ActiveCount > 0)) {
+                                $scope.locationlist.push(wholelocationlist[i]);
+                            } else if(!$scope.AllProjectLocations && !$scope.ActiveProjectLocations){
+                                $scope.locationlist.push(wholelocationlist[i]);
+                            }
+                        }
+                    }
+                }
+                $scope.totalResultsCount = $scope.locationlist.length;
+                //console.log('::::',$scope.locationlist.length);
+            }
+                        
+            $scope.CancelClickForContentSelect = function() {
+                $scope.model.modelState2 = '';
+                $scope.model.backDropeOpen2 = '';
+            };
+            
+            $scope.CancelClickForContent = function (){
+                filterService.data.modelState4 = '';
+                filterService.data.backDropeOpen4 = '';
+            };
+            
+            $scope.changedValue = function(selectedMiles){
+                
+                /*
+                console.log('::::',selectedMiles);
+                console.log('::::',$scope.map.filteredMarkers);
+                $scope.map.filteredMarkers = [];
+                angular.forEach($scope.map.markers, function(value, key) {
+                        
+                    if(value.content.Proximity < Number(selectedMiles))
+                    $scope.map.filteredMarkers.push(value);
+                });
+                console.log('::::',$scope.map.filteredMarkers);*/
+            };
+            
+            if($scope.typename) {  
+                
+                $scope.selectedSchool = 'All';
+                $scope.filteredSchool = {};
+                $scope.dlssite = true;
+                $scope.partnersite = true;
+                $scope.clientsite = true;
+                $scope.candidates = false;
+                $scope.hotellocations = true;
+                $scope.ActiveProjectLocations = false;
+                $scope.AllProjectLocations = false;
+                $scope.selectedMiles = '25';
+                $scope.totalResultsCount = 0;
+                  
+                console.log(':::::::::::::',$scope.typename,$scope.stateorcountry);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.FindPartnerSchool_Compo_Ctrl.getSchooldetailRec}',
+                    $scope.typename,$scope.stateorcountry,
+                    function(response, ev) { 
+                        console.log(':::::findpartnerscl getscldetailRec',response);                       
+                        if(ev.status) {
+                            $timeout(function(){
+                                runLocationQuery(response.mttlocationList);
+                                runPartnerQuery(response.partnerSchoolList);  
+                                runHotelQuery(response.hotelList); 
+                                runClientQuery(response.clientLocations); 
+                                runCandidateQuery(response.candidateRecords);   
+                               
+                                document.getElementById("spinner").style.display = 'none';                        
+                            });                        
+                        } 
+                    },
+                    {escape: true}
+                );
+            }else {
+              
+                $scope.selectedSchool = 'All';
+                $scope.filteredSchool = {};
+                $scope.dlssite = true;
+                $scope.partnersite = true;
+                $scope.clientsite = true;
+                $scope.candidates = false;
+                $scope.hotellocations = true;
+                $scope.ActiveProjectLocations = false;
+                $scope.AllProjectLocations = false;
+                $scope.selectedMiles = '25';
+                $scope.totalResultsCount = 0;
+                loadPicklistvalues();
+                //userQuery();
+                
+            }
+            
+            function runMap(latitude,longitude,preMarker) {
+                console.log(':::modal::',$scope.model);
+                $scope.model.modelState2 = '';
+                $scope.model.backDropeOpen2 = '';
+                $scope.model.modelState4 = '';
+                $scope.model.backDropeOpen4 = '';
+                $scope.map.markers = [];
+                $scope.map.filteredMarkers = [];
+                $scope.locationlist = [];
+                wholelocationlist = [];
+                $scope.acclist = [];
+                $scope.totalResultsCount = 0;
+                var ret = {
+                    latitude: Number(latitude),
+                    longitude:  Number(longitude),
+                    id:'centerid'
+                };
+                
+                if(preMarker) {
+                    $scope.map.markers.push(preMarker);
+                    $scope.map.filteredMarkers.push(preMarker);
+                }
+                
+                //$scope.latitudeval = latitude;
+                //$scope.longitudeval = longitude;
+                
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.FindPartnerSchool_Compo_Ctrl.getlatitudeRec}',
+                    latitude,longitude,
+                    function(response, ev) { 
+                        console.log(':::::findpartnerscl getscldetailRec',response);                       
+                        if(ev.status) {
+                            $timeout(function(){
+                                runLocationQuery(response.mttloctionlatList,latitude,longitude);
+                                runPartnerQuery(response.partnerSchoolList,latitude,longitude);
+                                runHotelQuery(response.hotelList,latitude,longitude);
+                                runClientQuery(response.clientLocations,latitude,longitude); 
+                                runCandidateQuery(response.candidateRecords,latitude,longitude);   
+                               
+                                document.getElementById("spinner").style.display = 'none';                        
+                            });                        
+                        } 
+                    },
+                    {escape: true}
+                );                     
+            }            
+        });
+    </script>
+</apex:component>

@@ -1,0 +1,254 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="EventListViewController">
+    <aura:attribute name="eventRecords" type="List" default="[]"/>
+    <aura:attribute name="filterObj" type="Map" default="{ fromDate : '',
+                                                         toDate : '',
+                                                         selectedStatus : 'All',
+                                                         training : true,
+                                                         preparation : true,
+                                                         testing : true,
+                                                         holiday : true,
+                                                         studentPDO : true,
+                                                         instructorPDO : true,
+                                                         pendingEventApproval:true}"/>
+    <aura:attribute name="selectedStatus" type="List" default="['Scheduled']"/>
+    <aura:attribute name="oldStatusValues" type="List" default="['Scheduled']"/>
+    <aura:attribute name="eventStatusValues" type="List" default="['Draft','Canceled','Completed','Late Cancellation','Scheduled']"/>
+    <aura:attribute name="selectedProject" type="String"  default="All"/>
+    <aura:attribute name="projectValues" type="List" access="PUBLIC"/>
+    <aura:attribute name="fireEventChange" type="Boolean" default="false"/>
+    
+    <aura:attribute name="viewOptions" type="List" default="['Schedules','Events','Calendar']"/>
+    <aura:attribute name="viewOptionsMap" type="List" default="[
+    {'label': 'Schedules', 'value': 'Schedules'},
+    {'label': 'Events', 'value': 'Events'},
+    {'label': 'Calendar', 'value': 'Calendar'},
+    ]"/>
+    <aura:attribute name="selectedView" type="String" default="Calendar"/>
+    <aura:attribute name="initialLoad" type="Boolean" default="true"/>
+    <aura:attribute name="header" type="List" access="public"/>
+    <aura:attribute name="eventTableConfig" type="Map" access="public"/>
+    <aura:attribute name="community" type="String" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    
+    <aura:attribute name="pendingApprovalEvents" type="List" default="[]"/>
+    <aura:attribute name="selectedPendingApprovalEvent" type="List" default="[]"/>
+    <aura:attribute name="pendingApprovalEvtList" type="List" default="[]"/>
+    <aura:attribute name="showRescheduleModel" type="Boolean" default="false"/>
+    <aura:attribute name="selectedRecord" type="Map" access="public"/>
+    <aura:attribute name="showApprovalModel" type="Boolean" default="false"/>
+    <aura:attribute name="isMultiApproval" type="Boolean" default="false"/>
+    <aura:attribute name="conflictIndex" type="string"/>   
+    <aura:attribute name="showConflict" type="Boolean" default="false"/>
+    <aura:attribute name="stuInsConflictList" type="List" default="[]"/>
+    <aura:attribute name="roomConflictList" type="List" default="[]"/>
+    <aura:attribute name="isPendingEventsAvailable" type="Boolean" default="false" />
+    <aura:attribute name="modal" type="Object"/>    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>    
+    <aura:handler name="change" value="{!v.filterObj.fromDate}" action="{!c.filterEvents}"/>
+    <aura:handler name="change" value="{!v.filterObj.toDate}" action="{!c.filterEvents}"/>
+    <aura:handler name="change" value="{!v.fireEventChange}" action="{!c.eventStatusChange}"/>
+    <aura:handler name="change" value="{!v.showRescheduleModel}" action="{!c.hideRescheduleModel}"/>
+    <aura:handler name="change" value="{!v.showApprovalModel}" action="{!c.hideApprovalModel}"/>
+
+
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionClick}"/>
+    
+    <aura:method name="toggleConflictModal" action="{!c.toggleConflictModal}" > 
+        <aura:attribute name="index" type="string"/>
+    </aura:method>
+    <aura:method name="closePendingEventsModal" action="{!c.closePendingEventsModal}" /> 
+    <aura:method name="approveConflictModal" action="{!c.approveEventWithConflictCheck}" /> 
+    <aura:method name="cancelConflictModal" action="{!c.cancelConflictClk}" /> 
+
+    
+    <ltng:require scripts="{!join(',', 
+    $Resource.FullCalendar + '/fullcalendar-3.10.0/fullCalendar/moment.js',
+    $Resource.moment_timezone_data)}"/>
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed"/>
+    </aura:if>
+
+    <lightning:layout multipleRows="true">
+        <lightning:layoutItem size="{!v.displayDevice != 'Mobile' ? '2' : '11'}">
+            <div class="slds-m-top_medium slds-m-left_large">
+                <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                    <div class="slds-m-top_small">
+                        <lightning:combobox name="View" class="iconCls" label="View" value="{!v.selectedView}" options="{! v.viewOptionsMap }"/>
+                        <!--lightning:select label="View" value="{!v.selectedView}">
+                            <aura:iteration items="{!v.viewOptions}" var="view">
+                                <option value="{!view}" selected="{!(v.selectedView == view)}">{!view}</option>
+                            </aura:iteration>
+                        </lightning:select-->
+                    </div>
+                    <div class="slds-m-top_small">
+                        <c:multiSelectCmp label="Event Status" ischevrondownIcon="false" optionsList="{!v.eventStatusValues}" selectedvalue="{!v.selectedStatus}" handleChange="{!v.fireEventChange}"/>
+                    </div>
+                    <div class="slds-m-top_small">
+                        <lightning:combobox name="Project" label="Project" value="{!v.selectedProject}" options="{! v.projectValues }" onchange="{! c.filterEvents }"/>
+                        <!--lightning:select label="Project" class="" value="{!v.selectedProject}" onchange="{!c.filterEvents}">
+                            <aura:iteration items="{!v.projectValues}" var="project">
+                                <option value="{!project.value}" selected="{!(v.selectedProject == project.value)}">{!project.label}</option>
+                            </aura:iteration>
+                        </lightning:select-->
+                    </div>
+                    <div class="slds-m-top_small">
+                        <ui:inputDate label="From"  value="{!v.filterObj.fromDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/>  
+                    </div>
+                    <div class="slds-m-top_small">
+                        <ui:inputDate label="To"   value="{!v.filterObj.toDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/>  
+                    </div>
+                    <aura:set attribute="else">
+                        <lightning:layout >
+                            <lightning:select label="View" class="viewSelectClass" value="{!v.selectedView}">
+                                <aura:iteration items="{!v.viewOptions}" var="view">
+                                    <option value="{!view}" selected="{!(v.selectedView == view)}">{!view}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layout>
+                        <br/>
+                        <lightning:layout class="slds-p-bottom_medium viewSelectClass">
+                            <c:multiSelectCmp label="Event Status" ischevrondownIcon="true" optionsList="{!v.eventStatusValues}" selectedvalue="{!v.selectedStatus}" handleChange="{!v.fireEventChange}"/>
+                        </lightning:layout>
+                        <lightning:layout>
+                            <lightning:select label="Project" class="viewSelectClass" value="{!v.selectedProject}" onchange="{!c.filterEvents}">
+                                <aura:iteration items="{!v.projectValues}" var="project">
+                                    <option value="{!project.value}" selected="{!(v.selectedProject == project.value)}">{!project.label}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layout>
+                        <br/>
+                        <lightning:layout>
+                            <ui:inputDate label="From" class="slds-input viewSelectClass " value="{!v.filterObj.fromDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/>  
+                        </lightning:layout>
+                        <lightning:layout>
+                            <ui:inputDate label="To" class="slds-input viewSelectClass"  value="{!v.filterObj.toDate}" displayDatePicker="true" format="MM-dd-yyyy" updateOn="change"/>  
+                        </lightning:layout>
+                    </aura:set>
+                </aura:if>
+                <br/>
+                <lightning:layout>
+                    <lightning:input class="training" aura:id="training" checked="{!v.filterObj.training}" type="checkbox" label="" name="Language Training" onchange="{!c.filterEvents}"/><span class="labelCls">Language Training</span>
+                </lightning:layout>
+                <aura:if isTrue="{!v.community != 'student'}">
+                    <lightning:layout>
+                        <lightning:input class="preparation" aura:id="preparation" checked="{!v.filterObj.preparation}" type="checkbox" label="" name="Preparation Time" onchange="{!c.filterEvents}"/><span class="labelCls">Preparation Time</span>
+                    </lightning:layout>
+                </aura:if>
+                <lightning:layout>
+                    <lightning:input class="testing" aura:id="testing" checked="{!v.filterObj.testing}"  type="checkbox" label="" name="Language Testing" onchange="{!c.filterEvents}"/><span class="labelCls">Language Testing</span>
+                </lightning:layout>
+                <lightning:layout>
+                    <lightning:input class="holiday" aura:id="holiday" checked="{!v.filterObj.holiday}" type="checkbox" label="" name="Holiday" onchange="{!c.filterEvents}"/><span class="labelCls">Holiday</span>
+                </lightning:layout>
+                <aura:if isTrue="{!v.community == 'student'}">
+                    <lightning:layout>
+                        <lightning:input class="instructorDaysOff" name="Instructor Planned Days Off" aura:id="instructorDaysOff" checked="{!v.filterObj.instructorPDO}" type="checkbox" label="" onchange="{!c.filterEvents}"/><span class="labelCls">Instructor Planned Days Off</span>
+                    </lightning:layout>
+                    <lightning:layout>
+                        <lightning:input class="studentDaysOff" aura:id="studentDaysOff" name="My Student Planned Days Off" checked="{!v.filterObj.studentPDO}" type="checkbox" label="" onchange="{!c.filterEvents}"/><span class="labelCls">My Planned Days Off</span>
+                    </lightning:layout>
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!v.communityName == 'instructor'}">
+                        <lightning:layout>
+                            <lightning:input class="instructorDaysOff" aura:id="instructorDaysOff" name="My Instructor Planned Days Off" checked="{!v.filterObj.instructorPDO}" type="checkbox" label="" onchange="{!c.filterEvents}"/><span class="labelCls">My Planned Days Off</span>
+                        </lightning:layout>
+                        </aura:if>
+                        <lightning:layout>
+                            <lightning:input class="studentDaysOff" name="Student Planned Days Off" aura:id="studentDaysOff" checked="{!v.filterObj.studentPDO}" type="checkbox" label="" onchange="{!c.filterEvents}"/><span class="labelCls">Student Planned Days Off</span>
+                        </lightning:layout>
+                    </aura:set>
+                </aura:if>
+                <aura:if isTrue="{! or(v.pendingApprovalEvtList.length > 0, v.isPendingEventsAvailable)}">
+                    <lightning:layout>
+                        <lightning:input class="pendingApproval" name="Pending Event Approval" aura:id="pendingApproval" checked="{!v.filterObj.pendingEventApproval}" type="checkbox" label="{!v.pendingApprovalEvents.length > 0 ? '' : ' Pending Event Approval'}" onchange="{!c.filterEvents}"/>
+                        <aura:if isTrue="{! and(v.community == 'instructor', v.pendingApprovalEvtList.length > 0)}">
+                            <span class="labelCls" onclick="{!c.pendingApprovalClick}" style="cursor:pointer;margin-top: -.10rem;">
+                                Pending Event Approval 
+                                <lightning:icon iconName="action:new_event" alternativeText="New Event" size="xx-small"  class="eventWithBlueBackground"/>
+                            </span>
+                        </aura:if>
+                    </lightning:layout>
+                </aura:if>
+            </div>
+        </lightning:layoutItem>
+        <lightning:layoutItem   size="{!v.displayDevice != 'Mobile' ? '10' : '12'}">
+            <br/>
+             <aura:if isTrue="{!or(v.displayDevice != 'Mobile' ,and(v.displayDevice == 'Mobile',v.eventRecords.length > 0))}">
+                <div class="{!v.displayDevice+ ' '+'ldtTableCls'}">
+                    <ldt:datatableDev aura:id="eventTable" dataRows="{!v.eventRecords}" header="{!v.header}" config="{!v.eventTableConfig}"/>
+                </div>
+                <aura:set attribute="else"><br/><br/>
+                    <center style="font-size:0.875rem;">No records to display</center>
+                </aura:set>
+            </aura:if> 
+        </lightning:layoutItem>
+    </lightning:layout>
+    
+    <aura:if isTrue="{!v.showRescheduleModel}">
+        <c:EventRescheduleCmp showRescheduleModel="{!v.showRescheduleModel}" existingEventRec="{!v.selectedRecord}" communityName="{!v.community}"/>
+    </aura:if>
+    <!--     
+    <aura:if isTrue="{!v.showApprovalModel}">
+        <c:EventApprovalCmp showApprovalModel="{!v.showApprovalModel}" communityName="{!v.community}" eventList="{!v.pendingApprovalEvents}" isMultiApproval="{!v.isMultiApproval}"/>
+    </aura:if> -->
+    
+        <aura:if isTrue="{!v.showApprovalModel}">
+
+            <section role="dialog" class="{!v.displayDevice != 'Mobile' ? 'slds-popover popOverCls app-modal' : 'slds-popover popOverCls app-modal-mobile'}"  style="{!v.showConflict == true ? 'z-index: 9000;' : 'z-index: 9999;'}">            
+                <header class="slds-popover__header slds-p-vertical_medium" style="height: auto;">
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_10-of-12">
+                            <h2 class="slds-text-heading_medium" style="text-align: center;">Pending Approval Events</h2>
+                        </div>
+                        <div class="slds-col slds-size_2-of-12">
+                            <span><lightning:icon class="popOverCloseIcon" onclick="{!c.closeApprovalModal}" iconName="utility:close" size="x-small" alternativeText="Close" title="Close"/></span>
+                        </div>
+                    </div>
+                </header>
+                <div class="popOverBodyCls">
+                    
+                    <aura:iteration items="{!v.selectedPendingApprovalEvent}" var="pendingApproval" indexVar="index">
+                        <c:CalendarInfoWindowCmp 
+                                aura:id="calenderInfoCmp"
+                                selectedRecord="{!pendingApproval.selectedEvent}"
+                                parentEventInfo="{!pendingApproval.parentEvent}"
+                                showParentInfo="true"
+                                bodyCls="slds-popover__body"
+                                footerCls="slds-card__footer footerCls"
+                                handleApproveClick="{!c.newEventApproveClk}"
+                                handleRejectClick="{!c.newEventRejectionClk}"
+                                removeApproveRejectClick="{!c.removeApproveRejectClick}"
+                                viewRejectionReasonClk="{!c.viewRejectionReasonClk}"
+                                communityName="{!v.community}"
+                                parent="{!this}"
+                                showConflict="{!v.showConflict}"
+                                stuInsConflictList="{!v.stuInsConflictList}"
+                                roomConflictList="{!v.roomConflictList}"
+                                index="{!index}"
+                            />
+                    </aura:iteration>
+                </div>    
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </aura:if>
+    
+    <!-- Instructor Conflict check  modelWidth="53rem"-->
+    <aura:if isTrue="{!v.showConflict}">
+        <c:CommunityEventConflictCmp stuInsConflictList="{!v.stuInsConflictList}" roomConflictList="{!v.roomConflictList}" showConflict="{!v.showConflict}"  parent="{!this}"/>
+    </aura:if>
+        
+    <c:sldsModal aura:id="msgModal" displayCloseImage="true" showFooter="false" closeAction="{!c.closeModal}" modelWidth="80%">
+        <aura:set attribute="header">
+            <center><h5 class="card-title">{!v.modal.header}</h5></center>
+        </aura:set>
+        <aura:set attribute="content">
+            <center>{!v.modal.message}</center>
+        </aura:set>        
+    </c:sldsModal>
+</aura:component>

@@ -1,0 +1,46 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 10-06-2023
+  @last modified by  : Vasanthram
+-->
+<template>
+    <lightning-layout multiple-rows>
+        <lightning-layout-item size="12" padding="around-small" small-device-size="3"
+            medium-device-size="6" large-device-size="3">
+            <lightning-combobox name="selectedWeek" label="Week" value={filter.selectedWeek}
+                placeholder="Select Week" options={filter.weekRanges}
+                onchange={handleFilterChange}></lightning-combobox>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-small" small-device-size="3"
+            medium-device-size="6" large-device-size="3">
+            <lightning-combobox name="selectedProject" label="DLS Class #" value={filter.selectedProject}
+                placeholder="Select Project" options={filter.projectAndCA.projects}
+                onchange={handleFilterChange}></lightning-combobox>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-small" small-device-size="3"
+            medium-device-size="6" large-device-size="3">
+            <lightning-input type="text" name="employeeName" label="Instructor Name"
+                value={filter.employeeName} disabled></lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-small" small-device-size="3"
+            medium-device-size="6" large-device-size="3">
+            <lightning-input type="text" name="supervisorName" label="Supervisor Name"
+                value={filter.supervisorName} disabled></lightning-input>
+        </lightning-layout-item>
+    </lightning-layout>
+
+    <!-- <template lwc:if={changeRange}>
+        <c-modal-cmp header="" show-header show-footer show>
+            <div slot="body">
+                <p>If You Proceed with OK. the records you entered will not SAVE. Please Click CANCEL and save the record before Moving</p>
+            </div>
+            <div slot="footer">
+                <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleOk} name="OK">OK</button>
+                <button class="slds-button slds-button_neutral btn btn-primary" onclick={handleCancel}
+                    name="Cancel">Cancel</button>
+            </div>
+        </c-modal-cmp>
+    </template> -->
+</template>

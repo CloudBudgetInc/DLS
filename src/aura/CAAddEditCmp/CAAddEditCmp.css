@@ -1,0 +1,89 @@
+.THIS .slds-modal__container {
+    /*width: 80% !important;
+    max-width: 60rem !important;*/
+}
+.THIS .Editspinner {
+    margin-left: -35% !important;
+    width: 171% !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+}
+.THIS .inputPosition{
+    margin-top:-20px !important;
+}
+.THIS .slds-dropdown-trigger {
+    padding-left:0px; ;
+}
+.THIS .Deletespin {
+    margin-left: -65%;
+    width: 230%;
+    background-color: rgba(0, 0, 0, 0.10);
+}
+.THIS .datePicker-openIcon display{
+    margin-right: 400px;
+    margin-top: 10px;
+}.THIS .slds-tabs--default{
+    background-color:white !important;
+}
+.THIS .checkResult{
+    float: right;
+    margin-right:180px;
+}
+.THIS .inputclass{
+    float: right;
+    width:180px;
+    margin-right:20px;
+}
+.THIS .inputcost{
+    width: 300px !important;
+}
+.THIS .crspinner{
+    margin-left: -65%;
+    width: 230%;
+    background-color: rgba(0, 0, 0, 0.10);
+}
+.THIS .selectOption{
+    width:450px;
+}
+.THIS  tr {
+    line-height:2;
+}
+.THIS  th {
+    padding-left: 2px !important;
+    padding-right: 0px !important;
+    font-weight:bold !important;
+    line-height:3!important;
+    color:black;
+}
+.THIS .slds-truncate{ 
+    overflow: visible  !important;
+    white-space: initial  !important;  
+}
+.THIS slds {
+    box-sizing: border-box  !important;
+}
+.THIS .slds-table td {
+    white-space: initial  !important;
+    position: relative;
+}
+.THIS .accmarginTopCls{
+    margin-top: -2rem;
+}
+.THIS .slds-card {
+    background: #fff;
+    border: 0px !important;
+}
+.THIS .slds-spinner_container {
+    position:fixed !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+    z-index: 1000000 !important;
+}
+.THIS .subValModel .slds-modal__header{
+    background-color: rgb(255, 183, 93) !important;
+}
+.THIS .slds-required {
+   float: left !important;
+    padding-right: 2px !important;
+    color: var(--lwc-colorTextError,rgb(194, 57, 52)) !important;
+    font-weight: var(--lwc-fontWeightBold,700) !important;
+    font-size: 1rem !important;
+}

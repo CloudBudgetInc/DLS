@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>40.0</apiVersion>
+    <availableInTouch>true</availableInTouch>
+    <confirmationTokenRequired>false</confirmationTokenRequired>
+    <description>Used in Staff Community Salesforce internal view.
+Used in Custom tab</description>
+    <label>Staff_Time_Entry_Page_SC</label>
+</ApexPage>

@@ -1,0 +1,2597 @@
+<apex:page standardStylesheets="false" showHeader="true" sidebar="false" controller="ResumeUploadRchilliClass">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>    
+    <apex:includeScript value="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"/>
+    <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+    <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+    <script src="{!URLFOR($Resource.Filter)}"/>
+    <script src="{!URLFOR($Resource.MomentjsResource)}"></script>
+    <script src="{!URLFOR($Resource.MomentTimezone_Data)}"></script>
+    <c:RemoteActionTk ></c:RemoteActionTk>
+    <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+    <script type="text/javascript">
+        var __sfdcSessionId = '{!GETSESSIONID()}';
+    </script>
+    
+    <script src="../../soap/ajax/35.0/connection.js" type="text/javascript"></script>
+    <script src="../../soap/ajax/35.0/apex.js" type="text/javascript"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    
+         <style>
+        /**
+         * Hide when Angular is not yet loaded and initialized
+         */
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+          display: none !important;
+        }
+        
+        .img{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            height: 10%;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+        }
+        
+        .selectErrorClass {
+            background-color: #fff;
+            border-color: #c23934;
+            box-shadow: #c23934 0 0 0 1px inset;
+            background-clip: padding-box;
+        }
+        
+        // For lightning staff community
+        .slds:not(html), .slds body {
+            background: white !important;
+        }
+        
+        html .brandQuaternaryBgr {
+            background: white !important;
+        }
+        
+        </style>
+        <apex:form >            
+            <div class="slds ng-cloak" ng-app="myApp" ng-controller="resumeController">
+                <div class="slds-spinner--small" style="display: none; background-color: rgba(222, 230, 230, 0.6);width: 100%; height: 100%; z-index: 1000; position: fixed; left: 0; top: 0; overflow: hidden; text-align: center; vertical-align: middle;" id="spinner">
+                    <img alt="Loading..." src="{!URLFOR($Resource.SLDS0_12_2,'assets/images/spinners/slds_spinner_brand.gif')}" class="img" style="height: 10%;"/>
+                </div>
+                <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                    <div class="slds-grid">
+                        <div class="slds-media__figure">
+                            <svg aria-hidden="true" class="slds-icon slds-icon--large slds-icon-standard-user">
+                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2,'/assets/icons/standard-sprite/svg/symbols.svg#record')}"></use>
+                            </svg>
+                        </div>
+                        <div class="slds-media__body">
+                            <div class="slds-grid">
+                                <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="Update Profile">Update Profile</h1>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                           <!--<div style="width: 100%;text-align: center;padding-left:17%;">
+                               <div class="slds-form-element">
+                                   <h3 class="slds-page-header__title" style="font-size: 15px;">BookMark this Contact</h3>
+                                   <input name="checkbox" type="checkbox" aria-describedby="toggle-desc" ng-model="bookMarkThisCont"/>
+                               </div>
+                           </div>-->
+                        </div>
+                    </div>
+                </div>
+                <div class="{{uploadBlock}}">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small"></span>
+                                    </a>
+                                </div>
+                                <div class="slds-no-flex">
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left {{uploadButton}}" ng-click="uploadXML()" type="button">Upload</button>                                
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left {{searchContactButton}}" ng-click="searchContact()" type="button">Upload</button>   
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <input class="slds-col slds-size--4-of-12" type="file" data-file="responseFile"/>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                </div>
+                <div class="{{matchedContact}}">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Select One Contact</span>
+                                    </a>
+                                </div>
+                                <div class="slds-no-flex">
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left" ng-click="afterContactSelection()" type="button">Proceed</button>                                
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label"> 
+                                        <td class="slds-truncate">Select</td>                                  
+                                        <td class="slds-truncate">First Name</td>
+                                        <td class="slds-truncate">Middle Name</td>
+                                        <td class="slds-truncate">Last Name</td>
+                                        <td class="slds-truncate">Phone</td>
+                                        <td class="slds-truncate">Email</td>                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="cl in matchedContactList">
+                                        <td id="col2" data-label="Select" class="slds-cell-wrap">                                        
+                                            <input type="radio" ng-model="selCon" ng-value="cl" ng-click="callOnRadioChange(cl.Id);" name="ContactSelection"/>  <!--edited-->
+                                        </td>
+                                   
+                                        <td id="col2" data-label="First Name" class="slds-cell-wrap">
+                                            <apex:outputText value="{{cl.FirstName}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Middle Name" class="slds-cell-wrap">
+                                            <apex:outputText value="{{cl.MiddleName}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Last Name" class="slds-cell-wrap">
+                                            <apex:outputText value="{{cl.LastName}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Phone" class="slds-cell-wrap">
+                                            <apex:outputText value="{{cl.Phone}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Email" class="slds-cell-wrap">
+                                            <apex:outputText value="{{cl.Email}}"/>
+                                        </td>
+                                    </tr>
+                                    <tr ng-hide="matchedContactList.length">    <!--asdfghj-->
+                                        <td id="col2" data-label="Select" class="slds-cell-wrap">  
+                                        </td>
+                                        <td id="col2" data-label="First Name" class="slds-cell-wrap">
+                                            No matching contacts found
+                                        </td>
+                                        <td id="col2" data-label="Middle Name" class="slds-cell-wrap">
+                                        </td>
+                                        <td id="col2" data-label="Last Name" class="slds-cell-wrap">
+                                        </td>
+                                        <td id="col2" data-label="Phone" class="slds-cell-wrap">
+                                        </td>
+                                        <td id="col2" data-label="Email" class="slds-cell-wrap">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                </div>
+                <div class="{{contactInfoBlock}}">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Contact Information</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" ng-click="backToUpload()" type="button">Back to Upload</button>
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" ng-click="toEducationBlock()" type="button">Next</button>                                
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate">Fields</td>
+                                        <td class="slds-truncate">{{column2Label}}</td>
+                                        <td class="slds-truncate">{{column3Label}}</td>                            
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="c in ContactList" id="theRepeat">
+                                        <td id="col2" data-label="Fields" class="slds-cell-wrap"><apex:outputText value="{{c.conFieldLabel}}" style="font-weight:bold;"/></td>
+                                        <td id="col2" data-label="Contact Value" class="slds-cell-wrap" style="padding-top:1.5%;">
+                                             <span>
+                                                <div ng-if="c.conFieldLabel != 'Account Name' && c.conFieldValue != c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.conFieldValue}}" name="{{c.choice1}}"/>&nbsp;&nbsp;{{c.conFieldValue}}
+                                                </div>
+                                                <div ng-if="c.conFieldLabel != 'Account Name' && c.conFieldValue == c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.conFieldValue}}" name="{{c.choice1}}"/>&nbsp;&nbsp;{{c.conFieldValue}}
+                                                </div>
+                                                <span ng-if="c.conFieldLabel == 'Account Name' && (c.conFieldValue.Name != c.SelectedValue.Name || c.conFieldValue.Name == c.SelectedValue.Name)">
+                                                    <input type="radio" ng-model="c.SelectedValue.Name" value="{{c.conFieldValue.Name}}" name="{{c.choice1}}"/>&nbsp;&nbsp;{{c.conFieldValue.Name}}
+                                                </span>
+                                            </span>
+                                        </td>
+                                        <td id="col2" data-label="Resume Value" class="slds-cell-wrap"> 
+                                            <span>
+                                                <span ng-if="c.conFieldLabel != 'Account Name' && c.resumeFieldValue == c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.resumeFieldValue}}" name="{{c.choice1}}"/><!--<input ng-model="c.resumeFieldValue" ng-change="c.SelectedValue = c.resumeFieldValue" class="slds-input" type="text" style="width: 55%;"/>-->
+                                                </span>
+                                                <span ng-if="c.conFieldLabel != 'Account Name' && c.resumeFieldValue != c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.resumeFieldValue}}" name="{{c.choice1}}"/>
+                                                </span> 
+                                                <span ng-if="c.conFieldLabel == 'Account Name' && (c.resumeFieldValue.Name != c.SelectedValue.Name || c.resumeFieldValue.Name == c.SelectedValue.Name)">
+                                                    <input type="radio" ng-model="c.SelectedValue.Name" value="{{c.resumeFieldValue.Name}}" name="{{c.choice1}}"/>
+                                                </span>  
+                                                    <input ng-model="c.resumeFieldValue" class="slds-input"  ng-change="c.SelectedValue = c.resumeFieldValue" type="text" style="width: 90%;" ng-if="c.conFieldLabel != 'Date Of Birth' && c.conFieldLabel != 'Account Name'"/>
+                                                <span ng-if="c.conFieldLabel == 'Date Of Birth'">
+                                                    <datepicker date-format="MM-dd-yyyy" style="float:none;">
+                                                        <input ng-model="c.resumeFieldValue" type="text" class="slds-input"  ng-change="c.SelectedValue = c.resumeFieldValue" style="width: 90%;"/>
+                                                    </datepicker>
+                                                </span>
+                                                <span ng-if="c.conFieldLabel == 'Account Name'">
+                                                    <lookup data="c.resumeFieldValue" object="'Account'" placeholder="'Account Name'" on-change="c.SelectedValue = c.resumeFieldValue"></lookup>
+                                                </span>                                         
+                                            </span>
+                                        </td>
+                                        
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div> 
+                    
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Personal Information</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate">Fields</td>
+                                        <td class="slds-truncate">{{column2Label}}</td>
+                                        <td class="slds-truncate">{{column3Label}}</td>                            
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="c in PersonalInfo" id="theRepeat">
+                                        <td id="col2" data-label="Fields" class="slds-cell-wrap"><apex:outputText value="{{c.conFieldLabel}}" style="font-weight:bold;"/></td>
+                                        <td id="col2" data-label="Contact Value" class="slds-cell-wrap" style="padding-top:1.5%;">
+                                             <span>
+                                                <div ng-if="c.conFieldLabel != 'Account Name' && c.conFieldValue != c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.conFieldValue}}" name="{{c.choice1}}"/>&nbsp;&nbsp;{{c.conFieldValue}}
+                                                </div>
+                                                <div ng-if="c.conFieldLabel != 'Account Name' && c.conFieldValue == c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.conFieldValue}}" name="{{c.choice1}}"/>&nbsp;&nbsp;{{c.conFieldValue}}
+                                                </div>
+                                            </span>
+                                        </td>
+                                        <td id="col2" data-label="Resume Value" class="slds-cell-wrap"> 
+                                            <span>
+                                                <span ng-if="c.conFieldLabel != 'Account Name' && c.resumeFieldValue == c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.resumeFieldValue}}" name="{{c.choice1}}"/><!--<input ng-model="c.resumeFieldValue" ng-change="c.SelectedValue = c.resumeFieldValue" class="slds-input" type="text" style="width: 55%;"/>-->
+                                                </span>
+                                                <span ng-if="c.conFieldLabel != 'Account Name' && c.resumeFieldValue != c.SelectedValue">
+                                                    <input type="radio" ng-model="c.SelectedValue" value="{{c.resumeFieldValue}}" name="{{c.choice1}}"/>
+                                                </span> 
+                                                <span ng-if="c.conFieldLabel == 'Account Name' && (c.resumeFieldValue.Name != c.SelectedValue.Name || c.resumeFieldValue.Name == c.SelectedValue.Name)">
+                                                    <input type="radio" ng-model="c.SelectedValue.Name" value="{{c.resumeFieldValue.Name}}" name="{{c.choice1}}"/>
+                                                </span>  
+                                                <input ng-model="c.resumeFieldValue" class="slds-input"  ng-change="c.SelectedValue = c.resumeFieldValue" type="text" style="width: 90%;" ng-if="c.conFieldLabel != 'Date Of Birth' && c.conFieldLabel != 'Account Name'"/>
+                                                <span ng-if="c.conFieldLabel == 'Date Of Birth'">
+                                                    <datepicker date-format="MM-dd-yyyy" style="float:none;">
+                                                        <input ng-model="c.resumeFieldValue" type="text" class="slds-input"  ng-change="c.SelectedValue = c.resumeFieldValue" style="width: 90%;"/>
+                                                    </datepicker>
+                                                </span>
+                                            </span>
+                                        </td>
+                                        
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>                          
+                </div>
+                <div class="{{EducationShowOrHide}}">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Existing Education(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" type="Button" ng-click="backToContactInfo()">Previous</button>
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" type="Button" ng-click="toExperienceBlock()">Next</button>
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate" style="color: red;">School/College*</td>
+                                        <td class="slds-truncate">College/School Type</td>
+                                        <td class="slds-truncate" style="color: red;">Degree*</td>
+                                        <td class="slds-truncate">Degree Level</td>
+                                        <td class="slds-truncate">Field of Concentration</td>
+                                        <td class="slds-truncate">Year of Completion</td>
+                                        <td class="slds-truncate">City</td>
+                                        <td class="slds-truncate">State</td>
+                                        <td class="slds-truncate">Country</td>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="edu in filteredEduList = ( EducationList | filter :{isNew : false})">
+                                        <td id="col2" data-label="School/College" class="slds-cell-wrap">
+                                            <textarea id="School_College_old" class="slds-textarea {{edu.hasSchoolError}}" ng-model="edu.exp.College_School__c"></textarea>  
+                                        </td>
+                                        <td id="col2" data-label="College/School Type" class="slds-cell-wrap">
+                                            <select ng-model="edu.exp.College_School_Type__c" ng-options="i as i for i in college_School_Type_List" class="slds-select"></select>                            
+                                        </td>
+                                        <td id="col2" data-label="Degree" class="slds-cell-wrap">
+                                            <textarea id="Degree_old" class="slds-textarea {{edu.hasDegreeError}}" ng-model="edu.exp.Degree__c" ng-bind="edu.exp.Degree__c"></textarea>
+                                        </td>
+                                        <td id="col2" data-label="Degree Level" class="slds-cell-wrap">
+                                            <select ng-model="edu.exp.Degree_Level__c" ng-options="i as i for i in degreeLevelList" class="slds-select"></select>
+                                        </td>
+                                        <td id="col2" data-label="Field of Concentration" class="slds-cell-wrap">
+                                            <textarea id="field of Concentration" class="slds-textarea" ng-model="edu.exp.Field_of_Concentration__c"></textarea>
+                                        </td>
+                                        <td id="col2" data-label="Year of Completion" class="slds-cell-wrap">
+                                            <input ng-model="edu.exp.Year_of_Completion__c" type="text" class="slds-input"/>
+                                        </td>
+                                        <td id="col2" data-label="City" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="edu.exp.City__c"/>
+                                        </td>
+                                        <td id="col2" data-label="State" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="edu.exp.State__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Country" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="edu.exp.Country__c"/>
+                                        </td>
+                                    </tr>
+                                    <tr ng-hide="filteredEduList.length">
+                                        <td id="col2" data-label="Select"></td>
+                                        <td id="col2" data-label="School/College">No data Found</td> 
+                                        <td id="col2" data-label="College/School Type"></td> 
+                                        <td id="col2" data-label="Degree"></td> 
+                                        <td id="col2" data-label="Degree Level"></td>
+                                        <td id="col2" data-label="Field of Concentration"></td> 
+                                        <td id="col2" data-label="Year of Completion"></td> 
+                                        <td id="col2" data-label="City"></td> 
+                                        <td id="col2" data-label="State"></td> 
+                                        <td id="col2" data-label="Country"></td> 
+                                        <!--<td id="col2" data-label="Aggregate"></td>-->
+                                        
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">New Education(S)</span>
+                                    </a>
+                                </div>
+                                <div class="slds-no-flex">
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left" type="Button" ng-click="addNewEducation()">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">
+                                        <td class="slds-truncate">Select</td>
+                                        <td class="slds-truncate" style="color: red;">School/College*</td>
+                                        <td class="slds-truncate">College/School Type</td>
+                                        <td class="slds-truncate" style="color: red;">Degree*</td>
+                                        <td class="slds-truncate">Degree Level</td>
+                                        <td class="slds-truncate">Field of Concentration</td>
+                                        <td class="slds-truncate">Year of Completion</td>
+                                        <td class="slds-truncate">City</td>
+                                        <td class="slds-truncate">State</td>
+                                        <td class="slds-truncate">Country</td>
+                                        <!--<td class="slds-truncate">Aggregate</td>-->
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="edu in filteredNewEduList = ( EducationList | filter :{isNew : true})">
+                                        <td id="col2" data-label="Select" class="slds-cell-wrap">                                       
+                                            <input type="checkbox" name="options" id="checkbox-01" ng-model="edu.isSelected"/>
+                                        </td>
+                                        <td id="col2" data-label="School/College" class="slds-cell-wrap">
+                                            <textarea id="School_College" class="slds-textarea {{edu.hasSchoolError}}" ng-model="edu.exp.College_School__c"></textarea>  
+                                        </td>
+                                        <td id="col2" data-label="College/School Type" class="slds-cell-wrap">
+                                            <select ng-model="edu.exp.College_School_Type__c" ng-options="i as i for i in college_School_Type_List" class="slds-select"></select>                            
+                                        </td>
+                                        <td id="col2" data-label="Degree" class="slds-cell-wrap">
+                                            <textarea id="Degree_New" class="slds-textarea {{edu.hasDegreeError}}" ng-model="edu.exp.Degree__c"></textarea>
+                                        </td>
+                                        <td id="col2" data-label="Degree Level" class="slds-cell-wrap">
+                                            <select ng-model="edu.exp.Degree_Level__c" ng-options="i as i for i in degreeLevelList" class="slds-select"></select>                                        
+                                        </td>
+                                        <td id="col2" data-label="Field of Concentration" class="slds-cell-wrap">
+                                            <!--<input ng-model="edu.exp.Field_of_Concentration__c" type="text" class="slds-input"/>-->
+                                            <textarea id="field of Concentration" class="slds-textarea" ng-model="edu.exp.Field_of_Concentration__c"></textarea>
+                                        </td>
+                                        <td id="col2" data-label="Year of Completion" class="slds-cell-wrap">
+                                            <!--<datepicker date-format="yyyy-MM-dd">-->
+                                                <input ng-model="edu.exp.Year_of_Completion__c" type="text" class="slds-input"/>
+                                            <!--</datepicker>-->
+                                        </td>
+                                        <td id="col2" data-label="City" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="edu.exp.City__c"/>
+                                        </td>
+                                        <td id="col2" data-label="State" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="edu.exp.State__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Country" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="edu.exp.Country__c"/>
+                                        </td>
+                                        <!--<td id="col2" data-label="Aggregate" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="edu.exp.Aggregate__c"/>
+                                        </td>-->
+                                        
+                                    </tr>
+                                    <tr ng-hide="filteredNewEduList.length">
+                                        <td id="col2" data-label="Select"></td>
+                                        <td id="col2" data-label="School/College">No data Found</td> 
+                                        <td id="col2" data-label="College/School Type"></td> 
+                                        <td id="col2" data-label="Degree"></td> 
+                                        <td id="col2" data-label="Degree Level"></td> 
+                                        <td id="col2" data-label="Field of Concentration"></td>
+                                        <td id="col2" data-label="Year of Completion"></td> 
+                                        <td id="col2" data-label="City"></td> 
+                                        <td id="col2" data-label="State"></td> 
+                                        <td id="col2" data-label="Country"></td> 
+                                       <!-- <td id="col2" data-label="Aggregate"></td> -->
+                                        
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                </div>
+                <div class="{{ExperienceShowOrHide}}">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                  
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Existing Work Experience(S)</span>
+                                    </a>
+                                </div>
+                                <div class="slds-no-flex">
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left" type="Button" ng-click="backToEducation()">Previous</button>
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left" type="Button" ng-click="toSkillsSection()">Next</button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate" style="color: red;">Name of Company*</td>
+                                        <td class="slds-truncate">Role Title</td>
+                                        <td class="slds-truncate">Experience in Months</td>
+                                        <td class="slds-truncate">Start Date</td>
+                                        <td class="slds-truncate">End Date</td>
+                                        <td class="slds-truncate">City</td>
+                                        <td class="slds-truncate">State</td>
+                                        <td class="slds-truncate">Country</td> 
+                                        <td class="slds-truncate">Description</td>                                       
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="wl in  WorkList | filter :{isNew : false}">
+                                        <td id="col2" data-label="Name of Company" class="slds-cell-wrap">
+                                            <textarea id="Name_of_Company" class="slds-textarea {{wl.hasNameError}}" ng-model="wl.exp.Name_of_Company__c"></textarea>  
+                                        </td>
+                                        <td id="col2" data-label="Role Title" class="slds-cell-wrap">
+                                            <!--input class="slds-input" type="text" ng-model="wl.exp.Role_Title__c"/-->
+                                            <textarea class="slds-textarea" ng-model="wl.exp.Role_Title__c"></textarea>  
+                                        </td>
+                                        <td id="col2" data-label="Experience in Months" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.Experience_in_Months__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Start Date" class="slds-cell-wrap">
+                                            <datepicker date-format="MM-dd-yyyy">
+                                                <input ng-model="wl.exp.Start_Date__c" type="text" class="slds-input"/>
+                                            </datepicker>
+                                        </td>
+                                        <td id="col2" data-label="End Date" class="slds-cell-wrap">
+                                            <div ng-if="!wl.exp.showPresent">
+                                                <datepicker date-format="MM-dd-yyyy">
+                                                    <input ng-model="wl.exp.End_Date__c" type="text" class="slds-input"/>
+                                                </datepicker>
+                                                <div ng-if="!wl.exp.End_Date__c">
+                                                    <a style="text-decoration:underline !important; cursor:pointer !important;" ng-click="showPresentforEndDate(WorkList.indexOf(wl))">Present</a>
+                                                </div>
+                                            </div>
+                                            <div ng-if="wl.exp.showPresent">
+                                                <div ng-click="showEndDate(WorkList.indexOf(wl))">
+                                                    <input style="cursor:pointer !important; background-color:white !important;" class="slds-input" type="text" value="Present" disabled="true"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td id="col2" data-label="City" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.City__c"/>
+                                        </td>
+                                        <td id="col2" data-label="State" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.State__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Country" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.Country__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Description" class="slds-cell-wrap">
+                                            <textarea id="Job-Description" class="slds-textarea" ng-model="wl.exp.Description__c"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr class="slds-text-heading--label" ng-hide="filteredWorkList.length"> 
+                                        <td id="col2" data-label="Name of Company">No data found</td>
+                                        <td id="col2" data-label="Role Title"></td>
+                                        <td id="col2" data-label="Experience in Months"></td>
+                                        <td id="col2" data-label="Start Date"></td>
+                                        <td id="col2" data-label="End Date"></td>
+                                        <td id="col2" data-label="City"></td>
+                                        <td id="col2" data-label="State"></td>
+                                        <td id="col2" data-label="Country"></td>
+                                        <td id="col2" data-label="Description"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                   
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">New Work Experience(S)</span>
+                                    </a>
+                                </div>
+                                <div class="slds-no-flex">
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left" type="Button" ng-click="addNewExperience()">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label"> 
+                                        <td class="slds-truncate">Select</td>                                  
+                                        <td class="slds-truncate" style="color: red;">Name of Company*</td>
+                                        <td class="slds-truncate">Role Title</td>
+                                        <td class="slds-truncate">Experience in Months</td>
+                                        <td class="slds-truncate" style="white-space: normal !important;">Intensive Proficiency Oriented Experience</td>
+                                        <td class="slds-truncate">Start Date</td>
+                                        <td class="slds-truncate">End Date</td>
+                                        <td class="slds-truncate">City</td>
+                                        <td class="slds-truncate">State</td>
+                                        <td class="slds-truncate">Country</td>
+                                        <td class="slds-truncate">Description</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="wl in WorkList | filter :{isNew : true}">
+                                        <td id="col2" data-label="Select" class="slds-cell-wrap">                                       
+                                            <input type="checkbox" name="options" id="checkbox-01" ng-model="wl.isSelected"/>
+                                        </td>
+                                        <td id="col2" data-label="Name of Company" class="slds-cell-wrap">
+                                            <textarea id="Name_of_Company_New" class="slds-textarea {{wl.hasNameError}}" ng-model="wl.exp.Name_of_Company__c"></textarea>  
+                                        </td>
+                                        <td id="col2" data-label="Role Title" class="slds-cell-wrap">
+                                            <!--input class="slds-input" type="text" ng-model="wl.exp.Role_Title__c"/-->
+                                            <textarea class="slds-textarea" ng-model="wl.exp.Role_Title__c"></textarea>  
+                                        </td>
+                                        <td id="col2" data-label="Experience in Months" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.Experience_in_Months__c"/>
+                                        </td>
+                                         <td id="col2" data-label="Intensive Proficiency Oriented Experience" class="slds-cell-wrap">
+                                             <input type="checkbox" name="intensive" id="checkbox-01" ng-model="wl.exp.Intensive_Proficiency_Oriented_Experienc__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Start Date" class="slds-cell-wrap">
+                                            <datepicker date-format="MM-dd-yyyy">
+                                                <input ng-model="wl.exp.Start_Date__c" type="text" class="slds-input"/>
+                                            </datepicker>
+                                        </td>
+                                        <td id="col2" data-label="End Date" class="slds-cell-wrap">
+                                            <div ng-if="!wl.exp.showPresent">
+                                                <datepicker date-format="MM-dd-yyyy">
+                                                    <input ng-model="wl.exp.End_Date__c" type="text" class="slds-input"/>
+                                                </datepicker>
+                                                <div ng-if="!wl.exp.End_Date__c">
+                                                    <a style="text-decoration:underline !important; cursor:pointer !important;" ng-click="showPresentforEndDate(WorkList.indexOf(wl))">Present</a>
+                                                </div>
+                                            </div>
+                                            <div ng-if="wl.exp.showPresent">
+                                                <div ng-click="showEndDate(WorkList.indexOf(wl))">
+                                                    <input style="cursor:pointer !important; background-color:white !important;" class="slds-input" type="text" value="Present" disabled="true"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td id="col2" data-label="City" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.City__c"/>
+                                        </td>
+                                        <td id="col2" data-label="State" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.State__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Country" class="slds-cell-wrap">
+                                            <input class="slds-input" type="text" ng-model="wl.exp.Country__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Description" class="slds-cell-wrap">
+                                            <textarea id="Job-Description" class="slds-textarea" ng-model="wl.exp.Description__c"></textarea>  
+                                        </td>
+                                    </tr>
+                                    <tr class="slds-text-heading--label" ng-hide="filteredNewWorkList.length"> 
+                                        <td id="col2" data-label="Select"></td>                                  
+                                        <td id="col2" data-label="Name of Company">No data found</td>
+                                        <td id="col2" data-label="Role Title"></td>
+                                        <td id="col2" data-label="Experience in Months"></td>
+                                        <td id="col2" data-label="Start Date"></td>
+                                        <td id="col2" data-label="End Date"></td>
+                                        <td id="col2" data-label="City"></td>
+                                        <td id="col2" data-label="State"></td>
+                                        <td id="col2" data-label="Country"></td>
+                                        <td id="col2" data-label="Description"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                </div>
+                <!-- End of Education and Experience Section -->
+                <!-- Start of skills Section -->
+                <div class="{{skillsInfoBlock}}">       
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small" ng-hide="editProf">Suggested Skills</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" ng-click="backToExperience()" type="button">Previous</button>
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" ng-click="overAllViewFun()" type="button">Next</button>
+                                
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center" style="display: block;">
+                            <span ng-repeat="sl in NewSkillInfoList">
+                                <span class="slds-badge" style="line-height: 3">
+                                    <span ng-bind="sl.Skill">
+                                    </span>
+                                    <span ng-if="sl.ExperienceInMonths != 0" ng-bind="sl.ExperienceInMonths">
+                                    </span>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Existing Skill(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                
+                                <button type="Button" ng-click="toAddSkill()" class="slds-button slds-button--neutral slds-col--bump-left">Add Skill</button>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate" style="color:red;">Skill*</td>
+                                        <td class="slds-truncate">From Language</td>
+                                        <td class="slds-truncate">To Language</td>
+                                        <td class="slds-truncate">Rating</td>
+                                        <td class="slds-truncate">Status</td>
+                                        <!--<td class="slds-truncate">Experience</td>-->
+                                        <td class="slds-truncate">Action</td>
+                                    </tr>
+                                </thead>
+        
+                                <tbody>
+                                    <tr ng-repeat="sk in SkillInfoList" ng-if="SkillInfoList.length > 0">
+                                        <td id="col2" data-label="Skill">                                           
+                                            <select ng-model="sk.skl.Skill__c" ng-options="i as i for i in skillPickList" class="slds-select {{sk.hasSkillError}}" ng-change="disableToLanguage(sk.skl.Skill__c,$index);"></select>
+                                        </td>
+                                        <td id="col2" data-label="From Language">                                         
+                                            <select ng-model="sk.skl.From_Language_LU__c" ng-options="key as Value for (key ,Value) in LanguageList" class="slds-select"></select>                                            
+                                        </td>
+                                        <td id="col2" data-label="To Language">                                           
+                                            <select ng-model="sk.skl.To_Language_LU__c" ng-options="key as Value for (key ,Value) in LanguageList" class="slds-select" ng-disabled="sk.toLangDisabled"></select>
+                                        </td>
+                                        <td id="col2" data-label="Rating">
+                                            <select ng-model="sk.skl.Rating__c" ng-options="i as i for i in RatingList" class="slds-select"></select>
+                                        </td>
+                                        <td id="col2" data-label="Status">
+                                            <multi-picklist options="StatusList" selected-options="sk.skl.Skill_Verification__c"></multi-picklist>
+                                        </td>
+                                        <!--<td id="col2" data-label="Experience">
+                                            <multi-picklist options="expList" selected-options="sk.ExperienceName"></multi-picklist>
+                                        </td>-->
+                                        <td id="col2" data-label="Action">
+                                            <button type="Button" ng-click="tocancelSkill($index)" ng-hide="sk.skl.Id" class="slds-button slds-button--neutral slds-col--bump-left">Cancel</button>
+                                        </td>
+                                    </tr>
+                                    <tr ng-hide="SkillInfoList.length">
+                                        <td id="col2" data-label="Skill">No data found</td>
+                                        <td id="col2" data-label="From Language"></td>
+                                        <td id="col2" data-label="To Language"></td>
+                                        <td id="col2" data-label="Rating"></td>
+                                        <td id="col2" data-label="Status"></td>
+                                        <!--<td id="col2" data-label="Experience"></td>-->
+                                        <td id="col2" data-label="Action"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div> 
+                    <div class="slds-card" ng-hide="editProf">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">New Language(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">                                
+                            </div>
+                        </div>
+                        
+                        <div class="slds-card__body slds-text-align--center">
+                            {{LanguageKnownVal}}
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>         
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Existing Language(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                
+                                <button type="Button" ng-click="toAddLanguageKnown()" class="slds-button slds-button--neutral slds-col--bump-left">Add Language Known</button>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate" style="color: red;">Language*</td>
+                                        <td class="slds-truncate">Native Language</td>
+                                        <td class="slds-truncate">Speaking Proficiency</td>
+                                        <td class="slds-truncate">Listening Proficiency</td>
+                                        <td class="slds-truncate">Action</td>
+                                    </tr>
+                                </thead>
+        
+                                <tbody>
+                                    <tr ng-repeat="lk in LanguageKnownList" ng-if="LanguageKnownList.length > 0">
+                                        <td id="col2" data-label="Language">
+                                            <select ng-model="lk.Language__c" ng-options="key as Value for (key ,Value) in LanguageList" class="slds-select {{lk.hasLangError}}"></select>
+                                        </td>
+                                        <td id="col2" data-label="Native Language">
+                                            <input type="checkbox" ng-model="lk.Native_Language__c"/>
+                                        </td>
+                                        <td id="col2" data-label="Speaking Proficiency">
+                                            <input type="text" ng-model="lk.Speaking_Proficiency__c" class="slds-input"/>
+                                        </td>
+                                        <td id="col2" data-label="Listening Proficiency">
+                                            <input type="text" ng-model="lk.Listening_Proficiency__c" class="slds-input"/>
+                                        </td>
+                                        <td id="col2" data-label="Action">
+                                            <button type="Button" ng-click="tocancelLang($index)" ng-hide="lk.Id" class="slds-button slds-button--neutral slds-col--bump-left">Cancel</button>
+                                        </td>
+                                    </tr>
+                                    <tr ng-hide="LanguageKnownList.length">
+                                        <td id="col2" data-label="Language">No data found</td>
+                                        <td id="col2" data-label="Native Language"></td>
+                                        <td id="col2" data-label="Speaking Proficiency"></td>
+                                        <td id="col2" data-label="Listening Proficiency"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div> 
+                    <!-- ** -->
+                    
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Existing Professional Publication and Awards(S)</span>
+                                    </a>
+                                </div>
+                                <div class="slds-no-flex">
+                                    <button class="slds-button slds-button--neutral slds-col--bump-left" type="Button" ng-click="addProfPublicationAward()">Add Professional Publication and Award</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">   
+                                        <td class="slds-truncate">Name of the Publication/Award</td>
+                                        <td class="slds-truncate">Company/Institution Name</td>                                        
+                                        <td class="slds-truncate">Year</td>
+                                        <td class="slds-truncate">Action</td>
+                                    </tr>
+                                </thead>
+        
+                                <tbody>
+                                    <tr ng-repeat="lk in ProfPublicationAwardsList"  ng-if="ProfPublicationAwardsList.length > 0">                                        
+                                        <td id="col2" data-label="Name of the Publication/Award">
+                                            <input type="text" ng-model="lk.ppa.Name_of_the_Publication_Award__c" class="slds-input"/>
+                                        </td>
+                                        <td id="col2" data-label="Company/Institution Name">
+                                            <input type="text" ng-model="lk.ppa.Company_Institution_Name__c" class="slds-input"/>
+                                        </td>                                        
+                                        <td id="col2" data-label="Year">
+                                            <input type="text" ng-model="lk.ppa.Year__c" class="slds-input"/>
+                                        </td>
+                                        <td id="col2" data-label="Action">
+                                            <button type="Button" ng-click="tocancelprofPublicationAward($index)" ng-hide="lk.ppa.Id" class="slds-button slds-button--neutral slds-col--bump-left">Cancel</button>
+                                        </td>
+                                    </tr>
+                                    <tr ng-hide="ProfPublicationAwardsList.length">
+                                        <td id="col2" data-label="Company/Institution Name">No data found</td>
+                                        <td id="col2" data-label="Name of the Publication/Award"></td>
+                                        <td id="col2" data-label="Year"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>  
+                    
+                </div>
+                <!-- End of skills Section -->
+                <!-- Start of over all Section -->
+                <div class="{{overAllView}}" Id="OverAllViewDiv">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Contact Information</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" type="button" ng-click="skillsInfoBlock = 'ng-show'; overAllView = 'ng-hide';">Previous</button>                   
+                                <button class="slds-button slds-button--neutral slds-col--bump-left" type="button" ng-click="saveAllRecords()">Save</button>                   
+                            </div>
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate">Fields</td>
+                                        <td class="slds-truncate">Contact Value</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="ci in ContactList">
+                                        <td id="col2" data-label="Fields" class="slds-cell-wrap">
+                                            <apex:outputText value="{{ci.conFieldLabel}}" style="font-weight:bold;"/>
+                                        </td>
+                                        <td id="col2" data-label="Contact Value" class="slds-cell-wrap">
+                                            <span ng-if="ci.conFieldLabel != 'Account Name'">
+                                                <apex:outputText value="{{ci.SelectedValue}}"/>
+                                            </span>
+                                            <!--<apex:repeat value="{{ci.selectedAccountIdAndNameMap}}" var="m">-->
+                                            <span ng-if="ci.conFieldLabel == 'Account Name'">
+                                                <span ng-if="ci.conFieldValue.Name == ''"></span>
+                                                <span ng-if="ci.resumeFieldValue.Name == ''"></span>
+                                                {{ci.SelectedValue.Name}}
+                                                <!--<apex:repeat value="{!selectedAccountIdAndNameMap}" var="m">
+                                                    <apex:outputText >{!m}</apex:outputText> 
+                                                </apex:repeat>-->
+                                            </span>
+                                            <!--</apex:repeat>-->
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Personal Information</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate">Fields</td>
+                                        <td class="slds-truncate">Contact Value</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="ci in PersonalInfo">
+                                        <td id="col2" data-label="Fields" class="slds-cell-wrap">
+                                            <apex:outputText value="{{ci.conFieldLabel}}" style="font-weight:bold;"/>
+                                        </td>
+                                        <td id="col2" data-label="Contact Value" class="slds-cell-wrap">
+                                            <span ng-if="ci.conFieldLabel != 'Account Name'">
+                                                <apex:outputText value="{{ci.SelectedValue}}"/>
+                                            </span>
+                                            <!--<apex:repeat value="{{ci.selectedAccountIdAndNameMap}}" var="m">-->
+                                            <span ng-if="ci.conFieldLabel == 'Account Name'">
+                                                <span ng-if="ci.conFieldValue.Name == ''"></span>
+                                                <span ng-if="ci.resumeFieldValue.Name == ''"></span>
+                                                {{ci.SelectedValue.Name}}
+                                                <!--<apex:repeat value="{!selectedAccountIdAndNameMap}" var="m">
+                                                    <apex:outputText >{!m}</apex:outputText> 
+                                                </apex:repeat>-->
+                                            </span>
+                                            <!--</apex:repeat>-->
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    <!--<svg aria-hidden="true" class="slds-icon slds-icon-standard-contact slds-icon--small">
+                                        <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#contact"></use>
+                                    </svg>-->
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Education(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">
+                                        <td class="slds-truncate">School/College</td>
+                                        <td class="slds-truncate">College/School Type</td>
+                                        <td class="slds-truncate">Degree</td>
+                                        <td class="slds-truncate">Degree Level</td>
+                                        <td class="slds-truncate">Field of Concentration</td>
+                                        <td class="slds-truncate">Year of Completion</td>
+                                        <td class="slds-truncate">City</td>
+                                        <td class="slds-truncate">State</td>
+                                        <td class="slds-truncate">Country</td>
+                                        <!--<td class="slds-truncate">Aggregate</td>-->
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                        <!--<tr style="{!IF(ql.isSelected,'','display:none')}">-->
+                                    <tr ng-repeat="edu in filteredEducationFinalList = ( EducationList | filter :{isSelected : true})">
+                                        
+                                        <td id="col2" data-label="School/College" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.College_School__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="College/School Type" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.College_School_Type__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Degree" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.Degree__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Degree Level" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.Degree_Level__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Field of Concentration" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.Field_of_Concentration__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Year of Completion" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.Year_of_Completion__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="City" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.City__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="State" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.State__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Country" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.Country__c}}"/>
+                                        </td>
+                                        <!--<td id="col2" data-label="Aggregate" class="slds-cell-wrap">
+                                            <apex:outputText value="{{edu.exp.Aggregate__c}}"/>
+                                        </td>-->
+                                        
+                                    </tr>
+                                    <tr ng-hide="filteredEducationFinalList.length">
+                                        <td id="col2" data-label="Select"></td>
+                                        <td id="col2" data-label="School/College">No data Found</td> 
+                                        <td id="col2" data-label="College/School Type"></td> 
+                                        <td id="col2" data-label="Degree"></td> 
+                                        <td id="col2" data-label="Degree Level"></td> 
+                                        <td id="col2" data-label="Field of Concentration"></td>
+                                        <td id="col2" data-label="Year of Completion"></td> 
+                                        <td id="col2" data-label="City"></td> 
+                                        <td id="col2" data-label="State"></td> 
+                                        <td id="col2" data-label="Country"></td> 
+                                        <!--<td id="col2" data-label="Aggregate"></td> -->
+                                        
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                     <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    <!--<svg aria-hidden="true" class="slds-icon slds-icon-standard-contact slds-icon--small">
+                                        <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#contact"></use>
+                                    </svg>-->
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Experience(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label"> 
+                                        <td class="slds-truncate">Name of Company</td>
+                                        <td class="slds-truncate">Role Title</td>
+                                        <td class="slds-truncate">Experience in Months</td>
+                                        <td class="slds-truncate">Start Date</td>
+                                        <td class="slds-truncate">End Date</td>
+                                        <td class="slds-truncate">City</td>
+                                        <td class="slds-truncate">State</td>
+                                        <td class="slds-truncate">Country</td>
+                                        <td class="slds-truncate">Description</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="wl in finalFilteredWorkListIns = ( WorkList | filter :{isSelected : true})">
+                                        
+                                        <td id="col2" data-label="Name of Company" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.Name_of_Company__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Role Title" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.Role_Title__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Experience in Months" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.Experience_in_Months__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Start Date" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.Start_Date__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="End Date" class="slds-cell-wrap">
+                                            <div ng-if="!wl.exp.End_Date__c">
+                                                <apex:outputText value="Present"/>
+                                            </div>
+                                            <div ng-if="wl.exp.End_Date__c">
+                                                <apex:outputText value="{{wl.exp.End_Date__c}}"/>
+                                            </div>
+                                        </td>
+                                        <td id="col2" data-label="City" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.City__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="State" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.State__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Country" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.Country__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="Description" class="slds-cell-wrap">
+                                            <apex:outputText value="{{wl.exp.Description__c}}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="slds-text-heading--label" ng-hide="finalFilteredWorkListIns.length"> 
+                                        <td id="col2" data-label="Name of Company">No data found</td>
+                                        <td id="col2" data-label="Role Title"></td>
+                                        <td id="col2" data-label="Experience in Months"></td>
+                                        <td id="col2" data-label="Start Date"></td>
+                                        <td id="col2" data-label="End Date"></td>
+                                        <td id="col2" data-label="City"></td>
+                                        <td id="col2" data-label="State"></td>
+                                        <td id="col2" data-label="Country"></td>
+                                        <td id="col2" data-label="Description"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Skill(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">
+                                        <td class="slds-truncate">Skill</td>
+                                        <td class="slds-truncate">From Language</td> 
+                                        <td class="slds-truncate">To Language</td>
+                                        <td class="slds-truncate">Rating</td> 
+                                        <td class="slds-truncate">Status</td> 
+                                        <!--<td class="slds-truncate">Experience</td>--> 
+                                    </tr>
+                                </thead>
+        
+                                <tbody>
+                                    <tr ng-repeat="sl in SkillInfoList">
+                                        <td id="col2" data-label="Skill">
+                                            <apex:outputText value="{{sl.skl.Skill__c}}"/>
+                                        </td>
+                                        <td id="col2" data-label="From Language">
+                                            {{LanguageList[sl.skl.From_Language_LU__c]}}
+                                        </td>
+                                        <td id="col2" data-label="To Language">
+                                            {{LanguageList[sl.skl.To_Language_LU__c]}}
+                                        </td>
+                                        <td id="col2" data-label="Rating">
+                                            {{sl.skl.Rating__c}}
+                                        </td>
+                                        <td id="col2" data-label="Status">
+                                            {{sl.skl.Skill_Verification__c}}
+                                        </td>
+                                        <!--<td id="col2" data-label="Experience">
+                                            <apex:outputText value="{{sl.ExperienceName}}"/>
+                                        </td>-->                        
+                                    </tr>
+                                    <tr ng-hide="SkillInfoList.length">
+                                        <td id="col2" data-label="Skill">No data found</td>
+                                        <td id="col2" data-label="From Language"></td>
+                                        <td id="col2" data-label="To Language"></td>
+                                        <td id="col2" data-label="Rating"></td>
+                                        <td id="col2" data-label="Status"></td>
+                                        <!--<td id="col2" data-label="Experience"></td>-->
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Known Language(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="slds-no-flex">
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">                                   
+                                        <td class="slds-truncate">Language</td>
+                                        <td class="slds-truncate">Native Language</td>
+                                        <td class="slds-truncate">Speaking Proficiency</td>
+                                        <td class="slds-truncate">Listening Proficiency</td>
+                                    </tr>
+                                </thead>
+        
+                                <tbody>
+                                    <tr ng-repeat="lk in LanguageKnownList" ng-if="LanguageKnownList.length > 0">
+                                        <td id="col2" data-label="Language">
+                                            {{LanguageList[lk.Language__c]}}
+                                        </td>
+                                        <td id="col2" data-label="Native Language">
+                                            <input type="checkbox" ng-model="lk.Native_Language__c" ng-disabled="true"/>
+                                        </td>
+                                        <td id="col2" data-label="Speaking Proficiency">
+                                            {{lk.Speaking_Proficiency__c}}
+                                        </td>
+                                        <td id="col2" data-label="Listening Proficiency">
+                                            {{lk.Listening_Proficiency__c}}
+                                        </td>
+                                    </tr>
+                                    <tr ng-hide="LanguageKnownList.length">
+                                        <td id="col2" data-label="Language">No data found</td>
+                                        <td id="col2" data-label="Native Language"></td>
+                                        <td id="col2" data-label="Speaking Proficiency"></td>
+                                        <td id="col2" data-label="Listening Proficiency"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div> 
+                     <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    <!--<svg aria-hidden="true" class="slds-icon slds-icon-standard-contact slds-icon--small">
+                                        <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#contact"></use>
+                                    </svg>-->
+                                </div>
+                                <div class="slds-media__body slds-truncate">
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small"> Professional Publication and Awards(S)</span>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="slds-card__body slds-text-align--center">
+                            <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+                                <thead>
+                                    <tr class="slds-text-heading--label">
+                                        <td class="slds-truncate">NAME OF THE PUBLICATION/AWARD	</td>
+                                        <td class="slds-truncate">COMPANY/INSTITUTION NAME	</td>                                        
+                                        <td class="slds-truncate">Year</td>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="lk in ProfPublicationAwardsList "  ng-if="ProfPublicationAwardsList.length > 0">                                        
+                                        <td id="col2" data-label="Name of the Publication/Award">
+                                            <apex:outputText value="{{lk.ppa.Name_of_the_Publication_Award__c}}"/>
+                                            
+                                        </td>
+                                        
+                                        <td id="col2" data-label="Company/Institution Name">
+                                            <apex:outputText value="{{lk.ppa.Company_Institution_Name__c}}"/>
+                                            
+                                        </td>
+                                        
+                                        <td id="col2" data-label="Year">
+                                            <apex:outputText value="{{lk.ppa.Year__c}}"/>
+                                        </td>
+                                    </tr>
+                                        
+                                    <tr ng-hide="ProfPublicationAwardsList.length">                                        
+                                        <td id="col2" data-label="Company/Institution Name">No data found</td>
+                                        <td id="col2" data-label="Name of the Publication/Award"></td>
+                                        <td id="col2" data-label="Year"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="slds-card__footer"></div>
+                    </div>
+                </div>
+                <!-- End of Over all Section -->
+                <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForError}}">
+                    <div class="slds-modal__container">
+                        <div class="slds-modal__header" style="background-color: rgb(199, 71, 21);color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                        </div>
+                        <div class="slds-modal__content">
+                            <p>{{errorMessageforAllSave}}</p>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="modalStateForError = '';modalBackdropStateForError = '';"></input>
+                        </div>
+                   </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForError}}"></div>
+                
+                <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateContactNotSelected}}">
+                    <div class="slds-modal__container">
+                          <div class="slds-modal__header" style="background-color: rgb(199, 71, 21);color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                          </div>
+                          <div class="slds-modal__content">
+                               <p>{{contactNotSelectedMsg}}</p>
+                         </div>
+                         <div class="slds-modal__footer">
+                             <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="modalStateContactNotSelected = '';modalBackdropContactNotSelected = '';uploadXML()"></input>
+                             <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="modalStateContactNotSelected = '';modalBackdropContactNotSelected = '';"></input>
+                         </div>
+                   </div>
+              </div>
+              <div class="slds-modal-backdrop {{modalBackdropContactNotSelected}}"></div>
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalForBookmark}}">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__content">
+                        <div id="lightning"/>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropForBookmark}}"></div>
+              <script type="text/ng-template" id="multiplePick.html">
+                    <div id="mulipicklist" class="slds" style="width:100%;">
+                        <div class="slds-picklist" aria-expanded="true">
+                            <button type="button" class="slds-button slds-button--neutral slds-picklist__label" aria-haspopup="true" ng-click="toggleDropdown()">
+                                <span class="slds-truncate">{{count}} Selected</span>
+                                <svg aria-hidden="true" class="slds-icon">
+                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, 'assets/icons/utility-sprite/svg/symbols.svg#down')}"></use>
+                                </svg>
+                            </button>
+                            <div class="slds-dropdown slds-dropdown--left slds-dropdown--menu" ng-class="{'slds-hide': !isOptVisible}">
+                                <ul class="slds-dropdown__list" role="menu"  style="height: 110px;overflow-y: scroll;">
+                                  <li id="{{$index}}"  href="#"  class="slds-dropdown__item" ng-repeat="inp in pickListOptions track by $index"  ng-class="{'slds-is-selected':isSelected(inp)}" ng-click="toggleSelectOption(inp)">
+                                    <a href="javascript:void(0)" role="menuitemradio">
+                                      <p class="">
+                                            <svg aria-hidden="true" class="slds-icon slds-icon--selected slds-icon--x-small slds-icon-text-default slds-m-right--x-small">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, 'assets/icons/utility-sprite/svg/symbols.svg#check')}"></use>
+                                            </svg>
+                                            {{inp}}
+                                        </p>
+                                    </a>
+                                  </li>
+                                </ul>
+                             </div>
+                        </div>
+                    </div>
+                </script>
+                <!-- for Look up code -->
+              
+                <script type="text/ng-template" id="lookup1.html">
+                    <div class="slds" style="display: inline-block; width: 90%;">
+                        <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                            <div class="slds-form-element">
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                    <input id="lookupf" ng-model="searchTxt" ng-disabled="disabled" ng-KeyPress="fetchAccounts(searchTxt)" ng-KeyDown="isDropDownHidden= false;data = ''" class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" placeholder="{{placeholder}}"/>
+                                </div>
+                            </div>
+                            <div class="slds-lookup__menu" role="listbox" ng-hide="isDropDownHidden">
+                                <ul class="slds-lookup__list" role="presentation" id="lookuplist">
+                                    <li class="slds-lookup__item" ng-repeat="acc in accounts" ng-click="updateDataModelAttr(acc)">
+                                        <a id="{{acc.Id}}" role="option">
+                                            {{acc.Name}}
+                                        </a>
+                                    </li>
+                                    <li ng-if="!accounts.length && !showLoadingDiv" class="slds-text-align--center">
+                                       No match found
+                                    </li>
+                                    <li ng-if="showLoadingDiv" class="slds-text-align--center">
+                                       <img src="{!URLFOR($Resource.SLDS090,'/assets/images/spinners/slds_spinner_brand.gif')}" width="50" height="50"/>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </script>
+                
+                <!-- End of look up code --->
+            </div>
+            
+        </apex:form>
+        <apex:includeLightning />
+    </html>
+    <script>
+    
+    var force = new remotetk.Client();
+    
+    var underscore = angular.module('underscore', []);
+        underscore.factory('_', ['$window', function($window) {
+            return $window._;
+        }]);
+    
+    var app = angular.module('myApp', ['ngRoute','underscore','720kb.datepicker']);  //,'720kb.datepicker'
+    
+    
+    app.directive('file', function(){
+            
+        return {
+            scope: {
+                file: '='
+            },
+            link: function(scope, el, attrs){
+                el.bind('change', function(event){
+                    var files = event.target.files;
+                    var file = files[0];
+
+                    var reader = new FileReader();
+                    reader.onload = loaded;
+                    reader.onerror = errorHandler;
+                    reader.readAsDataURL(file);
+
+                    function loaded(evt){
+                        scope.file = {};
+                        var fileContent = String(evt.target.result);
+                        fileContent = fileContent.substr(fileContent.indexOf(',') + 1);
+                        
+                        scope.file.resultbody = fileContent;
+                        scope.file.name = file ? file.name : undefined;
+                        scope.file.contenttype = file ? file.type : undefined;
+
+                        scope.$apply(); 
+                        //console.log(scope.file);
+                    }                            
+                    function errorHandler(evt) {
+                        if (evt.target.error.name == 'NotReadableError') {
+                            alert('File could not be read');
+                        }
+                        else {
+                            alert(evt.target.error);
+                        }
+                    }
+                });
+            }
+        };
+    });
+    
+    app.controller('resumeController', function($scope,$timeout,$routeParams,$location,$route,_,$filter) {
+        
+        document.getElementById("spinner").style.display = 'block';
+        $scope.conId = '';
+        //var pageURL = $location.absUrl().split('&Launch=')[0];
+        //$scope.conId = pageURL.split('Cid=')[1];
+        //$scope.type = $location.absUrl().split('&Launch=')[1];
+        $scope.type = '{!$CurrentPage.parameters.Launch}';
+        $scope.conId = '{!$CurrentPage.parameters.Cid}'; 
+        $scope.skipBookmark = '{!$CurrentPage.parameters.skipBookmark}';
+        $scope.jobId = '{!$CurrentPage.parameters.jobId}';
+        $scope.applicantId = '{!$CurrentPage.parameters.applicantId}';
+        $scope.skipUpload = '{!$CurrentPage.parameters.skipUpload}';
+        
+        $scope.modalForBookmark = '';
+        $scope.modalBackdropForBookmark = '';
+        if(angular.isUndefined($scope.type) || $scope.type == '') {
+            $scope.type = 'Upload';
+        }
+        
+        console.log('$scope.conId::::'+$scope.conId, $scope.type);
+        $scope.fromEdit = false;
+        if($scope.conId != '') {
+            $scope.fromEdit = true;
+        }
+        $scope.uploadBlock = 'ng-hide';                 
+        $scope.contactInfoBlock = 'ng-hide';            //edited ng-hide
+        $scope.EducationShowOrHide = 'ng-hide';
+        $scope.ExperienceShowOrHide = 'ng-hide';
+        $scope.skillsInfoBlock = 'ng-hide';
+        $scope.overAllView = 'ng-hide';
+        $scope.matchedContact = 'ng-hide';              //edited ng-hide
+        $scope.modalStateForError = '';
+        $scope.modalBackdropStateForError = '';
+        $scope.errorMessageforAllSave = '';
+        $scope.tempconId ='';
+        //$scope.expList = [];   
+        $scope.responseFile = {}; 
+        $scope.matchedContactList = []; 
+        $scope.selCon = {};
+        $scope.bookMarkThisCont = false;
+        
+        $scope.filteredNewWorkList = [];
+        $scope.filteredWorkList = [];
+        
+        // Setting picklist values
+        force.describePicklistVal('Skill__c','Skill__c',successOnSkill,error);
+        force.describePicklistVal('Skill__c','Rating__c',successOnRating,error);
+        force.describePicklistVal('Skill__c','Skill_Verification__c',successOnStatus,error);
+        force.describePicklistVal('Experience__c','Degree_Level__c',function(data){
+            $scope.degreeLevelList = data;
+        },error);
+        
+        force.describePicklistVal('Experience__c','College_School_Type__c',function(data){
+            $scope.college_School_Type_List = data;
+        },error);
+                
+        //console.log('after $scope.conId:::',$scope.conId);
+        $scope.searchContact = function() {
+            //console.log('Testing::::');
+            document.getElementById("spinner").style.display = 'block';
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ResumeUploadRchilliClass.searchMatchedContact}',$scope.responseFile,
+                
+                function(records, ev) {
+                    //console.log(':::records::contactList>>::::1111:::',records);
+                    if(ev.status) {
+                        //console.log(':::records::contactList>>:::::::',records);
+                        $scope.matchedContactList = records;
+                        // To replace the special character related text with symbols
+                        for(var i = 0;i < $scope.matchedContactList.length;i++){
+                            if($scope.matchedContactList[i].FirstName)
+                                $scope.matchedContactList[i].FirstName = decodeHTML($scope.matchedContactList[i].FirstName);
+                                
+                            if($scope.matchedContactList[i].MiddleName)
+                                $scope.matchedContactList[i].MiddleName = decodeHTML($scope.matchedContactList[i].MiddleName);
+                                
+                            if($scope.matchedContactList[i].LastName)
+                                $scope.matchedContactList[i].LastName = decodeHTML($scope.matchedContactList[i].LastName);
+                        }
+                        //console.log('$$$$$$$$$$$$$$$$$$$'+$scope.matchedContactList);
+                        $scope.matchedContact = 'ng-show';
+                        $scope.contactSelButton = 'ng-show';
+                        document.getElementById("spinner").style.display = 'none';
+                        $scope.$apply();
+                    } else {
+                        document.getElementById("spinner").style.display = 'none';
+                        $scope.errorMessageforAllSave = ev.message;
+                        $scope.$apply();
+                    }
+                },
+                {escape: true}
+            );
+        }
+        
+        $scope.showPresentforEndDate = function(index) {
+            
+            console.log('::::!:111:::::', index);
+            if($scope.WorkList.length > 0 && $scope.WorkList[index].exp){
+                $scope.WorkList[index].exp.showPresent = true;
+                $scope.WorkList[index].exp.End_Date__c = null;
+            }
+            
+        }
+        
+        $scope.showEndDate = function(index) {
+            
+            console.log('::::!:222:::::', index);
+            if($scope.WorkList.length > 0 && $scope.WorkList[index].exp){
+                $scope.WorkList [index].exp.showPresent = false;
+                $scope.WorkList [index].exp.End_Date__c = null;
+            }
+        }
+        
+        //Decode related function added by NS on June 1 2018
+        function decodeHTML(encodedStr){
+            var parser = new DOMParser;
+            var dom = parser.parseFromString(
+                '<!doctype html><body>' + encodedStr,
+                'text/html');
+            var decodedString = dom.body.textContent;
+            
+            //console.log(decodedString);
+            return decodedString;
+        }
+        
+        $scope.afterContactSelection = function() {
+            console.log('::after selection:conId:::',$scope.conId);
+            //console.log(':::matchedContactList:::',$scope.matchedContactList);
+            if (angular.isUndefined($scope.conId) || $scope.conId == 'NoContact' || $scope.conId == '') { 
+                $scope.conId = 'NoContact'; 
+                $scope.contactNotSelectedMsg = 'No contact is selected. Are you sure to create a new Contact.';
+                $scope.modalStateContactNotSelected = 'slds-fade-in-open';
+                $scope.modalBackdropContactNotSelected = 'slds-modal-backdrop--open'; 
+            } else {         
+                $scope.matchedContact = 'ng-hide';
+                $scope.uploadXML();
+            }
+        }
+        
+        $scope.callOnRadioChange = function(cl) {
+            //console.log('cl::callOnRadioChange ***********$Scope.selCon********',$scope.selCon.Id);
+            //console.log('cl::callOnRadioChange *******************',cl);
+            $scope.conId = cl;
+            console.log('$scope.conId:callOnRadioChange ******************:',$scope.conId);
+        }
+        
+        $scope.parseTheValue = function(records) {
+            if(records['ContactInfo'] && records.ContactInfo.length) {
+                $scope.ContactList = records.ContactInfo;
+                console.log(':::::::::::::&&&    ::::'+$scope.ContactList);
+                for ( var i=0; i< $scope.ContactList.length; i++) {
+                    if($scope.ContactList[i].conFieldLabel == 'LanguageKnown') {
+                        $scope.LanguageKnownVal = $scope.ContactList[i].resumeFieldValue;
+                        $scope.ContactList.splice(i,1);
+                    }
+                    console.log('conFieldLabel :',$scope.ContactList[i].conFieldLabel );
+                    if($scope.ContactList[i].conFieldLabel == 'Account Name') {
+                        console.log('$scope.ContactList[i].conFieldValue:::',$scope.ContactList[i].conFieldValue);
+                        if($scope.ContactList[i].conFieldValue) {
+                            var tmp = $scope.ContactList[i].conFieldValue;
+                            var accT = tmp.split('~');
+                            if( accT != null && accT.length > 1 ) {
+                                $scope.ContactList[i].conFieldValue = {Id:(accT[0] != 'null'? accT[0] : ''),Name:(accT[1] != 'null' ? accT[1] : '')}; //accT[1];
+                                console.log('$scope.ContactList[i].conFieldValue::::',$scope.ContactList[i].conFieldValue);
+                            }
+                            if($scope.ContactList[i].SelectedValue == tmp) {
+                                $scope.ContactList[i].SelectedValue = {Id:accT[0],Name:accT[1]};
+                            }
+                        }
+                        if($scope.ContactList[i].resumeFieldValue) {
+                            var tmp = $scope.ContactList[i].resumeFieldValue;
+                            var accT = tmp.split('~');
+                            if( accT != null && accT.length > 1 ) {
+                                $scope.ContactList[i].resumeFieldValue = {Id:accT[0],Name:accT[1]};
+                            }
+                            if($scope.ContactList[i].SelectedValue == tmp) {
+                                $scope.ContactList[i].SelectedValue = {Id:accT[0],Name:accT[1]}; //accT[0];
+                            }
+                        }
+                        
+                    }
+                }
+            }
+            
+            if(records['PersonalInfo'] && records.PersonalInfo.length) {
+                $scope.PersonalInfo = records.PersonalInfo;
+                for (var i=0; i< $scope.PersonalInfo.length; i++) {
+                    if($scope.PersonalInfo[i].conFieldLabel == 'Date Of Birth') {
+                        console.log($scope.PersonalInfo[i]);
+                        console.log($scope.PersonalInfo[i].conFieldValue);
+                        console.log('Inside Date of Birth:',$scope.PersonalInfo[i].SelectedValue);
+                        console.log(':::::::resumeFiedlds:::::',$scope.PersonalInfo[i].resumeFieldValue);
+                        
+                        if($scope.PersonalInfo[i].hasOwnProperty('conFieldValue') && $scope.PersonalInfo[i].conFieldValue && !angular.isUndefined($scope.PersonalInfo[i].conFieldValue)) {
+                        
+                            $scope.PersonalInfo[i].conFieldValue = moment($scope.PersonalInfo[i].conFieldValue,'YYYY-MM-DD').format('MM/DD/YYYY');
+                            $scope.PersonalInfo[i].SelectedValue = $scope.PersonalInfo[i].conFieldValue;
+                            
+                            if($scope.PersonalInfo[i].resumeFieldValue) {
+                                console.log('$scope.type::::',$scope.type);
+                                if($scope.type == 'Edit') {
+                                    $scope.PersonalInfo[i].resumeFieldValue = moment($scope.PersonalInfo[i].resumeFieldValue).format('MM/DD/YYYY');
+                                } else {
+                                    $scope.PersonalInfo[i].resumeFieldValue = moment($scope.PersonalInfo[i].resumeFieldValue,'DD/MM/YYYY').format('MM/DD/YYYY');
+                                }
+                            }
+                        }else if($scope.PersonalInfo[i].hasOwnProperty('resumeFieldValue') && $scope.PersonalInfo[i].resumeFieldValue && !angular.isUndefined($scope.PersonalInfo[i].resumeFieldValue)) {
+                            //$scope.PersonalInfo[i].resumeFieldValue = moment($scope.PersonalInfo[i].resumeFieldValue,'DD/MM/YYYY').format('MM/DD/YYYY');
+                            if($scope.type == 'Edit') {
+                                $scope.PersonalInfo[i].resumeFieldValue = moment($scope.PersonalInfo[i].resumeFieldValue).format('MM/DD/YYYY');
+                            } else {
+                                $scope.PersonalInfo[i].resumeFieldValue = moment($scope.PersonalInfo[i].resumeFieldValue,'DD/MM/YYYY').format('MM/DD/YYYY');
+                            }
+                            $scope.PersonalInfo[i].SelectedValue = $scope.PersonalInfo[i].resumeFieldValue;
+                        }
+                    }
+                }
+            } 
+            
+            if(records['EducationList'] && records.EducationList.length) {
+                
+                //var correctStr = decodeEntities(JSON.stringify(records.EducationList));
+                //records.EducationList = JSON.parse(correctStr);
+                
+                $scope.EducationList = [];
+                
+                for(var i = 0 ; i < records.EducationList.length; i++) {
+                    //Commented below 2 lines on September 16, 2016
+                    //if(records.EducationList[i].exp.Start_Date__c) records.EducationList[i].exp.Start_Date__c = millisecondToString(records.EducationList[i].exp.Start_Date__c);
+                    //if(records.EducationList[i].exp.End_Date__c) records.EducationList[i].exp.End_Date__c = millisecondToString(records.EducationList[i].exp.End_Date__c);
+                    
+                    
+                    if(records.EducationList[i].exp.Start_Date__c) {
+                        records.EducationList[i].exp.Start_Date__c = moment(records.EducationList[i].exp.Start_Date__c).format('MM-DD-YYYY');
+                    }
+                    if(records.EducationList[i].exp.End_Date__c) {
+                        records.EducationList[i].exp.End_Date__c = moment(records.EducationList[i].exp.End_Date__c).format('MM-DD-YYYY');
+                    }
+                    $scope.EducationList.push(records.EducationList[i]);
+                }
+                
+            } else {
+                $scope.EducationList = [];
+            }
+            if(records['WorkList'] && records.WorkList.length) {
+                $scope.WorkList = [];
+                
+                var currentDate = new Date();
+                
+                currentDate = currentDate.getTime() + currentDate.getTimezoneOffset() * 1000 * 60;
+                
+                for(var i = 0 ; i < records.WorkList.length; i++) {
+                
+                    if(records.WorkList[i].isNew == true){
+                        $scope.filteredNewWorkList.push(records.WorkList[i]);
+                    }
+                    
+                    if(records.WorkList[i].isNew == false){
+                        $scope.filteredWorkList.push(records.WorkList[i]);
+                    }
+                    
+                    if(records.WorkList[i].exp.Start_Date__c) {
+                        records.WorkList[i].exp.Start_Date__c = moment(records.WorkList[i].exp.Start_Date__c).format('MM-DD-YYYY');
+                    }
+                    
+                    
+                    if(records.WorkList[i].exp.End_Date__c && millisecondToString(records.WorkList[i].exp.End_Date__c) == DateTimeToDateString(new Date())) {
+                        records.WorkList[i].exp.End_Date__c = null;
+                    } else if( records.WorkList[i].exp.End_Date__c ){
+                        records.WorkList[i].exp.End_Date__c = moment(records.WorkList[i].exp.End_Date__c).format('MM-DD-YYYY');
+                    }
+                    
+                    var endDate;
+                    if(records.WorkList[i].exp.End_Date__c){
+                        endDate = new Date(records.WorkList[i].exp.End_Date__c);
+                    }else {
+                        endDate = null;
+                    }
+                    
+                    if(records.WorkList[i].isNew == true && (records.WorkList[i].exp.End_Date__c == null || (records.WorkList[i].exp.End_Date__c != null && endDate == currentDate))){
+                        records.WorkList[i].exp.showPresent = true;
+                    }
+                    
+                    if(records.WorkList[i].isNew == false && records.WorkList[i].exp.End_Date__c == null){
+                        records.WorkList[i].exp.showPresent = true;
+                    }
+                    
+                    $scope.WorkList.push(records.WorkList[i]);
+                    //if(records.WorkList[i].exp.Id) {        Commented on GRK on April, 30
+                    //    if(records.WorkList[i].exp.Name_of_Company__c && records.WorkList[i].exp.Role_Title__c){
+                    //        $scope.expList.push(records.WorkList[i].exp.Name_of_Company__c+'_'+records.WorkList[i].exp.Role_Title__c);
+                    //    } else if(records.WorkList[i].exp.Name_of_Company__c){
+                    //        $scope.expList.push(records.WorkList[i].exp.Name_of_Company__c);
+                    //    }
+                    //}
+                }
+            } else {
+                $scope.WorkList = [];
+            }
+            console.log('WorkList:::',$scope.WorkList);
+            
+            
+            if(records['NewSkillInfoList'] && records.NewSkillInfoList.length) {
+                $scope.NewSkillInfoList = records.NewSkillInfoList;
+                
+            } else {
+                $scope.NewSkillInfoList = [];
+            }
+            //console.log('$scope.NewSkillInfoList:::',$scope.NewSkillInfoList);
+            if(records['SkillInfoList'] && records.SkillInfoList.length) {
+                $scope.SkillInfoList = records.SkillInfoList;
+            } else {
+                $scope.SkillInfoList = [];
+            }
+            
+            if(records['LanguageKnownList'] && records.LanguageKnownList.length) {
+                $scope.LanguageKnownList = records.LanguageKnownList;
+            } else {
+                $scope.LanguageKnownList = [];
+            }
+
+            if(records['ProfPublicationAwardsList'] && records.ProfPublicationAwardsList.length) {
+                $scope.ProfPublicationAwardsList = records.ProfPublicationAwardsList;
+            } else {
+                $scope.ProfPublicationAwardsList = [];
+            }
+            
+            if(records['LanguageList'] && records.LanguageList.length) {
+                $scope.LanguageList = {};
+                for (var j=0; j < records.LanguageList.length;j++) {
+                    if(!$scope.LanguageList[records.LanguageList[j].Id]) {
+                        $scope.LanguageList[records.LanguageList[j].Id] = records.LanguageList[j].Name;
+                    }
+                    if(records.LanguageList[j].Name == 'English') {
+                        $scope.EnglishLangId = records.LanguageList[j].Id;
+                    }
+                }
+            console.log('$scope.EnglishLangId:::::',$scope.EnglishLangId);
+            }
+            // To check we already have a Bookmark for this Contact and User.
+            if(records['BookMarkList'] && records.BookMarkList.length) {
+                $scope.BookMarkAvailable = true;
+            } else {
+                $scope.BookMarkAvailable = false;
+            }
+        }
+        
+        $scope.uploadXML = function() {
+            document.getElementById("spinner").style.display = 'block';
+            $scope.matchedContact = 'ng-hide';
+            $scope.uploadBlock = 'ng-hide';
+            $scope.contactInfoBlock = 'ng-show';
+            $scope.searchContactButton = 'ng-hide';
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ResumeUploadRchilliClass.jsonResume}',$scope.conId,$scope.responseFile,$scope.type,
+                function(records, ev) {
+                    //console.log(':::records:::::&&&&&&&&&&::::',records);
+                    if(ev.status) {
+                        console.log(':::records:::::::::',JSON.parse(_.unescape(records)));
+                        $scope.parseTheValue(JSON.parse(_.unescape(records)));
+                        $scope.column2Label = 'Contact Value';
+                        $scope.column3Label = 'Resume Value';
+                        $scope.editProf = false;
+                        //console.log('::::$scope.ContactList:::',$scope.ContactList);
+                        //console.log('::::$scope.NewSkillInfoList:::',$scope.NewSkillInfoList);
+                        //console.log('::::$scope.SkillInfoList:::',$scope.SkillInfoList);
+                        //console.log('::::::$scope.EducationList:::::',$scope.EducationList);
+                        document.getElementById("spinner").style.display = 'none';
+                                                        
+                        $scope.$apply();
+                                                        
+                    } else {
+                        document.getElementById("spinner").style.display = 'none';
+                        //$scope.errorMessageforAllSave = ev.message;
+                        $scope.$apply();
+                    }
+                },
+                {escape: true}
+            );
+        }
+        
+        if(angular.isUndefined($scope.conId) || $scope.conId == '') { 
+            $scope.uploadButton = 'ng-hide';
+            $scope.searchContactButton = 'ng-show';
+        } else {
+            if ( $scope.type == 'Upload') { 
+                $scope.uploadButton = 'ng-show';
+                $scope.searchContactButton = 'ng-hide';
+            } else if( $scope.type == 'Edit' ) {
+                
+                $scope.uploadBlock = 'ng-hide';                 
+                $scope.contactInfoBlock = 'ng-show';  
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ResumeUploadRchilliClass.editProfile}',$scope.conId,$scope.type,
+                    function(records, ev) {
+                        console.log('records::::::',JSON.parse(_.unescape(records)));
+                        $scope.column2Label = 'Existing Value';
+                        $scope.column3Label = 'New Value';
+                        $scope.editProf = true;
+                        $scope.parseTheValue(JSON.parse(_.unescape(records)));
+                        $scope.$apply();
+                    },
+                    {escape: true}
+                );
+               
+            }
+        }
+        
+        if($scope.skipUpload){
+            document.getElementById("spinner").style.display = 'block';             
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ResumeUploadRchilliClass.getAttachedResumeFromApplicantRec}',$scope.applicantId,
+                function(records, ev) {
+                    if(ev.status) {   
+                                                                  
+                        if(Object.keys(records).length > 0){                            
+                            $scope.responseFile = records;      
+                        	$scope.uploadXML();
+                        }else{
+                            $scope.uploadBlock = 'ng-show';
+                            document.getElementById("spinner").style.display = 'none';                                                        
+                            $scope.$apply(); 
+                        }
+                    } else {
+                        document.getElementById("spinner").style.display = 'none';
+                        $scope.$apply();
+                    }
+                },
+                {escape: true}
+            );            
+        }else{
+            $scope.uploadBlock = 'ng-show';                 //edited ng-show
+        }
+        
+        $scope.addNewEducation = function() {
+            var edu = { exp:{Name: '', College_School__c: '', Degree__c:'',Experience_in_Months__c: '', Experience_in_Years__c:'', Intensive_Proficiency_Oriented_Experienc__c:''}, hasDegreeError:'', hasSchoolError:'', isNew:true, isSelected:true};
+            $scope.EducationList.push(edu);
+        }
+        
+        
+        $scope.addProfPublicationAward = function() {
+            var ppa = { ppa:{Name_of_the_Publication_Award__c: "", Year__c: "", Name__c: "", Company_Institution_Name__c:""}};
+            $scope.ProfPublicationAwardsList.push(ppa);
+        }       
+        
+        $scope.addNewExperience = function() {
+            var exp = { exp:{Name_of_Company__c: "", Role_Title__c: "", City__c: "", Start_Date__c: "09-01-2008"}, hasNameError:'',isNew:true,isSelected:false};
+            $scope.WorkList.push(exp);
+        }
+        
+        var decodeEntities = (function() {
+          // this prevents any overhead from creating the object each time
+          var element = document.createElement('div');
+        
+          function decodeHTMLEntities (str) {
+            if(str && typeof str === 'string') {
+              //strip script or html tags
+              str = str.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
+              str = str.replace(/<\/?\w(?:[^"'>]|"[^"]*"|'[^']*')*>/gmi, '');
+              element.innerHTML = str;
+              str = element.textContent;
+              element.textContent = '';
+            }
+        
+            return str;
+          }
+        
+          return decodeHTMLEntities;
+        })();
+        
+        
+        $scope.disableToLanguage = function(skl,index) {
+            console.log('skll::::',skl,'::::',index);
+            console.log('$scope.EnglishLangId:::::in Method',$scope.EnglishLangId);
+            var tempToLang = $scope.SkillInfoList[index].skl.To_Language_LU__c;
+            if(skl == 'Curriculum Development' || skl == 'Language Training' || skl == 'Testing') {               
+                //$scope.SkillInfoList[index].skl.To_Language_LU__c = $scope.EnglishLangId; //Modified By Dhinesh - 03/08/2023 - To Remove English as default for to language field
+                $scope.SkillInfoList[index].toLangDisabled = true;
+            }else if(skl == 'Translation'){
+                $scope.SkillInfoList[index].skl.To_Language_LU__c = $scope.EnglishLangId;
+            }else {
+                $scope.SkillInfoList[index].toLangDisabled = false;
+                $scope.SkillInfoList[index].skl.To_Language_LU__c = tempToLang;
+            }            
+        }       
+        
+        $scope.backToUpload = function() {
+            
+            $scope.contactInfoBlock = 'ng-hide';
+            $scope.uploadBlock = 'ng-show';
+            //$scope.tempconId = pageURL.split('Cid=')[1];
+            //$scope.type = $location.absUrl().split('&Launch=')[1];
+            $scope.tempconId = '{!$CurrentPage.parameters.Cid}';
+            $scope.type = '{!$CurrentPage.parameters.Launch}';
+            
+            if (angular.isUndefined($scope.tempconId)) { 
+                $scope.uploadButton = 'ng-hide';
+                $scope.searchContactButton = 'ng-show';
+                $scope.matchedContact = 'ng-show';
+            } else {
+                $scope.uploadButton = 'ng-show';
+                $scope.searchContactButton = 'ng-hide';
+                $scope.matchedContact = 'ng-hide';
+            }
+        }
+        
+        $scope.toEducationBlock = function() {
+            console.log('::::$scope.ContactList::after:',$scope.ContactList);
+            //$scope.uploadBlock = 'ng-hide';
+            $scope.contactInfoBlock = 'ng-hide';
+            $scope.EducationShowOrHide = 'ng-show';
+            $scope.ExperienceShowOrHide = 'ng-hide';
+        }
+        
+        $scope.toExperienceBlock = function() {
+            console.log('::::$scope.ContactList::after:',$scope.ContactList);
+            //$scope.uploadBlock = 'ng-hide';
+            var err1 = 0;
+            for(var i = 0;i < $scope.EducationList.length; i++) {
+                if($scope.EducationList[i].isSelected == true && (angular.isUndefined($scope.EducationList[i].exp.College_School__c) || $scope.EducationList[i].exp.College_School__c == '')) {
+                    $scope.EducationList[i].hasSchoolError = 'selectErrorClass';
+                    err1 = err1+1;
+                } else {
+                    $scope.EducationList[i].hasSchoolError = '';  
+                }
+                if($scope.EducationList[i].isSelected == true && (angular.isUndefined($scope.EducationList[i].exp.Degree__c) || $scope.EducationList[i].exp.Degree__c == '')) {
+                    $scope.EducationList[i].hasDegreeError = 'selectErrorClass';
+                    err1 = err1+1;
+                } else {
+                    $scope.EducationList[i].hasDegreeError = '';
+                }                
+            }
+            if(err1 > 0) return false;
+            $scope.EducationShowOrHide = 'ng-hide';
+            $scope.ExperienceShowOrHide = 'ng-show';
+            
+        }
+        
+        $scope.backToContactInfo = function() {
+            $scope.contactInfoBlock = 'ng-show';
+            $scope.EducationShowOrHide = 'ng-hide';
+        }
+        
+        $scope.toAddSkill = function() {
+            $scope.SkillInfoList.push({toLangDisabled : false, skl : {Skill__c:'',From_Language__c:'',To_Language__c:'',Skill_Verification__c : 'Not Verified'}});
+        }
+        $scope.tocancelSkill = function(ind) {
+            //console.log('ind:::',ind);
+            $scope.SkillInfoList.splice(ind,1);
+        }
+        
+        $scope.toAddLanguageKnown = function() {
+            if($scope.conId != 'NoContact') {
+                $scope.LanguageKnownList.push({Native_Language__c: false,Contact__c : $scope.conId});
+            } else {
+                $scope.LanguageKnownList.push({Native_Language__c: false});
+            }
+        }
+        
+        $scope.tocancelLang = function(ind) {
+            $scope.LanguageKnownList.splice(ind,1);
+        }
+        
+        $scope.tocancelprofPublicationAward = function(ind) {
+            $scope.ProfPublicationAwardsList.splice(ind,1);
+        }
+
+      
+        $scope.toSkillsSection = function() {
+            console.log('After Selection:::',$scope.WorkList);
+            console.log('After Selection:EducationList::',$scope.EducationList);
+            var err1 = 0;
+            
+            for(var i = 0; i < $scope.WorkList.length; i++ ) {
+                if($scope.WorkList[i].isSelected == true && ( angular.isUndefined($scope.WorkList[i].exp.Name_of_Company__c) || $scope.WorkList[i].exp.Name_of_Company__c == '')) {
+                    $scope.WorkList[i].hasNameError = 'selectErrorClass';
+                    err1 = err1+1;
+                } else {
+                    $scope.WorkList[i].hasNameError = '';
+                }
+            }
+            console.log(err1);
+            if(err1 > 0) return false;
+            $scope.ExperienceShowOrHide = 'ng-hide';
+            $scope.EducationShowOrHide = 'ng-hide';
+            $scope.skillsInfoBlock = 'ng-show';
+        }
+        
+        $scope.backToEducation = function()  {
+            $scope.EducationShowOrHide = 'ng-show';
+            $scope.skillsInfoBlock = 'ng-hide'; 
+            $scope.ExperienceShowOrHide = 'ng-hide';  
+        }
+        
+        $scope.backToExperience = function()  {
+            $scope.EducationShowOrHide = 'ng-hide';
+            $scope.skillsInfoBlock = 'ng-hide';  
+            $scope.ExperienceShowOrHide = 'ng-show'; 
+        }
+        
+        $scope.overAllViewFun = function() {
+            //console.log('$scope.SkillInfoList:::::',$scope.SkillInfoList);
+            //console.log('******selectedAccountIdAndNameMap***'+selectedAccountIdAndNameMap);
+            var err2 = 0;
+            /*for(var i = 0; i < $scope.ContactList.length; i++) {
+                console.log(':::inside::overAllViewFun****seleted*********:', $scope.ContactList[i].SelectedValue.Id);
+                console.log(':::inside::overAllViewFun******confield*******:', $scope.ContactList[i].conFieldValue.Id);
+                console.log(':::inside::overAllViewFun******resumefield*******:', $scope.ContactList[i].resumeFieldValue.Id);
+            }
+            */
+            console.log(':::inside::overAllViewFun****seleted*********:', $scope.ContactList);
+            
+            for(var i = 0; i < $scope.SkillInfoList.length; i++) {
+                if(angular.isUndefined($scope.SkillInfoList[i].skl.Skill__c) || $scope.SkillInfoList[i].skl.Skill__c == '') {
+                    $scope.SkillInfoList[i].hasSkillError = 'selectErrorClass';
+                    err2 = err2 + 1;
+                } else {
+                    $scope.SkillInfoList[i].hasSkillError = '';
+                }
+            }
+            for(var i = 0; i < $scope.LanguageKnownList.length; i++) {
+                if(angular.isUndefined($scope.LanguageKnownList[i].Language__c) || $scope.LanguageKnownList[i].Language__c == '') {
+                    $scope.LanguageKnownList[i].hasLangError = 'selectErrorClass';
+                    err2 = err2 + 1;
+                } else {
+                    $scope.LanguageKnownList[i].hasLangError = '';
+                }
+            }
+            if(err2 > 0) return false;
+            $scope.skillsInfoBlock = 'ng-hide'; 
+            $scope.overAllView = 'ng-show';
+            console.log('::$scope.ContactList::',$scope.ContactList);
+                console.log('::$scope.EducationList::',$scope.EducationList);
+                console.log('::$scope.WorkList::',$scope.WorkList);
+                console.log('::$scope.WorkList::',$scope.WorkList);
+                console.log('::$scope.SkillInfoList::',$scope.SkillInfoList);
+                console.log('::$scope.LanguageKnownList::',$scope.LanguageKnownList);
+
+            
+        }
+        
+        $scope.saveAllRecords = function() {
+            document.getElementById("spinner").style.display = 'block';
+            console.log('ContactList:::::',$scope.ContactList.length);
+            console.log('ContactList::nnnn:::',$scope.ContactList);
+            
+            if($scope.ContactList && $scope.ContactList != null) {
+                for(var i = 0; i < $scope.ContactList.length; i++) {
+                    if($scope.ContactList[i].conFieldLabel == 'Account Name' && !angular.isUndefined($scope.ContactList[i].SelectedValue)) {
+                        $scope.ContactList[i].SelectedValue = $scope.ContactList[i].SelectedValue.Id;
+                        $scope.ContactList[i].conFieldValue = (!angular.isUndefined($scope.ContactList[i].conFieldValue) ? $scope.ContactList[i].conFieldValue.Id: '');
+                        $scope.ContactList[i].resumeFieldValue = $scope.ContactList[i].resumeFieldValue.Id;
+                    }
+                }
+            }
+            
+            if($scope.PersonalInfo && $scope.PersonalInfo != null) {
+                for(var i = 0; i < $scope.PersonalInfo.length; i++) {
+                    if($scope.PersonalInfo[i].conFieldLabel == 'Date Of Birth' && !angular.isUndefined($scope.PersonalInfo[i].SelectedValue) && $scope.PersonalInfo[i].SelectedValue != null) {//Modified By Dhinesh - 03/08/2023 - W-007803 - To fix Invalid Date issue                       
+                        var date1 = moment($scope.PersonalInfo[i].SelectedValue);
+                        //$scope.PersonalInfo[i].SelectedValue = moment($scope.PersonalInfo[i].SelectedValue, 'MM/DD/YYYY').format('YYYY-MM-DD');
+                        $scope.PersonalInfo[i].SelectedValue = moment($scope.PersonalInfo[i].SelectedValue).format('YYYY-MM-DD');
+                    }
+                }
+            }
+            //console.log('$scope.ContactList:::::After 1',$scope.ContactList[0].conFieldLabel);
+            
+            if($scope.EducationList && $scope.EducationList != null) {
+                for(var i = 0;i < $scope.EducationList.length; i++) {
+                    if($scope.EducationList[i].exp.Start_Date__c && !angular.isUndefined($scope.EducationList[i].exp.Start_Date__c)) {                        
+                        $scope.EducationList[i].exp.Start_Date__c = moment($scope.EducationList[i].exp.Start_Date__c,  ["MM-DD-YYYY", "YYYY-MM-DD"]).format('YYYY-MM-DD');//Modified By Dhinesh - 03/08/2023 - W-007803 - To fix Invalid Date issue by adding more expected format from string to Array
+                    }
+                    if($scope.EducationList[i].exp.End_Date__c && !angular.isUndefined($scope.EducationList[i].exp.End_Date__c)) {
+                        $scope.EducationList[i].exp.End_Date__c = moment($scope.EducationList[i].exp.End_Date__c, ["MM-DD-YYYY", "YYYY-MM-DD"]).format('YYYY-MM-DD');//Modified By Dhinesh - 03/08/2023 - W-007803 - To fix Invalid Date issue by adding more expected format from string to Array
+                    }
+                }
+            }
+            
+            if($scope.WorkList && $scope.WorkList != null) {
+                for(var i = 0; i < $scope.WorkList.length; i++ ) {
+                    if($scope.WorkList[i].exp.Start_Date__c && !angular.isUndefined($scope.WorkList[i].exp.Start_Date__c)) {                        
+                        $scope.WorkList[i].exp.Start_Date__c = moment($scope.WorkList[i].exp.Start_Date__c, ["MM-DD-YYYY", "YYYY-MM-DD"]).format('YYYY-MM-DD'); //Modified By Dhinesh - 03/08/2023 - W-007803 - To fix Invalid Date issue by adding more expected format from string to Array
+                    }
+                    
+                    if($scope.WorkList[i].exp.End_Date__c) {
+                        $scope.WorkList[i].exp.End_Date__c = moment($scope.WorkList[i].exp.End_Date__c, ["MM-DD-YYYY", "YYYY-MM-DD"]).format('YYYY-MM-DD');//Modified By Dhinesh - 03/08/2023 - W-007803 - To fix Invalid Date issue by adding more expected format from string to Array
+                    }else {
+                        $scope.WorkList[i].exp.End_Date__c = null;
+                    }
+                }
+            }
+            
+            //console.log('::$scope.ContactList::',$scope.ContactList);
+            //console.log('::$scope.EducationList::',$scope.EducationList);
+            //console.log('::$scope.WorkList::',$scope.WorkList);
+            //console.log('::$scope.WorkList::',$scope.WorkList);
+            //console.log('::$scope.SkillInfoList::',$scope.SkillInfoList);
+            //console.log('::$scope.LanguageKnownList::',$scope.LanguageKnownList);
+            
+            //for(var i = 0; i < $scope.PersonalInfo.length; i++) {
+            //    $scope.ContactList.push($scope.PersonalInfo[i]);
+            //}
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ResumeUploadRchilliClass.saveNewRecords}',$scope.conId, JSON.stringify($scope.ContactList), JSON.stringify($scope.PersonalInfo), JSON.stringify($scope.EducationList), JSON.stringify($scope.WorkList), JSON.stringify($scope.SkillInfoList),JSON.stringify($scope.LanguageKnownList),JSON.stringify($scope.ProfPublicationAwardsList),
+                function(records, ev) {
+                    console.log('*********ev::::::::::::::',ev);
+                    if(ev.status) {
+                        // To save the Resume as Attachment under Contact
+                        if( $scope.responseFile != null && !$scope.skipUpload) { 
+                            var attachmentlist = [];
+                            try {
+                                        
+                                var attach = new sforce.SObject("Attachment");
+                                attach.Name        = $scope.responseFile.name;
+                                attach.Body        = $scope.responseFile.resultbody;
+                                attach.ContentType = $scope.responseFile.contenttype;
+                                attach.ParentId    = records; //$scope.conId;
+                                attach.IsPrivate   = false;
+                                attachmentlist.push( attach );
+                                
+                                attachment_result = sforce.connection.create(attachmentlist);
+                            }
+                            catch(error){
+                                console.log(':::errror:::',error.message);
+                            } 
+                        }    
+                        $scope.conId = records;                  
+                        //window.location.href = '{!$Site.Prefix}/'+records;
+                        //window.location.href = '/apex/CreateBookMark?id='+records+'&header=Would you like to Bookmark this contact&returnURL='+records;
+                        if(!$scope.skipBookmark){
+                        	$scope.toBookmark();
+                        }else{
+                            //window.location.href = '/' + $scope.jobId;
+                            window.close();
+                        }
+                        document.getElementById("spinner").style.display = 'none';
+
+                    } else {
+                        document.getElementById("spinner").style.display = 'none';
+                        console.log('::::::::inside else:::');
+                        $scope.errorMessageforAllSave = ev.message;
+                        $scope.modalStateForError = 'slds-fade-in-open';
+                        $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                        //console.log('Error on save',ev);
+                        $scope.$apply();
+                    }
+                },
+                {escape: true}
+            );
+            
+        }
+        
+        function millisecondToString(millisecond) {
+            var date = new Date(millisecond);            
+            date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            if(day < 10) {
+                day = '0' + day;
+            }
+            if(month < 10) {
+                month = '0' + month;
+            }
+            return date.getFullYear() + '-' +month + '-' + day;
+        }
+        
+        function DateTimeToDateString(dateVal) {
+            var date = dateVal ;            
+            date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            if(day < 10) {
+                day = '0' + day;
+            }
+            if(month < 10) {
+                month = '0' + month;
+            }
+            return date.getFullYear() + '-' +month + '-' + day;
+        }
+        
+        function successOnSkill(data){
+            $scope.skillPickList = data;
+        }
+        function successOnRating(data){
+            $scope.RatingList = data;
+        }
+        function successOnStatus(data) {
+            $scope.StatusList = data;
+        }
+        function error(err) {
+            console.log('::::error::::in::::picklist:qry::',JSON.stringify(err));
+        }
+        document.getElementById("spinner").style.display = 'none';
+        
+        $scope.toBookmark = function() {
+            console.log('Inside Bookmark');
+            $scope.modalForBookmark = 'slds-fade-in-open';
+            $scope.modalBackdropForBookmark = 'slds-modal-backdrop--open';
+            var headerContent;
+            if($scope.BookMarkAvailable == true) {
+                var headerContent = 'Manage Bookmark';
+            } else {
+                var headerContent = 'Create Bookmark';
+            }
+            var contactId = $scope.conId;
+            var returnURL = $scope.conId;
+                        
+            $Lightning.use("c:CreateBookMarkApp", function() {
+            $Lightning.createComponent("c:CreateBookMarkCmp",
+                { recordId : contactId,
+                  headerContent : headerContent,
+                  returnURL : returnURL },
+                "lightning",
+                function(cmp) { 
+                    $A.eventService.addHandler({ "event": "c:reloadEvent", "handler" : reloadFunction});   
+                    $scope.$apply();     
+                }); 
+                                                                    
+            });
+        }
+        
+        
+        var reloadFunction = function(event) {
+            $scope.modalForBookmark = '';
+            $scope.modalBackdropForBookmark = '';
+            $scope.$apply();
+            console.log('$scope.conId:::inside reload:::',$scope.conId);
+            
+            var uiTheme = '{!$User.UIThemeDisplayed}';
+            var isSite = '{!$Site.Name}';
+            
+            if(!isSite) {
+                window.location.href = '/' + $scope.conId;
+            }else {
+                
+                if(uiTheme == 'Theme4d' || uiTheme == 'Theme4t'){
+                    var urlPrefix = '{!$Label.Community_Site_Prefix}';
+                    sforce.one.navigateToURL(urlPrefix+'/s/detail/'+$scope.conId);
+                }else {
+                    window.location.href = '/' + $scope.conId;
+                }
+            }
+        }
+    });
+    
+    // Directive for Lookup Search option
+    app.service('ApexQuery', function($q) {
+                
+        //Resolve Responses
+        function resolveResponse(response, ev, def) {
+            if(ev.status) {
+                def.resolve(response);
+            } else {
+                def.reject(ev);
+            }
+        }        
+        
+        //Get lookup record from a specific object
+        var getLookups = function(objectName, searchString, condition) {
+            var def = $q.defer();
+            if(!condition) { condition = ''; }
+            if(!searchString) { searchString = ''; }
+            Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.ResumeUploadRchilliClass.getLookupRecords}',
+                objectName,
+                searchString,
+                condition,
+                function(response, ev) {
+                    resolveResponse(response, ev, def);
+                },
+                {escape: true}
+            );
+            return def.promise;
+        }
+        
+        return {
+            getLookups: getLookups
+        }
+        
+    });
+    
+    app.directive('multiPicklist',function($document){
+        return {
+            restrict: 'EA',
+            templateUrl:'multiplePick.html',
+            replace:true,
+            scope: {
+              pickListOptions : '=options',
+              selectedOptions : '=',
+              isVisible: '=onBlur'
+            },
+            controller:function($scope){
+            
+                var selectedOptArr = [];
+                $scope.count = 0;
+
+                $scope.toggleSelectOption = function (option) {
+                    var intIndex = selectedOptArr.indexOf(option);
+                    if(intIndex > -1){
+                         selectedOptArr.splice(intIndex, 1);
+                    }
+                    else{
+                        selectedOptArr.push(option);
+                    }
+                    $scope.updateSelectedOptions(selectedOptArr);
+                                          
+                };
+            
+                $scope.updateSelectedOptions = function(temp){
+                    //console.log(temp);
+                    $scope.selectedOptions = $scope.toString(temp,";");
+                    $scope.count = selectedOptArr.length; 
+                };
+
+                
+                $scope.isSelected = function(opt){
+                    return selectedOptArr.indexOf(opt) > -1;
+                };
+                
+                $scope.toString = function(temp,exp){
+                    return temp.join(exp);
+                };
+                
+                $scope.toArray = function(temp,exp){
+                    return temp.split(exp);
+                };
+                
+                $scope.filterOptions = function(){
+                    if($scope.selectedOptions){
+                        selectedOptArr = $scope.toArray($scope.selectedOptions,';');
+                        //console.log("assigning is selected",selectedOptArr)
+                    }
+                    else{
+                        selectedOptArr = [];
+                    }
+                    $scope.count = selectedOptArr.length;   
+                };
+               
+            },
+            link:function(scope,element,attr,ctrl){
+               //console.log(scope);
+               
+               if(scope.selectedOptions){
+                   scope.filterOptions();
+               }
+               
+               var bindHandler = function(){
+                    console.log("binding");
+                    var isClickedElementChildOfPopup = element
+                      .find(event.target)
+                      .length > 0;
+                      
+                    if (isClickedElementChildOfPopup)
+                      return;
+                    
+                    scope.$apply(function(){
+                        scope.toggleDropdown(event);
+                    });
+               }
+                
+               scope.toggleDropdown = function () {
+                   
+                   scope.isOptVisible = !scope.isOptVisible;
+                   //console.log("going to bind",scope.isOptVisible);
+                    if(scope.isOptVisible){
+                         $document.bind('click',bindHandler); 
+                    }
+                    else{
+                        //console.log("unbinding");
+                        $document.unbind('click');
+                        scope.isVisible = !scope.isVisible;
+                    }
+                };
+                
+            }
+            
+            
+        };
+    });
+    
+    app.directive('lookup',function($document, ApexQuery, $timeout){
+            return {
+                restrict: 'E',
+                templateUrl:'lookup1.html',
+                replace:true,
+                scope: {
+                  data: '=',
+                  disabled: '=',
+                  object: '=',
+                  placeholder: '=',
+                  condition: '=',
+                  onChange: '=',
+                  parameter: '=',
+                  type: '='
+                },
+                controller:function($scope, $timeout){
+                  
+                    $scope.accounts = [];
+                    $scope.searchTxt = '';
+                    $scope.objectName = '';
+                    $scope.isDropDownHidden = true;
+                    $scope.showLoadingDiv = false;
+                    
+                    $scope.$watch('data',function(newVal,oldVal){
+                        if($scope.data && $scope.data.Name){
+                            $scope.searchTxt = $scope.data.Name;
+                        }
+                    },true);
+                    
+                    $scope.fetchAccounts = function(){
+                        $scope.showLoadingDiv = true;
+                        $scope.accounts = [];
+                        $timeout(function(){
+                            ApexQuery.getLookups($scope.object, $scope.searchTxt, $scope.condition).then(
+                                function(data){
+                                    $scope.accounts = data;
+                                    $scope.showLoadingDiv = false;
+                                },function(error){}
+                            );
+                        },400);
+                    };
+                    
+                    $scope.updateDataModelAttr = function(selAcc){
+                        $scope.data = selAcc;
+                        $scope.searchTxt = selAcc.Name;
+                        $scope.toggleDropDown();
+                        console.log('inside project change', typeof $scope.change);
+                        $timeout(function() {
+                            if(typeof $scope.onChange == 'function') {
+                                $scope.onChange();
+                            }
+                        }, 0);
+                    };
+                    
+                     // Added by Sukanya for close dropdown list
+                    
+                    $scope.closeDropdownList = function(event) {
+                        if(!$scope.data) {
+                           $scope.isDropDownHidden = true;
+                        }
+                        event.stopPropagation();
+                    }
+                    
+                    window.addEventListener('click', function(event) {
+                        console.log('window clicked.');
+                        $scope.isDropDownHidden = true;
+                        $scope.$apply();
+                    });
+                },
+                link:function(scope,element,attr,ctrl) {
+                    
+                    scope.toggleDropDown = function(){
+                        scope.isDropDownHidden = !scope.isDropDownHidden;
+                        if(scope.isDropDownHidden){
+                            $document.bind('click', function(event){
+                                //var isClickedElementChildOfPopup = $('#lookuplist')
+                                //  .find(event.target)
+                                //  .length > 0;
+                                var isClickedElementChildOfPopup = event.target;
+                                if(isClickedElementChildOfPopup) {
+                                    return;
+                                }
+                                scope.isDropDownHidden = true;
+                                scope.$apply();
+                                $document.unbind('click');
+                            }); 
+                        }
+                        else {
+                             $document.unbind('click');
+                        }
+                    };
+                }
+            };
+        });
+    
+   </script>
+   
+</apex:Page>

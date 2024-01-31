@@ -1,0 +1,50 @@
+.THIS .multiselect {
+    padding-top: 17px !important;
+}
+.THIS .inputClass {
+    width: 30% !important;
+}
+/*.THIS .slds-form-element__label{
+    font-family: 'Salesforce Sans',Arial,sans-serif !important;
+    color: rgb(8, 7, 7) !important;
+    font-size: .8125rem;   
+}*/
+/*W-007463 - Commented due to label font styles overrided in ChildComponent*/
+.THIS .statusPickList {
+    width: 180px !important;
+}
+/*.THIS .slds-button_icon-border{
+    border : none !important;
+    border-color : none  !important;
+}*/
+.THIS .top{
+    margin-top : 1rem !important;
+}
+.THIS .widthClass{
+    width: 14.666667% !important;
+}
+
+.THIS .marginLeft{
+    margin-left: -27px !important;
+}
+
+.THIS .iconClass svg{
+    width: 1.4rem!important;
+    height: 3rem!important;
+}
+.THIS .nowrapStyle{
+    white-space: normal !important;
+}
+.THIS .slds-text-heading_small{
+    font-size: 1.3rem !important;
+}
+.THIS .boxTitle {
+    font-size: 13px;
+    position: absolute;
+    top: -10px;
+    background-color: #fff;
+    padding: 0 5px;
+}
+.THIS .slds-box {
+    position: relative;
+}

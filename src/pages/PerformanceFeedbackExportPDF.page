@@ -1,0 +1,57 @@
+<apex:page showHeader="false" controller="PerformanceFeedbackExportPDF_Ctrl" standardStylesheets="false" renderAs="PDF" applyBodyTag="false" applyHtmlTag="false">
+    <html> 
+        <head>
+            <style>
+                @page {  
+                    size: landscape;
+                }
+            </style>
+        </head>
+        
+        <apex:variable var="cnt" value="{!1}" />
+        <apex:variable var="mgrcnt" value="{!1}" />
+        
+        <apex:outputPanel id="thePanel" layout="block" rendered="{!not(isFromManagerSummary)}">            
+            <h3>{!formResponse.Name} - {!formResponse.Form_Feedback_Type__c}</h3>
+            <ol>                   
+                <apex:repeat value="{!formResponse.Form_Response_Elements__r}" var="formResEle">                    
+                    <li>
+                        <apex:outputText value="{!formResEle.Question__r.Question__c}" escape="false"/>
+                        &nbsp;&nbsp;<apex:outputText value="{!formResEle.Feedback__c}" escape="false"/>
+                    </li>                                                           
+                </apex:repeat>
+				<div style="{!if(cnt = totalCnt, 'page-break-before:avoid;','page-break-before:always;')}"/>                
+            </ol>
+            <apex:repeat value="{!formResponses}" var="formRes">
+                <h3><apex:outputText value="{!IF(formRes.Form_Feedback_Type__c == 'Self Summary', formRes.Name +' - '+ formRes.Form_Feedback_Type__c, formRes.Name +' - from - ' + formRes.Feedback_From__r.Name + ' - ' + formRes.Form_Feedback_Type__c)}"/></h3>
+                <ol>  
+                    <apex:repeat value="{!formRes.Form_Response_Elements__r}" var="formResEle">
+                        <li>
+                            <apex:outputText value="{!formResEle.Question__r.Question__c}" escape="false"/>
+                            &nbsp;&nbsp;<apex:outputText value="{!formResEle.Feedback__c}" escape="false"/>
+                        </li>
+                    </apex:repeat>
+                </ol>
+                <div style="{!if(mgrcnt = totalMangerSummaryCnt, 'page-break-before:avoid;','page-break-before:always;')}"/>
+                
+                <apex:variable var="mgrcnt" value="{!mgrcnt+1}"/>
+            </apex:repeat>
+        </apex:outputPanel>
+        <apex:outputPanel id="thePanel1" layout="block" rendered="{!isFromManagerSummary}">
+            <apex:repeat value="{!formResponses}" var="formRes">
+                <h3><apex:outputText value="{!IF(formRes.Form_Feedback_Type__c == 'Self Summary', formRes.Name +' - '+ formRes.Form_Feedback_Type__c, formRes.Name +' - from - ' + formRes.Feedback_From__r.Name + ' - ' + formRes.Form_Feedback_Type__c)}"/></h3>
+                <ol>  
+                    <apex:repeat value="{!formRes.Form_Response_Elements__r}" var="formResEle">
+                        <li>
+                            <apex:outputText value="{!formResEle.Question__r.Question__c}" escape="false"/>
+                            &nbsp;&nbsp;<apex:outputText value="{!formResEle.Feedback__c}" escape="false"/>
+                        </li>
+                    </apex:repeat>
+                </ol>
+                <div style="{!if(cnt = totalCnt, 'page-break-before:avoid;','page-break-before:always;')}"/>
+                    
+                <apex:variable var="cnt" value="{!cnt+1}"/>
+            </apex:repeat>
+        </apex:outputPanel>
+    </html>                    
+</apex:page>

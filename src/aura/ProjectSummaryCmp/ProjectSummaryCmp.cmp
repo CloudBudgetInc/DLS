@@ -1,0 +1,639 @@
+<!--
+  @description       : 
+  @author            : Dhinesh Kumar
+  @group             : 
+  @last modified on  : 08/12/2022
+  @last modified by  : Dhinesh Kumar
+-->
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" controller="ProjectSummaryController">
+    <!-- Attributes -->
+    <aura:attribute name="ProjectSummaryList" type="List" description="Contains all the project records based on Filters"/>
+    <aura:attribute name="projectStatusList" type="list" default="[]"/>
+    <aura:attribute name="contactAssignmentStatus" type="List"/>
+    <aura:attribute name="contactTypeList" type="List" default="[]"/>
+    <aura:attribute name="projectTypeList" type="List" default="[]"/>
+    <aura:attribute name="projectRecordTypeList" type="List" default="[]"/>
+    <aura:attribute name="positionList" type="list" default="[{label:'All',value:'All'}]"/>
+    <aura:attribute name="contactAssStatus" type="Map" default="{}"/>
+    <aura:attribute name="showSpinner" type="boolean" />
+    <aura:attribute name="initialLoad" type="boolean" default="false"/>
+    <aura:attribute name="isLoaded" type="boolean" default="false"/>
+    <aura:attribute name="defaultId" type="String" />
+    <aura:attribute name="arrowDirection" type="String"  description="arrow position" />
+    <aura:attribute name="manageFilter" type="list" description="current filter conditions in a list"/>
+    <aura:attribute name="selectedFilter" type="String" />
+    <aura:attribute name="savedSearchList" type="list" default="[]"/>
+    <aura:attribute name="filter" type="map" default="{filterName :null,isDefault:false , Id :'',selectedFilterName :'Instructor'}"/>
+    <aura:attribute name="counts" type="map" description="No of counts to track" default="{noOfProjects:0,remainingHours:0,hoursWeek:0,activeInstructors:0,activeStudents:0}" />
+    <aura:attribute name="isValidInput" type="boolean" default="false"/>
+    <aura:attribute name="newStatusList" type="list" default="['Order','Active','Ended','On Hold','Canceled','Paid']" description="new values for update status"/>
+    <aura:attribute name="tempStatusList" type="list" description="Excluding current status" />
+    <aura:attribute name="newStatus" type="String"  default=""/>
+    <aura:attribute name="isPagePrintVersion" type="Boolean" default="false"/>
+    <aura:attribute name="isActivitiesOpened" type="Boolean" default="false"/>
+    <aura:attribute name="projectRec" type="map" default="{}" />
+    <aura:attribute name="actions" type="map" default="{'budjet':false,'schedule':false,'conAssign':false,'Id':null}" />
+    <aura:attribute name="multiPicklistFilter" type="map" description="filter values" default="{selectedStatusList : [],selectedAssignmentList : [], selectedProjectRT : []}"/>
+    <aura:attribute name="filterObj" type="map" description="filter values to restrict the records" default="{ SelectedAccount : [],
+                                                                                                             SelectedLocation : [],
+                                                                                                             SelectedContact : [],
+                                                                                                             fieldToSort : 'name',
+                                                                                                             sortingOrder : 'Asc',
+                                                                                                             selectedContactAsssign : null,
+                                                                                                             SelectedPosition : null,
+                                                                                                             selectedAssignmentList : [],
+                                                                                                             selectedProjectRT : [],
+                                                                                                             selectedStatusList : [],
+                                                                                                             filterName : null,
+                                                                                                             isDefault : false}"/>
+    <aura:attribute name="allFilterId" type="String" default=""/>
+    <aura:attribute name="projectRTMap" type="Map" default="{}"/>
+    <aura:attribute name="projectSectionList" type="list" default="[]"/>
+    
+    <!-- Handlers -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler name="change" value="{!v.filterObj}" action="{!c.filterChanged}"/>
+    <aura:handler name="change" value="{!v.filterChange}" action="{!c.filterMultiPicklistChange}"/>
+    <!--aura:handler name="change" value="{!v.filterObj.SelectedAccount}" action="{!c.filterChanged}"/>
+        <aura:handler name="change" value="{!v.filterObj.SelectedLocation}" action="{!c.filterChanged}"/>
+        <aura:handler name="change" value="{!v.filterObj.SelectedContact}" action="{!c.filterChanged}"/-->
+    
+    <c:ApexService aura:id="server"/>  
+    
+    <div>
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+        </aura:if>
+        
+        <aura:if isTrue="{!and(v.initialLoad,not(v.isPagePrintVersion))}" >
+            <lightning:card footer="" title="Project Summary View">
+                <!--aura:if isTrue="{!and(v.filter.selectedFilter != 'All', not(empty(v.filter.selectedFilter)))}"-->
+                <div align="right" style="margin-right:5rem;margin-top: -2rem;">
+                    <lightning:button label="Export" variant="brand" onclick="{!c.exportView}"/>
+                </div>
+                <!--/aura:if-->
+                <div align="right" style="margin-right:1rem;margin-top: -2rem;">
+                    <lightning:button label="Print" variant="brand" onclick="{!c.printView}"/>
+                </div>
+                <lightning:layout>                            
+                    <lightning:layoutItem size="9" smallDeviceSize="12" mediumDeviceSize="9" largeDeviceSize="9" padding="around-small">
+                        <div class="slds-box">
+                            <span class="boxTitle">Filters</span>
+                            <!-- Project filter section -->
+                            <lightning:layout multipleRows="true">                    
+                                <lightning:layoutItem padding="around-small" size="3">
+                                    <c:LookupSearch aura:id="Account" selection="{!v.filterObj.SelectedAccount}" onSearch="{!c.AccountlookupSearch}" iconName="standard:account" objectName="Account" fieldName="Name" condition="" label="Account" placeholder="Select Account" isMultiEntry="true" />
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small" size="3">
+                                    <c:LookupSearch aura:id="Location" selection="{!v.filterObj.SelectedLocation}" onSearch="{!c.LocationlookupSearch}" iconName="standard:location" objectName="MTT_Location__c" fieldName="Name" condition="" label="Location" placeholder="Select Location" isMultiEntry="false" />
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small"  size="2" >
+                                    <!--<div style="margin-left:5.5rem;margin-top:0.1rem;" >
+                            <lightning:helptext content="Not Shown: Canceled or Ended Projects with End Date older than 90 days. Please use Reports tab to view these records." class="helpText"/>
+                        </div>
+                        <div style="margin-top:-0.95rem;">-->
+                                    <c:multiSelectCmp  label="Project Status" aura:id="projectstatus" optionsList="{!v.projectStatusList}" 
+                                                      selectedvalue="{!v.multiPicklistFilter.selectedStatusList}" 
+                                                      handleChange="{!v.filterChange}" 
+                                                      helpText="Not Shown: Canceled or Ended Projects with End Date older than 90 days. Please use Reports tab to view these records." 
+                                                      isForCommunity="false"/>
+                                    <!--</div-->
+                                </lightning:layoutItem>
+                                
+                                <lightning:layoutItem padding="around-small" size="2">
+                                    <div>
+                                        <!--lightning:select name="projectTypeList" label="Project Type" value="{!v.filterObj.selectedProjectRT}">
+                            <aura:iteration items="{!v.projectTypeList}" var="recordType">
+                                <option text="{!recordType.label}" value="{!recordType.value}" selected = "{!v.filterObj.selectedProjectRT == recordType.value}" ></option>
+                            </aura:iteration>
+                        </lightning:select-->
+                                        <c:multiSelectCmp label="Project Type" aura:id="projectType" optionsList="{!v.projectRecordTypeList}" 
+                                                          selectedvalue="{!v.multiPicklistFilter.selectedProjectRT}" handleChange="{!v.filterChange}"
+                                                          isForCommunity="false"/>
+                                    </div>
+                                </lightning:layoutItem> 
+                                 <lightning:layoutItem padding="around-small" size="2">
+                                    <lightning:select name="projectSectionList" label=" Project Section" value="{!v.filterObj.selectedSection}" onchange="{!c.filterChanged}">
+                                        <option text="All" value="All" selected = "{!v.filterObj.selectedSection == sec}"></option>
+                                        <aura:iteration items="{!v.projectSectionList}" var="sec">
+                                            <option text="{!sec}" value="{!sec}" selected = "{!v.filterObj.selectedSection == sec}"></option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </lightning:layoutItem>
+                                <!-- Contact assignment Section -->
+                                <lightning:layoutItem padding="around-small" size="3">
+                                    <lightning:select name="contactTypeList" label="Contact Type" value="{!v.filterObj.selectedContactAsssign}" onchange="{!c.getCAPosition}">
+                                        <aura:iteration items="{!v.contactTypeList}" var="recordType">
+                                            <option text="{!recordType.label}" value="{!recordType.value}" selected = "{!v.filterObj.selectedContactAsssign == recordType.value}" ></option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small" size="3">
+                                    <aura:if isTrue="{!v.contactAssignmentStatus.length > 0}" >
+                                        <c:multiSelectCmp aura:id="multiSelect" label="Contact Assignment Status"  
+                                                          optionsList="{!v.contactAssignmentStatus}" 
+                                                          selectedvalue="{!v.multiPicklistFilter.selectedAssignmentList}" 
+                                                          handleChange="{!v.filterChange}"
+                                                          isForCommunity="false"/>
+                                    </aura:if>                                    
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small"  size="2">
+                                    <lightning:select name="contactTypeList" label="Position" value="{!v.filterObj.SelectedPosition}" onchange="{!c.filterChanged}">
+                                        <aura:iteration items="{!v.positionList}" var="color">
+                                            <option text="{!color.label}" value="{!color.value}" selected = "{!v.filterObj.SelectedPosition == color.value}"></option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small" size="2">
+                                    <c:LookupSearch aura:id="Contact" selection="{!v.filterObj.SelectedContact}" onSearch="{!c.ContactlookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" label="Contact" placeholder="Select Contact" isMultiEntry="false" />
+                                </lightning:layoutItem>
+                            </lightning:layout>   
+                        </div>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem  size="3" smallDeviceSize="12" mediumDeviceSize="3" largeDeviceSize="3" padding="around-small">
+                        <div class="slds-box">
+                            <span class="boxTitle">Manage Filters</span>
+                            <lightning:layout multipleRows="true">
+                                <lightning:layoutItem padding="around-small" size="12" >
+                                    <lightning:select aura:id="filterList" name="filterList" label="Select Filter" value="{!v.filter.selectedFilter}"  onchange="{!c.filterSelect}">
+                                        <option text="" value="" ></option>
+                                        <aura:iteration items="{!v.savedSearchList}" var="filter">
+                                            <option text="{!filter.Name}" value="{!filter.Id}" selected="{!filter.Id == v.filter.selectedFilter}"></option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </lightning:layoutItem>                                
+                                <lightning:layoutItem size="6">
+                                    <div class="slds-p-horizontal_x-small slds-p-top_medium">
+                                        <lightning:button label="Manage Filter" onclick="{!c.manageFilter}"/><br/>
+                                        <div class="slds-p-top_small">
+                                            <a herf="" data-name="Instructor" onclick="{!c.downloadFile}" >Download Active Instructor's</a>
+                                        </div>
+                                    </div>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6">
+                                    <div class="slds-p-left_x-large slds-p-top_medium">
+                                        <lightning:button label="Clear Filter" onclick="{!c.clearFilter}"/><br/>
+                                        <div class="slds-p-top_small">
+                                            <a herf="" data-name="Student" onclick="{!c.downloadFile}" >Download Active Student's</a>
+                                        </div>
+                                    </div>
+                                </lightning:layoutItem>                                
+                            </lightning:layout>
+                        </div>
+                    </lightning:layoutItem>
+                </lightning:layout>                
+                <p class="slds-p-horizontal_small">
+                    <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal table slds-table_fixed-layout">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th  class="slds-is-sortable slds-text-title--caps" data-name="name" onclick="{!c.tableSort}" scope="col" >
+                                    <div class="slds-cell-wrap" >
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'name') }">
+                                            
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'name') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Name
+                                    </div>
+                                </th>
+                                <!--<th  scope="col" class="slds-is-sortable slds-text-title_caps" data-name="DLS_Ref__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-truncate" >
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'DLS_Ref__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'DLS_Ref__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        DLS Ref#
+                                    </div>
+                                </th>-->
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="Start_Date__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Start Date">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Start_Date__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Start_Date__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Start Date</div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="End_Date__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="End Date">
+                                        
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'End_Date__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'End_Date__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        End Date</div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="Scheduled_Hours_Week__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Scheduled Hours/Week">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Scheduled_Hours_Week__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Scheduled_Hours_Week__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Scheduled Hours/Week</div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="AcctSeed__Account__r.Name"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Account Name">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'AcctSeed__Account__r.Name') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'AcctSeed__Account__r.Name') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Account Name</div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="Language__r.Name"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Language">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Language__r.Name') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Language__r.Name') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Language </div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="All_Active_Rooms__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Room(s)">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'All_Active_Rooms__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'All_Active_Rooms__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Room(s)</div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="Hours_Remaining__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Hours Remaining">
+                                        
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Hours_Remaining__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Hours_Remaining__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Hours Remaining </div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="AcctSeed__Status__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Project Status">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'AcctSeed__Status__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'AcctSeed__Status__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Project Status </div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="Instructors__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Active Instructor(s)">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Instructors__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Instructors__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Active Instructor(s) </div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="Students__c"  onclick="{!c.tableSort}">
+                                    <div class="slds-cell-wrap" title="Active Student(s)">
+                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Students__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
+                                        </aura:if>  
+                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Students__c') }">
+                                            <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
+                                        </aura:if> 
+                                        Active Student(s) </div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps">
+                                    <div class="slds-cell-wrap" title="Last Date of Attendance">
+                                        Last Date of Attendance
+                                    </div>
+                                </th>
+                                <th  scope="col" class="slds-is-sortable slds-text-title--caps">Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:if isTrue="{!not(empty(v.ProjectSummaryList))}" >
+                                <aura:iteration items="{!v.ProjectSummaryList}" var="Project">
+                                    <tr class="slds-hint-parent">
+                                        <td>
+                                            <div class="slds-cell-wrap" >
+                                                <a href="{!'/'+Project.projectId.Id}" target="_blank">{!Project.projectId.Name}</a>
+                                            </div>
+                                        </td>
+                                        <!--<td>
+                                            <div class="slds-cell-wrap" >{!Project.dlsRef}</div>
+                                        </td>-->
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.stDate}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.endDate}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.scheduledHour}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >
+                                                <a href="{!'/'+ Project.accountId}" target="_blank">{!Project.accountName}</a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >
+                                                <a href="{!'/'+ Project.languageId}" target="_blank">{!Project.languageName}</a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.rooms}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.remainingHrs}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-grid slds-gutters">
+                                                <div >
+                                                    {!Project.projectStatus}
+                                                </div>
+                                                <div style="margin-top: -6px;" >
+                                                    <div data-id="{!Project.projectId.Id}" data-name="{!Project.projectId.Name}" data-status="{!Project.projectStatus}" onclick="{!c.changeStatus}">
+                                                        <lightning:buttonIcon variant = "bare" name = "" iconName="utility:edit" alternativeText="Status" />    
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.activeInstructors}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.activeStudents}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-cell-wrap" >{!Project.lastDateOfAttendance}</div>
+                                        </td>
+                                        <td>
+                                            <lightning:buttonIcon size="xx-small" name="{!Project.projectId.Id}" class="iconClass" variant = "bare" iconName="utility:currency" onclick="{!c.openCurrency}" alternativeText="Project Budject Info" />
+                                            <lightning:buttonIcon size="xx-small" name="{!Project.projectId.Id}" class="iconClass" variant = "bare" iconName="utility:groups" onclick="{!c.openConAssignment}" alternativeText="Contact Assignment" />
+                                            <lightning:buttonIcon size="xx-small" name="{!Project.projectId.Id}" class="iconClass" variant = "bare" iconName="utility:event" onclick="{!c.openSchedules}" alternativeText="Schedule a Event"/>
+                                            <!--<lightning:buttonIcon size="xx-small" name="{!Project.projectId.Id}" class="iconClass" variant = "bare" iconName="utility:task" onclick="{!c.openActivities}" alternativeText="View Activities"/>-->
+                                            <c:iconWithNotificationCmp
+                                            iconName = 'utility:task'
+                                            iconSize = 'xx-small'
+                                            pendingCount = "{!Project.dueActivitiesCount}"
+                                            iconClass = "iconClass"
+                                            iconVariant = "bare"
+                                            recordId = "{!Project.projectId.Id}"
+                                            alternativeText = 'View Activities'
+                                            onbtnclick = "{!c.openActivities}"
+                                            >
+
+                                            </c:iconWithNotificationCmp>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                                <aura:set attribute="else">
+                                    <center style="margin-left: 545%;">No records found</center>
+                                </aura:set>
+                                <tr>
+                                    <td>
+                                        <div class="slds-cell-wrap">
+                                            <b># of Projects:  </b><br></br><b><center>{!v.counts.noOfProjects}</center></b>
+                                        </div>
+                                    </td>
+                                    <td colspan="3"></td>
+                                    <td>
+                                        <div class="slds-cell-wrap">
+                                            <b>Hours/Week: </b><br></br><b><center>{!v.counts.hoursWeek}</center></b>
+                                        </div>
+                                    </td>
+                                    <td colspan="3"></td>
+                                    <td><div class="slds-cell-wrap">
+                                        <b>Hours Remaining:</b><div style="margin-left:0.5rem;"><b>{!v.counts.remainingHours}</b></div>
+                                        </div>                        
+                                    </td>
+                                    <td  colspan="1"></td>
+                                    <td>
+                                        <div class="slds-cell-wrap">
+                                            <b># of Active Instructors: </b><div><b><center>{!v.counts.activeInstructors}</center></b></div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td><div class="slds-cell-wrap">
+                                        <b># of Active Students: </b><div><b><center>{!v.counts.activeStudents}</center></b></div>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </aura:if>
+                        </tbody>
+                    </table>
+                </p>
+            </lightning:card>
+        </aura:if>
+        
+        <c:sldsModal aura:id="manageFilter" displayCloseImage="true" closeAction="{!c.closeModal}">
+            <aura:set attribute="header">
+                Filter Details
+            </aura:set>
+            <aura:set attribute="content">
+                <lightning:card footer="" title="">
+                    <lightning:layout>
+                        <lightning:layoutItem padding="around-small" size="4">
+                            <aura:if isTrue="{!v.isValidInput}">
+                                <lightning:input name="input2"  messageWhenValueMissing="Please Enter the Filter Name" aura:id="filterName" label="Filter Name" value="{!v.filter.filterName}"  required="true"/>
+                            </aura:if>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="3">
+                            Is Default Filter  ?
+                            <lightning:input type="checkbox" label="" checked="{!v.filter.isDefault}" name="input2"/>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                    <p class="slds-p-horizontal_small">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th class="" scope="col">
+                                        <div class="slds-truncate" title="Opportunity Name">SELECT</div>
+                                    </th>
+                                    <th class="" scope="col">
+                                        <div class="slds-truncate" title="Opportunity Name">Type</div>
+                                    </th>
+                                    <th class="" scope="col">
+                                        <div class="slds-truncate" title="Opportunity Name">Condition</div>
+                                    </th>
+                                    <th class="" scope="col">
+                                        <div class="slds-truncate" title="Opportunity Name">Value</div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.manageFilter}" var="filter">
+                                    
+                                    <tr class="slds-hint-parent">
+                                        <td>
+                                            <lightning:input type="checkbox" label="" name="input2" checked="{!filter.isSelected}"/>
+                                        </td>
+                                        <td>
+                                            <div class="slds-truncate" title="Cloudhub">{!filter.label}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-truncate" title="Cloudhub">{!filter.condition}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-truncate" title="Cloudhub">{!filter.value}</div>
+                                        </td>
+                                    </tr>                            
+                                </aura:iteration>
+                                
+                            </tbody>
+                        </table>
+                    </p>
+                    
+                </lightning:card>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Save" title="Brand action" onclick="{!c.saveFilter}" />
+                <lightning:button variant="brand" label="Save As" title="Brand action" onclick="{!c.saveAsFilter}" />
+                <lightning:button variant="brand" label="Delete" title="Brand action" onclick="{!c.deleteRec}" />
+            </aura:set>
+        </c:sldsModal>
+        
+        <!-- Status Update Modal  -->
+        
+        <c:sldsModal aura:id="statusUpdate" displayCloseImage="true" closeAction="{!c.closeStatus}">
+            <aura:set attribute="header">
+                <h2 aura:id="header" value=""> {!v.projectRec.name} </h2>
+            </aura:set>
+            <aura:set attribute="content">
+                <lightning:select name="statusValues"  messageWhenValueMissing="Please Choose a Status " aura:id="newStatus" class="statusPickList" label="New Status" value="{!v.projectRec.status}"  required="true">
+                    <option text=" " value=" "></option>
+                    <aura:iteration items="{!v.tempStatusList}" var="status">
+                        <option text="{!status}" value="{!status}"></option>
+                    </aura:iteration>
+                </lightning:select>
+                
+                <aura:if isTrue="{!v.projectRec.status == 'Order'}">
+                    <br/><p class="slds-p-horizontal_small">Please update Schedule Records</p>
+                </aura:if>
+                
+                <aura:if isTrue="{!v.projectRec.status == 'On Hold'}">
+                    <br/><br/>
+                    <p class="slds-p-horizontal_small">
+                        Project related contact assignment and schedule records' Status will get updated to On Hold.<br/><br/>
+                        <ui:inputDate aura:id="dtVal" label="On Hold Date" value="{!v.projectRec.onHoldDt}" displayDatePicker="true" required="true" format="MM/dd/yyyy"/>   
+                    </p>
+                </aura:if>
+                
+                <aura:if isTrue="{!v.projectRec.status == 'Canceled'}">
+                    <br/><br/>Project related contact assignment and schedule records' Status will get updated to Canceled.<br/><br/><br/>
+                    
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="6" padding="around-small">
+                            <ui:inputDate aura:id="cancelDt" label="Cancellation Date" value="{!v.projectRec.cancelledDt}" displayDatePicker="true" required="true" format="MM/dd/yyyy"/>   
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="6" padding="around-small">
+                            <lightning:textarea aura:id="cancelReason" label="Cancellation Reason" value="{!v.projectRec.cancellationReason}" rows="4" required="true"/>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                </aura:if>
+                
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Save" title="Brand action" onclick="{!c.updateStatus}" />
+            </aura:set>
+        </c:sldsModal>
+        
+        <c:sldsModal aura:id="actionCmps" displayCloseImage="false" modelWidth="95%">
+            <aura:set attribute="header">
+                <aura:if isTrue="{!v.actions.budjet}">
+                    Budget Information
+                </aura:if>
+                <aura:if isTrue="{!v.actions.conAssign}">
+                    Contact Assignments Details
+                </aura:if>
+                <aura:if isTrue="{!v.actions.schedule}">
+                    Schedule Details
+                </aura:if>
+            </aura:set>
+            <aura:set attribute="content">
+                <aura:if isTrue="{!v.actions.budjet}">
+                    <c:ProjectBudjectInfo recordId="{!v.actions.Id}" />
+                </aura:if>
+                <aura:if isTrue="{!v.actions.schedule}">
+                    <c:ScheduleCmp recordId="{!v.actions.Id}" />
+                </aura:if>
+                <aura:if isTrue="{!v.actions.conAssign}">
+                    <c:ContactAssignmentCmp sObjectName="AcctSeed__Project__c"  recordId="{!v.actions.Id}" />
+                </aura:if>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Cancel" onclick="{!c.closeActions}" />
+            </aura:set>
+        </c:sldsModal>
+
+        <!-- Activities Modal  -->
+        <aura:if isTrue = "{!v.isActivitiesOpened}">
+        <c:sldsModal aura:id="activitiesModal" displayCloseImage = 'true' modelWidth="90%" closeAction="{!c.closeActivities}">
+            <aura:set attribute="header">
+                View Activities
+            </aura:set>
+            <aura:set attribute="content">
+                <c:activitiesContainerComponent recordId = "{!v.actions.Id}">
+                </c:activitiesContainerComponent>
+            </aura:set>
+        </c:sldsModal> 
+    </aura:if>
+        
+        
+        <!-- Print Version table -->    
+        
+        <aura:if isTrue="{!v.isPagePrintVersion}">
+            <div style="margin-top: 1%;">
+                <table class="slds-table">
+                    <thead>
+                        <th>Name</th>
+                        <th>DLS Ref #</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th class="nowrapStyle">Hours/Week</th>
+                        <th class="nowrapStyle">Account Name</th>
+                        <th>Language</th>
+                        <th>Room(s)</th>
+                        <th class="nowrapStyle">Hours Remaining</th>
+                        <th class="nowrapStyle">Project Status</th>
+                        <th class="nowrapStyle" style="width:10% !important;">Active Instructor(s)</th>
+                        <th class="nowrapStyle" style="width:10% !important;">Active Student(s)</th>
+                    </thead>
+                    <tbody>
+                        <aura:if isTrue="{!v.ProjectSummaryList.length > 0}">
+                            <aura:iteration items="{!v.ProjectSummaryList}" var="project">
+                                <tr>
+                                    <td class="nowrapStyle">{!project.projectId.Name}</td>
+                                    <td>{!project.dlsRef}</td>
+                                    <td>{!project.stDate}</td>
+                                    <td>{!project.endDate}</td>
+                                    <td>{!project.scheduledHour}</td>
+                                    <td class="nowrapStyle">{!project.accountName}</td>
+                                    <td class="nowrapStyle">{!project.languageName}</td>
+                                    <td class="nowrapStyle">{!project.rooms}</td>
+                                    <td class="nowrapStyle">{!project.remainingHrs}</td>
+                                    <td>{!project.projectStatus}</td>
+                                    <td class="nowrapStyle">{!project.activeInstructors}</td>
+                                    <td class="nowrapStyle">{!project.activeStudents}</td>
+                                </tr>
+                            </aura:iteration>
+                        </aura:if>
+                    </tbody>
+                </table> 
+            </div>
+        </aura:if>
+    </div>
+    
+</aura:component>

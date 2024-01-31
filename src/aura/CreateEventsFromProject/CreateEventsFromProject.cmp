@@ -1,0 +1,25 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="CustomButtonService">
+	<aura:attribute name="message" type="String" default=""/>
+    <aura:attribute name="recordId" type="String"/>
+    <!--<aura:attribute name="record" type="Object"/>
+    <aura:attribute name="simpleRecord" type="Object"/>
+    <aura:attribute name="fieldsToQuery" type="List" default="['Name','AcctSeed__Opportunity__c','AcctSeed__Status__c']"/>
+    <aura:attribute name="recordError" type="String"/>
+    
+    <force:recordData aura:id="forceRecordCmp"
+                      recordId="{!v.recordId}"
+                      mode="VIEW"
+                      fields="AcctSeed__Opportunity__c"  
+                      targetRecord="{!v.record}"
+                      targetFields="{!v.simpleRecord}"
+                      targetError="{!v.recordError}"
+                      recordUpdated="{!c.handleRecordUpdated}"/>-->
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <!-- To display the message -->
+    <div style="margin-top: 1rem;">
+        <p class="slds-text-align_center" style="font-size: 23px;"><b>Information</b></p>
+        <p class="slds-p-top_large" style="font-size: 16px;margin-top: 1rem;">{!v.message}</p>
+    </div>
+    
+</aura:component>

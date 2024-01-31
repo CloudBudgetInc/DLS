@@ -1,0 +1,162 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="LibrarySearchController">
+    
+    <aura:attribute name="userType" type="String" default="" access="Public"/>
+    <aura:attribute name="displaySearchResult" type="Boolean" default="false" access="public"/>
+    
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="materials" type="List" default="[]"/>
+    
+    <aura:attribute name="displayMaterialDetail" type="Boolean" default="flase"/>
+    <aura:attribute name="selectedRecordId" type="String" default=""/>
+    
+    <aura:attribute name="displayTopRatedSection" type="Boolean" default="false"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:handler name="change" value="{!v.displayTopRatedSection}" action="{!c.backFromDetailPage}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..." size="medium" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div aura:id="topRatedSection">
+        
+        <div>
+        	<span class="backCls">
+                <div style="float: left;">
+                    <div class="slds-grid">
+                    	<span class="slds-col"><i class="far fa-arrow-left" onclick="{!c.backToHomePage}" ></i></span>
+                		<span class="slds-col" style="font-size: 1.25rem;color: #055e89!important;">&nbsp;&nbsp;Back</span>
+                    </div>
+                </div>
+            </span>
+            <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                <br/><br/>
+            </aura:if>
+            <center><h5 class="card-title" style="font-size:2rem;text-transform: uppercase !important;">My Rated</h5></center>
+        </div>
+        
+        <div class="card-deck">
+            <div class="card">
+                <div class="card-body">
+                    <aura:if isTrue="{!v.materials.length > 0}">
+                        <lightning:layout multipleRows="true">
+                            <aura:iteration items="{!v.materials}" var="mr">
+                                <lightning:layoutItem size="12" largeDeviceSize="4" mediumDeviceSize="4" smallDeviceSize="12" padding="around-small">
+                                    
+                                    <div onclick="{!c.redirectToMaterialDetail}" data-value="{!mr.Id}">
+                                        <aura:if isTrue="{!mr.Book_Cover__c != null}">
+                                            <lightning:formattedRichText value="{!mr.Book_Cover__c}" class="imageClass"></lightning:formattedRichText>
+                                            <aura:set attribute="else">
+                                                <img src="{!$Resource.Cover_Not_Found_Image}" class="imageCls"></img>
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                        <aura:if isTrue="{!mr.Average_Rating__c}">
+                                            <c:RatingCmp value="{!mr.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                            <aura:set attribute="else">
+                                                <span style="font-size: smaller;">No Ratings</span>
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div> <h1>
+                                        {!mr.Name}
+                                        </h1></div>
+                                    <div> <i style="font-size: 1rem;" class="far fa-check-circle"></i>
+                                        <aura:if isTrue="{!mr.Total_Quantity_Available__c != null}">
+                                            Available: {!mr.Total_Quantity_Available__c}
+                                            <aura:set attribute="else">
+                                                Available: N/A
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div>
+                                        <i style="font-size: 1rem;" class="far fa-book"></i>
+                                        <aura:if isTrue="{!mr.Total_Quantity_Loaned_Out__c != null}">
+                                            Loaned Out: {!mr.Total_Quantity_Loaned_Out__c}
+                                            <aura:set attribute="else">
+                                                Loaned Out: N/A
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                </lightning:layoutItem>
+                            </aura:iteration>
+                        </lightning:layout>
+                        <aura:set attribute="else">
+                            <center><span>No Records To Display</span></center>
+                        </aura:set>
+                    </aura:if>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!--div aura:id="topRatedSection">
+        <lightning:card title="Top Rated Books">
+            <aura:set attribute="actions">
+                <lightning:button label="Back"  class="btn btn-primary" onclick="{!c.backToHomePage}"/>
+            </aura:set>
+            <p class="slds-p-horizontal_small">
+                <aura:if isTrue="{!v.materials.length > 0}">
+                    <lightning:layout multipleRows="true">
+                        <aura:iteration items="{!v.materials}" var="mr">
+                            <lightning:layoutItem size="4" padding="around-small">
+                                
+                                <div onclick="{!c.redirectToMaterialDetail}" data-value="{!mr.Id}">
+                                    <aura:if isTrue="{!mr.Book_Cover__c != null}">
+                                        <lightning:formattedRichText value="{!mr.Book_Cover__c}" class="imageClass"></lightning:formattedRichText>
+                                        <aura:set attribute="else">
+                                            <img src="{!$Resource.Cover_Not_Found_Image}" class="imageCls"></img>
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                                <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                    <aura:if isTrue="{!mr.Average_Rating__c}">
+                                        <c:RatingCmp value="{!mr.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                        <aura:set attribute="else">
+                                            <span style="font-size: smaller;">No Ratings</span>
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                                <div> <h1>
+                                    {!mr.Name}
+                                    </h1></div>
+                                <div> <i style="font-size: 1rem;" class="far fa-check-circle"></i>
+                                    <aura:if isTrue="{!mr.Total_Quantity_Available__c != null}">
+                                        Available: {!mr.Total_Quantity_Available__c}
+                                        <aura:set attribute="else">
+                                            Available: N/A
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                                <div>
+                                    <i style="font-size: 1rem;" class="far fa-book"></i>
+                                    <aura:if isTrue="{!mr.Total_Quantity_Loaned_Out__c != null}">
+                                        Loaned Out: {!mr.Total_Quantity_Loaned_Out__c}
+                                        <aura:set attribute="else">
+                                            Loaned Out: N/A
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                            </lightning:layoutItem>
+                        </aura:iteration>
+                    </lightning:layout>
+                    <aura:set attribute="else">
+                        <center><span>No Records To Display</span></center>
+                    </aura:set>
+                </aura:if>
+            </p>
+        </lightning:card>
+    </div-->
+    
+    <!-- Display Material detail cmp -->
+    <aura:if isTrue="{!v.displayMaterialDetail}">
+        <c:MaterialDetailCmp recordId="{!v.selectedRecordId}" displayDevice="{!v.displayDevice}" userType="{!v.userType}" displayTopRatedSection="{!v.displayTopRatedSection}" fromType="Top Rated"/>
+    </aura:if>
+    
+</aura:component>

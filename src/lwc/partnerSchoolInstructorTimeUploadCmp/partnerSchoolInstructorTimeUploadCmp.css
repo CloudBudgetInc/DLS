@@ -1,0 +1,13 @@
+.box{
+    padding: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid #e5e5e5;
+    position: relative;
+}
+.boxTitle {
+    font-size: 13px;
+    position: absolute;
+    top: -10px;
+    background-color: #fff;
+    padding: 0 5px;
+}

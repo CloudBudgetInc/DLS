@@ -1,0 +1,88 @@
+<apex:page showHeader="false" controller="DODATimesheetExportCtrl" standardStylesheets="false" renderAs="PDF" applyBodyTag="false" applyHtmlTag="false">
+    <html> 
+        <head>
+            <style>
+                @page {  
+                    size: landscape;
+                }
+            </style>
+        </head>
+        
+        <apex:variable var="cnt" value="{!1}" />
+        
+        <apex:repeat value="{!insHoursTable}" var="ins">
+            <center>
+                <apex:image url="{!$Resource.DLS_Logo_v1}" width="100" height="50"/>
+            </center>
+            <h3>Project Name: {!ins.projName} <span style="float:right;">Class #: {!ins.dlsClass}</span></h3> 
+            
+            <table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout:fixed">
+                <thead>
+                    <tr>
+                    
+                        <th style="word-wrap:break-word;"><center>Instructor Name</center></th>
+                        <th><center>Date</center></th>
+                        <th><center>Instructors Hour</center></th>
+                        <th><center>Prep Hours</center></th>
+                        
+                        <apex:repeat value="{!ins.headerStuNames}" var="names">
+                            <th><center>{!names} Hours</center></th>
+                            <th><center>Attendance</center></th>
+                        </apex:repeat>
+                        
+                        <th><center>Comments</center></th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                
+                    <apex:repeat value="{!ins.insHours}" var="inshrs">
+                    
+                        <tr>
+                            <td style="word-wrap:break-word;"><center>{!inshrs.insName}</center></td>
+                            <td >
+                                <center><apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                                    <apex:param value="{!inshrs.insDate}" /> 
+                                </apex:outputText></center>
+                            </td>
+                            <td ><center>{!inshrs.insHours}</center></td>
+                            <td ><center>{!inshrs.prepHours}</center></td>
+                            
+                            <apex:repeat value="{!inshrs.studentDetails}" var="student">
+                                <td><center>{!student.hours}</center></td>
+                                <td><center>{!student.attendance}</center></td>
+                            </apex:repeat>
+                            
+                            <td>
+                                <apex:repeat value="{!inshrs.comments}" var="cmt">
+                                    <center>-{!cmt}</center>
+                                </apex:repeat>
+                            </td>
+                            
+                        </tr>
+                        
+                    </apex:repeat>
+                    <tr>
+                        <td><center>Total</center></td>
+                        <td></td>
+                        <td><center>{!ins.insHrsTotal}</center></td>
+                        <td><center>{!ins.prepHrsTotal}</center></td>
+                        <apex:repeat value="{!ins.studentHrsTotal}" var="hrs">
+                            <td><center>{!hrs}</center></td>
+                            <td></td>
+                        </apex:repeat>
+                        
+                        <td></td>
+                    </tr>
+                
+                </tbody>
+            </table>
+            
+            <div style="{!if(cnt = totalCnt, 'page-break-before:avoid;','page-break-before:always;')}"/>
+            
+            <apex:variable var="cnt" value="{!cnt+1}"/>
+            
+        </apex:repeat>
+   
+    </html>                    
+</apex:page>

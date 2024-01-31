@@ -1,0 +1,116 @@
+<aura:component controller="TimeActivityController" implements="forceCommunity:availableForAllPageTypes,lightning:isUrlAddressable" access="global">
+    <aura:attribute name="startDate" type="Date" access="PUBLIC" default=""/>
+    <aura:attribute name="endDate" type="Date" access="PUBLIC" default=""/>
+    <aura:attribute name="projectId" type="String" default=""/>
+    <aura:attribute name="selectedProject" type="String" access="PUBLIC" default="--None--"/>
+    <aura:attribute name="projectList" type="List" access="PUBLIC" default="[]"/>
+    <aura:attribute name="timeCardDays" type="List" access="PUBLIC" default="[]"/>
+    <aura:attribute name="communityName" type="String" access="PUBLIC" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" access="PUBLIC" default="false"/>
+    <aura:attribute name="conditionCheck" type="Boolean" access="PUBLIC"/>
+    <aura:attribute name="totalHrs" type="String" default=""/>
+    <aura:attribute name="displayDevice" type="String" default=""/> 
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    <br/>
+    <center><h5 class="card-title" style="font-size:2rem;">TIMEKEEPING HISTORY</h5></center><br/>
+    <div style="padding:0.5rem;">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">
+                    <lightning:layout class="slds-p-bottom_medium"  multipleRows="true">
+                        <lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}">
+                            <lightning:select name="select" label="Project" aura:id="projectSel" class="projectSelCls" value="{!v.selectedProject}" messageWhenValueMissing="Please fill project">
+                                <option value="--None--">--None--</option>
+                                <aura:iteration items="{!v.projectList}" var="pro">
+                                    <option value="{!pro.projectId}">{!pro.dlsClass}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}">
+                            <lightning:input type="date" label="From Date" value="{!v.startDate}" aura:id ="dates" messageWhenValueMissing="Please correct the value"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}">
+                            <lightning:input type="date" label="To Date" value="{!v.endDate}" aura:id ="dates" messageWhenValueMissing="Please correct the value"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '3'}">
+                            <div class="slds-p-top_large" >
+                                <center>
+                                    <lightning:button label="Search" variant="brand" class="btn btn-primary" onclick="{!c.searchRecords}"/>&nbsp;
+                                    <lightning:button label="Clear" variant="brand" class="btn btn-secondary" onclick="{!c.clearFilters}"/>
+                                </center>
+                            </div>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                    <div class="tableCls">
+                        <aura:if isTrue="{!v.timeCardDays.length > 0}">
+                            <table  class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                                <thead class="thead-light">
+                                    <tr class="slds-text-title_caps">
+                                        <th class="wrap slds-text-align_center">Date</th>
+                                        <th class="wrap slds-text-align_center">Week Day</th>
+                                        <th class="wrap slds-text-align_center">Submitted Hours</th>
+                                        <th class="wrap slds-text-align_center">Student Approval</th>
+                                        <th class="wrap slds-text-align_center">Supervisor Approval</th>
+                                        <aura:if isTrue="{!v.selectedProject == '--None--'}">
+                                            <th class="wrap slds-text-align_center">DLS Class #</th>
+                                        </aura:if>
+                                        <th class="wrap slds-text-align_center">Project Task</th>
+                                        <aura:if isTrue="{!v.communityName == 'student'}">
+                                            <th class="slds-text-align_center">Instructor</th>
+                                        </aura:if>
+                                        <th class="wrap slds-text-align_center">Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <aura:iteration items="{!v.timeCardDays}" var="time">
+                                        <tr>
+                                            <td data-label="Date" class="wrap slds-text-align_center">{!time.dayDtVal}</td>
+                                            <td data-label="Week Day" class="wrap slds-text-align_center">{!time.weekDay}</td>
+                                            <td data-label="Submitted Hours" class="wrap slds-text-align_center">{!time.submittedHours}</td>
+                                            <td data-label="Student Approval" class="wrap slds-text-align_center">{!time.studentAprroval}</td>
+                                            <td data-label="Supervisor Approval" class="wrap slds-text-align_center">{!time.supervisorAprroval}</td>
+                                            <aura:if isTrue="{!v.selectedProject == '--None--'}">
+                                                <td data-label="DLS Class #" class="wrap slds-text-align_center">{!time.dlsClass}</td>
+                                            </aura:if>
+                                            <td data-label="Project Task" class="wrap slds-text-align_center">{!time.projectTask}</td>
+                                            <aura:if isTrue="{!v.communityName == 'student'}">
+                                                <td data-label="Instructor" class="wrap slds-text-align_center">{!time.instructor}</td>
+                                            </aura:if>
+                                            <td data-label="Location" class="wrap slds-text-align_center">{!time.location}</td>
+                                        </tr>
+                                    </aura:iteration>
+                                    <tr>
+                                        <td></td>
+                                        <td class="slds-text-align_center" style="font-weight: bold;">Total Hours</td>
+                                        <td class="slds-text-align_center" style="font-weight: bold;">{!v.totalHrs}</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <aura:if isTrue="{!v.communityName == 'student'}">
+                                            <td></td>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.selectedProject == '--None--'}">
+                                            <td></td>
+                                        </aura:if>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <aura:set attribute="else">
+                                <center><p style="font-size:0.875rem;">No records found</p></center>
+                            </aura:set>
+                        </aura:if>
+                    </div>
+                </span>
+            </div>
+        </div>
+    </div>
+</aura:component>

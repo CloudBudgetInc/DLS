@@ -1,0 +1,39 @@
+<template>
+    <template if:true = {showSpinner}>
+        <lightning-spinner variant = 'brand' alternative-text="Loading"></lightning-spinner>
+    </template>
+    <div class="slds-modal__header">
+        <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Submit for Approval</h1>
+      </div>
+      <div if:false = {isApprove} class = 'slds-p-around--medium'>
+            <lightning-textarea
+                label="Comments"
+                max-length="300"
+                onchange = {handleComments}>
+            </lightning-textarea>
+        </div>
+        <template if:true = {isApprove}>
+            <div class="slds-text-align_center slds-p-around--large">
+                Would you like to delete the events? If there will be a Substitute Instructor , please select No.
+            </div>
+
+        </template>
+        <div class="slds-modal__footer">
+            <template if:false = {isApprove}>
+                <lightning-button class = 'slds-p-around--medium' label = 'Approve' variant = 'brand' onclick = {handleApproveClick}>
+
+                </lightning-button>
+                <lightning-button label = 'Reject' variant = 'neutral' onclick = {handleRejectClick}>
+                
+                </lightning-button>
+            </template>
+            <template if:true = {isApprove}>
+                <lightning-button class = 'slds-p-around--medium' label = 'Yes' variant = 'brand' onclick = {handleDeleteYes}>
+
+                </lightning-button>
+                <lightning-button label = 'No' variant = 'neutral' onclick = {handleDeleteNo}>
+                
+                </lightning-button>
+            </template>
+          </div>
+</template>

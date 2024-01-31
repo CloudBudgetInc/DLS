@@ -1,0 +1,69 @@
+<aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" controller="TimeSheetAppApexController">
+    <!-- Attributes -->
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="add" type="Boolean" default="false"/>
+    <aura:attribute name="workItems" type="agf__ADM_Work__c[]" access="global"/>
+    <aura:attribute name="timeInputs" type="MBA_Timesheet__c[]" access="public"/>
+    <aura:attribute name="timeInputIndices" type="Integer[]" access="public" default = "[0]" />
+    <aura:attribute name="numTimeInputs" type="Integer" access="public" default = "0"/>
+    <!-- Handlers -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="updateTimeInput" event="c:timeInputUpdate" 
+                  action="{!c.handleUpdateTimeInput}"/>
+    <aura:handler name="deleteTimeInput" event="c:timeInputDelete"
+                  action="{!c.handleDeleteTimeInput}"/>
+    <!-- Register Events -->
+    <aura:registerEvent name="updateDataTable" type="c:dataTableUpdate"/>
+    <aura:registerEvent name="updateChart" type="c:chartUpdate"/>
+
+    <c:TimeSheetAppHeader/>
+    <c:TimeSheetAppNotes/>
+    <lightning:card title="Timesheet Entry" class="slds-m-around_xxx-small">
+        <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+            <thead>
+                <tr class="slds-text-title_caps">
+                    <th scope="col">
+                        <div class="slds-truncate" title="Work Item">Work Item</div>
+                    </th>
+                    <th scope="col">
+                        <div class="slds-truncate" title="Hours">Hours</div>
+                    </th>
+                    <th scope="col" >
+                        <div class="slds-truncate" title="Actual Date Completed">Actual Date Completed</div>
+                    </th>
+                    <th scope="col" >
+                        <div class="slds-truncate" title="Description">Description</div>
+                    </th>
+                    <th scope="col" >
+                        <div class="slds-truncate" title="Action">Action</div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody aura:id="timeEntryPanel">
+                <c:TimeSheetAppTimeInput workItems="{!v.workItems}" lineNumber = "0"/> 
+            </tbody>
+        </table>
+        <lightning:layout verticalAlign="center" horizontalAlign="left" class="slds-m-around_x-small">
+            <aura:if isTrue="{!v.add}" >
+                <lightning:layoutItem padding="around-small">
+                    <lightning:button label="Add" title="Add" onclick="{!c.addInput}"/>
+                </lightning:layoutItem>  
+                <lightning:layoutItem padding="around-small">
+                    <lightning:button label="Save" title="Save" onclick="{!c.saveAllItems}"/>
+                </lightning:layoutItem >
+            </aura:if>   
+        </lightning:layout>
+    </lightning:card>
+    <c:TimeSheetAppChartGrid/> 
+    <c:TimeSheetAppDataTable workItems="{!v.workItems}"/>
+    <aura:if isTrue="{!v.showSpinner}">
+       <div class="slds-spinner_container spinnerFixed">
+           <div role="status" class="slds-spinner slds-spinner--medium slds-spinner--brand">
+               <span class="slds-assistive-text">Loading</span>
+               <div class="slds-spinner__dot-a"></div>
+               <div class="slds-spinner__dot-b"></div>
+           </div>
+       </div>
+   </aura:if>
+	
+</aura:component>

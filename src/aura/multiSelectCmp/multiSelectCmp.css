@@ -1,0 +1,63 @@
+.THIS .scrollbar::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 3px rgba(0,0,0,.3);
+	border-radius: 10px;
+	background-color: #fafaf9;
+}
+
+.THIS .scrollbar::-webkit-scrollbar
+{
+	width: 10px;
+	background-color: #dddbda;
+}
+
+.THIS .scrollbar::-webkit-scrollbar-thumb
+{
+	border-radius: 10px;
+	-webkit-box-shadow: inset 0 0 2px rgba(0,0,0,.3);
+	background-color: #808080;
+}
+.THIS .iconCls .slds-icon_xx-small{
+    width: 1.7rem !important;
+    height: 0.7rem !important;
+    color: black !important;
+    stroke: #000000 !important;
+}
+.THIS .slds-input-community{
+    display: inline-block !important;
+    width: 100% !important;
+    height: calc(1.25em + 1.5rem + 2px) !important;
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    color: #495057 !important;
+    vertical-align: middle !important;
+    border-radius: 0 !important;
+    appearance: none !important;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    -webkit-appearance: none !important;
+}
+.THIS .slds-input{
+    display: inline-block !important;
+    width: 100% !important;
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    color: #495057 !important;
+    vertical-align: middle !important;
+    border-radius: .25rem !important;
+    appearance: none !important;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    -webkit-appearance: none !important;
+}
+.THIS .white-border{
+    border: 1px solid #ced4da !important;
+}
+.THIS .red-border{
+    border: 1px solid #ea001e !important;
+}
+.THIS .helpText {
+    color: #ea001e;
+    font-size: .75rem;
+    margin-top: 0.125rem;
+}

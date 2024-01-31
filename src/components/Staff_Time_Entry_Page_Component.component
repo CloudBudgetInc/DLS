@@ -1,0 +1,1411 @@
+<apex:component controller="DLS_Staff_Time_Entry_Ctrl">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+       <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <apex:slds />
+       <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        <!--<apex:stylesheet value="{!URLFOR($Resource.SLDS_2_1_3, 'assets/styles/salesforce-lightning-design-system.css')}" />-->
+       
+        <style>
+        /**
+         * Hide when Angular is not yet loaded and initialized
+         */
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+          display: none !important;
+        }
+        
+        .slds-input {
+            float: right;
+        }
+        
+        .selectErrorClass {
+            background-color: #fff;
+            border-color: #c23934;
+            box-shadow: #c23934 0 0 0 1px inset;
+            background-clip: padding-box;
+        }
+        
+      
+        .img{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            //height: 10%;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+        }
+            
+        .red {
+            color: red;
+        }
+        .green{
+            color: green;
+        }
+        
+        .blue {
+            color: blue;
+        }
+        td:before {
+            font-weight: 700 !important;;
+        }
+        td {
+            vertical-align:top;
+        }
+        
+        .hrsalign {
+            margin-top: 25%;
+        }
+        
+        .hrsColour {
+            background-color: yellow !important;
+        }
+        
+        .deleteColour {
+            background-color: red !important;
+        }
+        
+        // To wrap and show the Request Notes field
+        .slds .slds-table td {
+            white-space: normal;
+        }
+        .nowrapStyle {
+            white-space: normal !important;
+        }
+        
+         //This below styles for toggle options
+         
+         .toggleCheckbox {
+            width: 1px;
+            height: 1px;
+            border: 0;
+            clip: rect(0 0 0 0);
+            margin: -1px;
+            overflow: hidden;
+            padding: 0;
+            position: absolute;
+         }
+         
+         .bottomNonClass {
+             margin-bottom: 0!important;
+         }
+         
+         .gridClass {
+             display: flex;
+         }
+         
+         .checkboxtoggle1 {
+             width: 100%;
+         }
+         
+         .faxContainerClass {
+            font-size: .625rem;
+            color: #54698d;
+         }
+         
+         .checkbocFaxClass {
+            display: block;
+            position: relative;
+            width: 3rem;
+            height: 1.5rem;
+            border: 1px solid #9faab5;
+            padding: .125rem;
+            border-color: #0070d2;
+            background-color: #0070d2;
+            border-radius: 15rem;
+            transition: background-color .2s cubic-bezier(.75,0,.08,1);
+         }
+         
+         .checkbocFaxClass::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 1.25rem;
+            height: 1.25rem;
+            background-color: #fff;
+            border-radius: 15rem;
+          }
+                   
+                   
+          .toggleCheckbox:checked~.faxContainerClass .checkbocFaxClass::after {
+                content: ' ';
+                position: absolute;
+                top: .25rem;
+                left: .6rem;
+                height: .7rem;
+                width: .45rem;
+                border-bottom: 2px solid #fff;
+                border-right: 2px solid #fff;
+                border-radius: 0;
+                background-color: transparent;
+                transform: rotate(45deg);
+          }
+          
+         .toggleCheckbox:checked~.faxContainerClass .checkbocFaxClass::before {
+                content: '';
+                position: absolute;
+                top: 1px;
+                right: 1px;
+                width: 1.25rem;
+                height: 1.25rem;
+                background-color: #fff;
+                border-radius: 15rem;
+                transition: transform .2s cubic-bezier(.75,0,.08,1);
+          }
+         
+         .checkboxOn {
+             display: none;
+         }
+         
+         .checkbocOff {
+             display: block;
+         }
+         
+         .onHoverIcon {
+             cursor: pointer !important;
+         }
+            
+         .success{
+            color: #fff !important;
+            background-color: #2e844a !important;
+         }
+            
+          .error{
+            color: #fff !important;
+            background-color: #ea001e !important;
+         }
+            
+         
+           
+    </style>
+        <div class="slds ng-cloak">
+            <div style="display: none; background-color: rgba(222, 230, 230, 0.6);width: 100%; height: 100%; z-index: 1000; position: fixed; left: 0; top: 0; overflow: hidden; text-align: center; vertical-align: middle;" id="spinner">
+                <img alt="Loading..." src="{!URLFOR($Resource.SLDS_2_1_3,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+            </div>
+            
+            <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">                
+                <div class="slds-grid">
+                    <div class="slds-media__figure">
+                         <img src="{!URLFOR($Resource.MyTimeSheet_PackageIcon)}" style="width:60px;height:50px;"></img>
+                    </div>
+                    <div class="slds-media__body">
+                        <div class="slds-grid">
+                            <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="DLS Timesheet">DLS Timesheet</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-col slds-no-flex slds-align-bottom" ng-if="!sitePage" style="margin-right: 1rem;padding-bottom: 0.5rem;">
+                        <div style="width: 100%;text-align: center;">
+                            <a href="/lightning/n/Internal_Instructor_Time_Entry" style="color: white;">Link to Internal Instructor Time Entry</a>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-col slds-no-flex slds-align-bottom" ng-if="sitePage" style="margin-right: 1rem;padding-bottom: 0.5rem;">
+                        <div style="width: 100%;text-align: center;">
+                            <a href="{!$Label.Community_Site_Prefix+'/s/internal-instructor-time-entry'}" style="color: white;">Link to Internal Instructor Time Entry</a>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-col slds-no-flex slds-align-bottom" ng-show="recallBtnDisplay" style="margin-right: 7px;">
+                        <div style="width: 100%;text-align: center;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="recallBtnclickFunction('Recall')">Recall</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-no-flex slds-align-bottom" ng-show="submitBtnDisplay" style="margin-right: 7px;">
+                        <div style="width: 100%;text-align: center;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="submitbtnClickFunction('Submit')">Submit</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-no-flex slds-align-bottom" ng-show="saveBtnDisplay">
+                        <div style="width: 100%;text-align: center;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="SaveCallingFunction('FromSave')">Save</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-no-flex slds-align-bottom" ng-show="cancelBtnDisplay">
+                        <div style="width: 100%;text-align: center;padding-left:17%;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="backBtn()">Cancel</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slds-tabs--default">
+                <ul class="slds-tabs--default__nav" role="tablist">
+                    <li class="slds-tabs__item slds-text-heading--label" style="margin-left:10px;margin: 0 !important;" id="li11" title="Time Summary" role="presentation"><a role="tab" tabindex="0" aria-selected="false" aria-controls="tab-scoped-11" ng-click="openBox11();">Time Summary</a></li>
+                    <li class="slds-tabs__item slds-text-heading--label slds-active" style="margin: 0 !important;" id="li12" title="Enter Time" role="presentation"><a role="tab" tabindex="1" aria-selected="true" aria-controls="tab-scoped-12" ng-click="openBox12();">Enter Time</a></li>
+                    <li class="slds-tabs__item slds-text-heading--label slds-active" style="margin: 0 !important;" id="li13" title="Leave Balances" role="presentation"><a role="tab" tabindex="2" aria-selected="true" aria-controls="tab-scoped-13" ng-click="openBox13();">Leave Balances</a></li>
+                </ul>
+                
+                <div id="tab-scoped-11" class="slds-tabs__content slds-hide" role="tabpanel">
+                    
+                   <!-- <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__body">
+                                    <span class="slds-text-heading--small"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body">
+                            <div class="slds-grid slds-wrap"> 
+                                
+                                  <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Vacation Leave Earned: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.vocationLeaveearned" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Earned: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeaveearned" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Sick Leave Earned: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.sickLeaveearned" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Vacation Leave Taken: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.vocationLeavetaken" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Taken: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeavetaken" type="text" ng-disabled="true"/> 
+                                 </div>
+                                  <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Sick Leave Taken: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.sickLeavetaken" type="text" ng-disabled="true"/> 
+                                 </div>
+                                
+                                  <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Vacation Leave Balance: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.vocationLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Balance: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Sick Leave Balance: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.sickLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 
+                                
+                            </div>  
+                        </div>
+                    </div>-->
+                
+                    <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__body">
+                                
+                                    <div style="float: right;">
+                                         <div class="slds-form-element">
+                                          <label class="checkboxtoggle1 gridClass">
+                                            <span class="slds-form-element__label bottomNonClass" style="font-size: 15px;">Show Details</span>
+                                            <input name="checkbox" type="checkbox" aria-describedby="toggle-desc" class="toggleCheckbox" style="width: 1px;height: 1px;border: 0;clip: rect(0 0 0 0);margin: -1px;overflow: hidden;padding: 0;position: absolute;" ng-click="TableFlipfunction()"/>
+                                            <span id="toggle-desc" class="faxContainerClass" aria-live="assertive">
+                                              <span class="checkbocFaxClass"></span>
+                                            </span>
+                                          </label>
+                                        </div>
+                                        </div>
+                                     
+                                     <div class="slds-grid slds-wrap">  
+                                     
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                             <label class="slds-form-element__label">User Name: </label>
+                                             <input class="slds-input" ng-model="summaryUsrDetails.userName" type="text" ng-disabled="true"/> 
+                                         </div>
+                                         
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                            <label class="slds-form-element__label">Date Range</label>
+                                            <select ng-model="summaryWeekRange" class="slds-select" ng-options="i as i for i in summaryWeekrangeFilter" ng-change="summaryToDateCalc()">
+                                            </select>
+                                         </div>
+                                         
+                                         <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                              <label class="slds-form-element__label">From Date: </label>
+                                               <datepicker date-format="MM-dd-yyyy">
+                                                   <input class="slds-input" ng-model="MonthFromDate" type="text" ng-change="summaryToDateCalc()"/>
+                                               </datepicker>  
+                                         </div>
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                              <label class="slds-form-element__label">To Date: </label> 
+                                              <input class="slds-input" ng-model="MonthToDate" type="text" ng-disabled="true"/>
+                                         </div> -->
+                                         
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                             <label class="slds-form-element__label">Status: </label> 
+                                             <select ng-model="SummaryStatus" class="slds-select" ng-options="i as i for i in SummaryStatusFilter" ng-change="FilterSummaryData()"></select>   
+                                         </div>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body">
+                            <div class="slds-grid" ng-hide="SummaryDataList.length > 0"> 
+                                    <div class="slds-col--padded slds-size--1-of-1" style="text-align:center;margin-top:2%;">
+                                        <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                                    </div>
+                                </div>
+                            <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" ng-show="tableViewDisplay">
+                                <thead>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Day</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Date</span>
+                                    </th>                                    
+                                    <th scope="col">
+                                        <span class="slds-truncate">Project Name</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Task Name</span>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-hyphenate">Hours</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-hyphenate">Payroll Rate</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-hyphenate">Status</div>
+                                    </th>
+                                    <!--<th scope="col" class="nowrapStyle">
+                                        <span class="slds-hyphenate">Total Amount</span>
+                                    </th>-->
+                                </thead>
+                                <tbody>
+                                    <tr class="slds-hint-parent" ng-repeat="data in showDetaildata | orderBy:'dateValue':false">
+                                        <td data-label="Day">
+                                            <span>{{data.dateValue | date : 'EEEE' }}</span>
+                                        </td>
+                                        <td data-label="Date">
+                                            <span>{{data.dateValue | date:'MM-dd-yyyy'}}</span>
+                                        </td>                                        
+                                        <td data-label="Project Name" class="nowrapStyle">
+                                            <div class="slds-hyphenate">{{data.ProjectName}}</div>
+                                        </td>
+                                        <td data-label="Task Name" class="nowrapStyle">
+                                            <div class="slds-hyphenate">{{data.TaskName}}</div>
+                                        </td>
+                                        <td data-label="Hours" class="nowrapStyle">
+                                            <div class="slds-hyphenate">{{data.Hours}}</div>
+                                        </td>
+                                        <td data-label="Payroll Rate" class="nowrapStyle">
+                                            <div class="slds-hyphenate">${{data.Payrate}}</div>
+                                        </td>
+                                        <td data-label="Status">
+                                            <div class="slds-hyphenate">{{data.Status}}</div>
+                                        </td>
+                                        <!--<td data-label="Total Amount" class="nowrapStyle">
+                                           <div class="slds-hyphenate">${{data.TotalAmount}}</div>
+                                        </td>-->
+                                    </tr> 
+                                    <tr class="slds-hint-parent">
+                                        <td> </td>
+                                        <td> </td>
+                                        <td> </td>
+                                        <td><span style="font-weight: bold;font-size: 15px;margin-left: -93px;">Period Standard Hours: </span><span ng-bind="stdHrsCalculation()" style="font-weight: bold;font-size: 15px;"></span></td>
+                                        <td><span style="font-weight: bold;font-size: 15px;margin-left: -93px;">Total Hours: </span><span ng-bind="hoursSummaryfunction('showDetail')" style="font-weight: bold;font-size: 15px;"></span></td>
+                                        <td></td>
+                                        <td></td>
+                                        <!--<td data-label="Total Amount"><span style="font-weight: bold;font-size: 15px;margin-left: -100px;">Total Amount: $</span><span ng-bind="amountSummaryfunction('showDetail')" style="font-weight: bold;font-size: 15px;"></span></td> -->
+                                        <td></td>
+                                    </tr>
+                                   
+                                </tbody>
+                            </table>
+                            
+                            <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" ng-hide="tableViewDisplay">
+                                <thead>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Day</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Date</span>
+                                    </th>                                    
+                                    <th scope="col">
+                                        <div class="slds-hyphenate">Hours</div>
+                                    </th>
+                                    <!--<th scope="col">
+                                        <span class="slds-hyphenate">Amount</span>
+                                    </th>-->
+                                </thead>
+                                <tbody>
+                                    <tr class="slds-hint-parent" ng-repeat="data in SummaryDataList | orderBy:'dateValue':false">
+                                        <td data-label="Day">
+                                            <span>{{data.dateValue | date : 'EEEE' }}</span>
+                                        </td>
+                                        <td data-label="Date">
+                                            <span>{{data.dateValue | date:'MM-dd-yyyy'}}</span>
+                                        </td>                                        
+                                        <td data-label="Hours" class="nowrapStyle">
+                                            <div class="slds-hyphenate">{{data.Hours}}</div>
+                                        </td>
+                                        <!--<td data-label="Total Amount" class="nowrapStyle">
+                                           <div class="slds-hyphenate">${{data.TotalAmount}}</div>
+                                        </td>-->
+                                    </tr> 
+                                    <tr class="slds-hint-parent">
+                                        <td></td>
+                                        <td><span style="font-weight: bold;font-size: 15px;">Period Standard Hours: </span><span ng-bind="stdHrsCalculation()" style="font-weight: bold;font-size: 15px;margin-right: -45rem !important;"></span></td>
+                                        <td><span style="font-weight: bold;font-size: 15px;margin-left: -93px;">Total Hours: </span><span ng-bind="hoursSummaryfunction('Summary')" style="font-weight: bold;font-size: 15px;"></span></td>
+                                        <!--<td data-label="Total Hours"><span style="font-weight: bold;font-size: 15px;margin-left: -100px;">Total Amount: $</span><span ng-bind="amountSummaryfunction('Summary')" style="font-weight: bold;font-size: 15px;"></span></td>-->
+                                    </tr>
+                                   
+                                </tbody>
+                            </table>
+                            
+                        </div>
+                    </div>
+                    
+                    <!--<div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__body">
+                                    <span class="slds-text-heading--small"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body">
+                            <div class="slds-grid slds-wrap"> 
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Balance: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Vocation Leave Balance : </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.vocationLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Sick Leave Balance : </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.sickLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Earned : </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeaveearned" type="text" ng-disabled="true"/> 
+                                 </div>
+                                
+                            </div>  
+                        </div>
+                    </div>-->
+                    
+                </div>
+                
+                <!-- This below table is old one --->
+                <div id="tab-scoped-12" class="slds-tabs__content slds-show" role="tabpanel">
+                    <div class="slds-grid slds-wrap">
+                        <div  class="slds-size_2-of-12 slds-align_absolute-center">
+                            <div>
+                                <h4>Time Entered this Month</h4>
+                                <span class="slds-badge success">On Time = {{timeEnteredOnTime}}</span>
+                                <span class="slds-badge error" >Late = {{timeEnteredLate}}</span>
+                            </div>                            
+                        </div>
+                        <div class="slds-size_2-of-12 slds-align_absolute-center">
+                            <div>
+                                <h4>Timesheets Submitted this Month</h4>
+                                <span class="slds-badge success">On Time = {{timeSubmittedOnTime}}</span>
+                                <span class="slds-badge error" >Late = {{timeSubmittedLate}}</span>
+                            </div>
+                        </div>   
+                        <div class="slds-size_8-of-12 slds-p-right_small">
+                            <div class="slds-float_right">                                                            
+                                <div ng-if="!sitePage">
+                                    <a href="/servlet/servlet.FileDownload?file={{documentList[0].Id}}" target="_blank" ng-if="documentList.length > 0"> 
+                                        <span class="slds-icon__container" ng-if="documentList.length > 0">
+                                            <svg aria-hidden="true" class="slds-icon slds-icon--large" style="width: 20px;height: 20px;">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2,'/assets/icons/doctype-sprite/svg/symbols.svg#word')}"></use>
+                                            </svg>
+                                        </span>
+                                        Timekeeping Policies &amp; Procedures 
+                                    </a><br/>
+                                    
+                                    <a href="/servlet/servlet.FileDownload?file={{documentList[1].Id}}" target="_blank" ng-if="documentList.length > 0"> 
+                                        <span class="slds-icon__container" ng-if="documentList.length > 0">
+                                            <svg aria-hidden="true" class="slds-icon slds-icon--large" style="width: 20px;height: 20px;">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2,'/assets/icons/doctype-sprite/svg/symbols.svg#ppt')}"></use>
+                                            </svg>
+                                        </span>
+                                        Timekeeping Training Presentation 
+                                    </a>
+                                </div>
+                                <div ng-if="sitePage">
+                                    <a href="/staff/servlet/servlet.FileDownload?file={{documentList[0].Id}}" target="_blank" ng-if="documentList.length > 0"> 
+                                        <span class="slds-icon__container" ng-if="documentList.length > 0">
+                                            <svg aria-hidden="true" class="slds-icon slds-icon--large" style="width: 20px;height: 20px;">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2,'/assets/icons/doctype-sprite/svg/symbols.svg#word')}"></use>
+                                            </svg>
+                                        </span>
+                                        Timekeeping Policies &amp; Procedures 
+                                    </a><br/>
+                                    
+                                    <a href="/staff/servlet/servlet.FileDownload?file={{documentList[1].Id}}" target="_blank" ng-if="documentList.length > 0"> 
+                                        <span class="slds-icon__container" ng-if="documentList.length > 0">
+                                            <svg aria-hidden="true" class="slds-icon slds-icon--large" style="width: 20px;height: 20px;">
+                                                <use xlink:href="{!URLFOR($Resource.SLDS0_12_2,'/assets/icons/doctype-sprite/svg/symbols.svg#ppt')}"></use>
+                                            </svg>
+                                        </span>
+                                        Timekeeping Training Presentation 
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>                  
+                    <div class="slds-card" style="margin-top: 1rem;padding: 15px;">
+                        <div class="slds-card__header slds-grid" style="margin-top: -25px;">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__body">
+                                     <div class="slds-grid slds-wrap"> 
+                                         
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                             <label class="slds-form-element__label">HOME DEPT:</label> 
+                                             <input class="slds-input" ng-model="HomeDepartmentName" type="text" ng-disabled="true"/>
+                                         </div>
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                              <label class="slds-form-element__label">SUPERVISOR NAME:</label> 
+                                              <input class="slds-input" ng-model="SupervisorName" type="text" ng-disabled="true"/> 
+                                         </div>
+                                         
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                             <label class="slds-form-element__label">Employee Name &amp; ID #: </label>
+                                             <input class="slds-input" ng-model="Employee_Paycom" type="text" ng-disabled="true"/> 
+                                         </div>
+                                         
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="padding-top: 1%;">
+                                            <label>Week</label>
+                                            <select ng-model="selectedWeekRange" class="slds-select" ng-options="i as i for i in weekRangeFilter" ng-change="displayConfirmationWindow()">
+                                            </select>
+                                         </div>
+                                         
+                                         <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                              <label class="slds-form-element__label">From Date: </label>
+                                               <datepicker date-format="MM-dd-yyyy">
+                                                   <input class="slds-input" ng-model="FromDate" type="text" ng-change="ToDateCalculation()"/>
+                                               </datepicker>  
+                                         </div>
+                                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                              <label class="slds-form-element__label">To Date: </label> 
+                                              <input class="slds-input" ng-model="ToDate" type="text" ng-disabled="true"/>
+                                         </div> -->
+                                         
+                                         
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body">
+                            <div class="slds-grid" ng-show="noRecordFound"> 
+                                <div class="slds-col--padded slds-size--1-of-12">
+                                    <input type="button" class="slds-button slds-button--neutral" value="Add" ng-click="addRow()"></input>
+                                </div>
+                                <div class="slds-col--padded slds-size--1-of-1" style="text-align:center;">
+                                    <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                                </div>
+                            </div>
+                            <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover slds-table_resizable-cols" width="100%" ng-show="timeCardDayList.length > 0">
+                                <thead>
+                                    <th scope="col" style="padding-left: 1px;width:20px;">
+                                    </th>
+                                    <th scope="col" style="max-width:467px;">
+                                        <span class="slds-truncate">Charge Code</span>
+                                        
+                                        <div class="slds-button slds-button slds-button--icon" style="color: #16325c;margin-left: 5px;" aria-describedby="help" title="Project Name / Task Name / Payroll Item / Billable / Location">
+                                          <svg class="slds-icon slds-icon-text-default" aria-hidden="true" style="width:20px;height:20px;">
+                                            <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                          </svg>
+                                          <span class="slds-assistive-text">Project Name / Task Name / Payroll Item / Billable / Location</span>
+                                        </div>
+                                        <!--<p title="Project Name / Task Name / Payroll Item / Billable / Location" style="margin-top: -19px;margin-left: 90px;">
+                                            <span class="slds-icon__container">
+                                                <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:20px;height:20px;">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                                </svg>
+                                            </span>
+                                        </p>-->
+                                    </th>
+                                    <!--<th scope="col">
+                                        <span class="slds-truncate">Charge Code</span>
+                                    </th>
+                                    <th scope="col" class="nowrapStyle">
+                                        <div class="slds-hyphenate">Task Name</div>
+                                    </th>
+                                    <th scope="col" class="nowrapStyle">
+                                        <div class="slds-hyphenate">Payroll Item</div>
+                                    </th>
+                                    <th scope="col">
+                                        <span class="slds-truncate">Billable</span>
+                                    </th>-->
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">{{dateLableArray[0]}}</span>
+                                        <div>MON</div>
+                                    </th>
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">{{dateLableArray[1]}}</span>
+                                        <div>TUE</div>
+                                    </th>
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">{{dateLableArray[2]}}</span>
+                                        <div>WED</div>
+                                    </th>
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">{{dateLableArray[3]}}</span>
+                                        <div>THU</div>
+                                    </th>
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">{{dateLableArray[4]}}</span>
+                                        <div>FRI</div>
+                                    </th>
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">{{dateLableArray[5]}}</span>
+                                        <div>SAT</div>
+                                    </th>
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">{{dateLableArray[6]}}</span>
+                                        <div>SUN</div>
+                                    </th>
+                                    <th scope="col" style="text-align:center;">
+                                        <span class="slds-truncate">Total Hrs</span>
+                                    </th>
+                                    <!--<th scope="col">
+                                        <span class="slds-truncate">Action</span>
+                                    </th>-->
+                                </thead>
+                                <tbody>
+                                    <tr class="slds-hint-parent" ng-repeat="day in timeCardDayList | orderBy:'sequenceNumber':false" ng-if="day.isVisible">
+                                        <td style="padding-left: 1px;width:20px !important;">
+                                            <div style="width:10px;">
+                                                <!--<span style="width:12px;height:12px;">
+                                                    <span class="slds-icon__container" ng-show="!isBeforeLastWeek && $index != 0" ng-click="moveUpFuncation(day)">
+                                                        <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:12px;height:12px;">
+                                                            <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#arrowup')}"></use>
+                                                        </svg>
+                                                    </span>
+                                                </span>-->
+                                                
+                                                <span class="slds-icon__container" ng-if="chargeCodeEditIcon(day)" ng-click="openChargeCodeEdit(day)">
+                                                    <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:12px;height:12px;">
+                                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                    </svg>
+                                                </span>
+                                                
+                                            </div>
+                                            
+                                            <div style="width:10px;margin-top: 8px;">
+                                                <!--<span class="slds-icon__container" ng-if="!isBeforeLastWeek && $index != timeCardDayList.length-1" ng-click="moveDownFunction(day)">
+                                                    <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:12px;height:12px;">
+                                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#arrowdown')}"></use>
+                                                    </svg>
+                                                </span>-->
+                                                
+                                                <span class="slds-icon__container" ng-if="day.isDisabled" ng-click="removeRow(day)">
+                                                    <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:12px;height:12px;">
+                                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#delete')}"></use>
+                                                    </svg>
+                                                </span>
+                                            
+                                            </div>
+                                            
+                                        </td>
+                                        <td data-label="Charge Code" class="nowrapStyle">
+                                            
+                                           <div class="slds-hyphenate" style="font-size: 12px;" ng-show="day.showDetails">{{day.project_Task_Payroll_Billable_Location}}</div>
+                                        </td>
+                                        
+                                        <!--<td data-label="Charge Code" class="nowrapStyle">
+                                            <select ng-model="day.SelectedProject" ng-hide="day.Flag" style="width: 110px !important;" class="slds-select {{projectErrorMsg}}" ng-options="project.Id as project.Name for project in day.projects" ng-change="populateProjectTask(day);timeCardDayQryFunction(day)"></select>   
+                                            <div class="slds-hyphenate" ng-show="day.Flag">{{day.ProjectName}}</div>
+                                        </td>
+                                        <td data-label="Task Name" class="nowrapStyle">
+                                            <div>
+                                                <select ng-init="day.OldProjectTask = day.SelectedProTask" ng-model="day.SelectedProTask" ng-hide="day.Flag" style="width: 110px !important;" class="slds-select {{TaskErrorMsg}}" ng-options="project.Id as project.Name for project in day.projectTasks" ng-change="RemoveOldCombination(day,day.OldProjectTask,day.SelectedProTask);TaskValidationFunction(day);day.OldProjectTask = day.SelectedProTask"></select>
+                                                <div ng-show="day.Flag" class="slds-hyphenate">{{day.TaskName}}</div>
+                                            </div>
+                                        </td>
+                                        
+                                         <td data-label="Payroll Item" class="nowrapStyle">
+                                            <div class="slds-hyphenate">
+                                                <select ng-init="day.OldPayRollItem = day.payRollItem"  ng-model="day.payRollItem" style="width: 85px !important;" class="slds-select {{payRollErrorMsg}}" ng-options="i as i for i in day.PayRollItemList" ng-disabled="day.disablePayRoll" ng-change="RemoveOldPayRollCombination(day,day.OldPayRollItem,day.payRollItem);day.OldPayRollItem = day.payRollItem"></select>
+                                            </div>
+                                        </td>
+                                        
+                                        <td data-label="Billable">
+                                            <span class="slds-truncate" style="margin-right:56px;">
+                                                <label class="slds-checkbox checkbox_custom">
+                                                    <input name="checkbox" type="checkbox" ng-model="day.isBillable" ng-change="UpdateBillableValue(day)" ng-disabled="day.disableBillable"/>
+                                                    <span class="slds-checkbox--faux"></span>
+                                                    <span class="slds-form-element__label slds-assistive-text"></span>
+                                                </label>
+                                            </span>
+                                        </td>-->
+                                        
+                                        <td data-label="{{dateLableArray[0]}}" style="position: relative;">
+                                            <span class="slds-truncate" ng-click="EditBtnClick(day,'Hours1','comment1','Hrs1ColourDisplay','isReadeOnlyHrs1',day.Hrs1Day1Id,'Day1','status1')">
+                                                <input ng-class="{'onHoverIcon': HrsDisableFunction(day,'Hours1','Day1','isReadeOnlyHrs1','Hrs1Day1Id')}" class="slds-input {{day.Hrs1ColourDisplay}} {{day.Hrs1Error}}" style="max-width: 85px;" ng-model="day.Hours1" type="text" ng-show="hideInputBox(day,'Day1')" ng-change="totalHrsCalculation(day);hrsValidation(day,'Hours1');captureUpdation(day,'Hours1','Hrs1Day1Id','status1')" ng-disabled="HrsDisableFunction(day,'Hours1','Day1','isReadeOnlyHrs1','Hrs1Day1Id')" ng-click="OpenPopupForEarned(day,'Hours1','comment1','Day1','Hrs1Day1Id','isReadeOnlyHrs1','status1','Hrs1ColourDisplay')"/>
+                                               
+                                               <p ng-hide="hideInputBox(day,'Day1')" title="You cannot enter time for future date."><input class="slds-input" style="max-width: 85px;" ng-model="day.Hours1" type="text" ng-hide="hideInputBox(day,'Day1')" ng-disabled="HrsDisableFunction(day,'Hours1','Day1','isReadeOnlyHrs1','Hrs1Day1Id','status1')"/></p>
+                                                
+                                                <span style="position: absolute;right: 10px;margin-top: 9px;">
+                                                    <a ng-click="EditBtnClick(day,'Hours1','comment1','Hrs1ColourDisplay','isReadeOnlyHrs1',day.Hrs1Day1Id,'Day1','status1')" ng-if="EditIconDisplay(day,'Hours1','Hrs1Day1Id','Day1','status1')">
+                                                         <span class="slds-icon__container">
+                                                            <svg aria-hidden="true" class="slds-icon slds-icon--x-small slds-icon-text-default" style="width:12px;height:12px;">
+                                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                            </svg>
+                                                        </span>
+                                                     </a>
+                                                 </span>
+                                                 
+                                                 <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs1ErrMsg}}</p>
+                                             </span>
+                                        </td>
+                                        <td data-label="{{dateLableArray[1]}}" style="position: relative;">
+                                            <span class="slds-truncate">
+                                                <input ng-class="{'onHoverIcon': HrsDisableFunction(day,'Hours2','Day2','isReadeOnlyHrs2','Hrs2Day2Id')}" class="slds-input {{day.Hrs2ColourDisplay}} {{day.Hrs2Error}}" style="max-width: 85px;" ng-model="day.Hours2" type="text" ng-show="hideInputBox(day,'Day2')" ng-change="totalHrsCalculation(day);hrsValidation(day,'Hours2');captureUpdation(day,'Hours2','Hrs2Day2Id','status2')" ng-disabled="HrsDisableFunction(day,'Hours2','Day2','isReadeOnlyHrs2','Hrs2Day2Id')" ng-click="OpenPopupForEarned(day,'Hours2','comment2','Day2','Hrs2Day2Id','isReadeOnlyHrs2','status2','Hrs2ColourDisplay')"/>
+                                                
+                                                <p ng-hide="hideInputBox(day,'Day2')" title="You cannot enter time for future date."><input class="slds-input" style="max-width: 85px;" ng-model="day.Hours2" type="text" ng-hide="hideInputBox(day,'Day2')" ng-disabled="HrsDisableFunction(day,'Hours2','Day2','isReadeOnlyHrs2','Hrs2Day2Id','status2')"/></p>
+                                                
+                                                <span style="position: absolute;right: 10px;margin-top: 9px;">
+                                                    <a ng-click="EditBtnClick(day,'Hours2','comment2','Hrs2ColourDisplay','isReadeOnlyHrs2',day.Hrs2Day2Id,'Day2','status2')" ng-if="EditIconDisplay(day,'Hours2','Hrs2Day2Id','Day2','status2')">
+                                                         <span class="slds-icon__container">
+                                                            <svg aria-hidden="true" class="slds-icon slds-icon--x-small slds-icon-text-default" style="width:12px;height:12px;">
+                                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                            </svg>
+                                                        </span>
+                                                     </a>
+                                                 </span>
+                                                
+                                                <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs2ErrMsg}}</p>
+                                            </span>
+                                        </td>
+                                        <td data-label="{{dateLableArray[2]}}" style="position: relative;">
+                                            <span class="slds-truncate">
+                                                <input ng-class="{'onHoverIcon': HrsDisableFunction(day,'Hours3','Day3','isReadeOnlyHrs3','Hrs3Day3Id')}" class="slds-input {{day.Hrs3ColourDisplay}} {{day.Hrs3Error}}" style="max-width: 85px;" ng-model="day.Hours3" type="text" ng-show="hideInputBox(day,'Day3')" ng-change="totalHrsCalculation(day);hrsValidation(day,'Hours3');captureUpdation(day,'Hours3','Hrs3Day3Id','status3')" ng-disabled="HrsDisableFunction(day,'Hours3','Day3','isReadeOnlyHrs3','Hrs3Day3Id')" ng-click="OpenPopupForEarned(day,'Hours3','comment3','Day3','Hrs3Day3Id','isReadeOnlyHrs3','status3','Hrs3ColourDisplay')"/>
+                                                
+                                                <p ng-hide="hideInputBox(day,'Day3')" title="You cannot enter time for future date."><input class="slds-input" style="max-width: 85px;" ng-model="day.Hours3" type="text" ng-hide="hideInputBox(day,'Day3')" ng-disabled="HrsDisableFunction(day,'Hours3','Day3','isReadeOnlyHrs3','Hrs3Day3Id','status3')"/></p>
+                                                
+                                                <span style="position: absolute;right: 10px;margin-top: 9px;">
+                                                    <a ng-click="EditBtnClick(day,'Hours3','comment3','Hrs3ColourDisplay','isReadeOnlyHrs3',day.Hrs3Day3Id,'Day3','status3')" ng-if="EditIconDisplay(day,'Hours3','Hrs3Day3Id','Day3','status3')">
+                                                         <span class="slds-icon__container">
+                                                            <svg aria-hidden="true" class="slds-icon slds-icon--x-small slds-icon-text-default" style="width:12px;height:12px;">
+                                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                            </svg>
+                                                        </span>
+                                                     </a>
+                                                 </span>
+                                                
+                                                <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs3ErrMsg}}</p>
+                                            </span>
+                                        </td>
+                                        <td data-label="{{dateLableArray[3]}}" style="position: relative;">
+                                            <span class="slds-truncate">
+                                                <input ng-class="{'onHoverIcon': HrsDisableFunction(day,'Hours4','Day4','isReadeOnlyHrs4','Hrs4Day4Id')}" class="slds-input {{day.Hrs4ColourDisplay}} {{day.Hrs4Error}}" style="max-width: 85px;" ng-model="day.Hours4" type="text" ng-show="hideInputBox(day,'Day4')" ng-change="totalHrsCalculation(day);hrsValidation(day,'Hours4');captureUpdation(day,'Hours4','Hrs4Day4Id','status4')" ng-disabled="HrsDisableFunction(day,'Hours4','Day4','isReadeOnlyHrs4','Hrs4Day4Id')" ng-click="OpenPopupForEarned(day,'Hours4','comment4','Day4','Hrs4Day4Id','isReadeOnlyHrs4','status4','Hrs4ColourDisplay')"/>
+                                                
+                                                <p ng-hide="hideInputBox(day,'Day4')" title="You cannot enter time for future date."><input class="slds-input" style="max-width: 85px;" ng-model="day.Hours4" type="text" ng-hide="hideInputBox(day,'Day4')" ng-disabled="HrsDisableFunction(day,'Hours4','Day4','isReadeOnlyHrs4','Hrs4Day4Id','status4')"/></p>
+                                                
+                                                <span style="position: absolute;right: 10px;margin-top: 9px;">
+                                                    <a ng-click="EditBtnClick(day,'Hours4','comment4','Hrs4ColourDisplay','isReadeOnlyHrs4',day.Hrs4Day4Id,'Day4','status4')" ng-if="EditIconDisplay(day,'Hours4','Hrs4Day4Id','Day4','status4')">
+                                                         <span class="slds-icon__container">
+                                                            <svg aria-hidden="true" class="slds-icon slds-icon--x-small slds-icon-text-default" style="width:12px;height:12px;"> 
+                                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                            </svg>
+                                                        </span>
+                                                     </a>
+                                                 </span>
+                                                
+                                                <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs4ErrMsg}}</p>
+                                            </span>
+                                        </td>
+                                        <td data-label="{{dateLableArray[4]}}" style="position: relative;">
+                                            <span class="slds-truncate">
+                                                <input ng-class="{'onHoverIcon': HrsDisableFunction(day,'Hours5','Day5','isReadeOnlyHrs5','Hrs5Day5Id')}" class="slds-input {{day.Hrs5ColourDisplay}} {{day.Hrs5Error}}" style="max-width: 85px;" ng-model="day.Hours5" type="text" ng-show="hideInputBox(day,'Day5')" ng-change="totalHrsCalculation(day);hrsValidation(day,'Hours5');captureUpdation(day,'Hours5','Hrs5Day5Id','status5')" ng-disabled="HrsDisableFunction(day,'Hours5','Day5','isReadeOnlyHrs5','Hrs5Day5Id')" ng-click="OpenPopupForEarned(day,'Hours5','comment5','Day5','Hrs5Day5Id','isReadeOnlyHrs5','status5','Hrs5ColourDisplay')"/>
+                                                
+                                                <p ng-hide="hideInputBox(day,'Day5')" title="You cannot enter time for future date."><input class="slds-input" style="max-width: 85px;" ng-model="day.Hours5" type="text" ng-hide="hideInputBox(day,'Day5')" ng-disabled="HrsDisableFunction(day,'Hours5','Day5','isReadeOnlyHrs5','Hrs5Day5Id','status5')"/></p>
+                                                
+                                                <span style="position: absolute;right: 10px;margin-top: 9px;">
+                                                    <a ng-click="EditBtnClick(day,'Hours5','comment5','Hrs5ColourDisplay','isReadeOnlyHrs5',day.Hrs5Day5Id,'Day5','status5')" ng-if="EditIconDisplay(day,'Hours5','Hrs5Day5Id','Day5','status5')">
+                                                         <span class="slds-icon__container">
+                                                            <svg aria-hidden="true" class="slds-icon slds-icon--x-small slds-icon-text-default" style="width:12px;height:12px;">
+                                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                            </svg>
+                                                        </span>
+                                                     </a>
+                                                 </span>
+                                                
+                                                <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs5ErrMsg}}</p>
+                                            </span>
+                                        </td>
+                                        <td data-label="{{DaysList[5]}}" style="position: relative;">
+                                            <span class="slds-truncate">
+                                                <input ng-class="{'onHoverIcon': HrsDisableFunction(day,'Hours6','Day6','isReadeOnlyHrs6','Hrs6Day6Id')}"  class="slds-input {{day.Hrs6ColourDisplay}} {{day.Hrs6Error}}" style="max-width: 85px;" ng-model="day.Hours6" type="text" ng-show="hideInputBox(day,'Day6')" ng-change="totalHrsCalculation(day);hrsValidation(day,'Hours6');captureUpdation(day,'Hours6','Hrs6Day6Id','status6')" ng-disabled="HrsDisableFunction(day,'Hours6','Day6','isReadeOnlyHrs6','Hrs6Day6Id')" ng-click="OpenPopupForEarned(day,'Hours6','comment6','Day6','Hrs6Day6Id','isReadeOnlyHrs6','status6','Hrs6ColourDisplay')"/>
+                                                
+                                                <p ng-hide="hideInputBox(day,'Day6')" title="You cannot enter time for future date."><input class="slds-input" style="max-width: 85px;" ng-model="day.Hours6" type="text" ng-hide="hideInputBox(day,'Day6')" ng-disabled="HrsDisableFunction(day,'Hours6','Day6','isReadeOnlyHrs6','Hrs6Day6Id','status6')"/></p>
+                                                
+                                                <span style="position: absolute;right:10px;margin-top: 9px;">
+                                                    <a ng-click="EditBtnClick(day,'Hours6','comment6','Hrs6ColourDisplay','isReadeOnlyHrs6',day.Hrs6Day6Id,'Day6','status6')" ng-if="EditIconDisplay(day,'Hours6','Hrs6Day6Id','Day6','status6')">
+                                                         <span class="slds-icon__container">
+                                                            <svg aria-hidden="true" class="slds-icon slds-icon--x-small slds-icon-text-default" style="width:12px;height:12px;">
+                                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                            </svg>
+                                                        </span>
+                                                     </a>
+                                                 </span>
+                                                
+                                                <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs6ErrMsg}}</p>
+                                            </span>
+                                        </td>
+                                        <td data-label="{{dateLableArray[6]}}" style="position: relative;">
+                                            <span class="slds-truncate">
+                                                <input ng-class="{'onHoverIcon': HrsDisableFunction(day,'Hours7','Day7','isReadeOnlyHrs7','Hrs7Day7Id')}" class="slds-input {{day.Hrs7ColourDisplay}} {{day.Hrs7Error}}" style="max-width: 85px;" ng-model="day.Hours7" type="text" ng-show="hideInputBox(day,'Day7')" ng-change="totalHrsCalculation(day);hrsValidation(day,'Hours7');captureUpdation(day,'Hours7','Hrs7Day7Id','status7')" ng-disabled="HrsDisableFunction(day,'Hours7','Day7','isReadeOnlyHrs7','Hrs7Day7Id')" ng-click="OpenPopupForEarned(day,'Hours7','comment7','Day7','Hrs7Day7Id','isReadeOnlyHrs7','status7','Hrs7ColourDisplay')"/>
+                                                
+                                                <p ng-hide="hideInputBox(day,'Day7')" title="You cannot enter time for future date."><input class="slds-input" style="max-width: 85px;" ng-model="day.Hours7" type="text" ng-hide="hideInputBox(day,'Day7')" ng-disabled="HrsDisableFunction(day,'Hours7','Day7','isReadeOnlyHrs7','Hrs7Day7Id','status7')"/></p>
+                                                
+                                                <span style="position: absolute;right: 10px;margin-top: 9px;">
+                                                    <a ng-click="EditBtnClick(day,'Hours7','comment7','Hrs7ColourDisplay','isReadeOnlyHrs7',day.Hrs7Day7Id,'Day7','status7')" ng-if="EditIconDisplay(day,'Hours7','Hrs7Day7Id','Day7','status7')">
+                                                         <span class="slds-icon__container">
+                                                            <svg aria-hidden="true" class="slds-icon slds-icon--x-small slds-icon-text-default" style="width:12px;height:12px;">
+                                                                <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#edit')}"></use>
+                                                            </svg>
+                                                        </span>
+                                                     </a>
+                                                 </span>
+                                                
+                                                <p style="color:red;padding-top: 33px;" class="nowrapStyle">{{day.hrs7ErrMsg}}</p>
+                                            </span>
+                                        </td>
+                                        <td data-label="Total Hrs">
+                                            <input class="slds-input" style="width: 85px;" ng-model="day.TotalHours" type="text" ng-disabled="true"/>
+                                        </td>
+                                        <!--<td>
+                                            <a href="" ng-if="day.isDisabled" style="cursor: pointer;" ng-click="removeRow(day)">Remove</a>
+                                        </td>-->
+                                    </tr>
+                                    <tr class="slds-hint-parent">
+                                        <td></td>
+                                        <td data-label="Total Hours" style="text-align:center;">
+                                            <span style="float: left;"><input type="button" class="slds-button slds-button--neutral" value="Add" ng-click="addRow()" ng-show="AddBtnDisplay"></input></span>
+                                        </td>
+                                        <td>
+                                            <span style="margin-left: 15px;margin-top: 10px;" ng--bind="getHoursSumValues(timeCardDayList,'Hours1','Day1',DaysList[0],'status1')"></span>
+                                        </td> 
+                                        <td data-label="Total Hours" style="text-align:center;"><span style="margin-left: 15px;margin-top: 10px;" ng--bind="getHoursSumValues(timeCardDayList,'Hours2','Day2',DaysList[1],'status2')"></span></td>
+                                        <td data-label="Total Hours" style="text-align:center;"><span style="margin-left: 15px;margin-top: 10px;" ng--bind="getHoursSumValues(timeCardDayList,'Hours3','Day3',DaysList[2],'status3')"></span></td>
+                                        <td data-label="Total Hours" style="text-align:center;"><span style="margin-left: 15px;margin-top: 10px;" ng--bind="getHoursSumValues(timeCardDayList,'Hours4','Day4',DaysList[3],'status4')"></span></td>
+                                        <td data-label="Total Hours" style="text-align:center;"><span style="margin-left: 15px;margin-top: 10px;" ng--bind="getHoursSumValues(timeCardDayList,'Hours5','Day5',DaysList[4],'status5')"></span></td>
+                                        <td data-label="Total Hours" style="text-align:center;"><span style="margin-left: 15px;margin-top: 10px;" ng--bind="getHoursSumValues(timeCardDayList,'Hours6','Day6',DaysList[5],'status6')"></span></td>
+                                        <td data-label="Total Hours" style="text-align:center;"><span style="margin-left: 15px;margin-top: 10px;" ng--bind="getHoursSumValues(timeCardDayList,'Hours7','Day7',DaysList[6],'status7')"></span></td>
+                                        <td style="text-align:center;"><span style="margin-top: 10px;" ng--bind="totalhours()"></span></td>
+                                    </tr>
+                                   
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    
+                     <!-- This table for notes section display -->
+                        <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                            <div class="slds-card__header slds-grid" style="margin-top: -20px;">
+                                <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                    <div class="slds-media__body">
+                                        <span class="slds-text-heading--small">Notes</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-card__body">
+                                <div class="slds-grid" ng-show="NotesSectionDisplay"> 
+                                        <div class="slds-col--padded slds-size--1-of-1" style="text-align:center;">
+                                            <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                                        </div>
+                                    </div>
+                                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%"  ng-hide="NotesSectionDisplay">
+                                    <thead>
+                                        <!--<th scope="col">
+                                            <span class="slds-truncate">Notes </span>
+                                        </th>-->
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent" ng-repeat="value in commentsList | orderBy:'createdDate':true">
+                                            <td style="white-space: normal;text-align:left;" ng-if="value.NewStatus != '' || value.OldStatus != '' || value.NewHrs != '' || value.OldHrs != '' || value.Date != '' || value.TaskName != '' || value.UserName != '' || value.Edited != '' || value.ChargeCode != '' || (value.Comment && value.Comment != '')">
+                                                 <span style="font-weight: bold;" ng-if="value.UserName != ''">User Name:</span><span ng-if="value.UserName != ''"> {{value.UserName}}.</span>
+                                                 <span style="font-weight: bold;" ng-if="value.Edited != ''">Edited:</span><span ng-if="value.Edited != ''"> {{value.Edited}}.</span>
+                                                 <span style="font-weight: bold;" ng-if="value.ChargeCode != ''">Charge Code: </span> <span ng-if="value.ChargeCode != ''"> {{value.ChargeCode}}.</span>
+                                                 <span style="font-weight: bold;" ng-if="value.TaskName != ''"> Task Name: </span> <span ng-if="value.TaskName != ''"> {{value.TaskName}}.</span>
+                                                 <span style="font-weight: bold;" ng-if="value.Date != ''">Date: </span> <span ng-if="value.Date != ''"> {{value.Date | date:'MM-dd-yyyy'}}. </span>
+                                                 <span style="font-weight: bold;" ng-if="value.OldHrs != ''">Old Hours: </span> <span ng-if="value.OldHrs != ''"> {{value.OldHrs}} Hrs. </span>
+                                                 <span style="font-weight: bold;" ng-if="value.NewHrs != ''">New Hours: </span> <span ng-if="value.NewHrs != ''"> {{value.NewHrs}} Hrs. </span>
+                                                 <span style="font-weight: bold;" ng-if="value.OldStatus != ''">Old Status: </span> <span ng-if="value.OldStatus != ''"> {{value.OldStatus}}. </span>
+                                                 <span style="font-weight: bold;" ng-if="value.NewStatus != ''">New Status: </span> <span ng-if="value.NewStatus != ''"> {{value.NewStatus}}. </span>
+                                                 <span style="font-weight: bold;" ng-if="value.Comment && value.Comment != ''">Comment: </span><span ng-if="value.Comment && value.Comment != ''"> {{value.Comment}}.</span><br/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    <!-- End of this table -->
+                    
+                </div>
+                
+                <div id="tab-scoped-13" class="slds-tabs__content slds-hide" role="tabpanel">
+                    <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                                <div class="slds-media__body">
+                                    <span class="slds-text-heading--small"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-card__body">
+                            <div class="slds-grid slds-wrap"> 
+                                
+                                
+                                 <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Total Approved Hours: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.totalApprovedHrs" type="text" ng-disabled="true"/> 
+                                 </div>-->
+                                  <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Vacation Leave Earned: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.vocationLeaveearned" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Earned: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeaveearned" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Sick Leave Earned: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.sickLeaveearned" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 
+                                 
+                                 <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                    <label class="slds-form-element__label">Total Approved Amount: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.totalApprovedAmt" type="text" ng-disabled="true"/> 
+                                 </div>-->
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Vacation Leave Taken: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.vocationLeavetaken" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Taken: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeavetaken" type="text" ng-disabled="true"/> 
+                                 </div>
+                                  <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Sick Leave Taken: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.sickLeavetaken" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 
+                                 
+                                 <!--<div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Total Rejected Hours: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.totalRejectedHrs" type="text" ng-disabled="true"/> 
+                                 </div>-->
+                                  <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Vacation Leave Balance: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.vocationLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Bonus Leave Balance: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.bonusLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="padding-top: 1%;">
+                                     <label class="slds-form-element__label">Sick Leave Balance: </label>
+                                     <input class="slds-input" ng-model="summaryUsrDetails.sickLeavebalance" type="text" ng-disabled="true"/> 
+                                 </div>
+                                 
+                                
+                            </div>  
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+       
+            
+        <!-- This model for date change conformation display -->
+        
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForEmployeeChange}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Confirmation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <div>
+                            <p>Would you like to save changes?</p>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayFunction()">Yes</div>
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="cancelFunction()">No</div>
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="proceedwithoutsave()">Proceed without Save</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForEmployeeChange}}"></div>
+            
+        <!-- This for save operation succes & Error message display -->
+            
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForError}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">{{modelTitle}}</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                           <p>{{errorMessageforAllSave}}</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForError()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForError}}"></div>
+          
+      <!-- This for duplicate message display -->
+          
+          <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForDuplicate}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                           <p>{{DuplicateMsgValue}}</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForDuplicates()"></input>
+                        <input type="button" class="slds-button slds-button--neutral" ng-show="cancelbtnDisplay" value="Cancel" ng-click="NOClickForDuplicates()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForDuplicate}}"></div>
+          
+          <!-- This for Lock date validation message display -->
+            
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForLockDate}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                           <p>{{LockPeriodMessage}}</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="modalStateForLockDate='';modalBackdropStateForLockDate='';"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForLockDate}}"></div>
+          
+      <!-- This model for time card day hours edit & capture Comment -->
+      
+          <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForDayEdit}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Time Card Day</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                           <div class="slds-grid slds-wrap">
+                              
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <div class="slds-form-element {{HoursError}}">
+                                        <label class="slds-form-element__label">Hours</label>
+                                         <div class="slds-form-element__control">
+                                           <input class="slds-input" ng-model="Hours" type="text" ng-change="hrsValidate(Hours)"/>
+                                           <p style="color:red;padding-top: 33px;">{{hoursErrorMsg}}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                               
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <div class="slds-form-element {{CommentsError}}">
+                                        <label class="slds-form-element__label">Comments</label>
+                                        <div class="slds-form-element__control">
+                                            <!--<input class="slds-input" ng-model="Comments" type="text"/>-->
+                                            <textarea class="slds-textarea" rows="5" cols="30" ng-model="Comments"/>
+                                        </div>
+                                    </div>   
+                                </div>
+                                
+                            </div>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Delete" ng-click="ChangeSattus_Unpost()"></input>   
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForEditBox()"></input>
+                        <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="CancelForEdit()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForDayEdit}}"></div>
+          
+      <!-- end of existing hrs edit -->
+      
+      <!-- This model for time card day hours & capture Comment for Bonus Leave Earned Hours Project Task-->
+      
+          <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForNewDay}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Time Card Day</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                           <div class="slds-grid slds-wrap">
+                              
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <div class="slds-form-element {{HoursError}}">
+                                        <label class="slds-form-element__label">Hours</label>
+                                         <div class="slds-form-element__control">
+                                           <input class="slds-input" ng-model="Hours" type="text" ng-change="BLEHrsValidate(Hours)"/>
+                                           <p style="color:red;padding-top: 33px;">{{hoursErrorMsg}}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                               
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <div class="slds-form-element {{CommentsError}}">
+                                        <label class="slds-form-element__label">Comments</label>
+                                        <div class="slds-form-element__control">
+                                            <!--<input class="slds-input" ng-model="Comments" type="text"/>-->
+                                            <textarea class="slds-textarea" rows="5" cols="30" ng-model="Comments"/>
+                                        </div>
+                                    </div>   
+                                </div>
+                            </div>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForNewRecord()"></input>
+                        <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="CancelForNewRecord()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForNewDay}}"></div>
+          
+      <!-- end of existing hrs edit -->
+
+      <!-- This model for Submission confirmation display -->
+
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForSubmission}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Confirmation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <div>
+                            <p>{{overAllactionMsg}}</p>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayForSubmission()">Okay</div>
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="modalStateForSubmission = '';modalBackdropStateForSubmission = '';">Cancel</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForSubmission}}"></div>
+            
+        <!-- End of Submission confirmation --->
+        
+        <!-- This model for Project Task type & Pay roll Item validation message display -->
+        
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForTaskValidation}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Validation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <p>Please update Project Task Type / Payroll Item values for the following Project tasks: </p><br/>
+                        <div ng-repeat="(key,value) in projectTaskValidation">
+                            <span style="display: inline;"><a href="/{{key}}" target="_blank">{{value}}</a></span>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <!--<div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayForTaskValidation()">Okay</div>-->
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="CloseClickOnValidate()">Close</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForTaskValidation}}"></div>
+            
+        <!-- End of Project Task validation msg display --->
+        
+         <!-- This model for Home Deapartment Project validation message display -->
+        
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForLocationValidation}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Validation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <p>Please update Training Location for the Home Department Project: </p><br/>
+                        <div>
+                            <a href="/{{homeDeptLocationValidation.Id}}" target="_blank">{{homeDeptLocationValidation.Name}}</a>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <!--<div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayForTaskValidation()">Okay</div>-->
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="CloseClickOnValidate()">Close</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForLocationValidation}}"></div>
+            
+        <!-- End of Home Deapartment Project validation msg display --->
+        
+        <!-- This model to display deletion message for empty rows in table-->
+        
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForDeletionMsg}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Confirmation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <p>Following Charge Codes do not have any time entry and it will be skipped. Remaining time entries will be saved:</p><br/>
+                        <div ng-repeat="value in chargeCodeToDelete">
+                            <span style="display: inline;">{{value}}</span><br/>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayForDeletionMsgDisplay()">Yes</div>
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="modalStateForDeletionMsg='';modalBackdropStateForDeletionMsg='';">No</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForDeletionMsg}}"></div>
+            
+        <!-- End of deletion msg display --->
+        
+        <!-- This model for Cost Rate record validation message for logged in contact display -->
+        
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForCRValidation}}">
+                <div class="slds-modal__container">
+                     <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                         <h2 class="slds-text-heading--medium">Validation Message</h2>
+                     </div>
+                    <div class="slds-modal__content"> 
+                        <p>Please populate Cost Rate value in Contact Assignment to proceed further.</p>
+                    </div>
+                    <div class="slds-modal__footer">                                                  
+                       <!--<div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="OkayForTaskValidation()">Okay</div>-->
+                       <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="closeCRValidation()">Close</div>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-modal-backdrop {{modalBackdropStateForCRValidation}}"></div>
+            
+        <!-- End of Cost rate validation msg display --->
+        
+        
+        
+        <!-- Add button model open to get Project,Task,Payroll & Billable values -->
+
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForAddBtn}}">
+                <div class="slds-modal__container" style="width:100%;max-width:750px;">
+                      <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;"></h2>
+                      </div>
+                      <div class="slds-modal__content" style="overflow: inherit;overflow-y: inherit;">
+                           <div class="slds-grid slds-wrap">
+                              
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Project</label>
+                                         <div class="slds-form-element__control">
+                                           <select ng-model="NewlyAddedRec.SelectedProject" style="width: 110px !important;" class="slds-select {{projectErrorMsg}}" ng-options="project.Id as project.Name for project in NewlyAddedRec.projects" ng-change="populateProjectTask(NewlyAddedRec)"></select>   
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Task Name</label>
+                                         <div class="slds-form-element__control">
+                                             <select ng-model="NewlyAddedRec.SelectedProTask" style="width: 110px !important;" class="slds-select {{TaskErrorMsg}}" ng-options="project.Id as project.Name for project in NewlyAddedRec.projectTasks" ng-change="TaskValidationFunction(NewlyAddedRec)"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12">
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Payroll Item</label>
+                                         <div class="slds-form-element__control">
+                                             <select ng-model="NewlyAddedRec.payRollItem" style="width: 85px !important;" class="slds-select {{payRollErrorMsg}}" ng-options="i as i for i in NewlyAddedRec.PayRollItemList" ng-disabled="NewlyAddedRec.disablePayRoll" ng-change="payrollItemChange(NewlyAddedRec)"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <div class="slds-form-element {{locationError}}">
+                                        <label class="slds-form-element__label">Location</label>
+                                         <div class="slds-form-element__control">
+                                             <lookup data="NewlyAddedRec.selectedLocation" object="'MTT_Location__c'" placeholder="'Location Name'" on-change="locationValueChanges()" parameter="NewlyAddedRec"></lookup>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--2-of-12" style="margin-top: 25px;">
+                                    <span class="slds-truncate" style="margin-right:56px;" >
+                                        <label class="slds-checkbox checkbox_custom" ng-if="!NewlyAddedRec.hidebillableSection">
+                                            <input name="checkbox" type="checkbox" ng-model="NewlyAddedRec.isBillable" ng-disabled="NewlyAddedRec.disableBillable" ng-change="changesMade = true;"/>
+                                            <span class="slds-checkbox--faux"></span>
+                                            <span class="slds-form-element__label">Billable</span>
+                                        </label>
+                                        
+                                        <div ng-if="!NewlyAddedRec.isBillable && NewlyAddedRec.hidebillableSection">
+                                            <img src="{!$Site.Prefix}/img/checkbox_unchecked.gif" alt="Not Checked" width="23" height="19" class="checkImg"/><span class="slds-form-element__label" style="font-size: 14px;color: #54698d;" >Billable</span>
+                                        </div>
+                                        <div ng-if="NewlyAddedRec.isBillable && NewlyAddedRec.hidebillableSection">
+                                            <img src="{!$Site.Prefix}/img/checkbox_checked.gif" alt="Checked" width="23" height="19" class="checkImg"/><span class="slds-form-element__label" style="font-size: 14px;color: #54698d;" >Billable</span>
+                                        </div>
+                                        
+                                        
+                                    </span>
+                                </div>
+                                
+                                <p>{{DuplicateMsgValue}}</p>
+                        
+                            </div>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayClickForAddBtn()"></input>
+                        <input type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="cancelForAddBtnModel()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropStateForAddBtn}}"></div>
+          
+      <!-- End of add button model popup --->
+      
+      <!-- for Look up code -->
+              
+          <script type="text/ng-template" id="lookup1.html">
+            <div class="slds">
+                <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                    <div class="slds-form-element">
+                        <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                            <input id="lookupf" ng-model="searchTxt" ng-disabled="disabled" ng-KeyPress="fetchAccounts(searchTxt)" ng-KeyDown="isDropDownHidden= false;data = ''"  class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" placeholder="{{placeholder}}" />
+                        </div>
+                    </div>
+                    <div class="slds-lookup__menu" role="listbox" ng-hide="isDropDownHidden" style="margin-top: 37px;">
+                        <ul class="slds-lookup__list" role="presentation" id="lookuplist">
+                            <li class="slds-lookup__item" ng-repeat="acc in accounts" ng-click="updateDataModelAttr(acc)">
+                                <a id="{{acc.Id}}" role="option">
+                                    {{acc.Name}}
+                                </a>
+                            </li>
+                            <li ng-if="!accounts.length && !showLoadingDiv" class="slds-text-align--center">
+                               No match found
+                            </li>
+                            <li ng-if="showLoadingDiv" class="slds-text-align--center">
+                               <img src="{!URLFOR($Resource.SLDS090,'/assets/images/spinners/slds_spinner_brand.gif')}" width="50" height="50"/>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </script>
+      
+      <!-- End of look up code --->
+            
+        </div>
+    </html>
+</apex:component>

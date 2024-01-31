@@ -1,0 +1,166 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickActionWithoutHeader" access="global" controller="CustomButtonService">
+    
+    <aura:attribute name="selectedStatus" type="String" default=""/>
+    <aura:attribute name="statusValues" type="List" default="['Order','Active','On Hold','Ended','Canceled']"/>
+    <aura:attribute name="showStatusSelection" type="Boolean" default="true"/>
+
+               
+    <!-- For On Hold Status values -->
+    <aura:attribute name="showOnHoldSection" type="Boolean" default="false"/>
+    <aura:attribute name="onHoldDt" type="String" default=""/>
+    <aura:attribute name="showInactiveCRRelCAs" type="List" default="[]"/>
+    <aura:attribute name="caRecords" type="List" default="[]"/>
+    <aura:attribute name="sendStudentRemainder" type="Boolean" default="false"/>
+
+
+    
+    <!-- For Cancellaed Status values -->
+    <aura:attribute name="showCancelSection" type="Boolean" default="false"/>
+    <aura:attribute name="cancelledDt" type="String" default=""/>
+    <aura:attribute name="cancellationReason" type="String" default=""/> 
+    
+    <aura:attribute name="message" type="String"/>
+    <aura:attribute name="type" type="String"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    
+    <!-- Add dependency to server side action service -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" style="background-color: rgba(0, 0, 0, 0.10);" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div aura:id="toast" class="slds-hide">
+        <div aura:id="toastTheme" class="slds-notify slds-notify--toast" role="alert">
+            <span class="slds-assistive-text">Info</span>
+            <a class="slds-button slds-button--icon-inverse slds-notify__close" onclick="{!c.closeToast}">
+                <lightning:icon aura:id="closeIcon" iconName="utility:close" size="small" />
+            </a>
+            
+            <div class="slds-notify__content">
+                <a class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                    <lightning:icon aura:id="actionIcon" iconName="{!v.type == 'success' ? 'utility:success' : 'utility:error' }" size="small" />
+                </a>
+                <h2 class="slds-text-heading--small" style="margin-left: 29px;margin-top: -22px;">{!v.message}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <aura:if isTrue="{!v.showStatusSelection}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p class="slds-text-align_center"></p>
+            </aura:set>
+            <p class="slds-p-horizontal_small" style="{!v.showInactiveCRRelCAs.length > 0 ? 'width:25%;': ''}"> 
+                <lightning:select name="select" label="Select Status" aura:id="proStatusInput" value="{!v.selectedStatus}" required="true" onchange="{!c.statusChange}">
+                    <option value="--None--">--None--</option>
+                    <aura:iteration items="{!v.statusValues}" var="status">
+                        <option text="{!status}"></option>
+                    </aura:iteration>
+                </lightning:select>
+            </p>
+            
+            <aura:if isTrue="{!v.selectedStatus == 'Order'}">
+                <br/><p style="{!v.showInactiveCRRelCAs.length > 0 ? 'font-size:1rem;': ''}">Please update Schedule Records</p>  
+                <aura:if isTrue="{!v.showInactiveCRRelCAs.length > 0}"><br/>
+                    <p style="font-size:1rem;">The following Instructor will get created since the old instructor has Inactive Cost Rate assigned.</p><br/>
+                    <ltng:require styles="/resource/QuickActionFullPage"></ltng:require>
+                    <lightning:card title="Contact Assignments">
+                        <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal table slds-table_fixed-layout">
+                            <thead class="slds-line-height_reset">
+                                <th scope="col" class="wrap">Contact</th>
+                                <th scope="col" class="wrap">Start Date</th>
+                                <th scope="col" class="wrap">End Date</th>
+                                <th scope="col" class="wrap">Old Date Range</th>
+                                <th scope="col" class="wrap">Position</th>
+                                <th scope="col" class="wrap">Project Task</th>
+                                <th scope="col" class="wrap">Status</th>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.showInactiveCRRelCAs}" var="ca" indexVar="index">
+                                    <tr class="slds-hint-parent slds-p-top_small slds-p-bottom_small">
+                                        <td class="slds-p-left_small wrap">
+                                            <div><a  name="{!ca.Candidate_Name__c}" onclick="{!c.goToSObjPage}">{!ca.Candidate_Name__r.Name}</a></div>
+                                        </td>
+                                        <td class="slds-p-left_small wrap">
+                                            <div><ui:inputDate format="MM/DD/YYYY" value="{!ca.Start_Date__c}" displayDatePicker="true"/></div>
+                                        </td>
+                                        <td class="slds-p-left_small wrap">
+                                            <div><ui:inputDate format="MM/DD/YYYY" value="{!ca.End_Date__c}" displayDatePicker="true"/></div>
+                                        </td>
+                                        <td class="slds-p-left_small wrap">
+                                            <div><ui:outputDate format="MM/DD/YYYY" value="{!ca.Start_Date__c}"/> - <ui:outputDate format="MM/DD/YYYY" value="{!ca.End_Date__c}"/></div>
+                                        </td>
+                                        <td class="slds-p-left_small wrap">
+                                            <div>{!ca.Assignment_Position__c}</div>
+                                        </td>
+                                        <td class="slds-p-left_small wrap">
+                                            <div><a  name="{!ca.Project_Task__c}"  onclick="{!c.goToSObjPage}">{!ca.Project_Task__r.Name}</a></div>
+                                        </td>
+                                        <td class="slds-p-left_small wrap">
+                                            <div>{!ca.Status__c}</div>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                    </lightning:card><br/>
+                </aura:if>
+            </aura:if>
+            
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Proceed" onclick="{!c.proceedBtnClick}"/>
+                <lightning:button variant="brand" label="Close" onclick="{!c.closeBtnClick}"/>
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+    
+    
+    
+    <aura:if isTrue="{!v.showOnHoldSection}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p class="slds-text-align_center">Confirmation</p>
+            </aura:set>
+            <p class="slds-p-horizontal_small">
+                <div>Project related contact assignment and schedule records' Status will get updated to On Hold.</div><br/>
+                <div>
+                    <ui:inputDate aura:id="dtVal" label="On Hold Date" value="{!v.onHoldDt}" displayDatePicker="true" required="true" format="MM/dd/yyyy"/>   
+                    <div class="slds-p-top_small">
+                    	<lightning:input  type="checkbox" label="Send On Hold Confirmation Email to Student" checked="{!v.sendStudentRemainder}"/>
+                    </div>
+                </div>
+            </p><br/><br/>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Okay" onclick="{!c.onHoldOkayClick}"/>
+                <lightning:button variant="brand" label="Cancel" onclick="{!c.closeOnHoldSection}"/>
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showCancelSection}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p class="slds-text-align_center">Confirmation</p>
+            </aura:set>
+            <p class="slds-p-horizontal_small">
+                Project related contact assignment and schedule records' Status will get updated to Canceled.<br/><br/><br/>
+                
+                <lightning:layout multipleRows="true">
+                    <lightning:layoutItem size="6" padding="around-small">
+                        <ui:inputDate aura:id="cancelDt" label="Cancellation Date" value="{!v.cancelledDt}" displayDatePicker="true" required="true" format="MM/dd/yyyy"/>   
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="6" padding="around-small">
+                        <lightning:textarea aura:id="cancelReason" label="Cancellation Reason" value="{!v.cancellationReason}" rows="4" required="true"/>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </p>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Okay" onclick="{!c.cancelOkayClick}"/>
+                <lightning:button variant="brand" label="Close" onclick="{!c.closeCancelSection}"/>
+            </aura:set>
+        </lightning:card>
+    	
+    </aura:if>
+    
+</aura:component>

@@ -1,0 +1,12 @@
+<apex:page standardStylesheets="false" sidebar="false" showHeader="{!$CurrentPage.parameters.showHeader != 'false'}">
+    <style>
+        .slds:not(html), .slds body {
+            background: white !important;
+        }
+        
+        html .brandQuaternaryBgr {
+            background: white !important;
+        }
+    </style>
+    <c:TimeSheet_Internlas_Component ></c:TimeSheet_Internlas_Component>
+</apex:page>

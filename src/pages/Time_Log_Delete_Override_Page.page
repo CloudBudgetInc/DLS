@@ -1,0 +1,397 @@
+<apex:page standardController="Time_Log__c" extensions="TimeLog_delete_Override_Controller">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+    <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+    <script src="{!URLFOR($Resource.Filter)}"/>
+    <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+    <c:RemoteActionTk ></c:RemoteActionTk>
+    <script src="{!URLFOR($Resource.moment)}"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.map"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"/>
+        
+    <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        <style>
+            /**
+             * Hide when Angular is not yet loaded and initialized
+             */
+            [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+              display: none !important;
+            }
+            
+            .slds-input {
+                float: right;
+            }
+            
+            .selectErrorClass {
+                background-color: #fff;
+                border-color: #c23934;
+                box-shadow: #c23934 0 0 0 1px inset;
+                background-clip: padding-box;
+            }
+            
+            .slds-spinner--small  {
+                    z-index: 999;
+                        //width: 100%;
+                        //height: 100%;
+                        top: 0;
+                        left: 0;
+                       // display: none;
+                        position:fixed;             
+                        background-color: #cccccc;
+                        color: #aaaaaa;
+                        opacity: .4;
+                    filter: alpha(opacity = 50);
+                 
+            }
+            .img{
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                //height: 10%;
+                -webkit-transform: translate(-50%,-50%);
+                -ms-transform: translate(-50%,-50%);
+                transform: translate(-50%,-50%);
+                }
+        </style>
+        
+         <apex:form >
+        <div class="slds ng-cloak" ng-app="myApp" ng-controller="timeLog_deleteOverride_Controller">
+            <div class="slds-spinner--small" style="display:none;width:100%;height:100%;" id="spinner">
+                <img alt="Loading..." src="{!URLFOR($Resource.SLDS0_12_2,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+            </div>
+            <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                <div class="slds-grid">
+                    <div class="slds-media__figure">
+                         <!--<img src="{!URLFOR($Resource.MyTimeSheet_PackageIcon)}" style="width:60px;height:50px;"></img>-->
+                    </div>
+                    <div class="slds-media__body">
+                        <div class="slds-grid">
+                            <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="UnPost Time Log">UnPost Time Log</h1>
+                        </div>
+                    </div>
+                   <div class="slds-col slds-no-flex slds-align-bottom">
+                        <div style="width: 100%;text-align: center;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="SaveCallingFunction()">Submit</div>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-col slds-no-flex slds-align-bottom">
+                        <div style="width: 100%;text-align: center;padding-left:17%;">
+                            <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="cancel()">Cancel</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                <div class="slds-card__body">
+                     <div class="slds-grid slds-wrap">
+                         
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Time Log Number</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Name}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Contact</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Contact__r.Name}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Opportunity</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Opportunity__r.Name}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Month</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Month__c}}</span>
+                                </div> 
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Date</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Date__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Service Item</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Service_Item__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Payroll Item</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Payroll_Item__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Hours</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Hours__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                       
+                       <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">PC Cust Job</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].PC_Cust_Job__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">PC GL Code</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].PC_GL_Code__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">QB Cust:Job</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].QB_Cust_Job__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Last Month</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Last_Month__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Week Day</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Week_Day__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">First Name</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].First_Name__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Last Name</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Last_Name__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Location</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Training_Location__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Section</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <span>{{TimeLogData[0].Section__c}}</span>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                         <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--6-of-12" style="margin-top:1%;">
+                             <div class="slds-grid slds-wrap">
+                                 <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                     <label class="slds-form-element__label">Notes</label>
+                                 </div>
+                                <div class="slds-col--padded slds-size--1-of-1 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                                    <textarea class="slda-textarea {{notesError}}" rows="3" cols="20" ng-model="TimeLogData[0].Notes__c"></textarea>
+                                </div> 
+                            </div>
+                        </div> 
+                        
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <div aria-hidden="false" role="dialog" class="slds-modal {{modalState}}">
+                <div class="slds-modal__container">
+                      <div class="slds-modal__header" style="background-color: rgb(22, 50, 92);color: white;">
+                        <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                      </div>
+                      <div class="slds-modal__content">
+                         <p>{{ErrorMessage}}</p>
+                     </div>
+                     <div class="slds-modal__footer">
+                        <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="Okayclick()"></input>
+                     </div>
+               </div>
+          </div>
+          <div class="slds-modal-backdrop {{modalBackdropState}}"></div>
+        
+         </div>
+     </apex:form>
+    </html>
+    
+    <script>
+  
+        var force = new remotetk.Client();
+        
+        var underscore = angular.module('underscore', []);
+          underscore.factory('_', ['$window', function($window) {
+              return $window._; // assumes underscore has already been loaded on the page
+          }]);
+        
+        var app = angular.module('myApp', ['ngRoute','720kb.datepicker','underscore']);
+        app.controller('timeLog_deleteOverride_Controller', function($scope,$window,$timeout,$routeParams,$location,$route,_) {
+        
+            //document.getElementById("spinner").style.display = 'block';
+            
+            $scope.timeLogId = '{!timeLogId}';
+            $scope.TimeLogData = JSON.parse('{!TimeLogDetail}');
+            console.log(':::::TimeLogDetail:::::::',$scope.TimeLogData);
+            
+            $scope.modalState = '';
+            $scope.modalBackdropState = '';
+            $scope.ErrorMessage = '';
+            
+            
+            $scope.SaveCallingFunction = function() {
+               // if($scope.TimeLogData[0].Notes__c) {
+                    console.log(':::::notes::::::',$scope.TimeLogData[0].Notes__c);
+                    
+                   document.getElementById("spinner").style.display = 'block';
+                   
+                   var array = [];
+                   
+                   //console.log('::::::$scope.TimeLogData::::::',$scope.TimeLogData);
+                   
+                   var obj = {Id:$scope.TimeLogData[0].Id,Notes__c:$scope.TimeLogData[0].Notes__c};
+                   
+                   console.log('::::::obj::::::',obj);
+                   
+                   array.push(obj);
+                   
+                   Visualforce.remoting.Manager.invokeAction(
+                      '{!$RemoteAction.TimeLog_delete_Override_Controller.updateTimeLog}',
+                      JSON.stringify(array),
+                      function(response, ev) {
+                          if(ev.status) {
+                              document.getElementById("spinner").style.display = 'none';
+                              window.location.href = '/'+$scope.timeLogId;
+                          } else {
+                              console.log(':::::::error:::::::',ev.message.split('FIELD_CUSTOM_VALIDATION_EXCEPTION,')[1].split(': []'));
+                              $scope.ErrorMessage = ev.message.split('FIELD_CUSTOM_VALIDATION_EXCEPTION,')[1].split(': []')[0];
+                              $scope.modalState = 'slds-fade-in-open';
+                              $scope.modalBackdropState = 'slds-modal-backdrop--open';
+                              document.getElementById("spinner").style.display = 'none';
+                              $scope.$apply();
+                          }
+                      },
+                      {escape: true}
+                  );
+                  
+               // }else {
+                    //$scope.notesError = 'selectErrorClass';
+                    //console.log('LLLLLLLLLLLLLL');
+                //}
+            }
+            
+            $scope.Okayclick = function() {
+                $scope.modalState = '';
+                $scope.modalBackdropState = '';
+                
+                window.location.href = '/'+$scope.timeLogId;
+                
+            }
+            
+            $scope.cancel = function() {
+                window.location.href = '/'+$scope.timeLogId;
+            }
+           
+        
+        });
+    </script>
+</apex:page>

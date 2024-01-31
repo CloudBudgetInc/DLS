@@ -1,0 +1,15 @@
+.THIS .itemMenuContainer{
+    display: none !important;
+}
+.THIS .ldtdev .tableHeaderTextWrap .slds-truncate{
+    word-wrap: break-word !important;
+    white-space: pre-wrap !important;
+}
+@media(max-width:48em){
+    .THIS .ldtDatatableDev table tbody tr>td:first-child {
+        padding-left: 0.75rem!important;
+    }
+    .THIS .card-body{
+        padding: .50rem !important;
+    }
+}

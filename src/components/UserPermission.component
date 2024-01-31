@@ -1,0 +1,290 @@
+<apex:component controller="UserCheckUtil">
+    <script>
+        console.log('UserPermission Component entered.');
+        function UserPermissions(successCallback, errorCallback) {
+            var userPermissions = {
+                'INSTRUCTOR' : {
+                    'Welcome Message': true,
+                    'Onboarding': true,
+                    'Upcoming Events': true,
+                    'Contact Info': true,
+                    'Job Preferences': true,
+                    'Communication Preferences': true,
+                    'Work History in DLS': true,
+                    'Experience': true,
+                    'Skills': true,
+                    'Language Scores': true,
+                    'My Pay': true,
+                    'My Pay_tab': true,
+                    'Education_Experience_tab': true,
+                    'Contact Information_tab': true,
+                    'Budget Details': true,
+                    'Contact Informations': true,
+                    'Contact_Name' : true,
+                    'Contact_Alias' : false,
+                    'Contact_PhoneOrEmail' : true,
+                    'Events_myProject': true,
+                    'Related Materials': true,
+                    'Timesheets_myProject': true,
+                    'Attendance': true,
+                    'Attendance_action': false,
+                    'Agenda Builder_myProject': true,
+                    'Timekeeping_myProject': true,
+                    'Periodic Reports': true,
+                    'Enter_Time_myProject_button' : true,
+                    'Periodic Report_myProject_button': true,
+                    'Agenda Builder_myProject_button': true,
+                    'Job Community': true,
+                    'Zoom': true,
+                    'Update Agenda': true,
+                    'Edit Events': true,
+                    'ContactOffs':  true,
+                    'ClientOffs': false,
+                    'EditOff': true,
+                    'CateringForm': false,
+                    'Instructor_Timesheet': true,
+                    'Client_Timesheet': false,
+                    'Schedule': true,
+                    'Planned_Days_Off': true,
+                    'Wifi_Password': false,
+                    'Door_Code': false,
+                    'Access_Card': false,
+                    'Facilities': true,
+                    'MyCase': true,
+                    'Form_Tab': true,
+                    'Paycom': true,
+                    'Per_Diem': true,
+                    'MTT_Reimbursement': true,
+                    'General_Reimbursement': true,
+                    'MyDashboard': true,
+                    'DashBoard_Tab': false,
+                    'MyStudent': false,
+                    'Mystudent_Detail': false,
+                    'HomePage_Graph': false,
+                    'Room_Directory': false,
+                    'My_Quotes': false,
+                    'My_Invoices': false,
+                    'Staff_Timesheet':false
+                },
+                'CLIENT': {
+                    'Welcome Message': true,
+                    'Onboarding': false,
+                    'Upcoming Events': false,
+                    'Contact Info': true,
+                    'Job Preferences': false,
+                    'Communication Preferences': true,
+                    'Work History in DLS': true,
+                    'Experience': false,
+                    'Skills': false,
+                    'Language Scores': false,
+                    'My Pay': false,
+                    'My Pay_tab': false,
+                    'Education_Experience_tab': false,
+                    'Contact Information_tab': true,
+                    //My Project
+                    'Budget Details': true,
+                    'Contact Informations': true,
+                    'Contact_Name' : false,
+                    'Contact_Alias' : true,
+                    'Contact_PhoneOrEmail' : false,
+                    'Events_myProject': true,
+                    'Related Materials': true,
+                    'Timesheets_myProject': true,
+                    'Attendance': true,
+                    'Attendance_action': true,
+                    'Agenda Builder_myProject': false,
+                    'Timekeeping_myProject': false,
+                    'Periodic Reports': true,
+                    'Enter_Time_myProject_button': false,
+                    'Periodic Report_myProject_button': false,
+                    'Agenda Builder_myProject_button': false,
+                    'Job Community': false,
+                    'Zoom': false,
+                    'Update Agenda': false,
+                    'Edit Events': false,
+                    'ContactOffs':  false,
+                    'ClientOffs': true,
+                    'EditOff': false,
+                    'CateringForm': false,
+                    'Instructor_Timesheet': false,
+                    'Client_Timesheet': false,
+                    'Schedule': false,
+                    'Planned_Days_Off': false,
+                    'Wifi_Password': false,
+                    'Door_Code': false,
+                    'Access_Card': false,
+                    'Facilities': false,
+                    'MyCase': false,
+                    'Form_Tab': false,
+                    'Paycom': false,
+                    'Per_Diem': false,
+                    'MTT_Reimbursement': false,
+                    'General_Reimbursement': false,
+                    'MyDashboard': false,
+                    'DashBoard_Tab': true,
+                    'MyStudent': true,
+                    'Mystudent_Detail': true,
+                    'HomePage_Graph': true,
+                    'Room_Directory': false,
+                    'My_Quotes': true,
+                    'My_Invoices': true,
+                    'Staff_Timesheet':false
+                },
+                'STAFF' : {
+                    'Welcome Message': true,
+                    'Onboarding': true,
+                    'Upcoming Events': true,
+                    'Contact Info': true,
+                    'Job Preferences': true,
+                    'Communication Preferences': true,
+                    'Work History in DLS': true,
+                    'Experience': true,
+                    'Skills': true,
+                    'Language Scores': true,
+                    'My Pay': true,
+                    'My Pay_tab': true,
+                    'Education_Experience_tab': true,
+                    'Contact Information_tab': true,
+                    'Budget Details': true,
+                    'Contact Informations': true,
+                    'Contact_Name' : true,
+                    'Contact_Alias' : false,
+                    'Contact_PhoneOrEmail' : true,
+                    'Events_myProject': true,
+                    'Related Materials': true,
+                    'Timesheets_myProject': true,
+                    'Attendance': true,
+                    'Attendance_action': false,
+                    'Agenda Builder_myProject': true,
+                    'Timekeeping_myProject': true,
+                    'Periodic Reports': true,
+                    'Enter_Time_myProject_button' : false,
+                    'Periodic Report_myProject_button': true,
+                    'Agenda Builder_myProject_button': false,
+                    'Job Community': true,
+                    'Zoom': true,
+                    'Update Agenda': true,
+                    'Edit Events': true,
+                    'ContactOffs':  true,
+                    'ClientOffs': false,
+                    'EditOff': true,
+                    'CateringForm': false,
+                    'Instructor_Timesheet': false,
+                    'Client_Timesheet': false,
+                    'Schedule': true,
+                    'Planned_Days_Off': true,
+                    'Wifi_Password': false,
+                    'Door_Code': false,
+                    'Access_Card': false,
+                    'Facilities': true,
+                    'MyCase': true,
+                    'Form_Tab': true,
+                    'Paycom': false,
+                    'Per_Diem': false,
+                    'MTT_Reimbursement': false,
+                    'General_Reimbursement': false,
+                    'MyDashboard': true,
+                    'DashBoard_Tab': false,
+                    'MyStudent': false,
+                    'Mystudent_Detail': false,
+                    'HomePage_Graph': false,
+                    'Room_Directory': false,
+                    'My_Quotes': false,
+                    'My_Invoices': false,
+                    'Staff_Timesheet':true
+                }
+            }
+            var userType;
+            var contactId;
+            var userRoles;
+            var notifications;
+            var userName;
+            //Function to get the permissions for the current user.
+            function getUserType() {
+                var jsonResponse = '{!typeJson}';
+                var response = JSON.parse(jsonResponse);
+                userType = response.type;
+                contactId = response.userContactId;
+                userRoles = response.roles;
+                notifications = response.notificationList;
+                userName = response.userName;
+                console.log('user response', response);
+            }
+
+            //To get the all the notificaitons
+            this.getAllNotifications = function() {
+                console.log('notifiction', notifications);
+                return notifications;
+            }
+
+            //Executed first when an Object is created for the constructor.
+            function init() {
+                getUserType();
+            }
+
+            //Get the name of the user.
+            this.getUserName = function() {
+                return userName;
+            }
+
+            //Function to find the permission for the current user.
+            this.hasPermission = function(viewType) {
+                if(viewType && userPermissions[userType] && userPermissions[userType][viewType]) {
+                    return true;
+                }
+                return false;
+            }
+
+            //Method to find the current user's contact id.
+            this.getContactId = function() {
+                return contactId;
+            }
+
+            //All the roles the user has.
+            this.getRoles = function() {
+                return userRoles;
+            }
+
+            this.getCurrentRole = function() {
+                return userType;
+            }
+
+            //Change the previlage of the current user.
+            this.changePrevilage = function(previlege) {
+                console.log('change previlage ', previlege);
+                if(previlege) {
+                    var dbPrevilege;
+                    if(previlege == 'Student') {
+                        dbPrevilege = 'STUDENT';
+                    } else if(previlege == 'Instructor') {
+                        dbPrevilege = 'INSTRUCTOR';
+                    } else if(previlege == 'Client') {
+                        dbPrevilege = 'CLIENT';
+                    } else if(previlege == 'Partner') {
+                        dbPrevilege = 'PARTNER';
+                    } else if(previlege == 'Staff') {
+                        dbPrevilege = 'STAFF';
+                    }
+                    console.log('dbPrevilege', dbPrevilege);
+                    if(dbPrevilege) {
+                        Visualforce.remoting.Manager.invokeAction(
+                           '{!$RemoteAction.UserCheckUtil.changePrevilege}',
+                           previlege,
+                           function(response, ev) {
+                               if(ev.status) {
+                                   window.location.reload();
+                               } else {
+                                   showError(ev.message);
+                               }
+                           },
+                           {escape: true}
+                       );
+                   }
+               }
+            }
+
+            init();
+        }
+        var userPermissions = new UserPermissions();
+    </script>
+</apex:component>

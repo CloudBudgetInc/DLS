@@ -1,0 +1,944 @@
+<aura:component implements="force:hasRecordId,force:hasSObjectName,force:appHostable,flexipage:availableForAllPageTypes,force:lightningQuickAction,forceCommunity:availableForAllPageTypes" access="global" controller="ContactAssignmentLightningCtrl">
+   
+    <!--- Parent component(ContactAssignmentTableCmp) related attributes-->
+    <aura:attribute name="recordTypeName" type="String" access="public"/>
+    <aura:attribute name="tabName" type="String" access="public"/>
+    <aura:attribute name="parentId" type="String" access="public"/>
+    <aura:attribute name="sObjectName" type="String"/>
+    <aura:attribute name="caRecordId" type="String" access="public" default=""/>
+    <aura:attribute name="displayAddModal" type="Boolean"/>
+    
+    
+    <aura:attribute name="recordId" type="String" default="{!v.parentId}"/>
+    <aura:attribute name="statusOptions" type="List" default=""/>
+    <aura:attribute name="parentRecordType" type="String"/>
+    <aura:attribute name="oppStageName" type="String" default=""/>
+    <aura:attribute name="actionPerform" type="String" default=""/>
+    <aura:attribute name="defaultCostRate"  type="String"  default=""/>
+    <aura:attribute name="costlookup" type="String" default=""/>
+    <aura:attribute name="visibleError" type="String" default="slds-hide"/>
+    <aura:attribute name="showErrorMsg" type="String" default=""/>
+    <aura:attribute name="profileName" type="String" default=""/>
+    <aura:attribute name="showExistingLTSUpdateModel" type="Boolean" default="false"/>
+    <aura:attribute name="showObervationReportValMsg" type="String" access="public" default=""/>
+    <aura:attribute name="showObservationReportValModel" type="Boolean" default="false"/>
+
+    
+    <aura:attribute name="caRecord" type="Map" access="private" default="{}"/>
+    <aura:attribute name="oldCARecord" type="Map" access="private" default="{}"/>
+    <aura:attribute name="picklistValues" type="Object" access="private" default="{}"/>
+    <aura:attribute name="cRCreationObj" type="Map" default="{}"/>
+    <aura:attribute name="cADetails" type="Map" default="{}"/>
+    
+    <aura:attribute name="openModel" type="Boolean" access="private" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="displayCRPicklist" type="Boolean"/>
+    <aura:attribute name="displayPermissionModel" type="Boolean" default="false"/>
+    <aura:attribute name="showDeleteModel" type="Boolean" default="false"/>
+    <aura:attribute name="scorePicklist" type="Boolean" default="false"/>
+    <aura:attribute name="showDeleteSchValidationModel" type="Boolean" default="false"/>
+    <aura:attribute name="isChangedContact" type="Boolean" default="false"/>
+    <aura:attribute name="TimeEntryExistingLCR" type="Boolean" default="false"/>
+    <aura:attribute name="showCostRateModal" type="Boolean" default="false"/>
+    <aura:attribute name="validationSubstituteInsModal" type="Boolean" default="false"/>
+
+
+    <aura:attribute name="projectTaskField" type="List" default="[]"/>
+    <aura:attribute name="positionList" type="List"  default="[]"/>
+    <aura:attribute name="oppProductList" type="List"  default="[]"/>
+    <aura:attribute name="costRateList" type="List" default="[]"/>
+    <aura:attribute name="noOfLaptopIssues" type="List" default="[]"/>
+    <aura:attribute name="timePreferncesPicklist" type="List" default="[]"/>
+    
+    <aura:attribute name="showScheduleEndEditDeleteVal" type="Boolean" default="false"/>
+    
+    <aura:attribute name="parentStartDate" type="Date" default=""/>
+    <aura:attribute name="parentEndDate" type="Date" default=""/>
+    
+    
+    <aura:registerEvent name="reloadEvent" type="c:reloadEvent"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <aura:handler name="assignCostRateTOCA" event="c:childClickEvent" action="{!c.assignCRValueToCA}"/>
+    
+    <aura:handler name="ErrorLogEvt" event="c:childClickEvent" action="{!c.showErrorLogMsg}"/>
+
+
+    <div>
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner variant="brand"  size="medium" alternativeText="Loading" />
+        </aura:if>
+        <aura:if isTrue="{!v.recordTypeName == 'Instructor'}"> 
+            <aura:if isTrue="{!v.openModel}">
+                <c:sldsModal aura:id="addModel" modelWidth="60%">
+                    <aura:set attribute="header">{!v.tabName} Assignment</aura:set>
+                    <aura:set attribute="displayCloseImage" value="false"></aura:set>
+                    <aura:set attribute="content">
+                        <lightning:recordEditForm objectApiName="Contact_Assignments__c">
+                            <lightning:messages />
+                            <div id="topscrollable">
+                                <c:ToastCmp visibleError="{!v.visibleError}" showErrorMsg="{!v.showErrorMsg}"/>
+                                <aura:if isTrue="{!v.actionPerform =='Edit'}"> 
+                                    <div class="slds-tabs--default">
+                                        <ul class="slds-tabs--default__nav" role="tablist">
+                                            <li  aura:id="Summary" class="slds-tabs--default__item slds-text-title--caps slds-active" title="Summary" role="presentation" ><a class="slds-tabs--default__link" href="javascript:void(0);" onclick="{!c.summaryInstructorTab}" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-1" id="SUMMARY">SUMMARY</a></li>
+                                            <aura:if isTrue="{!and(v.parentRecordType == 'MTT_Projects',v.sObjectName !='Opportunity' ) }">
+                                                <li  aura:id="ProjectTracking"  class="slds-tabs--default__item slds-text-title--caps " title="PROJECT TRACKING" role="presentation"><a class="slds-tabs--default__link" href="javascript:void(0);" onclick="{!c.projectTrackingInstructorTab}" role="tab" tabindex="-1" aria-selected="true" aria-controls="tab-default-2" id="PROJECT TRACKING">PROJECT TRACKING</a></li>
+                                            </aura:if>
+                                            <li  aura:id="Description" class="slds-tabs--default__item slds-text-title--caps" title="DESCRIPTION" role="presentation"><a class="slds-tabs--default__link" href="javascript:void(0);" onclick="{!c.DescriptionInstructorTab}" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-default-3" id="DESCRIPTION">DESCRIPTION</a></li>
+                                        </ul>
+                                        <div aura:id="SummaryTabDataId" id="tab-default-1" class="slds-tabs--default__content slds-show" role="tabpanel">
+                                            <lightning:layout multipleRows="true">
+                                                <aura:if isTrue="{!v.sObjectName == 'AcctSeed__Project__c'}">
+                                                    <div style="text-align: justify;" class="{!v.showScheduleEndEditDeleteVal ? 'slds-show slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning':'slds-hide'}">
+                                                        <div class="slds-media slds-media_center">
+                                                            <div class="slds-media__figure">
+                                                                <lightning:icon iconName="utility:warning" size="small"/>
+                                                            </div>
+                                                            <div class="slds-media__body ">
+                                                                <h1 style="font-weight: bold;">Please End the Schedule Record</h1>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <lightning:inputField fieldName="Candidate_Name__c" aura:id="otherInputField" value="{!v.caRecord.Candidate_Name__c}" />
+                                                    </lightning:layoutItem>  
+                                                    <aura:if isTrue="{!v.sObjectName == 'AcctSeed__Project__c'}">
+                                                        <lightning:layoutItem size="6" padding="around-small"   >
+                                                            <lightning:combobox name="Project" required="true" aura:id="proTask" label="Project Task" value="{!v.caRecord.Project_Task__c}" options="{!v.projectTaskField}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:if> 
+                                                    <aura:if isTrue ="{!and(not(v.defaultCostRate == 'Non-SCA Testing'),or(v.displayCRPicklist))}">
+                                                        <aura:if isTrue="{!not(v.caRecord.Drafted_Labor_Cost_Rate__c)}">
+                                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                                <lightning:combobox name="costRate" label="Rate Card Rate" value="{!v.caRecord.Rate_Card_Rate__c }" options="{!v.costRateList}"/>
+                                                                <aura:if isTrue="{!v.TimeEntryExistingLCR}">
+                                                                    <div style="color:red;">&nbsp;Time entry existing for this Labor Cost Rate, you cannot modify this.</div>
+                                                                </aura:if>
+                                                            </lightning:layoutItem>   
+                                                            <aura:set attribute="else">
+                                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                                    <lightning:combobox name="costRate" label="Rate Card Rate" value="{!v.caRecord.Drafted_Labor_Cost_Rate__c }" options="{!v.costRateList}"/>
+                                                                </lightning:layoutItem>
+                                                            </aura:set>
+                                                        </aura:if>
+                                                        <aura:set attribute="else">
+                                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                                <div style="color: rgb(62, 62, 60);"> Rate Card Rate</div>
+                                                                <aura:if isTrue="{!v.caRecord.Rate_Card_Rate__c != null}">
+                                                                    <br/> <a id="theLink"  style="font-size: 14px;" target="_blank" name="RCRLink" href="{!'/'+v.caRecord.Rate_Card_Rate__c}">{!v.caRecord.Rate_Card_Rate__r.Cost_Rate_Name__c}</a>
+                                                                </aura:if>  
+                                                                <aura:if isTrue="{!and(v.caRecord.Drafted_Labor_Cost_Rate__c  != null,v.caRecord.Rate_Card_Rate__c == null)}">    
+                                                                    <br/> <a id="theLink" target="_blank" style="color: red !important;  font-size: 14px;" name="RCRLink" href="{!'/'+v.caRecord.Drafted_Labor_Cost_Rate__c}">{!v.caRecord.Drafted_Labor_Cost_Rate__r.Cost_Rate_Name__c}</a>
+                                                                </aura:if>
+                                                            </lightning:layoutItem>
+                                                        </aura:set>
+                                                    </aura:if>
+                                                    <!--  WorkItem - W-006075 to show OralDate field as editable-->
+                                                    <aura:if isTrue="{!v.parentRecordType == 'Testing_Projects'}">
+                                                        <lightning:layoutItem size="6" padding="around-small"  >
+                                                            <ui:inputDateTime  label="Oral Exam Date &amp; Time" value="{!v.caRecord.Oral_Exam_Date_Time__c}"  displayDatePicker="true" format="mm/dd/yyyy"/>  
+                                                        </lightning:layoutItem>
+                                                        <aura:set attribute="else">
+                                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                                <ui:inputDate aura:id="dateInputField" label="Start Date" required="true" value="{!v.caRecord.Start_Date__c}"  displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                            </lightning:layoutItem>
+                                                        </aura:set>
+                                                    </aura:if>
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <lightning:combobox name="Position" label="Position" required="true" aura:id="otherInputField" value="{!v.caRecord.Assignment_Position__c}" options="{!v.positionList}"/>  
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small"  >
+                                                        <ui:inputDate aura:id="dateInputField" label="End Date" required="{!v.parentRecordType != 'Testing_Projects'}" value="{!v.caRecord.End_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                    </lightning:layoutItem>
+                                                    <aura:if isTrue="{!v.parentRecordType == 'MTT_Projects'}">
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <ui:inputDate  label="Travel In Date" value="{!v.caRecord.Travel_In_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                        </lightning:layoutItem>
+                                                        <lightning:layoutItem size="6" padding="around-small"  >
+                                                            <ui:inputDate label="Travel Out Date" value="{!v.caRecord.Travel_Out_Date__c}" displayDatePicker="true" format=" MM/DD/yyyy"/>  
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                    <br/>
+                                                    <lightning:layoutItem size="6" padding="around-small"   >
+                                                        <lightning:combobox name="Status" label="Status" required="true" aura:id="otherInputField" value="{!v.caRecord.Status__c}" options="{!v.statusOptions}"/>  
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small" >
+                                                        <lightning:inputField fieldName="Sequence__c" value="{!v.caRecord.Sequence__c}"/>
+                                                    </lightning:layoutItem>
+                                                    <aura:if isTrue="{!v.parentRecordType == 'MTT_Projects'}">
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <lightning:inputField fieldName="Hotel__c" value="{!v.caRecord.Hotel__c}"/> 
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <div style="margin-top:1rem;">
+                                                            <lightning:input type="checkbox" label="Paper Timesheet" name="Paper Timesheet"  checked="{!v.caRecord.Paper_Timesheet__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <lightning:inputField  fieldName="Location__c" value="{!v.caRecord.Location__c}"/>  
+                                                    </lightning:layoutItem>
+                                                    <aura:if isTrue="{!v.tabName =='Direct Labor'}">
+                                                        <aura:if isTrue="{!v.parentRecordType == 'Translation_Projects'}">
+                                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                                <lightning:inputField fieldName="Total_Qty_Planned__c" value="{!v.caRecord.Total_Qty_Planned__c}"/>
+                                                            </lightning:layoutItem>
+                                                        </aura:if>
+                                                        <lightning:layoutItem size="6" padding="around-small">
+                                                            <lightning:inputField fieldName="Quantity_Unit__c" value="{!v.caRecord.Quantity_Unit__c}"/>
+                                                        </lightning:layoutItem>
+                                                        <lightning:layoutItem size="6" padding="around-small">
+                                                            <lightning:input type="number" label="Quantity Actual" step=".01" required ="{!v.caRecord.Status__c == 'Ended' ? true:false}"  aura:id="qtyInput" value="{!v.caRecord.Quantity_Actual__c}"/>
+                                                        </lightning:layoutItem>
+                                                        <aura:if isTrue="{!or(v.parentRecordType == 'Translation_Projects' ,v.parentRecordType == 'Interpretation_Projects')}">
+                                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                                <ui:inputDate  label="Invoice Date:" aura:id="invoiceInput"  displayDatePicker="true" required="{!v.caRecord.Status__c == 'Ended' ? true:false}" format="MM/DD/yyyy" value="{!v.caRecord.Invoice_Date__c}"/>
+                                                            </lightning:layoutItem>
+                                                            <lightning:layoutItem size="6" padding="around-small">
+                                                                <lightning:input type="checkbox" label="Linguist Paid" name="Linguist Paid"  checked="{!v.caRecord.Linguist_Paid__c}"/>
+                                                            </lightning:layoutItem>
+                                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                                <lightning:fileUpload label="Upload Invoice document"
+                                                                                      name="fileUploader"
+                                                                                      multiple="false"
+                                                                                      recordId="{!v.recordId}"
+                                                                                      onuploadfinished="{!c.handleUploadFinished}" />                                                  
+                                                            </lightning:layoutItem>
+                                                            <aura:set attribute="else">
+                                                                <lightning:layoutItem size="6" padding="around-small">
+                                                                    <lightning:input type="checkbox" label="Linguist Paid" name="Linguist Paid"  checked="{!v.caRecord.Linguist_Paid__c}"/>
+                                                                </lightning:layoutItem>
+                                                            </aura:set>
+                                                        </aura:if>
+                                                    </aura:if>
+                                                    <lightning:layoutItem size="6" padding="around-small">  
+                                                        <lightning:inputField fieldName="Notes__c" value="{!v.caRecord.Notes__c}"/> 
+                                                    </lightning:layoutItem>
+                                                 <aura:if isTrue="{!and(v.parentRecordType == 'DLI_W_LT_Projects', or(v.caRecord.Assignment_Position__c == 'Partner School EI',
+                                                                  or(v.caRecord.Assignment_Position__c  == 'Partner School Instructor',and(v.caRecord.dliProjectType == 'Partner School' ,v.defaultCostRate == 'SubK-LT'))))}">
+                                                        <lightning:layoutItem size="6" padding="around-small">
+                                                            <lightning:inputField fieldName="Account__c" required="true" aura:id="otherInputField" value="{!v.caRecord.Account__c}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!v.caRecord.showSchObservation}">                                                    
+                                                        <lightning:layoutItem size="6" padding="around-small">
+                                                            <lightning:inputField fieldName="Schedule_Observation__c" value="{!v.caRecord.Schedule_Observation__c}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <div style="margin-top:1rem;">
+                                                            <lightning:input type="checkbox" label="No Student Hours Verification" name="No Student Hours Verification"  checked="{!v.caRecord.No_Student_Hours_Verification__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                </aura:if>
+                                                <aura:if isTrue="{!v.sObjectName =='Opportunity'}">
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <lightning:inputField fieldName="Candidate_Name__c" aura:id="otherInputField" value="{!v.caRecord.Candidate_Name__c}"/>
+                                                    </lightning:layoutItem> 
+                                                    <aura:if isTrue ="{!and(not(v.defaultCostRate == 'Non-SCA Testing'),or(v.displayCRPicklist))}">
+                                                        <aura:if isTrue="{!not(v.caRecord.Drafted_Labor_Cost_Rate__c)}">
+                                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                                <lightning:combobox name="costRate" label="Rate Card Rate" value="{!v.caRecord.Rate_Card_Rate__c }" options="{!v.costRateList}"/>
+                                                            </lightning:layoutItem>   
+                                                            <aura:set attribute="else">
+                                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                                    <lightning:combobox name="costRate" label="Rate Card Rate" value="{!v.caRecord.Drafted_Labor_Cost_Rate__c }" options="{!v.costRateList}"/>
+                                                                </lightning:layoutItem>
+                                                            </aura:set>
+                                                        </aura:if>
+                                                        <aura:set attribute="else">
+                                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                                <div style="color: rgb(62, 62, 60);"> Rate Card Rate</div>
+                                                                <aura:if isTrue="{!v.caRecord.Rate_Card_Rate__c != null}">
+                                                                    <br/> <a id="theLink"  style="font-size: 14px;" target="_blank" name="RCRLink" href="{!'/'+v.caRecord.Rate_Card_Rate__c}">{!v.caRecord.Rate_Card_Rate__r.Cost_Rate_Name__c}</a>
+                                                                </aura:if>  
+                                                                <aura:if isTrue="{!and(v.caRecord.Drafted_Labor_Cost_Rate__c  != null,v.caRecord.Rate_Card_Rate__c == null)}">    
+                                                                    <br/> <a id="theLink" target="_blank" style="color: red !important;  font-size: 14px;" name="RCRLink" href="{!'/'+v.caRecord.Drafted_Labor_Cost_Rate__c}">{!v.caRecord.Drafted_Labor_Cost_Rate__r.Cost_Rate_Name__c}</a>
+                                                                </aura:if>
+                                                            </lightning:layoutItem>
+                                                        </aura:set>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!v.parentRecordType == 'Testing_Opportunities'}">
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <ui:inputDateTime  label="Oral Exam Date &amp; Time" value="{!v.caRecord.Oral_Exam_Date_Time__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                        </lightning:layoutItem>
+                                                        <aura:set attribute="else">
+                                                            <lightning:layoutItem size="6" padding="around-small" >                                                     
+                                                                <ui:inputDate aura:id="dateInputField" label="Start Date" required="true" value="{!v.caRecord.Start_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                            </lightning:layoutItem>
+                                                        </aura:set>
+                                                    </aura:if>
+                                                    <lightning:layoutItem size="6" padding="around-small"  >
+                                                        <lightning:combobox name="Position" label="Position" required="true" aura:id="otherInputField" value="{!v.caRecord.Assignment_Position__c}" options="{!v.positionList}"/>  
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small" >
+                                                        <ui:inputDate aura:id="dateInputField" label="End Date" required="{!v.parentRecordType != 'Testing_Opportunities'}" value="{!v.caRecord.End_Date__c}"    displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small"  > 
+                                                        <lightning:combobox name="OpportunityProduct" label="Opportunity Product" value="{!v.caRecord.Opportunity_Product_Id__c}" options="{!v.oppProductList}"/>              
+                                                    </lightning:layoutItem> 
+                                                    <aura:if isTrue="{!v.parentRecordType == 'MTT_Opportunities'}">
+                                                        <lightning:layoutItem size="6" padding="around-small"  >
+                                                            <ui:inputDate  label="Travel In Date" value="{!v.caRecord.Travel_In_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                        </lightning:layoutItem>
+                                                        <lightning:layoutItem size="6" padding="around-small"  >
+                                                            <ui:inputDate label="Travel Out Date" value="{!v.caRecord.Travel_Out_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                    <lightning:layoutItem size="6" padding="around-small" class="inputInstruct">
+                                                        <lightning:combobox name="Status" label="Status" required="true" aura:id="otherInputField" value="{!v.caRecord.Status__c}" options="{!v.statusOptions}"/>  
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small" >
+                                                        <lightning:inputField fieldName="Sequence__c" value="{!v.caRecord.Sequence__c}"/>
+                                                    </lightning:layoutItem>
+                                                    <aura:if isTrue="{!v.parentRecordType == 'MTT_Opportunities'}">
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <lightning:inputField fieldName="Hotel__c" value="{!v.caRecord.Hotel__c}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                    <lightning:layoutItem size="6" padding="around-small"  >
+                                                        <lightning:inputField  fieldName="Location__c" value="{!v.caRecord.Location__c}"/>
+                                                    </lightning:layoutItem>
+                                                    <aura:if isTrue="{!and(v.tabName =='Direct Labor',v.parentRecordType == 'Translation_Opportunities')}">
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <lightning:inputField fieldName="Total_Qty_Planned__c" value="{!v.caRecord.Total_Qty_Planned__c}"/>
+                                                        </lightning:layoutItem>
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <lightning:inputField fieldName="Quantity_Unit__c" value="{!v.caRecord.Quantity_Unit__c}"/>
+                                                        </lightning:layoutItem>
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <lightning:inputField fieldName="Quantity_Actual__c" value="{!v.caRecord.Quantity_Actual__c}"/>
+                                                        </lightning:layoutItem>
+                                                        <lightning:layoutItem size="6" padding="around-small" >
+                                                            <lightning:input type="checkbox" label="Linguist Paid" name="Linguist Paid"  checked="{!v.caRecord.Linguist_Paid__c}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                     <lightning:layoutItem size="6" padding="around-small" >  
+                                                        <lightning:inputField fieldName="Notes__c" value="{!v.caRecord.Notes__c}"/> 
+                                                    </lightning:layoutItem>
+                                                     <aura:if isTrue="{!and(v.parentRecordType == 'DLI_W_TO_Opportunities', or(v.caRecord.Assignment_Position__c == 'Partner School EI',
+                                                                  or(v.caRecord.Assignment_Position__c  == 'Partner School Instructor',and(v.caRecord.dliProjectType == 'Partner School' ,v.defaultCostRate == 'SubK-LT'))))}">
+                                                        <lightning:layoutItem size="6" padding="around-small" class="accmarginTopCls">
+                                                            <lightning:inputField fieldName="Account__c" required="true" aura:id="otherInputField" value="{!v.caRecord.Account__c}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                    <aura:if isTrue="{!v.caRecord.showSchObservation}">
+                                                        <lightning:layoutItem size="6" padding="around-small" class="accmarginTopCls">
+                                                            <lightning:inputField fieldName="Schedule_Observation__c"  value="{!v.caRecord.Schedule_Observation__c}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:if>
+                                                </aura:if>
+                                            </lightning:layout>
+                                        </div>
+                                        <div aura:id="ProjectTrackingTabDataId" id="tab-default-2" class="slds-tabs--default__content slds-hide" role="tabpanel" >
+                                            <aura:if isTrue="{!v.sObjectName == 'AcctSeed__Project__c'}">
+                                                <lightning:layout multipleRows="true">
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-02">Contract Uploaded (Word and PDF)</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Contract_Uploaded_Word_and_PDF__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-04">Contract Emailed to Instructor</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Contract_Emailed_to_Instructor__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-05">Per diem info sent to Accounting</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Per_diem_info_sent_to_Accounting__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-06">Signed contract received</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Signed_contract_received__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-07">CC Auth on Hotel Detail Page</label>
+                                                            <ui:inputCheckbox class="checkResult"  value="{!v.caRecord.CC_Auth_on_Hotel_Detail_Page__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-09">Base Access Letter Requested</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Base_Access_Letter_Requested__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-10">Trip Details Emailed to Instructor</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Trip_Details_Emailed_to_Instructor__c}"/>  </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-11">Base Access Letter Uploaded</label>  
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Base_Access_Letter_Uploaded__c}"/></div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-12">Materials Delivered to Instructor</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Materials_Delivered_to_Instructor__c}"/>  </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-13">Flight out uploaded</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Flight_out_uploaded__c}"/>  </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-14">Laptop Issued</label> 
+                                                            <ui:inputSelect  label="" class="inputclass slds-select" value="{!v.caRecord.Laptops_Issued__c}" >
+                                                                <ui:inputSelectOption text="0" value="0"/>
+                                                                <ui:inputSelectOption text="1" value="1"/>
+                                                                <ui:inputSelectOption text="2" value="2"/>
+                                                                <ui:inputSelectOption text="3" value="3"/>
+                                                                <ui:inputSelectOption text="4" value="4"/>
+                                                                <ui:inputSelectOption text="5" value="5"/>
+                                                            </ui:inputSelect>  
+                                                        </div></lightning:layoutItem> <lightning:layoutItem size="6">
+                                                    <div style="margin-top:18px;">
+                                                        <label class="slds-form-element__label" style="font-size:12px;" for="text-input-15">Return Flight Uploaded</label>
+                                                        <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Flight_out_uploaded__c}"/>
+                                                    </div>
+                                                    </lightning:layoutItem> <lightning:layoutItem size="6">
+                                                    <div style="margin-top:18px;">
+                                                        <label class="slds-form-element__label" style="font-size:12px;" for="text-input-16">Laptop Serial Numbers</label>
+                                                        <ui:inputText  label="" class="inputclass" value="{!v.caRecord.Laptop_Serial_Numbers__c}"/>
+                                                    </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-17">Rental Car Confirmation Uploaded</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Rental_Car_Confirmation_Uploaded__c}"/>
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <div style="margin-top:18px;">
+                                                            <label class="slds-form-element__label" style="font-size:12px;" for="text-input-18">Laptop Returned?</label>
+                                                            <ui:inputCheckbox class="checkResult" value="{!v.caRecord.Laptop_Returned__c}" />
+                                                        </div>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6">
+                                                        <label class="slds-form-element__label" style="font-size:12px;" for="text-input-19">Gas Weekly Allowance</label>
+                                                        <ui:inputText  label="" class="inputclass" value="{!v.caRecord.Gas_Weekly_Allowance__c}"/>
+                                                    </lightning:layoutItem>
+                                                </lightning:layout>
+                                            </aura:if>
+                                        </div>
+                                        <div aura:id="DescriptionTabDataId" id="tab-default-3" class="slds-tabs--default__content slds-hide" role="tabpanel" >
+                                            <div style="width:350px;">
+                                                <label class="slds-form-element__label" for="IALDescriptionEdit">Project Assignment Description</label>
+                                                <div class="slds-form-element__control"><br/>
+                                                    <ui:inputTextArea  value="{!v.caRecord.Project_Assignment_Description__c}" />
+                                                </div>  
+                                            </div>
+                                        </div>  
+                                    </div>
+                                </aura:if>
+                                <aura:if isTrue="{!v.actionPerform =='Create'}"> 
+                                    <lightning:layout multipleRows="true">
+                                        <aura:if isTrue="{!and(v.recordTypeName == 'Instructor',v.sObjectName == 'AcctSeed__Project__c')}"> 
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <lightning:inputField fieldName="Candidate_Name__c" aura:id="otherInputField" value="{!v.caRecord.Candidate_Name__c}"/>
+                                            </lightning:layoutItem>  
+                                            <aura:if isTrue="{!v.sObjectName == 'AcctSeed__Project__c'}">
+                                                <lightning:layoutItem size="6" padding="around-small"   >
+                                                    <lightning:combobox name="Project" aura:id="proTask" required="true" label="Project Task" value="{!v.caRecord.Project_Task__c}" options="{!v.projectTaskField}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <aura:if isTrue="{!v.parentRecordType == 'Testing_Projects'}">
+                                                <lightning:layoutItem size="6" padding="around-small"  >
+                                                    <ui:inputDateTime  label="Oral Exam Date &amp; Time" value="{!v.caRecord.Oral_Exam_Date_Time__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                                <aura:set attribute="else">
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <ui:inputDate aura:id="dateInputField" label="Start Date" required="true" value="{!v.caRecord.Start_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                    </lightning:layoutItem>
+                                                </aura:set>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <lightning:combobox name="Position" label="Position" required="true" aura:id="otherInputField" value="{!v.caRecord.Assignment_Position__c}" options="{!v.positionList}"/>  
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <ui:inputDate aura:id="dateInputField" label="End Date" required="{!v.parentRecordType != 'Testing_Projects'}" value="{!v.caRecord.End_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                            </lightning:layoutItem>
+                                            <aura:if isTrue="{!v.parentRecordType == 'MTT_Projects'}">
+                                                <lightning:layoutItem size="6" padding="around-small"  >
+                                                    <ui:inputDate  label="Travel In Date" value="{!v.caRecord.Travel_In_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="6" padding="around-small"  >
+                                                    <ui:inputDate label="Travel Out Date" value="{!v.caRecord.Travel_Out_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <lightning:combobox name="Status" label="Status" required="true" aura:id="otherInputField" value="{!v.caRecord.Status__c}" options="{!v.statusOptions}"/>  
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                <lightning:inputField fieldName="Sequence__c" value="{!v.caRecord.Sequence__c}"/>
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <div style="margin-top:1rem;">
+                                                    <lightning:input type="checkbox" label="Paper Timesheet" name="Paper Timesheet"  checked="{!v.caRecord.Paper_Timesheet__c}"/>
+                                                </div>
+                                            </lightning:layoutItem>
+                                            <aura:if isTrue="{!v.parentRecordType == 'MTT_Projects'}">
+                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                    <lightning:inputField fieldName="Hotel__c" value="{!v.caRecord.Hotel__c}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <lightning:inputField  fieldName="Location__c" value="{!v.caRecord.Location__c}"/>
+                                            </lightning:layoutItem>
+                                            <aura:if isTrue="{!v.tabName =='Direct Labor'}">
+                                                <aura:if isTrue="{!v.parentRecordType == 'Translation_Projects'}">
+                                                    <lightning:layoutItem size="6" padding="around-small" >
+                                                        <lightning:inputField fieldName="Total_Qty_Planned__c" value="{!v.caRecord.Total_Qty_Planned__c}"/>
+                                                    </lightning:layoutItem>
+                                                </aura:if>
+                                                <lightning:layoutItem size="6" padding="around-small">
+                                                    <lightning:inputField fieldName="Quantity_Unit__c" value="{!v.caRecord.Quantity_Unit__c}"/>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                    <lightning:input type="number" label="Quantity Actual" step=".01" required ="{!v.caRecord.Status__c == 'Ended' ? true:false}"  aura:id="qtyInput" value="{!v.caRecord.Quantity_Actual__c}"/>
+                                                </lightning:layoutItem>
+                                                <aura:if isTrue="{!or(v.parentRecordType == 'Translation_Projects' ,v.parentRecordType == 'Interpretation_Projects')}">
+                                                    <lightning:layoutItem size="6" padding="around-small" >
+                                                        <ui:inputDate  label="Invoice Date:" aura:id="invoiceInput"  displayDatePicker="true" required ="{!v.caRecord.Status__c == 'Ended' ? true:false}" format="MM/DD/yyyy" value="{!v.caRecord.Invoice_Date__c}"/>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <lightning:input type="checkbox" label="Linguist Paid" name="Linguist Paid"  checked="{!v.caRecord.Linguist_Paid__c}"/>
+                                                    </lightning:layoutItem>
+                                                    <lightning:layoutItem size="6" padding="around-small" >
+                                                        <lightning:fileUpload label="Upload Invoice document"
+                                                                              name="fileUploader"
+                                                                              multiple="false"
+                                                                              recordId="{!v.recordId}"
+                                                                              onuploadfinished="{!c.handleUploadFinished}" />                                                  
+                                                    </lightning:layoutItem>
+                                                    <aura:set attribute="else">
+                                                        <lightning:layoutItem size="6" padding="around-small">
+                                                            <lightning:input type="checkbox" label="Linguist Paid" name="Linguist Paid"  checked="{!v.caRecord.Linguist_Paid__c}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:set>
+                                                </aura:if>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small" >  
+                                                <lightning:inputField fieldName="Notes__c" value="{!v.caRecord.Notes__c}"/> 
+                                            </lightning:layoutItem>
+                                              <aura:if isTrue="{!and(v.parentRecordType == 'DLI_W_LT_Projects', or(v.caRecord.Assignment_Position__c == 'Partner School EI',
+                                                                  or(v.caRecord.Assignment_Position__c  == 'Partner School Instructor',and(v.caRecord.dliProjectType == 'Partner School' ,v.defaultCostRate == 'SubK-LT'))))}">
+                                                <lightning:layoutItem size="6" padding="around-small" class="accmarginTopCls">
+                                                    <lightning:inputField fieldName="Account__c" required="true" aura:id="otherInputField" value="{!v.caRecord.Account__c}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <aura:if isTrue="{!v.caRecord.showSchObservation}">
+                                                <lightning:layoutItem size="6" padding="around-small" class="{!v.parentRecordType == 'MTT_Projects' ? '' : 'accmarginTopCls'}">
+                                                    <lightning:inputField fieldName="Schedule_Observation__c" value="{!v.caRecord.Schedule_Observation__c}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                    <lightning:input type="checkbox" label="No Student Hours Verification" name="No Student Hours Verification"  checked="{!v.caRecord.No_Student_Hours_Verification__c}"/>
+                                            </lightning:layoutItem>
+                                        </aura:if>
+                                        <aura:if isTrue="{!and(v.recordTypeName == 'Instructor',v.sObjectName =='Opportunity')}">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <lightning:inputField fieldName="Candidate_Name__c" aura:id="otherInputField" value="{!v.caRecord.Candidate_Name__c}"/>
+                                            </lightning:layoutItem> 
+                                            <aura:if isTrue="{!v.parentRecordType == 'Testing_Opportunities'}">
+                                                <lightning:layoutItem size="6" padding="around-small"  >
+                                                    <ui:inputDateTime  label="Oral Exam Date &amp; Time" value="{!v.caRecord.Oral_Exam_Date_Time__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                                <aura:set attribute="else">
+                                                    <lightning:layoutItem size="6" padding="around-small"  >
+                                                        <ui:inputDate aura:id="dateInputField" label="Start Date" required="true" value="{!v.caRecord.Start_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                    </lightning:layoutItem>
+                                                </aura:set>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <lightning:combobox name="Position" label="Position" required="true" aura:id="otherInputField" value="{!v.caRecord.Assignment_Position__c}" options="{!v.positionList}"/>  
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <ui:inputDate aura:id="dateInputField" label="End Date" required="{!v.parentRecordType != 'Testing_Opportunities'}" value="{!v.caRecord.End_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small"  > 
+                                                <lightning:combobox name="OpportunityProduct" label="Opportunity Product" value="{!v.caRecord.Opportunity_Product_Id__c}" options="{!v.oppProductList}"/>              
+                                            </lightning:layoutItem> 
+                                            <aura:if isTrue="{!v.parentRecordType == 'MTT_Opportunities'}">
+                                                <lightning:layoutItem size="6" padding="around-small"  >
+                                                    <ui:inputDate  label="Travel In Date" value="{!v.caRecord.Travel_In_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="6" padding="around-small"  >
+                                                    <ui:inputDate label="Travel Out Date" value="{!v.caRecord.Travel_Out_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <lightning:combobox name="Status" label="Status" required="true" aura:id="otherInputField" value="{!v.caRecord.Status__c}" options="{!v.statusOptions}"/>  
+                                            </lightning:layoutItem>
+                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                <lightning:inputField fieldName="Sequence__c" value="{!v.caRecord.Sequence__c}"/>
+                                            </lightning:layoutItem>
+                                            <aura:if isTrue="{!v.parentRecordType == 'MTT_Opportunities'}">
+                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                    <lightning:inputField fieldName="Hotel__c" value="{!v.caRecord.Hotel__c}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small"  >
+                                                <lightning:inputField  fieldName="Location__c" value="{!v.caRecord.Location__c}"/>
+                                            </lightning:layoutItem>
+                                            <aura:if isTrue="{!and(v.tabName =='Direct Labor',v.parentRecordType == 'Translation_Opportunities')}">
+                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                    <lightning:inputField fieldName="Total_Qty_Planned__c" value="{!v.caRecord.Total_Qty_Planned__c}"/>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                    <lightning:inputField fieldName="Quantity_Unit__c" value="{!v.caRecord.Quantity_Unit__c}"/>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                    <lightning:inputField fieldName="Quantity_Actual__c" value="{!v.caRecord.Quantity_Actual__c}"/>
+                                                </lightning:layoutItem>
+                                                <lightning:layoutItem size="6" padding="around-small" >
+                                                    <lightning:input type="checkbox" label="Linguist Paid" name="Linguist Paid"  checked="{!v.caRecord.Linguist_Paid__c}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <lightning:layoutItem size="6" padding="around-small" >  
+                                                <lightning:inputField fieldName="Notes__c" value="{!v.caRecord.Notes__c}"/> 
+                                            </lightning:layoutItem>
+                                            <aura:if isTrue="{!and(v.parentRecordType == 'DLI_W_TO_Opportunities', or(v.caRecord.Assignment_Position__c == 'Partner School EI',
+                                                                  or(v.caRecord.Assignment_Position__c  == 'Partner School Instructor',and(v.caRecord.dliProjectType == 'Partner School' ,v.defaultCostRate == 'SubK-LT'))))}">
+                                                <lightning:layoutItem size="6" padding="around-small">
+                                                    <lightning:inputField fieldName="Account__c" required="true" aura:id="otherInputField" value="{!v.caRecord.Account__c}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                            <aura:if isTrue="{!v.caRecord.showSchObservation}">
+                                                <lightning:layoutItem size="6" padding="around-small">
+                                                    <lightning:inputField fieldName="Schedule_Observation__c" value="{!v.caRecord.Schedule_Observation__c}"/>
+                                                </lightning:layoutItem>
+                                            </aura:if>
+                                        </aura:if>
+                                    </lightning:layout>
+                                </aura:if>
+                            </div>
+                        </lightning:recordEditForm>
+                    </aura:set>
+                    <aura:set attribute="footer">
+                        <lightning:button variant="brand" label="Save" class="buttonCls" onclick="{!c.instructorSaveBtnClick}"/>
+                        <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.instructorCancelBtnClick}"/>
+                    </aura:set>
+                </c:sldsModal>
+            </aura:if>
+        </aura:if>
+        <aura:if isTrue="{!v.recordTypeName != 'Instructor'}"> 
+            <aura:if isTrue="{!v.openModel}">
+                <c:sldsModal aura:id="addModel" modelWidth="60%">
+                    <aura:set attribute="header">{!v.tabName} Assignment</aura:set>
+                    <aura:set attribute="displayCloseImage" value="false"></aura:set>
+                    <aura:set attribute="content">
+                        <lightning:recordEditForm recordTypeId="{!v.caRecord.RecordTypeId}" objectApiName="Contact_Assignments__c">
+                            <lightning:messages />
+                            <div id="topscrollable">
+                                <c:ToastCmp visibleError="{!v.visibleError}" showErrorMsg="{!v.showErrorMsg}"/>
+                                <lightning:layout class="slds-wrap" multipleRows="true">
+                                    <aura:if isTrue="{!v.recordTypeName == 'Student'}">  
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                            <lightning:inputField fieldName="Candidate_Name__c" aura:id="otherInputField" value="{!v.caRecord.Candidate_Name__c}"/>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small" >
+                                            <lightning:combobox name="progress" label="Status" required="true" aura:id="otherInputField"  value="{!v.caRecord.Status__c}" options="{!v.statusOptions}"/>  
+                                        </lightning:layoutItem>
+                                        <aura:if isTrue="{!or(v.parentRecordType == 'Testing_Opportunities',v.parentRecordType == 'Testing_Projects') }">
+                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                <ui:inputDateTime  label="Oral Exam Date &amp; Time" value="{!v.caRecord.Oral_Exam_Date_Time__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                            </lightning:layoutItem>
+                                            <aura:set attribute="else">
+                                                <lightning:layoutItem size="6" padding="around-small" >                                                     
+                                                    <ui:inputDate aura:id="dateInputField" label="Start Date" required="true" value="{!v.caRecord.Start_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                            </aura:set>
+                                        </aura:if>
+                                        <lightning:layoutItem size="6" padding="around-small" >
+                                            <div>
+                                                <ui:inputDate aura:id="dateInputField" label='End Date' required="true" value="{!v.caRecord.End_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                            </div>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                            <lightning:inputField  fieldName="Location__c" value="{!v.caRecord.Location__c}"/>
+                                        </lightning:layoutItem>
+                                        <aura:if isTrue="{!v.scorePicklist}">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <lightning:inputField fieldName="L_Score_Final__c" value="{!v.caRecord.L_Score_Final__c}"/>
+                                            </lightning:layoutItem>
+                                        </aura:if>
+                                        <aura:if isTrue="{!or(v.parentRecordType == 'DODA_Projects',or(v.parentRecordType == 'DLI_W_LT_Projects',or(v.parentRecordType == 'Language_Training_Projects',v.parentRecordType == 'ESL_LT_Projects'))) }">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <lightning:combobox name="Position" label="Position" required="true" aura:id="otherInputField" value="{!v.caRecord.Assignment_Position__c}" options="{!v.positionList}"/>  
+                                            </lightning:layoutItem>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.scorePicklist}">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <lightning:inputField fieldName="R_Score_Final__c" value="{!v.caRecord.R_Score_Final__c}"/>  
+                                            </lightning:layoutItem>
+                                        </aura:if>
+                                        <aura:if isTrue="{!and(v.actionPerform =='Create',v.scorePicklist)}">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                            </lightning:layoutItem>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.actionPerform =='Edit'}">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <aura:if isTrue="{!or(v.profileName == 'Payroll',or(v.profileName == 'System Administrator',v.profileName == 'LTS'))}">
+                                                    <lightning:combobox name="Time Approval Prefrences" label="Time Approval Preference" value="{!v.caRecord.Time_Approval_Preference__c }" options="{!v.timePreferncesPicklist}"/>
+                                                    <aura:set attribute="else">
+                                                        <lightning:combobox name="Time Approval Prefrences" label="Time Approval Preference" value="{!v.caRecord.Time_Approval_Preference__c }" options="{!v.timePreferncesPicklist}" disabled="true"/>
+                                                    </aura:set>
+                                                </aura:if>
+                                            </lightning:layoutItem>   
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.scorePicklist}">
+                                            <lightning:layoutItem size="6" padding="around-small">
+                                                <lightning:inputField fieldName="S_Score_Final__c" value="{!v.caRecord.S_Score_Final__c}" />
+                                            </lightning:layoutItem>
+                                        </aura:if>
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                            <aura:if isTrue="{!v.scorePicklist}">
+                                                <lightning:inputField fieldName="W_Score_Goal__c" value="{!v.caRecord.W_Score_Goal__c}" />
+                                            </aura:if>
+                                        </lightning:layoutItem>
+                                        <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/><br/><br/>
+                                    </aura:if>
+                                    <aura:if isTrue="{!v.recordTypeName == 'Staff'}">
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                            <lightning:inputField fieldName="Candidate_Name__c" aura:id="otherInputField" value="{!v.caRecord.Candidate_Name__c}"/>
+                                        </lightning:layoutItem>
+                                        <!--  WorkItem - W-006075 to show OralDate field as editable-->
+                                        <aura:if isTrue="{!or(v.parentRecordType == 'Testing_Opportunities',v.parentRecordType == 'Testing_Projects') }">
+                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                <ui:inputDateTime  label="Oral Exam Date &amp; Time" value="{!v.caRecord.Oral_Exam_Date_Time__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                            </lightning:layoutItem>
+                                            <aura:set attribute="else">
+                                                <lightning:layoutItem size="6" padding="around-small" >                                                     
+                                                    <ui:inputDate aura:id="dateInputField" label="Start Date" required="true" value="{!v.caRecord.Start_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                            </aura:set>
+                                        </aura:if>
+                                        <lightning:layoutItem size="6" padding="around-small"  >
+                                            <ui:inputDate aura:id="dateInputField" label="End Date" required="{!v.parentRecordType != 'Testing_Projects'}" value="{!v.caRecord.End_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small"  >
+                                            <lightning:combobox name="Position" label="Position" required="true" aura:id="otherInputField" value="{!v.caRecord.Assignment_Position__c}" options="{!v.positionList}"/>  
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small"   >
+                                            <lightning:combobox name="Status" label="Status" required="true" aura:id="otherInputField" value="{!v.caRecord.Status__c}" options="{!v.statusOptions}"/>  
+                                        </lightning:layoutItem>
+                                        <aura:if isTrue="{!v.actionPerform =='Edit'}">
+                                            <aura:if isTrue ="{!or(and(v.parentRecordType =='Testing_Projects',or(v.profileName == 'Payroll',or(v.profileName == 'System Administrator',v.profileName == 'HR'))),and(v.parentRecordType !='Testing_Projects',and(not(v.defaultCostRate == 'Non-SCA Testing'),or(v.displayCRPicklist))))}">
+                                                <aura:if isTrue="{!not(v.caRecord.Drafted_Labor_Cost_Rate__c)}">
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <lightning:combobox name="costRate" label="Rate Card Rate" value="{!v.caRecord.Rate_Card_Rate__c }" options="{!v.costRateList}"/>
+                                                    </lightning:layoutItem>   
+                                                    <aura:set attribute="else">
+                                                        <lightning:layoutItem size="6" padding="around-small">
+                                                            <lightning:combobox name="costRate" label="Rate Card Rate" value="{!v.caRecord.Drafted_Labor_Cost_Rate__c }" options="{!v.costRateList}"/>
+                                                        </lightning:layoutItem>
+                                                    </aura:set>
+                                                </aura:if>
+                                                <aura:set attribute="else">
+                                                    <lightning:layoutItem size="6" padding="around-small">
+                                                        <div style="color: rgb(62, 62, 60);"> Rate Card Rate</div>
+                                                        <aura:if isTrue="{!v.caRecord.Rate_Card_Rate__c != null}">
+                                                            <br/> <a id="theLink"  style="font-size: 14px;" target="_blank" name="RCRLink" href="{!'/'+v.caRecord.Rate_Card_Rate__c}">{!v.caRecord.Rate_Card_Rate__r.Cost_Rate_Name__c}</a>
+                                                        </aura:if>  
+                                                        <aura:if isTrue="{!and(v.caRecord.Drafted_Labor_Cost_Rate__c  != null,v.caRecord.Rate_Card_Rate__c == null)}">    
+                                                            <br/> <a id="theLink" target="_blank" style="color: red !important;  font-size: 14px;" name="RCRLink" href="{!'/'+v.caRecord.Drafted_Labor_Cost_Rate__c}">{!v.caRecord.Drafted_Labor_Cost_Rate__r.Cost_Rate_Name__c}</a>
+                                                        </aura:if>
+                                                    </lightning:layoutItem>
+                                                </aura:set>
+                                            </aura:if>
+                                        </aura:if>
+                                        <aura:if isTrue="{!or(v.sObjectName == 'AcctSeed__Project__c',v.sObjectName == 'Contract') }">
+                                            <lightning:layoutItem size="6" padding="around-small"   >
+                                                <lightning:combobox name="Project" label="Project Task" value="{!v.caRecord.Project_Task__c}" options="{!v.projectTaskField}"/>
+                                            </lightning:layoutItem>
+                                            <aura:set attribute="else">
+                                                <lightning:layoutItem size="6" padding="around-small"  >  
+                                                    <lightning:combobox name="OpportunityProduct" label="Opportunity Product" value="{!v.caRecord.Opportunity_Product_Id__c}" options="{!v.oppProductList}"/>              
+                                                </lightning:layoutItem>      
+                                            </aura:set>   
+                                        </aura:if>      
+                                        <lightning:layoutItem size="6" padding="around-small" >  
+                                            <lightning:inputField fieldName="Notes__c" value="{!v.caRecord.Notes__c}"/> 
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                            <lightning:input type="checkbox" label="Include Fringe" name="Include Fringe"  checked="{!v.caRecord.Include_Fringe__c}"/>
+                                        </lightning:layoutItem>
+                                    </aura:if>
+                                    <aura:if isTrue="{!or(v.recordTypeName == 'Consultant',v.recordTypeName == 'Client_Partner')}">
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                            <lightning:inputField fieldName="Candidate_Name__c" aura:id="otherInputField" value="{!v.caRecord.Candidate_Name__c}"/>
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small" >
+                                            <lightning:combobox name="progress" label="Status" required="true" aura:id="otherInputField"  value="{!v.caRecord.Status__c}" options="{!v.statusOptions}"/>  
+                                        </lightning:layoutItem>
+                                        <aura:if isTrue="{!or(v.parentRecordType == 'Testing_Opportunities',v.parentRecordType == 'Testing_Projects') }">
+                                            <lightning:layoutItem size="6" padding="around-small" >
+                                                <ui:inputDateTime  label="Oral Exam Date &amp; Time" value="{!v.caRecord.Oral_Exam_Date_Time__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                            </lightning:layoutItem>
+                                            <aura:set attribute="else">
+                                                <lightning:layoutItem size="6" padding="around-small" >                                                     
+                                                    <ui:inputDate aura:id="dateInputField" label="Start Date" required="true" value="{!v.caRecord.Start_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                                </lightning:layoutItem>
+                                            </aura:set>
+                                        </aura:if>
+                                        <lightning:layoutItem size="6" padding="around-small"  >
+                                            <ui:inputDate aura:id="dateInputField" label='End Date' required="true" value="{!v.caRecord.End_Date__c}" displayDatePicker="true" format="MM/DD/yyyy"/>  
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="6" padding="around-small" >    
+                                            <lightning:combobox name="Position" label="Position" required="true" aura:id="otherInputField" value="{!v.caRecord.Assignment_Position__c}" options="{!v.positionList}"/>  
+                                        </lightning:layoutItem>
+                                    </aura:if>
+                                </lightning:layout>   
+                            </div>
+                        </lightning:recordEditForm><br/>
+                    </aura:set>
+                    <aura:set attribute="footer">
+                        <lightning:button variant="brand" label="Save" class="buttonCls" onclick="{!c.otherSaveBtnClick}"/>
+                        <lightning:button variant="brand" label="Cancel" class="buttonCls" onclick="{!c.otherCancelBtnClick}"/>
+                    </aura:set>
+                </c:sldsModal>
+            </aura:if>
+        </aura:if>
+        
+        
+        
+    <!-- Show CostRate Modal for Cost Rate Creation-->
+    <div>
+        <aura:if isTrue="{!v.showCostRateModal}">
+            <c:CostRateCreation_Cmp defaultCR="{!v.defaultCostRate}" parentRTName="{!v.parentRecordType}" 
+                                    parentObjName="{!v.sObjectName}" caRecord="{!v.caRecord}"/>
+        </aura:if>
+    </div>
+        
+        
+        <!-- Show Contact Assignment Delete Modal -->
+        <aura:if isTrue="{!v.showDeleteModel}">
+            <c:sldsModal modelWidth="45%" aura:id="caDeleteModal" closeAction="{!c.caDeleteCancelClick}" displayCloseImage="true">    
+                <aura:set attribute="header">
+                    <h1> Delete {!v.tabName}</h1>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <div>  
+                        <center><h1>Are you sure you want to delete this {!v.tabName}?</h1></center> 
+                    </div>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Cancel" onclick="{!c.caDeleteCancelClick}" />
+                    <lightning:button label="Delete" variant="brand" onclick="{!c.caDeleteClick}" />
+                </aura:set>
+            </c:sldsModal>  
+        </aura:if>
+        
+        <!-- Show Contact Assignment Permission Modal -->
+        <aura:if isTrue="{!v.displayPermissionModel}">
+            <c:sldsModal modelWidth="45%" aura:id="permissionModal" closeAction="{!c.permissionOkClick}" displayCloseImage="true" modalZIndexValue="9010" backdropZIndexValue="9005">    
+                <aura:set attribute="header">
+                    <h1> Warning!!</h1>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <div>
+                        <h1 style=" font-size: 1rem;">You don't have sufficient permission to {!v.actionPerform} Contact Assignment record.Please contact your Administrator.</h1>  
+                    </div>       
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Okay" onclick="{!c.permissionOkClick}" />
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+        <!-- Show Existing LTS Update Model -->
+        <aura:if isTrue="{!v.showExistingLTSUpdateModel}">
+            <c:sldsModal modelWidth="45%" aura:id="existingStaffUpdateConfirmation" closeAction="{!c.saveExistingStaffRecord}"  displayCloseImage="true">    
+                <aura:set attribute="header">
+                    <h1>{!v.tabName}</h1>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <div>
+                        <h1 style=" font-size: 1rem;">Would you like to make status as ended for existing LTS records?</h1>
+                        <aura:if isTrue="{!v.showSpinner}">          
+                            <lightning:spinner class="Deletespin" variant="brand" alternativeText="Loading" size="small" />
+                        </aura:if>  
+                    </div>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Yes" onclick="{!c.updateExistingStaffRecord}" />
+                    <lightning:button label="No" onclick="{!c.saveExistingStaffRecord}" />
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+         <!-- Show Dlete Schedule Validation Model --> 
+        <aura:if isTrue="{!v.showDeleteSchValidationModel}">
+            <c:sldsModal modelWidth="45%" aura:id="deleteSchedule" closeAction="{!c.deleteSchedule}"  displayCloseImage="false">    
+                <aura:set attribute="header">
+                    <h1> Delete {!v.tabName}</h1>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <div>
+                        <h1 style=" font-size: 1rem;"><center>You can't  delete the record. Please end the Schedule Record</center></h1>                
+                    </div>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Close" onclick="{!c.deleteSchedule}" />
+                </aura:set>
+            </c:sldsModal>   
+        </aura:if>
+        
+         <!-- Show Subsitute Instructor Model --> 
+        <aura:if isTrue="{!v.validationSubstituteInsModal}">
+            <div class="subValModel">
+                <c:sldsModal modelWidth="45%" aura:id="valSubIns"  displayCloseImage="false">    
+                    <aura:set attribute="header">
+                        <h1 style="font-weight: bold !important;">Create Schedule</h1>    
+                    </aura:set>
+                    <aura:set attribute="content">
+                        <h1 style=" font-size: 1rem;">Please create a substitute schedule record for this instructor.</h1><br/> 
+                    </aura:set>
+                    <aura:set attribute="footer">
+                        <div>
+                            <lightning:button label="Close" onclick="{!c.closeSubInsModelClK}"/>
+                        </div>
+                    </aura:set>
+                </c:sldsModal>
+            </div>
+        </aura:if> 
+        
+        <!-- Show Observation Report ValidationModal -->
+        <aura:if isTrue="{!v.showObservationReportValModel}">
+            <c:sldsModal modelWidth="45%" aura:id="caORValModal" closeAction="{!c.caORvalCancelClick}" displayCloseImage="true" modalZIndexValue="9010" backdropZIndexValue="9005">    
+                <aura:set attribute="header">
+                    <h1>Observation Report</h1>    
+                </aura:set>
+                <aura:set attribute="content">
+                    <div>  
+                        <center>
+                            <!--<h1>{!v.showObervationReportValMsg}</h1>-->
+                            <lightning:formattedRichText value="{!v.showObervationReportValMsg}"/>
+                            <h1>Are you sure you do not want to create an Observation report?</h1>
+                        </center> 
+                    </div>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Cancel" onclick="{!c.caORvalCancelClick}" />
+                    <lightning:button label="Yes" variant="brand" onclick="{!c.caORvalClick}" />
+                </aura:set>
+            </c:sldsModal>  
+        </aura:if>
+    </div>
+</aura:component>

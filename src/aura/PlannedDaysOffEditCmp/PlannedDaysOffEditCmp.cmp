@@ -1,0 +1,86 @@
+<aura:component >
+    <aura:attribute name="projectValues" type="List" access="PUBLIC"/>
+    <aura:attribute name="typeValues" type="List" default="['Instructor','Student']"/>
+    <aura:attribute name="plannedOffdayRecord" type="Map"/>
+    <aura:attribute name="dummyPlannedDayRecord" type="Map"/>
+    <aura:attribute name="viewMode" type="Boolean" default="true"/>
+    <aura:attribute name="deleteMode" type="Boolean" default="true"/>
+    <aura:attribute name="multiDaysOff" type="Boolean"/>
+    <aura:attribute name="displayDevice" type="String"/>
+    
+    <!--Added By Dhinesh for planned days off changes-->
+    <aura:attribute name="showEditIcon" type="Boolean" default="true"/>
+    <aura:attribute name="handleToggleSaveButton" type="Aura.action"/>
+    <aura:attribute name="isParent" type="Boolean" default="true"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:registerEvent name="CommunityPDOEditEvent" type="c:CommunityPDOEditEvent"/>
+    
+    <lightning:layout multipleRows="true">
+        <aura:if isTrue="{!v.multiDaysOff}">
+            <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '3' : '12'}" padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">                                                     
+                <ui:inputDate aura:id="dateInputField" label="Date" required="true" disabled ="{!or(not(v.isParent), and(v.viewMode, v.isParent))}" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.Date__c}"/>  
+            </lightning:layoutItem>
+            <aura:set attribute="else">
+                <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '2' : '12'}" padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">                                                     
+                    <ui:inputDate aura:id="dateInputField1" label="From Date" required="true" disabled ="{!or(not(v.isParent), and(v.viewMode, v.isParent))}" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.From_Date__c}"/>  
+                </lightning:layoutItem>
+                <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '2' : '12'}" padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">                                                     
+                    <ui:inputDate aura:id="dateInputField2" label="To Date" required="true" disabled ="{!or(not(v.isParent), and(v.viewMode, v.isParent))}" displayDatePicker="true" format="MM/DD/yyyy" value="{!v.plannedOffdayRecord.To_Date__c}"/>  
+                </lightning:layoutItem>
+            </aura:set>
+        </aura:if>
+        <aura:if isTrue="{!v.isParent}">
+            <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '3' : '12'}"  padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">                                                     
+                <lightning:select label="DLS Class #" value="{!v.plannedOffdayRecord.Project__c}" disabled ="{!v.viewMode}">
+                    <aura:iteration items="{!v.projectValues}" var="project">
+                        <option value="{!project.value}">{!project.label}</option>
+                    </aura:iteration>
+                </lightning:select>
+            </lightning:layoutItem>
+        </aura:if>
+        <!--<lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '2' : '12'}"  padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">
+            <lightning:select label="Type" value="{!v.plannedOffdayRecord.Type__c}" disabled ="{!v.viewMode}" aura:id="otherInputField" required="true">  
+                <option value="">None</option>
+                <aura:iteration items="{!v.typeValues}" var="i">
+                    <option value="{!i}">{!i}</option>
+                </aura:iteration>
+            </lightning:select>
+        </lightning:layoutItem>-->
+        <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '4' : '12'}"  padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">
+            <lightning:textarea label="Description" required="true" disabled ="{!v.viewMode}" aura:id="otherInputField"  value="{!v.plannedOffdayRecord.Description__c}"/>  
+        </lightning:layoutItem>
+        <div class="{!v.displayDevice == 'Pc' ? 'slds-p-top_x-large slds-size_1-of-12' : ''}">
+            <aura:if isTrue="{!and(v.viewMode,v.deleteMode)}">
+                <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '3' : '12'}"  padding="{!v.displayDevice == 'Pc' ? 'around-small' : ''}">  
+                    <span>
+                        <lightning:layout>
+                            <aura:if isTrue="{!v.showEditIcon}">
+                                <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '6' : '6'}" padding="around-small" >
+                                    <i style="{!v.displayDevice == 'Pc' ? 'font-size:1rem;cursor:pointer;' : 'font-size:1.2rem;cursor:pointer;'}" onclick="{!c.onEditClick}"  class="far fa-edit"></i>
+                                </lightning:layoutItem>
+                            </aura:if>
+                            <lightning:layoutItem size="{!v.displayDevice == 'Pc' ? '6' : '6'}" padding="around-small" >
+                                <i style="{!v.displayDevice == 'Pc' ? 'font-size:1rem;cursor:pointer;' : 'font-size:1.2rem;cursor:pointer;'}" onclick="{!c.onDeleteClick}"  class="far fa-trash-alt"></i>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                    </span>
+                </lightning:layoutItem>
+                <aura:set attribute="else">
+                    <aura:if isTrue="{!v.deleteMode}">
+                        <div class="slds-p-top_x-large">
+                            <lightning:button label="Cancel" variant="brand" onclick="{!c.onCancelClick}" />
+                        </div>
+                        <aura:set attribute="else">
+                            <div class="slds-p-top_large cancelPillCls">
+                                <center><lightning:pill  aura:id="pillView" label="Delete" onremove="{!c.onDeleteRemove}" /></center>  
+                            </div>
+                        </aura:set>
+                    </aura:if>
+                    <!--lightning:buttonIcon iconName="utility:close" variant="bare" onclick="{!c.onCancelClick}" alternativeText="Cancel" /-->
+                </aura:set>
+            </aura:if>
+        </div>
+    </lightning:layout>
+</aura:component>

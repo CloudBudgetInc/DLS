@@ -1,0 +1,44 @@
+<apex:component controller="PaymentItemsRetriever" access="global">
+    <apex:attribute name="PId" type="Id" description="Id of the Payment" assignTo="{!PayId}"/>
+    <table cellpadding="3" cellspacing="2" style="border: thin solid #CBE4EC; font-size: 16px;">
+        <thead>
+            <tr>   
+                <!--<th>S.No</th>   -->      
+                <th style="text-align:left">Product</th>   
+                <th>Unit</th>    
+                <th>UnitPrice</th>  
+                <th>Total Price</th>                                                  
+                <th>Quantity</th>
+                <th>Amount</th>                                     
+            </tr>                      
+        </thead>
+        <tbody>
+            <apex:repeat var="paym" value="{!PaymentTransactionList}">
+                <tr>
+                    <!--<td>
+                        {!paym.SerialNumber}
+                    </td>-->
+                                        
+                    <td>
+                       {!paym.Products} 
+                    </td>
+                    <td>
+                       {!paym.unit} 
+                    </td> 
+                    <td>
+                       {!paym.RateperQuantity} 
+                    </td>
+                    <td>
+                       {!paym.totalAmt} 
+                    </td>                                      
+                    <td>
+                       {!paym.Quantity} 
+                    </td>
+                    <td>
+                       {!paym.Amount} 
+                    </td>                                       
+                </tr>
+            </apex:repeat>
+        </tbody>              
+    </table>
+</apex:component>

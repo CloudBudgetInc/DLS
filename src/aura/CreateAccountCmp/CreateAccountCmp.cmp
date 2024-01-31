@@ -1,0 +1,18 @@
+<aura:component controller="CustomButtonService" implements="force:lightningQuickAction,flexipage:availableForRecordHome,force:hasRecordId">
+    
+    <!-- Attributes -->
+    <aura:attribute name="recordId" type="String" access="PUBLIC"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="PRIVATE"/>
+    
+    <!-- Handlers -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <!--Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" alternativeText="Loading" size="medium"/>
+    </aura:if>
+    
+</aura:component>

@@ -1,0 +1,12 @@
+<aura:component implements="force:hasRecordId,force:lightningQuickAction" controller="NewClassAnnouncementController">
+    
+    <aura:attribute name="initialValues" type="Map" default="{}"/>
+    <aura:attribute name="showContent" type="Boolean" default="false"/>
+    
+    <ltng:require styles="{!$Resource.SldsModelCss}" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <aura:if isTrue="{!v.showContent}">
+        <c:SendEmailCmp contentInput="{!v.initialValues}" buttonType="New Class Announcement"/>
+    </aura:if>
+</aura:component>

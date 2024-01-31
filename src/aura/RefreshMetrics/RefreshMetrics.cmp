@@ -1,0 +1,31 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId,force:hasSObjectName" controller="Goal_Metric_Util">
+	<aura:attribute name="message" type="String"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="startDate" type="Date"/>
+    <aura:attribute name="endDate" type="Date"/>
+    <aura:attribute name="showDates" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+        
+    <aura:if isTrue="{!v.showDates}">
+        <lightning:layout >
+            <lightning:layoutItem padding="around-small" size="6">
+                <lightning:input aura:id="dateinput" type="date"  label="Start Date" value="{!v.startDate}" dateStyle="short" required="true"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="6">
+                <lightning:input aura:id="dateinput" type="date"  label="End Date" value="{!v.endDate}" dateStyle="short" required="true"/>
+            </lightning:layoutItem>
+        </lightning:layout>      
+        <div class="slds-align_absolute-center">
+            <lightning:button variant="brand" label="Refresh" title="Refresh" onclick="{! c.validateInputs }" />
+        </div>
+    </aura:if>
+    
+    <!-- To display the message -->
+    <aura:if isTrue="{!v.message}">
+        <div style="margin-top: 1rem;">
+            <p class="slds-text-align_center" style="font-size: 23px;"><b>Information</b></p>
+            <p class="slds-p-top_large" style="font-size: 16px;margin-top: 1rem;">{!v.message}</p>
+        </div>
+    </aura:if>
+</aura:component>

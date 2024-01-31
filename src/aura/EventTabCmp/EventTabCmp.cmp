@@ -1,0 +1,225 @@
+<aura:component implements="force:hasRecordId,force:hasSObjectName,force:appHostable,flexipage:availableForAllPageTypes,force:lightningQuickAction,forceCommunity:availableForAllPageTypes" access="global" controller="EventTabController">
+    
+    <aura:attribute name="sObjectName" type="String"/>
+    <aura:attribute name="parenRecordTypeName" type="String" default=""/>
+    <aura:attribute name="proRecordIds" type="String[]"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="fasle"/>
+    <aura:attribute name="previousWeekStDate" type="Date"/>
+    <aura:attribute name="nextWeekEnDate" type="Date"/>
+    <aura:attribute name="eventpickListValues" type="Map" default="{'status':[], 'startTime':[], 'endTime':[]}"/>
+    <aura:attribute name="eventList" type="List"/>
+    <aura:attribute name="header" type="List" access="public"/>
+    <aura:attribute name="copyOfEventSelected" type="List"/>
+    <aura:attribute name="eventSelected" type="List"/>
+    <aura:attribute name="statusSelected" type="String" default=""/>
+    <aura:attribute name="eventTableConfig" type="Map" access="public"/>
+    <aura:attribute name="toastMessage" type="Map" default="{'message' : '', 'header' : ''}"/>
+    <aura:attribute name="currentUserProfile" type="String"/>
+    <aura:attribute name="allowRoomEdit" type="Boolean"/>
+    <aura:attribute name="projectTaskCondition" type="String"/>
+    <aura:attribute name="showCostRateModal" type="Boolean" default="false"/>
+    <aura:attribute name="defaultCostRate"  type="String"  default=""/>
+    <aura:attribute name="parentRecordType" type="String"/>
+    <aura:attribute name="caRecord" type="Object" access="private" default="{}"/>
+    <aura:attribute name="isCreateCA" type="Boolean" default="false"/>
+    <aura:attribute name="testingProOralDateVal" type="Boolean" default="false"/>
+    <aura:attribute name="isUpdateTestingProDates" type="Boolean" default="false"/>
+
+    
+    <aura:attribute name="showCreateEventModal" type="Boolean" default="false"/>
+    <aura:attribute name="eventObj" type="Object" default="{}"/>
+    <aura:attribute name="startTimeList" type="List" default="[]"/>
+    <aura:attribute name="endTimeList" type="List" default="[]"/>
+    <aura:attribute name="filteredEndTimeList" type="List" default="[]"/>
+    <aura:attribute name="proIdString" type="String" default=""/>
+    <aura:attribute name="parentOralExamDate" type="String"/>
+    <aura:attribute name="parentOralExamTime" type="String"/>
+    <aura:attribute name="projectExist" type="Boolean" default="false"/>
+    <aura:attribute name="isProjTaskRequired" type="Boolean" default="false"/>
+    <aura:attribute name="showLessonPlan" type="Boolean" default="false"/>
+    <aura:attribute name="selectedRecord" type="Map" access="public"/>
+    <aura:attribute name="eventsIdsHasLP" type="List"/>
+    
+    <aura:attribute name="proTaskOptions" type="List" default="[]"/>
+    <aura:attribute name="selectedProTask" type="String" default="All"/>
+
+
+    
+    <ltng:require scripts="{!join(',', 
+                           $Resource.MomentjsResource, 
+                           $Resource.MomentTimezone)}"
+                  afterScriptsLoaded="{!c.doinit}"/>
+    
+    <!--<aura:handler name="init" action="{!c.doinit}" value="{!this}"/>-->
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tableActionHandler}"/>
+    <aura:handler name="reloadEvent" event="c:reloadEvent" action="{!c.getRecord}"/>
+    <aura:handler name="assignCostRateTOCA" event="c:childClickEvent" action="{!c.assignCRValueToCA}"/>
+        
+    <lightning:layout multipleRows="true">
+        <lightning:layoutItem class="slds-p-top_x-small slds-p-right_large" size="2">
+            <lightning:select label="Status" value="{!v.statusSelected}">
+                <option value="All" selected="{All == !v.statusSelected}">All</option>
+                <aura:iteration items="{!v.eventpickListValues.status}" var="status">
+                    <option value="{!status}" selected="{!status == v.statusSelected}">{!status}</option>
+                </aura:iteration>
+            </lightning:select>
+        </lightning:layoutItem>
+        <lightning:layoutItem padding="around-small" size="2">
+            <ui:inputDate label="From" class="slds-input dateWidth" value="{!v.previousWeekStDate}" displayDatePicker="true" format="MM-dd-yyyy"/>  
+        </lightning:layoutItem>
+        <lightning:layoutItem padding="around-small" size="2">
+            <ui:inputDate label="To" class="slds-input dateWidth"  value="{!v.nextWeekEnDate}" displayDatePicker="true" format="MM-dd-yyyy"/>  
+        </lightning:layoutItem>
+        <!-- W-007603 - Added new project task filter on 17/10/22 -->
+        <aura:if isTrue="{!v.sObjectName == 'AcctSeed__Project__c'}">
+            <lightning:layoutItem size="2" padding="around-small"   >
+                <lightning:select label="Project Task" value="{!v.selectedProTask}">
+                    <aura:iteration items="{!v.proTaskOptions}" var="pt">
+                        <option value="{!pt.value}" selected="{!pt.value == v.selectedProTask}">{!pt.label}</option>
+                    </aura:iteration>
+                </lightning:select>      
+            </lightning:layoutItem>
+        </aura:if> 
+        <lightning:layoutItem class="slds-p-top_x-large" size="1">
+            <lightning:button variant="Brand" label="Search" onclick="{!c.getRecord}"/>
+        </lightning:layoutItem>
+        <aura:if isTrue="{!or(v.sObjectName != 'Opportunity',and(v.sObjectName == 'Opportunity', and(v.parenRecordTypeName == 'Testing_Opportunities',not(v.projectExist))))}">
+            <lightning:layoutItem size="3">
+                
+                <div align="right" class="slds-p-right_small slds-p-top_x-large">
+                    <lightning:button variant="Brand" label="Create Event" onclick="{!c.createEvent}"/>
+                    <lightning:button variant="Brand" label="Update Event" onclick="{!c.updateSelectedEvent}"/>
+                </div>
+            </lightning:layoutItem>
+            <aura:set attribute="else">
+            	<lightning:button variant="Brand" label="Update Event" onclick="{!c.updateSelectedEvent}"/>
+            </aura:set>            
+        </aura:if>
+    </lightning:layout>
+    
+    <!-- Event Data Table -->
+    <section class="project-task-list">
+        <!--aura:if isTrue="{!not(empty(v.eventList))}"-->
+        <div class="task-list">
+            <ldt:datatableDev title="" aura:id="eventsTable" dataRows="{!v.eventList }" header="{!v.header}" config="{!v.eventTableConfig}" noRecordsMessage="No Events to Display"/>
+        </div>
+    </section>
+    
+    <!-- Open the modal to update the event records -->
+    <aura:if isTrue="{!v.eventSelected.length > 0}">
+        <c:EventUpdateCmp aura:id="eventUpdate" selectedEvent="{!v.eventSelected}" valuesofEventpickList="{!v.eventpickListValues}" beforeUpdateSelectEvent="{!v.copyOfEventSelected}" projectIds="{!v.proRecordIds}" currentUserProfile="{!v.currentUserProfile}" allowRoomEdit="{!v.allowRoomEdit}"/>
+    </aura:if>
+    
+    <!-- Spinner -->
+    <aura:if isTrue="{!v.showSpinner}">
+         <div style="position:fixed;z-index: 9900000000;">
+            <lightning:spinner alternativeText="Loading" variant="brand" size="large" class="slds-is-fixed"/>
+        </div>
+    </aura:if>
+    
+    <!-- Display the error/success Messages -->
+    <c:sldsModal aura:id="statusMsgModal">
+        <aura:set attribute="header">{!v.toastMessage.header}</aura:set>
+        <aura:set attribute="displayCloseImage" value="false"/>
+        <aura:set attribute="content">
+            <center><p>{!v.toastMessage.message}</p></center>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeStatusModal}"/>
+        </aura:set>
+    </c:sldsModal>
+    
+    <!--New Event creation modal -->
+    <aura:if isTrue="{!v.showCreateEventModal}">
+        <c:sldsModal aura:id="newEventModal" header="New Event" displayCloseImage="false" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="content">
+                <lightning:layout multipleRows="true">
+                    
+                    <lightning:layoutItem padding="around-small" size="4">
+                        <lightning:input aura:id="input" label="Date" type="date" value="{!v.eventObj.dateVal}" dateStyle="short" required="true" />                         
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem padding="around-small" size="4">
+                        <lightning:select aura:id="input" label="Start Time" value="{!v.eventObj.startTime}" onchange="{!c.setEventTimeAndDuration}" required="true">
+                            <option value="">--None--</option>
+                            <aura:iteration items="{!v.startTimeList}" var="time">
+                                <option value="{!time.value}" selected="{!(v.eventObj.startTime == time.value)? true : false}">{!time.label}</option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem padding="around-small" size="4">
+                        <lightning:select aura:id="input" label="End Time" value="{!v.eventObj.endTime}" onchange="{!c.setEventTimeAndDuration}"  required="true">
+                            <option value="">--None--</option>
+                            <aura:iteration items="{!v.filteredEndTimeList}" var="time">
+                                <option value="{!time.value}" selected="{!(v.eventObj.endTime == time.value)? true : false}">{!time.label}</option>                                
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem padding="around-small" size="4">
+                    	<lightning:input aura:id="input" type="number" step="0.01" name="Duration" label="Duration" disabled="true" required="true" value="{!v.eventObj.duration}"/>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem padding="around-small" size="4">  
+                        <lightning:select aura:id="input" label="Status" value="{!v.eventObj.status}">
+                            <option value="">--None--</option>
+                            <aura:iteration items="{!v.eventpickListValues.status}" var="status">
+                                <option value="{!status}" selected="{!v.eventObj.status == status}">{!status}</option>
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem padding="around-small" size="4"> 
+                    	<c:LookupSearch aura:id="instructorLookup" selection="{!v.eventObj.instructor}" onSearch="{!c.instructorLookupSearch}" iconName="standard:record" objectName="Contact" fieldName="Name" condition="" label="Instructor" placeholder="Select Instructor" isMultiEntry="false" isRequired="true"/>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem padding="around-small" size="4"> 
+                        <c:LookupSearch aura:id="roomLookup" selection="{!v.eventObj.room}" onSearch="{!c.roomLookupSearch}" iconName="standard:record" objectName="Room__c" fieldName="Name" condition="" label="Room" placeholder="Select Room" isMultiEntry="false" isRequired="false"/>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem padding="around-small" size="4"> 
+                    	<c:LookupSearch aura:id="projectTaskLookup" selection="{!v.eventObj.projTask}" onSearch="{!c.projectTaskLookupSearch}" iconName="custom:custom68" objectName="AcctSeed__Project_Task__c" fieldName="Name" condition="{!v.projectTaskCondition}" label="Project Task" placeholder="Search Project Task" isMultiEntry="false" isRequired="{!v.isProjTaskRequired}" />
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Submit" onclick="{!c.submitOnNewEvent}"/>
+                <lightning:button variant="brand" label="Close" onclick="{!c.closeOnNewEvent}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showCostRateModal}">
+        <c:CostRateCreation_Cmp defaultCR="{!v.defaultCostRate}" parentRTName="{!v.parentRecordType}" 
+                                parentObjName="{!v.sObjectName}" caRecord="{!v.caRecord}"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showLessonPlan}">
+        <c:sldsModal aura:id="lessonPlanModal" modalZIndexValue="8001" backdropZIndexValue="8000" displayCloseImage="true"  showFooter="false" showHeader="false" closeAction="{!c.closeLessonPlanModal}" modelWidth="80%">
+            <aura:set attribute="content">
+   				<c:LessonPlanCmp showLessonPlan="{!v.showLessonPlan}" communityName="internal" eventId="{!v.selectedRecord.Id}" modalHeader="{! 'Lesson Plan ' + v.selectedRecord.dateStr}"/>    
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.testingProOralDateVal}">
+        <c:sldsModal aura:id="testingProOralDateVal" modalZIndexValue="9010" backdropZIndexValue="9005" displayCloseImage="false" showFooter="true" showHeader="true"  modelWidth="45%">
+            <aura:set attribute="header">
+                <h1>Confirmation</h1>    
+            </aura:set>
+            <aura:set attribute="content">
+                <div>  
+                    <center>
+                        <h1>Would you like to update all Contact Assignment and Project Dates?</h1><br/>
+                        <lightning:input label="Update all Contact Assignment &amp; Project Dates" type="checkbox" checked="{!v.isUpdateTestingProDates}"/>
+                    </center>
+                </div>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Proceed" onclick="{!c.updateTestingProOralDates}"/>
+                <lightning:button variant="brand" label="Cancel" onclick="{!c.closeTestingProDatesModal}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+</aura:component>

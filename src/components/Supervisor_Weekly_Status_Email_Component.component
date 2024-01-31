@@ -1,0 +1,133 @@
+<!---
+    - Component called from Supervisor_Weekly_Status_Summary_Mail email template
+    - From batch supervisor_WeeklyStatus_Email_Batch 
+    - USed for Summary data construction process
+---->
+
+<apex:component controller="supervisor_WeeklyStatus_Email_Controller" access="global">
+
+     <apex:attribute name="conId" type="Id" description="Id of the Contact" assignTo="{!contactId}"/> 
+     <!-- To have the actual approver contact id --->
+     <apex:attribute name="actualApproverId" type="Id" description="Id of the Actual Approver Contact" assignTo="{!actualContactId}"/> 
+     <html>
+        <style>
+             table {
+                 border-width: 5px;
+                 border-collapse: collapse;
+             }
+            
+            td {
+             border-width: 1px;
+             padding: 4px;
+             border-style: solid;
+            }
+            
+            th{ 
+             border-width: 1px ;
+             padding: 4px ;
+             border-style: solid ;
+            }
+        </style>
+        
+            <body>
+            <p>Dear {!Name},</p><br/>
+            
+            <apex:outputPanel rendered="{!displayDAMsg}">
+                <p>This is a status reminder for all timesheets requiring your approval on behalf of <b>{!ActualSupervisorName}</b>.</p>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!!displayDAMsg}">
+                <p>This is a status reminder for all timesheets requiring your approval.</p>
+            </apex:outputPanel>
+            
+            <p> For any timesheets pending approval, please log into the <a href="{!$Label.Org_Prefix_Start_URL}/lightning/n/Supervisor_Time_Approval">Supervisor Time Approval page</a> to complete approval/rejection of those hours.</p><br/>
+            
+            <p>Pending Approval</p><br/>
+            
+            <table style="border-collapse: collapse;" border="1">
+                <tr>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Contact Name</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Time Card Period</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Total Hours</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Date Submitted</th>
+                </tr>
+                <apex:repeat value="{!statusInnerRecMap['Submitted']}" var="day">
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{!day.ContactName}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.periodWeekRange}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.totalHrs}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.submittedDate}</td>
+                    </tr>
+                </apex:repeat>
+               
+            </table>
+            <br/>
+            
+            <p>Rejected</p><br/>
+            
+            <table style="border-collapse: collapse;" border="1">
+                <tr>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Contact Name</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Time Card Period</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Total Hours</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Date Submitted</th>
+                </tr>
+                <apex:repeat value="{!statusInnerRecMap['Rejected']}" var="day">
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{!day.ContactName}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.periodWeekRange}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.totalHrs}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.submittedDate}</td>
+                    </tr>
+                </apex:repeat>
+               
+            </table>
+            <br/>
+            
+            <p>Approved</p><br/>
+            
+            <table style="border-collapse: collapse;" border="1">
+                <tr>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Contact Name</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Time Card Period</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Total Hours</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Date Submitted</th>
+                </tr>
+                <apex:repeat value="{!statusInnerRecMap['Approved']}" var="day">
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{!day.ContactName}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.periodWeekRange}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.totalHrs}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.submittedDate}</td>
+                    </tr>
+                </apex:repeat>
+               
+            </table>
+            <br/>
+            
+            <p>Pending Submission</p><br/>
+            
+            <table style="border-collapse: collapse;" border="1">
+                <tr>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Contact Name</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Time Card Period</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Total Hours</th>
+                    <th width="25%" style="text-align: center; vertical-align: middle;">Date Submitted</th>
+                </tr>
+                <apex:repeat value="{!statusInnerRecMap['Pending Submission']}" var="day">
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{!day.ContactName}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.periodWeekRange}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.totalHrs}</td>
+                        <td style="text-align: center; vertical-align: middle;">{!day.submittedDate}</td>
+                    </tr>
+                </apex:repeat>
+               
+            </table>
+            <br/>
+            
+             <p>Thanks,<br/>Time Reporting System<br/><br/>This e-mail was auto generated. Please do not respond.</p>
+            </body>
+        </html> 
+ 
+</apex:component>

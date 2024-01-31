@@ -1,0 +1,208 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="Pay_Rate_Modification_Handler">
+    <aura:attribute name="record" type="Object" description="The record object to be displayed"/>
+    <aura:attribute name="simpleRecord" type="Object" description="A simplified view record object to be displayed"/>
+    <aura:attribute name="recordError" type="String" description="An error message bound to force:recordData"/>
+    <aura:attribute name="hourlyCost" type="Decimal" description="Hourly Cost value for updation"/>
+    <aura:attribute name="annualSalCost" type="Decimal" description="Annual Salary Cost value for updation"/>
+    <aura:attribute name="salaryCostperHour" type="Decimal" default="0" description="Salary Cost per Hour value for display"/>
+    <aura:attribute name="salaryCostperPeriod" type="Decimal" default="0" description="Salary Cost per Period value for display"/>
+    <aura:attribute name="effectiveDate" type="String" default="" description="Effective Date for the new Cost Rate"/>
+    <aura:attribute name="reasonForChange" type="String" default="" description="To update the Notes/ Reason for Change field"/>
+    <aura:attribute name="fullyLoadedAmt" type="Decimal" default="0.00" />
+    <aura:attribute name="card" type="Map" default="{'title' : '', 'message' : '', 'buttonName' : ''}"/>
+    <aura:attribute name="showMessage" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="crInfo" type="Map" default="{}"/>
+    <aura:attribute name="fTPTOptions" type="List" default="[]"/>
+    <aura:attribute name="selectedUser" type="List" default="[]"/>
+    <aura:attribute name="newJobTitle" type="String" default=""/>
+    <aura:attribute name="selectedFTPT" type="String" default=""/>
+    <aura:attribute name="selectedHomeDept" type="String" default=""/>
+    <aura:attribute name="payRateInfo" type="Map" default="{'showFTPTPickListPage' : false,'showInPutsPage' : false ,'showChangeINPickListPage' : false,'fullyLoadedFlag' : false}"/>
+    
+    <ltng:require styles="/resource/QuickActionHalfPage"></ltng:require>
+    
+    <!--<aura:handler name="init" value="{!this}" action="{!c.myAction}"/>-->
+    <force:recordData aura:id="record"
+                      layoutType="FULL"
+                      recordId="{!v.recordId}"
+                      targetError="{!v.recordError}"
+                      targetRecord="{!v.record}"
+                      targetFields ="{!v.simpleRecord}" 
+                      mode="VIEW"
+                      recordUpdated="{!c.handleRecordUpdated}"/>
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" style="background-color: rgba(0, 0, 0, 0.10);" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    <aura:if isTrue="{!(v.showMessage == false)}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <b>Pay Rate Modification</b>
+            </aura:set>
+            <p>
+                <aura:if isTrue="{!v.payRateInfo.showChangeINPickListPage}">
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <lightning:combobox name="Change in Employment Category" label="Change in Employment Category"  aura:id="changeINOption" value="{!v.crInfo.selectedChangeinEmployValues}" placeholder="Select Progress" options="{!v.crInfo.changeinEmployments}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <c:multiSelectCmp label="Change In Salary" aura:id="changeINOption" optionsList="{!v.crInfo.changeInSalary}" selectedvalue="{!v.crInfo.selectedChangeINSalaryValues}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <c:multiSelectCmp label="Incentive Compensation" aura:id="changeINOption" optionsList="{!v.crInfo.incentiveComps}" selectedvalue="{!v.crInfo.selectedIncentiveCompValues}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12">
+                            <b><p>Change in Position: </p></b>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <lightning:input type="checkbox" label="Promotion" checked="{!v.crInfo.showPromotion}"/>
+                        </lightning:layoutItem>   
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <lightning:input type="checkbox" label="Transfer/Reassignment" checked="{!v.crInfo.showtransferAssignment}"/>
+                        </lightning:layoutItem >
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <lightning:input type="checkbox" label="New Job Title" checked="{!v.crInfo.showJobTitle}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4">
+                            <aura:if isTrue="{!v.crInfo.showJobTitle}">
+                                <div style="margin-left:0.6rem;">
+                                    <lightning:input type="Text" name="Title" aura:Id="titleId" label="New Job Title" value="{!v.newJobTitle}" required="true"/>
+                                </div>
+                                </aura:if>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12"><br/>
+                            <b><p>Change in Reporting: </p></b>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <lightning:input type="checkbox" label="New Department" checked="{!v.crInfo.showNewDepartment}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4">
+                            <aura:if isTrue="{!v.crInfo.showNewDepartment}">
+                                <div style="margin-left:0.6rem;">
+                                    <lightning:select label="Home Department" aura:id="homeDept" value="{!v.selectedHomeDept}" required="true">
+                                        <option value="">--None--</option>
+                                        <aura:iteration items="{!v.crInfo.homeDeptPicklist}" var="hp">
+                                            <option value="{!hp}" selected="{!v.selectedHomeDept == hp}">{!hp}</option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </div>                                   
+                            </aura:if>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <lightning:input type="checkbox" label="New Manager" checked="{!v.crInfo.showNewManager}"/>
+                        </lightning:layoutItem >
+                        <lightning:layoutItem size="4">
+                            <aura:if isTrue="{!v.crInfo.showNewManager}">
+                                <abbr title="" class="slds-required">&nbsp;&nbsp;&nbsp;*</abbr>
+                                <div style="margin-top:-1.2rem;margin-left:0.6rem;">
+                                    <c:LookupSearch aura:id="userLookup" selection="{!v.selectedUser}" onSearch="{!c.userLookupSearch}"
+                                                    iconName="standard:user" objectName="User" fieldName="Name" condition="" 
+                                                    label="&nbsp;&nbsp;&nbsp;Supervisor Name" placeholder="Supervisor" isMultiEntry="false" isRequired="false"/>
+                                </div>
+                            </aura:if>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4">
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--x-small">
+                            <lightning:input type="date" label="Next Performance Review Date" value="{!v.crInfo.nextReviewDate}"/>
+                        </lightning:layoutItem >
+                        <lightning:layoutItem size="8" class="slds-p-around--x-small">
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12">
+                            <br/><b><p>Other Status Changes:</p></b>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--xx-small"> 
+                            <lightning:textarea name="input1" label="Leave of Absence (Reason): " value="{!v.crInfo.leaveAbsenceReason}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--xx-small">
+                            <lightning:textarea name="input2" label="Benefit changes (Reason):" value="{!v.crInfo.benefitchangesReason}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" class="slds-p-around--xx-small">
+                            <lightning:textarea name="input3" label="If other, please provide specifics:" value="{!v.crInfo.otherReasons}"/>
+                        </lightning:layoutItem>  
+                    </lightning:layout>
+                </aura:if>
+                
+                <!-- Display FT Salary and PT Hourly picklist if Contact recordType is Staff-->
+                <aura:if isTrue="{!v.payRateInfo.showFTPTPickListPage}">
+                    <lightning:select label="Rate Type" aura:id="rateOption" value="{!v.selectedFTPT}" required="true">
+                        <option value="">--None--</option>
+                        <aura:iteration items="{!v.fTPTOptions}" var="ftPT">
+                            <option value="{!ftPT}" selected="{!v.selectedFTPT == ftPT}">{!ftPT}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </aura:if>
+                
+                <!-- Show Inputs Page-->
+                <aura:if isTrue="{!v.payRateInfo.showInPutsPage}"> 
+                    <aura:if isTrue="{!or(v.selectedFTPT == 'FT Salary &amp; Benefits',v.selectedFTPT == 'International Salary')}">
+                        <lightning:input type="decimal" name="Annual Salary Cost"  aura:id = "crInput" label="Annual Salary Cost" value="{!v.annualSalCost}" required="true" onblur="{!c.updateValues}"/>
+                        Salary Cost per Hours: <b><ui:outputCurrency value="{!v.salaryCostperHour}"/></b>&nbsp;&nbsp;&nbsp;&nbsp;
+                        Salary Cost per Period: <b><ui:outputCurrency value="{!v.salaryCostperPeriod}"/></b>
+                        <aura:set attribute="else">
+                            <lightning:input type="decimal" name="Hourly Cost"  aura:id = "crInput" label="Hourly Cost" value="{!v.hourlyCost}" required="true" onchange="{!c.getFullyLoadedValues}"/>
+                        </aura:set>
+                    </aura:if>
+                    
+                    <div class="padCls">
+                        <ui:inputDate label="Effective Date"  aura:id = "crInputs" class="field" value="{!v.effectiveDate}" displayDatePicker="true" format="MM-dd-yyyy" required="true"/> 
+                    </div>
+                    <div class="padCls">
+                        <ui:inputTextArea  label="Notes/ Reason for Change" aura:id = "crInputs"  value="{!v.reasonForChange}" required="true"/>
+                    </div>
+                    <aura:if isTrue="{!v.payRateInfo.fullyLoadedFlag}">
+                        <h1> Fully Loaded Rate : {!v.fullyLoadedAmt}</h1>
+                    </aura:if>
+                </aura:if>
+            </p>
+            <aura:set attribute="footer">
+                <aura:if isTrue="{!v.payRateInfo.showFTPTPickListPage}">
+                    <lightning:button variant="brand" label="Next" onclick="{!c.displayInputs}"/>
+                </aura:if>
+                
+                <aura:if isTrue="{!v.payRateInfo.showInPutsPage}">
+                    <div class="slds-p-top_medium slds-align_absolute-center">
+                        <aura:if isTrue="{!v.crInfo.isShowFTPTOptions}">
+                            <lightning:button variant="brand" label="Proceed" onclick="{!c.proceedClk}"/>
+                            <aura:set attribute="else">
+                                <lightning:button variant="brand" label="Save" onclick="{!c.modifyPayRate}"/>
+                            </aura:set>
+                        </aura:if>
+                        <lightning:button variant="brand" label="Cancel" onclick="{!c.closeAction}"/>
+                    </div>
+                </aura:if>
+                
+                <aura:if isTrue="{!v.payRateInfo.showChangeINPickListPage}">
+                    <div class="slds-p-top_medium slds-align_absolute-center">
+                        <lightning:button variant="brand" label="Save" onclick="{!c.modifyPayRate}"/>
+                        <lightning:button variant="brand" label="Close" onclick="{!c.closeAction}"/>
+                        
+                    </div>
+                </aura:if>
+                
+            </aura:set>
+        </lightning:card>        
+    </aura:if>  
+    <!-- To display the message -->
+    <aura:if isTrue="{!v.showMessage}">
+        <lightning:card>
+            <aura:set attribute="title">
+                <p style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">{!v.card.title}</p>
+            </aura:set>
+            
+            <aura:set attribute="footer">
+                <lightning:button class="slds-float_right"
+                                  variant="brand"
+                                  label="{!v.card.buttonName}"
+                                  onclick="{!c.closeAction}"/>
+            </aura:set>
+            <div style="height:  80px; margin-top:40px;">
+                <p style="font-size: medium;">{!v.card.message}</p>
+            </div><br/><br/>
+        </lightning:card>
+    </aura:if>
+</aura:component>

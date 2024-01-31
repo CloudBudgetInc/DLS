@@ -1,0 +1,193 @@
+<aura:component controller="EventCalendarController" access="public">
+    
+    <aura:attribute name="selectedRecord" type="Map" default="{}"/>
+    <aura:attribute name="oldSelectedRecord" type="Map" default="{}"/>
+    <aura:attribute name="parentEventInfo" type="Map" default="{}"/>
+    <aura:attribute name="showParentInfo" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="bodyCls" type="String" default=""/>
+    <aura:attribute name="footerCls" type="String" default=""/>
+    <aura:attribute name="handleReschedule" type="Aura.Action" access="public"/>
+    <aura:attribute name="handleApproveClick" type="Aura.Action" access="public"/>
+    <aura:attribute name="handleRejectClick" type="Aura.Action" access="public"/>
+    <aura:attribute name="removeApproveRejectClick" type="Aura.Action" access="public"/>
+    <aura:attribute name="viewRejectionReasonClk" type="Aura.Action" access="public"/>
+    <aura:attribute name="rejectionReason" type="String" default=""/>
+    <aura:attribute name="parent" type="Aura.Component" required="true"/>
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="showConflict" type="Boolean" default="false"/>
+    <aura:attribute name="stuInsConflictList" type="List" default="[]"/>
+    <aura:attribute name="roomConflictList" type="List" default="[]"/>
+    <aura:attribute name="index" type="String"/>    
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+    <aura:method name="approveEvent" action="{!c.approveEventWithConflictCheck}" /> 
+    <aura:method name="cancelEventChange" action="{!c.handleCancel}" />
+    <aura:method name="handlePendingEventsSaveClk" action="{!c.handlePendingEventsSaveClk}" /> 
+    <aura:method name="handleRejectBtnClick" action="{!c.handleRejectClick}" /> 
+    <aura:method name="handleApproveBtnClick" action="{!c.handleApproveClick}" />         
+
+    <c:ApexService aura:id="server"/>
+   
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+
+    <div class="{!v.bodyCls}">
+        <div class="slds-grid slds-wrap">            
+
+            <div class="slds-col slds-size_2-of-12 slds-p-bottom_small">
+                <lightning:buttonIcon class="{!v.selectedRecord.classColour}" size="large" iconName="utility:record" variant="bare" alternativeText="Title" title="Title" />
+            </div>
+            
+            <div class="slds-col slds-size_10-of-12 slds-p-bottom_small">                       
+                <span class="titleCls">{!v.selectedRecord.project}</span>
+            </div>
+            <div class="slds-col slds-size_2-of-12 slds-p-bottom_small">
+                <span>
+                    <lightning:buttonIcon size="large" iconName="utility:clock" variant="bare" alternativeText="date and Time" title="Date and Time" />
+                </span>
+            </div>
+            <div class="slds-col slds-size_10-of-12 slds-p-bottom_small">
+                <aura:if isTrue="{!v.showParentInfo}">
+                    <aura:if isTrue="{!v.selectedRecord.status == 'Draft'}">
+                        <aura:if isTrue="{!or(v.selectedRecord.approvalStatus == 'Pending LTS Approval', v.selectedRecord.approvalStatus == 'LTS Approved')}">
+                            <aura:if isTrue="{!v.parentEventInfo.eventTime}">
+                                <span><div class="strike-word">{!v.parentEventInfo.eventTime}</div></span>
+                            </aura:if>
+                            <aura:if isTrue="{! and(v.parentEventInfo.startTime, v.parentEventInfo.endTime, v.parentEventInfo.duration)}">
+                                <span><div class="strike-word" style="font-size: 13px;">{!v.parentEventInfo.startTime}&nbsp;to&nbsp;{!v.parentEventInfo.endTime}&nbsp;({!v.parentEventInfo.duration} Hour)</div></span>
+                            </aura:if>
+                            
+                        </aura:if>
+                    </aura:if>
+                </aura:if>
+                <span><div>{!v.selectedRecord.eventTime}</div></span>
+                <span><div style="font-size: 13px;">{!v.selectedRecord.startTime}&nbsp;to&nbsp;{!v.selectedRecord.endTime}&nbsp;({!v.selectedRecord.duration} Hour)</div></span>
+            </div>
+            <aura:if isTrue="{!v.selectedRecord.meetingUrl}">
+                <aura:if isTrue="{!and(v.selectedRecord.status != 'Draft', v.selectedRecord.approvalStatus !='Pending LTS Approval')}">
+                    <div class="slds-col slds-size_2-of-12 slds-p-bottom_small">
+                        <img style="width:30px;height:30px" src="{!$Resource.zoom_logo}"/>
+                    </div>
+                    <div class="slds-col slds-size_10-of-12 slds-p-bottom_small">
+                        <button class="slds-button slds-button_brand" onclick="{!c.handleJoinMeetClick}">Join Meeting</button><br />
+                        <!--<span>Meeting Url</span><br />
+                        <a href="{!v.selectedRecord.meetingUrl}" target="_blank" class="slds-text-link" style="white-space: normal;word-break: break-word; ">{!v.selectedRecord.meetingUrl}</a>-->
+                    </div>
+                </aura:if>
+            </aura:if>             
+            <aura:if isTrue="{!(!v.selectedRecord.meetingUrl)}">
+                <aura:if isTrue="{!v.selectedRecord.room}">
+                    <div class="slds-col slds-size_2-of-12 slds-p-bottom_small">
+                        <span><lightning:buttonIcon size="large" iconName="utility:checkin" variant="bare" alternativeText="Room" title="Room" /></span>
+                    </div>
+                    <div class="slds-col slds-size_10-of-12 slds-p-bottom_small">
+                         <aura:if isTrue="{!v.showParentInfo}">
+                            <aura:if isTrue="{!v.selectedRecord.status == 'Draft'}">
+                                <aura:if isTrue="{!or(v.selectedRecord.approvalStatus == 'Pending LTS Approval', v.selectedRecord.approvalStatus == 'LTS Approved')}">
+                                    <aura:if isTrue="{!v.parentEventInfo.room}">
+                                        <aura:if isTrue="{!(v.parentEventInfo.room != v.selectedRecord.room)}">
+                                            <span class="strike-word">{!v.parentEventInfo.room}</span><br />
+                                        </aura:if>
+                                    </aura:if>
+                                </aura:if>
+                            </aura:if>
+                        </aura:if>
+                        <span>{!v.selectedRecord.room}</span>
+                    </div>
+                </aura:if>
+            </aura:if>
+            <div class="slds-col slds-size_2-of-12 slds-p-bottom_small">
+                <span><lightning:buttonIcon size="large" iconName="utility:groups" variant="bare" alternativeText="Students" title="Students" /></span>
+            </div>
+            <div class="slds-col slds-size_10-of-12 slds-p-bottom_small">                               
+                <aura:if isTrue="{!v.communityName == 'instructor'}">
+                    <span>{!v.selectedRecord.studentNames}</span>
+                    
+                    <aura:set attribute="else">
+                        <span>{!v.selectedRecord.instructor}</span>
+                    </aura:set>
+                </aura:if>
+                
+            </div>
+            <div class="slds-col slds-size_2-of-12 slds-p-bottom_small">
+                <span><lightning:buttonIcon size="large" iconName="utility:task" variant="bare" alternativeText="Task" title="Task" /></span>
+            </div>
+            <div class="slds-col slds-size_10-of-12 slds-p-bottom_small">                
+                <span>{!v.selectedRecord.projectTask}</span><br />
+                <aura:if isTrue="{! and(v.showParentInfo, v.parentEventInfo.approvalStatus, v.selectedRecord.status == 'Draft', or(v.selectedRecord.approvalStatus == 'Pending LTS Approval', v.selectedRecord.approvalStatus == 'LTS Approved')) }">                    
+                    <span><b>Status:&nbsp;</b><span class="strike-word">{!v.parentEventInfo.approvalStatus}</span></span><br />                        
+                </aura:if>
+                <aura:if isTrue="{!and(v.selectedRecord.approvalStatus,v.selectedRecord.status == 'Draft')}">
+                    <span><b>Status:&nbsp;</b>{!v.selectedRecord.approvalStatus}</span>
+                    <aura:set attribute="else">
+                        <span><b>Status:&nbsp;</b>{!v.selectedRecord.status}</span>
+                    </aura:set>
+                </aura:if>                    
+                
+                <!--<aura:if isTrue="{!v.selectedRecord.approvalStatus == 'Pending LTS Approval'}">
+                    <span><lightning:buttonIcon size="medium" iconName="utility:info" variant="bare" alternativeText="Help" title="Help" /></span>
+                </aura:if>-->
+            </div>
+            <!-- <aura:if isTrue="{!v.selectedRecord.meetingUrl}">
+                <aura:if isTrue="{!and(v.selectedRecord.status != 'Draft', v.selectedRecord.approvalStatus !='Pending LTS Approval')}">
+                    <div class="slds-col slds-size_2-of-12 slds-p-bottom_small">
+                        <img style="width:30px;height:30px" src="{!$Resource.Zoom_Image}"/>
+                    </div>
+                    <div class="slds-col slds-size_10-of-12 slds-p-bottom_small">
+                        <button class="slds-button slds-button_brand" onclick="{!c.handleJoinMeetClick}">Join Meeting</button><br />
+                        <span>Meeting Url</span><br />
+                        <a href="{!v.selectedRecord.meetingUrl}" target="_blank" class="slds-text-link" style="white-space: normal;word-break: break-word; ">{!v.selectedRecord.meetingUrl}</a>
+                    </div>
+                </aura:if>
+            </aura:if>  -->
+            <aura:if isTrue="{!v.selectedRecord.status == 'Draft'}">    
+                <aura:if isTrue="{!v.selectedRecord.approvalStatus == 'Instructor Rejected'}">                    
+                    <div class="slds-col slds-size_12-of-12 slds-p-bottom_small">
+                        <!-- <lightning:input name="reject1" value="{!v.rejectionReason}" aura:id="reject" label="Rejection Reason" /> -->
+                        <aura:if isTrue="{!v.communityName == 'instructor'}">
+                            <lightning:textarea name="reject1" value="{!v.rejectionReason}" aura:id="reject" label="Rejection Reason" />
+                            <aura:set attribute="else">
+                                <lightning:textarea name="reject1" value="{!v.selectedRecord.rejectComment}" aura:id="reject" label="Rejection Reason" disabled="true" />
+                            </aura:set>
+                        </aura:if>
+                        
+                    </div>
+                </aura:if> 
+            </aura:if>
+        </div>
+    </div>
+    <footer class="{!v.footerCls}" style="margin-top: 0px; padding-top: 0px;">
+        <aura:if isTrue="{!v.communityName == 'student'}">
+            <aura:if isTrue="{!v.selectedRecord.showRescheduleBtn}">
+                <aura:if isTrue="{!v.communityName == 'student'}">
+                    <span onclick="{!v.handleReschedule }">
+                        <lightning:icon class="rescheduleCls" iconName="standard:recent" size="large" onclick="{!v.handleReschedule }" alternativeText="Reschedule" title="Reschedule"/>
+                    </span>
+                </aura:if>
+            </aura:if>
+        </aura:if>
+        <aura:if isTrue="{!v.communityName == 'instructor'}">
+            <aura:if isTrue="{!v.selectedRecord.status == 'Draft'}">
+                <aura:if isTrue="{!v.selectedRecord.approvalStatus == 'Instructor Rejected'}">
+                    <button class="slds-button slds-button_brand" onclick="{!c.handlePendingEventsSaveClk}">Save</button>
+                    <button class="slds-button slds-button_neutral" onclick="{!c.handleCancel}">Cancel</button>
+                </aura:if> 
+                <aura:if isTrue="{!v.selectedRecord.approvalStatus == 'LTS Approved'}">
+                    <span onclick="{!c.handleApproveClick }">
+                        <lightning:icon class="approveIconCls" iconName="action:approval" size=" xx-small" alternativeText="Approve" title="Approve" />
+                    </span>
+                    <span onclick="{!c.handleRejectClick }">
+                        <lightning:icon class="btnIconCls rejectIconCls" iconName="action:close" size=" xx-small" alternativeText="Reject" title="Reject" />
+                    </span>
+                </aura:if>
+            </aura:if>
+        </aura:if>
+        <aura:if isTrue="{!and(v.selectedRecord.eventType == 'Language Training', v.selectedRecord.showLessonPlan)}">
+        	<img style="max-width:34px;max-height:34px" src="{!$Resource.lessonPlan}" onclick="{! c.openLessonPlanModal }"/>
+        </aura:if>
+    </footer>           
+</aura:component>

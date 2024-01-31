@@ -1,0 +1,16 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" controller="ScheduleCmpLightningController">
+    <aura:attribute name="profileName" type="string" default=""/>
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.profileName != 'System Administrator'}">
+    	<center>
+            <div class="slds-card" style="font-size: 1.25rem;color: red;">
+    			Please edit the schedule using the Actions from the Project page.
+    		</div>
+        </center>
+    </aura:if>
+    
+</aura:component>

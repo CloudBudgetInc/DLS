@@ -1,0 +1,83 @@
+.THIS .contentClass{
+    font-size: medium;
+    font-weight: bold;
+}
+.THIS .imageCls{
+    width: 30% !important;
+    height: 30% !important;
+}
+.THIS .imageClass img{
+    width: 30% !important;
+    height: 30% !important;
+}
+.THIS .containerClass {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+    margin: 0 0 5px 0;
+    box-shadow: 0 0 2px 1px rgb(0,0,0,0.2);
+    background-color: #ffffff;
+}
+.THIS .star-on-png {
+    font-size: medium;
+}
+.THIS .star-off-png {
+    font-size: medium;
+}
+.THIS .star-half-png{
+    font-size: medium;
+}
+.THIS .slds-input {
+    border-radius: 0 !important;
+    /*height: calc(1.5em + 1.5rem + 2px);*/
+}
+.THIS .titleCls {
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+.THIS .infoCls {
+    font-size: 1rem;
+    font-weight: 500;
+}
+.THIS .fa-arrow-left{
+    font-size:2rem !important;
+    cursor:pointer;
+    color: #055e89 !important;
+}
+.THIS.backCls{
+    color: #055e89 !important;
+    font-weight:bold;
+}
+.THIS .bookCls {
+    cursor: pointer;
+}
+@media (max-width: 48em) {
+    .THIS .card-body{
+        padding: .5rem !important;
+    }
+    .THIS .slds-accordion__section {
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+    }
+    .THIS .slds-accordion__summary-action .slds-icon{
+        color: black !important; 
+        width: 1rem !important;
+    }
+}
+@media (max-width: 330px) {
+    .THIS .nav-tabs {
+        font-size: small !important;
+    }
+    .THIS .slds-accordion__section {
+        padding-top: 0.1rem !important;
+        padding-bottom: 0rem !important;
+    }
+    .THIS .slds-accordion__summary-action .slds-icon{
+        color: black !important; 
+        width: 1rem !important;
+    }
+}
+.THIS.backGroundCls{
+    backGround-color:white !important;
+}

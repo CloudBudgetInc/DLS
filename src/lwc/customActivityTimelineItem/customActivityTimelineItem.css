@@ -1,0 +1,12 @@
+.headerclass{
+    padding-bottom: 15px;
+}
+.monthPadding{
+    padding-left: 10px;
+    font-size:small;
+    font-family: Arial, sans-serif;
+}
+.fontSizeMonthsAgo{
+    font-size: small;
+    font-family: Arial, sans-serif;
+}

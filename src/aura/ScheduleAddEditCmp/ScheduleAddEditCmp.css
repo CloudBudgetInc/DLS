@@ -1,0 +1,22 @@
+.THIS .slds-modal__container {
+    /*width: 80%;
+    max-width: 70rem;*/
+}
+.THIS .redColor {
+	 color: #ff0000;
+}
+.THIS .greenColor {
+	color: #00ae00;
+}
+.THIS .boxClass {
+    display: inline-block;
+    height: 1rem;
+    width: 1rem;
+}
+.THIS .cardCss {
+	background-color: #f4f6f9 !important;
+    border: 1px solid #d8dde6 !important;
+}
+.THIS.spinnerCls {
+    z-index: 10000 !important;
+}

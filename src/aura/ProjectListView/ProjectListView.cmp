@@ -1,0 +1,56 @@
+<aura:component controller="ListViewController" implements="forceCommunity:availableForAllPageTypes,lightning:isUrlAddressable" access="global">
+    <aura:attribute name="tableColumns" type="List" access="PUBLIC"/>
+    <aura:attribute name="projectTableConfig" type="Map" access="PUBLIC"/>
+    <aura:attribute name="projectList" type="List" access="PUBLIC"/>
+    <aura:attribute name="statusPicklist" type="List" access="PUBLIC"/>
+    <aura:attribute name="dummyProjectList" type="List" access="PUBLIC"/>
+    <aura:attribute name="selectedStatus" type="String" access="PUBLIC" default="Active"/>
+    <aura:attribute name="showSpinner" type = "Boolean" access="PUBLIC" default="false"/>
+    <aura:attribute name="displayDevice" type="string" access="PUBLIC" default=""/>
+    <aura:attribute name="projectIdWithCAStatus" type="MAP"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="dtCellClick" event="ldt:clickedDtCell" action="{!c.tabActionClicked}"/>
+    
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <!--lightning:navigation aura:id="navService"/-->
+    <br/><br/>
+    <center><h5 class="card-title" style="font-size:2rem;">MY PROJECTS</h5></center><br/>
+    <div class="cardPadding">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">
+                    <lightning:layout>
+                        <lightning:layoutItem padding="around-small" size = "{!v.displayDevice == 'Mobile' ? '12': '3'}">
+                            <lightning:select label="Status" value="{!v.selectedStatus}" onchange="{!c.handleFilterChange}">
+                                <option value="">All</option>
+                                <aura:iteration items="{!v.statusPicklist}" var="status">
+                                    <aura:if isTrue="{!and(status.value != 'Canceled',status.value != 'Paid')}">
+                                        <option value="{!status.value}" selected="{!(v.selectedStatus == status.value)}">{!status.label}</option>
+                                    </aura:if>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                    
+                    <!-- Table For Instructor Project List -->
+                    <aura:if isTrue="{!v.projectList.length > 0}">
+                        <div class="ldtTableCls">
+                            <ldt:datatableDev aura:id="projectTable"
+                                              dataRows="{!v.projectList}" header="{!v.tableColumns}"
+                                              config="{!v.projectTableConfig}"/>
+                        </div>
+                        <aura:set attribute="else"><br/>
+                            <center>No records to display</center>
+                        </aura:set>
+                    </aura:if>
+                </span>
+            </div>
+        </div>
+    </div>
+</aura:component>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <formulas>
+        <name>No_Student_Hours_Verification</name>
+        <dataType>Boolean</dataType>
+        <expression>TEXT({!$Record.DLI_Project_Type__c}) = &apos;EI&apos; || (TEXT({!$Record__Prior.DLI_Project_Type__c}) != &apos;EI&apos; &amp;&amp; TEXT({!$Record.DLI_Project_Type__c}) = &apos;EI&apos;)</expression>
+    </formulas>
+    <interviewLabel>Populate No Student Hours Verification in Project {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Populate No Student Hours Verification in Project</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Populate_No_Student_Hours_Verification_Field</name>
+        <label>Populate No Student Hours Verification Field</label>
+        <locationX>176</locationX>
+        <locationY>311</locationY>
+        <inputAssignments>
+            <field>No_Student_Hours_Verification__c</field>
+            <value>
+                <elementReference>No_Student_Hours_Verification</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Populate_No_Student_Hours_Verification_Field</targetReference>
+        </connector>
+        <object>AcctSeed__Project__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

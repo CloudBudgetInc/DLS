@@ -1,0 +1,7 @@
+.THIS .wrap {
+    white-space:pre-line !important;
+    word-break: break-word;
+}
+.THIS .slds-input{
+    min-height: calc(2.700rem + 2px) !important;
+}

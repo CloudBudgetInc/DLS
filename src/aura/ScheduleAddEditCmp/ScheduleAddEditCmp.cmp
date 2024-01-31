@@ -1,0 +1,520 @@
+<aura:component controller="ScheduleCmpLightningController">
+    <aura:attribute name="parentId" type="String" access="public" description="To get Opp/Project Id"/>
+    <aura:attribute name="objectName" type="String" access="public" description="To get Opp/Project API Name"/>
+    <aura:attribute name="scheduleType" type="String" access="public" description="To get type of new / existing schedule action]"/>
+    <aura:attribute name="scheduleId" type="String" access="public" description="To get the id of edit schedule"/>
+    <aura:attribute name="priorScheduleId" type="String" default="" access="public"/>
+    <aura:attribute name="parentScheduleId" type="String" default="" access="public"/>
+    <aura:attribute name="typeOfAction" type="String" default="" access="public"/>
+    <aura:attribute name="parentRTName" type="String" default="" access="public"/>
+    
+    <aura:attribute name="currentUsrProfileName" type="String"/>
+    <aura:attribute name="onlineRoomId" type="String"/>
+    <aura:attribute name="roomCondition" type="String"/>
+    <aura:attribute name="isDLSOnlineProject" type="Boolean"/>
+        
+    <aura:attribute name="displayInputModal" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="headerTitle" type="String" default="New Schedule" access="private"/>
+    <aura:attribute name="scheduleRec" type="Map" default="{}"/>
+    <aura:attribute name="timeList" type="List[]" default="[]"/>
+    <aura:attribute name="endTimeList" type="List[]" default="[]"/>
+    <aura:attribute name="taskRecords" type="List[]" default="[]"/>
+    <aura:attribute name="opliRecords" type="List[]" default="[]"/>
+    <aura:attribute name="alottedHrsMap" type="Map" default="{}"/>
+    <aura:attribute name="possibleHrsMap" type="Map" default="{}"/>
+    <aura:attribute name="instructorSelected" type="List[]" default="[]"/>
+    <aura:attribute name="roomSelected" type="List[]" default="[]"/>
+    <aura:attribute name="showParentSchSelection" type="Boolean" default="false"/>
+    <aura:attribute name="parentSchRecords" type="List[]" default="[]"/>
+    <aura:attribute name="timezones" type="List[]" default="['America/New_York']"/>
+    <aura:attribute name="totalAlottedHrs" type="Decimal" default="0"/>
+    <aura:attribute name="totalPossibleHrs" type="Decimal" default="0"/>
+    <aura:attribute name="minutesList" type="List[]" default="[]"/>
+    <aura:attribute name="holidayRecords" type="List[]" default="[]"/>
+    <aura:attribute name="exisitngSchedules" type="Map" default="{}"/>
+    <aura:attribute name="scheduleConflictMap" type="Map" default="{}"/>
+    <aura:attribute name="newHrsToBeCreated" type="Decimal" default="0"/>
+    <aura:attribute name="btnType" type="String" default=""/>
+    <aura:attribute name="showSpinner" type="Boolean" default="true"/>
+    <aura:attribute name="disableInput" type="Boolean" default="false"/>
+    <aura:attribute name="oldEndDate" type="Date" default=""/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    <aura:attribute name="defaultCRRateType" type="String" default=""/>
+    <aura:attribute name="substituteEventsList" type="List[]" default=""/>
+    <aura:attribute name="showConflictModal" type="Boolean" default="false"/>
+    <aura:attribute name="showSuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="showCostRateModal" type="Boolean" default="false"/>
+    <aura:attribute name="caMap" type="Map" default="{}"/>
+    <aura:attribute name="costRateId" type="String" default=""/>
+    <aura:attribute name="CRType" type="String" default=""/>
+    
+    <ltng:require 
+                  scripts="{!$Resource.All_Timezones_ForLightning}"
+                  afterScriptsLoaded="{!c.getTimezoneValues}"/>
+    
+    <ltng:require scripts="{!join(',', 
+                           $Resource.MomentjsResource, 
+                           $Resource.MomentTimezone_Data)}"/>
+    
+    <ltng:require 
+                  scripts="{!$Resource.CalculateDurationLightning}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- For cancel & save action complete event fire to parent -->
+    <aura:registerEvent name="reloadEvent" type="c:reloadEvent"/>
+    
+    <!--<aura:handler name="change" value="{!v.scheduleRec.startDate}" action="{!c.getSubstituteEvents}"/>
+    <aura:handler name="change" value="{!v.scheduleRec.endDate}" action="{!c.getSubstituteEvents}"/>-->
+    
+    <!-- Event to get cost rate result from costratecreationcmp -->
+    <aura:handler name="assignCostRateTOCA" event="c:childClickEvent" action="{!c.handleCostRateResult}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="large" alternativeText="Loading" class="slds-is-fixed spinnerCls"/>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.displayInputModal}">
+        <!--  New Schedule creation modal other than the Substitute Type -->
+        <aura:if isTrue="{!and(v.scheduleType != 'Substitute', v.scheduleType != 'Tester')}">
+            <c:sldsModal aura:id="inputModal" modelWidth="80%">
+                <aura:set attribute="header">
+                    {!v.headerTitle}
+                </aura:set>
+                <aura:set attribute="content">
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="4" padding="" class="slds-p-around_x-small">
+                            <lightning:input type="checkbox" label="Varied Time" name="input3" checked="{!v.scheduleRec.variedTime}" disabled="{!v.disableInput}"/><br/>
+                            <aura:if isTrue="{!or(v.parentRTName == 'MTT_Projects',or(v.parentRTName == 'MTT_Opportunities',v.parentRTName == 'DLI_W_TO_Opportunities'))}">
+                                <lightning:input type="checkbox" label="Travel Required" name="input3" checked="{!v.scheduleRec.isTravelRequired}" disabled="{!v.disableInput}"/><br/>
+                            </aura:if>
+                            <lightning:input type="checkbox" label="Varied Day" name="input3" checked="{!v.scheduleRec.variedDay}" disabled="{!v.disableInput}"/><br/>
+                            <div>
+                                <div class="slds-form-element__label">
+                                    <aura:if isTrue="{!not(v.scheduleRec.variedDay)}"><span style="color: red;">*</span></aura:if>Days
+                                </div><br/>
+                                <lightning:input aura:id="dayinput" type="checkbox" label="Monday" name="input3" checked="{!v.scheduleRec.dayVal.monday}" disabled="{!v.disableInput}"/><br/>
+                                <lightning:input aura:id="dayinput" type="checkbox" label="Tuesday" name="input3" checked="{!v.scheduleRec.dayVal.tuesday}" disabled="{!v.disableInput}"/><br/>
+                                <lightning:input aura:id="dayinput" type="checkbox" label="Wednesday" name="input3" checked="{!v.scheduleRec.dayVal.wednesday}" disabled="{!v.disableInput}"/><br/>
+                                <lightning:input aura:id="dayinput" type="checkbox" label="Thursday" name="input3" checked="{!v.scheduleRec.dayVal.thursday}" disabled="{!v.disableInput}"/><br/>
+                                <lightning:input aura:id="dayinput" type="checkbox" label="Friday" name="input3" checked="{!v.scheduleRec.dayVal.friday}" disabled="{!v.disableInput}"/><br/>
+                                <lightning:input aura:id="dayinput" type="checkbox" label="Saturday" name="input3" checked="{!v.scheduleRec.dayVal.saturday}" disabled="{!v.disableInput}"/><br/>
+                                <lightning:input aura:id="dayinput" type="checkbox" label="Sunday" name="input3" checked="{!v.scheduleRec.dayVal.sunday}" disabled="{!v.disableInput}"/>
+                            </div>
+                            <br/><br/>
+                            <lightning:input type="checkbox" label="Bi-Weekly" checked="{!v.scheduleRec.biWeekly}" disabled="{!v.disableInput}"/>
+                            <br/>
+                            <lightning:input type="checkbox" label="Create Zoom Meetings" checked="{!v.scheduleRec.createZoomMeetings}" disabled="{!v.disableInput}"/> <!--W-006819 - Hybrid Class Room Scheduling-->
+                            <br/>
+                            <lightning:input type="checkbox" label="Exclude Federal Holidays" name="input3" checked="{!v.scheduleRec.excludeFederalHoliday}" disabled="{!v.disableInput}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="8" >
+                            <lightning:layout multipleRows="true">
+                                <aura:if isTrue="{!v.scheduleRec.isUpdate}">
+                                    <lightning:layoutItem size="12" padding="" class="slds-p-around_x-small">
+                                        <lightning:input type="text" name="name" value="{!v.scheduleRec.scheduleName}" label="Schedule Name" required="true" disabled="{!v.disableInput}"/>
+                                    </lightning:layoutItem>
+                                </aura:if>
+                                <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                    <ui:inputDate aura:id="startDateValue" label="Start Date" class="slds-input" value="{!v.scheduleRec.startDate}" displayDatePicker="true" format="MM/dd/yyyy" required="true" disabled="{!v.scheduleType == 'Extend End Date'}"/>   
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                    <ui:inputDate aura:id="endDateValue" label="End Date" class="slds-input" value="{!v.scheduleRec.endDate}" displayDatePicker="true" format="MM/dd/yyyy" required="true"/>
+                                </lightning:layoutItem>
+                                <aura:if isTrue="{!v.scheduleRec.isTravelRequired}">
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <ui:inputDate aura:id="travelInDate" label="Travel In" class="slds-input" value="{!v.scheduleRec.travelInDate}" displayDatePicker="true" format="MM/dd/yyyy" required="true" disabled="{!v.scheduleType == 'Extend End Date'}"/>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <ui:inputDate aura:id="travelOutDate" label="Travel Out" class="slds-input" value="{!v.scheduleRec.travelOutDate}" displayDatePicker="true" format="MM/dd/yyyy" required="true" disabled="{!v.scheduleType == 'Extend End Date'}"/>
+                                    </lightning:layoutItem>
+                                </aura:if>
+                                
+                                <aura:if isTrue="{!not(or(v.scheduleRec.variedTime,v.scheduleRec.isTravelRequired))}">
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <lightning:select aura:id="inputValue" label="Start Time" value="{!v.scheduleRec.startTime}" required="true" onchange="{!c.setPlannedTime}" disabled="{!v.disableInput}">
+                                            <option text="--None--" value="--None--"></option>
+                                            <aura:iteration items="{!v.timeList}" var="time">
+                                                <option text="{!time}" value="{!time}"></option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <lightning:select aura:id="inputValue" label="End Time" value="{!v.scheduleRec.endTime}" required="true" onchange="{!c.setPlannedTime}" disabled="{!v.disableInput}">
+                                            <option text="--None--" value="--None--"></option>
+                                            <aura:iteration items="{!v.endTimeList}" var="time">
+                                                <option text="{!time}" value="{!time}"></option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </lightning:layoutItem>
+                                </aura:if>
+                                
+                                <!-- hide these input of the travel required is enabled -->
+                                <aura:if isTrue="{!not(v.scheduleRec.isTravelRequired)}">
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <lightning:input type="text" name="totalHrsPerSession" value="{!v.scheduleRec.totalHrsPerSession}" label="Total Hours Per Session" disabled="{!or(not(v.scheduleRec.variedTime),v.scheduleRec.status == 'Active')}" onchange="{!c.setExactPlannedTime}"/>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <lightning:input type="text" name="breakTime" value="{!v.scheduleRec.breakTimeHrs}" label="Break Time(Hours)" onchange="{!c.setExactPlannedTime}" disabled="{!v.disableInput}"/>	
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <lightning:input aura:id="inputValue" type="text" name="hrsPlanned" value="{!v.scheduleRec.hoursPlanned}" label="Hours Per Session" disabled="true" required="true"/>
+                                    </lightning:layoutItem>
+                                </aura:if>
+                                
+                                <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                    <aura:if isTrue="{!not(empty(v.timezones))}">
+                                        <lightning:select name="timezone" label="Timezone" value="{!v.scheduleRec.timezone}" required="true" disabled="{!v.disableInput}">
+                                            <aura:iteration items="{!v.timezones}" var="tz">
+                                                <optgroup label="{!tz.group}" class="slds-select">
+                                                    <aura:iteration items="{!tz.zones}" var="zone">
+                                                        <option text="{!zone.name}" value="{!zone.value}"></option>
+                                                    </aura:iteration>
+                                                </optgroup>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </aura:if>
+                                </lightning:layoutItem>
+                                
+                                <aura:if isTrue="{!v.objectName == 'Opportunity'}">
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <lightning:select aura:id="inputValue" name="opli" label="Opportunity Product" value="{!v.scheduleRec.opliId}" required="true" disabled="{!v.disableInput}">
+                                            <option text="--None--" value="--None--"></option>
+                                            <aura:iteration items="{!v.opliRecords}" var="opli">
+                                                <option text="{!opli.Product2.Name}" value="{!opli.Id}"></option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </lightning:layoutItem>
+                                </aura:if>
+                                <aura:if isTrue="{!v.objectName == 'AcctSeed__Project__c'}">
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <lightning:select aura:id="inputValue" name="task" label="Project Task" value="{!v.scheduleRec.projectTaskId}" required="true" disabled="{!v.disableInput}" onchange="{!c.displayParentSchRecords}">
+                                            <option text="--None--" value="--None--"></option>
+                                            <aura:iteration items="{!v.taskRecords}" var="task">
+                                                <option text="{!task.Name}" value="{!task.Id}"></option>
+                                            </aura:iteration>
+                                        </lightning:select>
+                                    </lightning:layoutItem>
+                                    <aura:if isTrue="{!v.showParentSchSelection}">
+                                        <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                            <lightning:select aura:id="inputValue" name="parentSchedule" label="Parent Schedule" required="true" value="{!v.scheduleRec.parentScheduleId}" disabled="{!v.disableInput}">
+                                                <option text="--None--" value="--None--"></option>
+                                                <aura:iteration items="{!v.parentSchRecords}" var="parentSch">
+                                                    <option text="{!parentSch.displayName}" value="{!parentSch.Id}" selected="{!v.scheduleRec.parentScheduleId == parentSch.Id}"></option>
+                                                </aura:iteration>
+                                            </lightning:select>
+                                        </lightning:layoutItem>
+                                    </aura:if>
+                                </aura:if>
+                                <aura:if isTrue="{!v.scheduleType != 'Regular'}">
+                                    <lightning:layoutItem size="6" class="slds-p-around_x-small">
+                                        <aura:if isTrue="{!not(v.disableInput)}">
+                                            <c:LookupSearch aura:id="insLookup" selection="{!v.instructorSelected}" onSearch="{!c.lookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" label="Instructor" placeholder="Select Instructor" isMultiEntry="false"/>
+                                            <aura:set attribute="else">
+                                                <label class="slds-form-element__label">Instructor</label><br/><br/>
+                                                <span>{!v.scheduleRec.instructorName} </span>
+                                            </aura:set>
+                                        </aura:if>
+                                        
+                                    </lightning:layoutItem>
+                                </aura:if>
+                                <lightning:layoutItem size="6" padding="around-small">
+                                    <label class="slds-form-element__label">Total Scheduled Hours/Total Planned Hours</label><br/>
+                                    <lightning:button label="Calculate"  variant="brand" onclick="{!c.calculateBtnClick}"/>
+                                    &nbsp;<span>
+                                    <span class="{!(v.totalAlottedHrs > v.totalPossibleHrs ? 'redColor' : 'greenColor')}">{!v.totalAlottedHrs}</span>
+                                    <span>/</span>
+                                    <span>{!v.totalPossibleHrs}</span>
+                                    </span>
+                                </lightning:layoutItem>
+                                <aura:if isTrue="{!v.scheduleType != 'Regular'}">
+                                    <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                        <aura:if isTrue="{!and(v.scheduleType != 'Extend End Date', v.scheduleType != 'Move Online')}">
+                                            <c:LookupSearch aura:id="roomLookup" selection="{!v.roomSelected}" onSearch="{!c.roomLookupSearch}" iconName="" objectName="Room__c" fieldName="Name" condition="{!v.roomCondition}" label="Room" placeholder="Select Room" isMultiEntry="false"/>
+                                            <aura:set attribute="else">
+                                                <label class="slds-form-element__label">Room</label><br/><br/>
+                                                <span>{!v.scheduleRec.roomName} </span>
+                                            </aura:set>
+                                        </aura:if>
+                                        
+                                    </lightning:layoutItem>
+                                </aura:if>
+                                
+                            </lightning:layout>
+                        </lightning:layoutItem>
+                        
+                    </lightning:layout>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Save"  variant="brand" onclick="{!c.saveBtnClick}"/>
+                    <lightning:button label="Cancel"  variant="brand" onclick="{!c.cancelBtnClick}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+        <!-- Substitute Type create & Edit modal -->
+        <aura:if isTrue="{!v.scheduleType == 'Substitute'}">
+            <c:sldsModal aura:id="substituteModal" modelWidth="80%">
+                <aura:set attribute="header">
+                    {!v.headerTitle}
+                </aura:set>
+                <aura:set attribute="content">
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="4" >
+                            <lightning:layout multipleRows="true">
+                                
+                                <lightning:layoutItem size="12" padding="around-small">
+                                    <lightning:input type="date"  aura:id="startDtValue" label="Start Date" value="{!v.scheduleRec.startDate}"  required="true" onchange="{!c.getSubstituteEvents}" dateStyle="short"/>
+                                    <!--<ui:inputDate aura:id="startDtValue" label="Start Date" class="slds-input" value="{!v.scheduleRec.startDate}" displayDatePicker="true" format="MM/dd/yyyy" required="true" onchange="{!c.getSubstituteEvents}"/>   -->
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="12" padding="around-small">
+                                    <lightning:input type="date"  aura:id="endDtValue" label="End Date" value="{!v.scheduleRec.endDate}"  required="true" onchange="{!c.getSubstituteEvents}" dateStyle="short"/>
+                                    <!--<ui:inputDate aura:id="endDtValue" label="End Date" class="slds-input" value="{!v.scheduleRec.endDate}" displayDatePicker="true" format="MM/dd/yyyy" required="true" onchange="{!c.getSubstituteEvents}"/>-->
+                                </lightning:layoutItem>
+                                
+                                <lightning:layoutItem size="12" padding="around-small">
+                                    <aura:if isTrue="{!v.scheduleRec.status != 'Active'}">
+                                        <c:LookupSearch aura:id="subInsLookup" selection="{!v.instructorSelected}" onSearch="{!c.lookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" label="Instructor" placeholder="Select Instructor" isMultiEntry="false"/>
+                                        <aura:set attribute="else">
+                                            <label class="slds-form-element__label">Instructor</label><br/><br/>
+                                            <span>{!v.scheduleRec.instructorName} </span>
+                                        </aura:set>
+                                    </aura:if>
+                                    
+                                </lightning:layoutItem>
+                                
+                                <!--lightning:layoutItem size="12" padding="around-small">
+                                    <aura:if isTrue="{!v.scheduleRec.status != 'Active'}">
+                                        <c:LookupSearch aura:id="subRoomLookup" selection="{!v.roomSelected}" onSearch="{!c.roomLookupSearch}" iconName="" objectName="Room__c" fieldName="Name" condition="" label="Room" placeholder="Select Room" isMultiEntry="false"/>
+                                        <aura:set attribute="else">
+                                            <label class="slds-form-element__label">Room</label><br/><br/>
+                                            <span>{!v.scheduleRec.roomName} </span>
+                                        </aura:set>
+                                    </aura:if>
+                                </lightning:layoutItem-->
+                                
+                                <lightning:layoutItem size="12" padding="around-small">
+                                    <label class="slds-form-element__label">Total Scheduled Hours/Total Planned Hours</label>
+                                    <lightning:button label="Calculate"  variant="brand" onclick="{!c.calculateBtnClick}"/>
+                                    &nbsp;<span>
+                                    <span class="{!(v.totalAlottedHrs > v.totalPossibleHrs ? 'redColor' : 'greenColor')}">{!v.totalAlottedHrs}</span>
+                                    <span>/</span>
+                                    <span>{!v.totalPossibleHrs}</span>
+                                    </span>
+                                </lightning:layoutItem>
+                                
+                            </lightning:layout>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="8">
+                            <lightning:layout multipleRows="true">
+                                <lightning:layoutItem size="12" padding="around-small">
+                                    <lightning:layout multipleRows="true">
+                                        <lightning:layoutItem size="3">
+                                            <label>
+                                                <span class="slds-box slds-box_xx-small boxClass" style="background-color: #ff6666;"></span>
+                                                <span style="margin-left: 5px;">Excluded</span>
+                                            </label>  
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3">
+                                            <label>
+                                                <span class="slds-box slds-box_xx-small boxClass" style="background-color: yellow;"></span>
+                                                <span style="margin-left: 5px;">Saved Events</span>
+                                            </label> 
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3">
+                                            <label>
+                                                <span class="slds-box slds-box_xx-small boxClass" style="background-color: #53c653;"></span>
+                                                <span style="margin-left: 5px;">New Events</span>
+                                            </label> 
+                                        </lightning:layoutItem>
+                                        <lightning:layoutItem size="3">
+                                            <label>
+                                                <span class="slds-box slds-box_xx-small boxClass" style="background-color: darkgray;"></span>
+                                                <span style="margin-left: 5px;">Completed Events</span>
+                                            </label> 
+                                        </lightning:layoutItem>
+                                    </lightning:layout>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="12" padding="around-small">
+                                    <lightning:card class="cardCss slds-col--padded">
+                                        <aura:set attribute="title">
+                                            Select Substitute Events
+                                        </aura:set>
+                                        <table class="slds-table slds-table_cell-buffer slds-no-row-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col"><center>Monday</center></th>
+                                                    <th scope="col"><center>Tuesday</center></th>
+                                                    <th scope="col"><center>Wednesday</center></th>
+                                                    <th scope="col"><center>Thursday</center></th>
+                                                    <th scope="col"><center>Friday</center></th>
+                                                    <th scope="col"><center>Saturday</center></th>
+                                                    <th scope="col"><center>Sunday</center></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <aura:if isTrue="{!not(empty(v.substituteEventsList))}">
+                                                    <aura:iteration items="{!v.substituteEventsList}" var="week" indexVar="weekIndex">
+                                                        <tr>
+                                                            <aura:iteration items="{!week.daysVal}" var="dayRec" indexVar="dayIndex">
+                                                                <aura:if isTrue="{!dayRec.day == 'Monday' || dayRec.day == 'Tuesday' || dayRec.day == 'Wednesday' || dayRec.day == 'Thursday' || dayRec.day == 'Friday' || dayRec.day == 'Saturday' || dayRec.day == 'Sunday'}">
+                                                                    <aura:if isTrue="{!dayRec.day == 'Monday'}">
+                                                                        <td data-weekIndex="{!weekIndex}" data-dayIndex="{!dayIndex}" onclick="{!c.addOrRemoveForSubstituteEvents}"><center><span class="slds-badge" title="{!dayRec.day}" style="{!dayRec.style}" >{!dayRec.date}</span></center></td>
+                                                                    </aura:if>
+                                                                    <aura:if isTrue="{!dayRec.day == 'Tuesday'}">
+                                                                        <td data-weekIndex="{!weekIndex}" data-dayIndex="{!dayIndex}" onclick="{!c.addOrRemoveForSubstituteEvents}"><center><span class="slds-badge" title="{!dayRec.day}" style="{!dayRec.style}" >{!dayRec.date}</span></center></td>
+                                                                    </aura:if>
+                                                                    <aura:if isTrue="{!dayRec.day == 'Wednesday'}">
+                                                                        <td data-weekIndex="{!weekIndex}" data-dayIndex="{!dayIndex}" onclick="{!c.addOrRemoveForSubstituteEvents}"><center><span class="slds-badge" title="{!dayRec.day}" style="{!dayRec.style}" >{!dayRec.date}</span></center></td>
+                                                                    </aura:if>
+                                                                    <aura:if isTrue="{!dayRec.day == 'Thursday'}">
+                                                                        <td data-weekIndex="{!weekIndex}" data-dayIndex="{!dayIndex}" onclick="{!c.addOrRemoveForSubstituteEvents}"><center><span class="slds-badge" title="{!dayRec.day}" style="{!dayRec.style}" >{!dayRec.date}</span></center></td>
+                                                                    </aura:if>
+                                                                    <aura:if isTrue="{!dayRec.day == 'Friday'}">
+                                                                        <td data-weekIndex="{!weekIndex}" data-dayIndex="{!dayIndex}" onclick="{!c.addOrRemoveForSubstituteEvents}"><center><span class="slds-badge" title="{!dayRec.day}" style="{!dayRec.style}" >{!dayRec.date}</span></center></td>
+                                                                    </aura:if>
+                                                                    <aura:if isTrue="{!dayRec.day == 'Saturday'}">
+                                                                        <td data-weekIndex="{!weekIndex}" data-dayIndex="{!dayIndex}" onclick="{!c.addOrRemoveForSubstituteEvents}"><center><span class="slds-badge" title="{!dayRec.day}" style="{!dayRec.style}" >{!dayRec.date}</span></center></td>
+                                                                    </aura:if>
+                                                                    <aura:if isTrue="{!dayRec.day == 'Sunday'}">
+                                                                        <td data-weekIndex="{!weekIndex}" data-dayIndex="{!dayIndex}" onclick="{!c.addOrRemoveForSubstituteEvents}"><center><span class="slds-badge" title="{!dayRec.day}" style="{!dayRec.style}" >{!dayRec.date}</span></center></td>
+                                                                    </aura:if>
+                                                                    <aura:set attribute="else"><td></td></aura:set>
+                                                                </aura:if>
+                                                            </aura:iteration>
+                                                        </tr>
+                                                    </aura:iteration>
+                                                    <aura:set attribute="else">
+                                                        <td colspan="7" style="text-align: center;"><span> No records to display</span></td>
+                                                    </aura:set>
+                                                </aura:if>
+                                            </tbody>
+                                        </table>
+                                    </lightning:card>
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                        </lightning:layoutItem>
+                        
+                    </lightning:layout>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Save"  variant="brand" onclick="{!c.substituteSaveClick}"/>
+                    <lightning:button label="Cancel"  variant="brand" onclick="{!c.substituteCancelClick}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        
+        <aura:if isTrue="{!v.scheduleType == 'Tester'}">
+            <c:sldsModal aura:id="testerModal" modelWidth="60%">
+                <aura:set attribute="header">
+                    {!v.headerTitle}
+                </aura:set>
+                <aura:set attribute="content">
+                    <div class="slds-p-around_small">
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem size="6" padding="around-small">
+                                <lightning:input type="date" aura:id="testerFormInputs" label="Start Date" value="{!v.scheduleRec.startDate}" required="true" dateStyle="short"/>   
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6" padding="around-small">
+                                <lightning:input type="date" aura:id="testerFormInputs" label="End Date" value="{!v.scheduleRec.endDate}" required="true" dateStyle="short"/>
+                            </lightning:layoutItem>                            
+                            <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                <lightning:select aura:id="testerFormSelectInputs" messageWhenValueMissing='Complete this field.' label="Start Time" value="{!v.scheduleRec.startTime}" required="true" onchange="{!c.setPlannedTime}" disabled="{!v.disableInput}">
+                                    <option text="--None--" value=""></option>
+                                    <aura:iteration items="{!v.timeList}" var="time">
+                                        <option text="{!time}" value="{!time}"></option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                <lightning:select aura:id="testerFormSelectInputs" messageWhenValueMissing='Complete this field.' label="End Time" value="{!v.scheduleRec.endTime}" required="true" onchange="{!c.setPlannedTime}" disabled="{!v.disableInput}">
+                                    <option text="--None--" value=""></option>
+                                    <aura:iteration items="{!v.endTimeList}" var="time">
+                                        <option text="{!time}" value="{!time}"></option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">
+                                <lightning:select aura:id="testerFormSelectInputs"  messageWhenValueMissing='Complete this field.' name="task" label="Project Task" value="{!v.scheduleRec.projectTaskId}" required="true" onchange="{!c.displayParentSchRecords}">
+                                    <option text="--None--" value=""></option>
+                                    <aura:iteration items="{!v.taskRecords}" var="task">
+                                        <option text="{!task.Name}" value="{!task.Id}"></option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6" padding="around-small">
+                                <aura:if isTrue="{!v.scheduleRec.status != 'Active'}">
+                                    <c:LookupSearch aura:id="testerFormLookupInputs" selection="{!v.instructorSelected}" onSearch="{!c.lookupSearch}" iconName="standard:contact" objectName="Contact" fieldName="Name" condition="" label="Instructor" placeholder="Select Instructor" isMultiEntry="false"  isRequired="true"/>
+                                    <aura:set attribute="else">
+                                        <label class="slds-form-element__label">Instructor</label><br/><br/>
+                                        <span>{!v.scheduleRec.instructorName} </span>
+                                    </aura:set>
+                                </aura:if>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6" padding="" class="slds-p-around_x-small">                                
+                                  <c:LookupSearch aura:id="testerFormLookupInputs" selection="{!v.roomSelected}" onSearch="{!c.roomLookupSearch}" iconName="" objectName="Room__c" fieldName="Name" condition="{!v.roomCondition}" label="Room" placeholder="Select Room" isMultiEntry="false"  isRequired="true"/>                                                                   
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                    </div>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button label="Save"  variant="brand" onclick="{!c.testerSaveClick}"/>
+                    <lightning:button label="Cancel"  variant="brand" onclick="{!c.testerCancelClick}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+    </aura:if>
+    
+    
+    <!-- Conflict details display modal -->
+    <aura:if isTrue="{!v.showConflictModal}">
+        <c:sldsModal aura:id="conflictModel" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="header">
+                Schedule Conflict Check
+            </aura:set>
+            <aura:set attribute="content">
+                <aura:if isTrue="{!v.objectName == 'AcctSeed__Project__c'}">
+                    <div>Holidays Excluded: {!v.scheduleConflictMap.Holiday}</div>
+                    <div>Student Planned Days Off Excluded: {!v.scheduleConflictMap.StudentPlannedDaysOff}</div>
+                    <div>Instructor Scheduled Event Conflicts: {!v.scheduleConflictMap.InstructorEvent} </div>
+                    <div>Instructor Planned Days Off Event Conflicts: {!v.scheduleConflictMap.InstructorPlannedDaysOff} </div>
+                    <div>Room Scheduled Event Conflicts: {!v.scheduleConflictMap.RoomEvent}</div>
+                </aura:if>
+                <aura:if isTrue="{!or(v.objectName == 'Opportunity',v.objectName == 'AcctSeed__Project__c')}">
+                    <div>Current Scheduled Hours:  {!v.newHrsToBeCreated}</div>
+                    <div>Total Scheduled Hours: {!v.totalAlottedHrs} </div>
+                    <div>Total Planned Hours: {!v.totalPossibleHrs} </div>
+                </aura:if>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Okay"  variant="brand" onclick="{!c.conflictYesClick}"/>
+                <lightning:button label="Cancel"  variant="brand" onclick="{!c.closeConlfictModel}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Success / Error msg display modal -->
+    <aura:if isTrue="{!v.showSuccessModal}">
+        <c:sldsModal aura:id="successModel" modalZIndexValue="9010" backdropZIndexValue="9005">
+            <aura:set attribute="header">
+                {!v.successTitle}
+            </aura:set>
+            <aura:set attribute="content">
+                {!v.successMsg}
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button label="Close"  variant="brand" onclick="{!c.closeSuccessModel}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!--To open cost rate creation model on new child shedule creation when new contact assignment is created -->
+    <aura:if isTrue="{!v.showCostRateModal}">
+        <c:CostRateCreation_Cmp defaultCR="{!v.defaultCRRateType}" parentRTName="{!v.parentRTName}" 
+                                parentObjName="{!v.objectName}" caRecord="{!v.caMap}"/>
+    </aura:if>
+    
+    
+    
+</aura:component>

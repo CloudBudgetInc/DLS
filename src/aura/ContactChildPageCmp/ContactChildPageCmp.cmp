@@ -1,0 +1,5 @@
+<aura:component implements="lightning:isUrlAddressable,force:lightningQuickAction,flexipage:availableForAllPageTypes,force:hasRecordId" >
+	<aura:handler name="init" value="{!this}" action="{!c.goToLightningPage}"/>
+    <aura:attribute name="recordId" type="string" />
+    <lightning:navigation aura:id="navService"/>
+</aura:component>

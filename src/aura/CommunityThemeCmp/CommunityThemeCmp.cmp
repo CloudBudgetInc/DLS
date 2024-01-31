@@ -1,0 +1,54 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes,forceCommunity:themeLayout" access="global" controller="EventListViewController">
+    <aura:attribute name="search" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="profileMenu" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="navBar" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="newHeader" type="Aura.Component[]" required="false"/>
+    <aura:attribute name="communityName" type="String" default=""/>
+    <aura:attribute name="backgroundImageURL" type="string"/>
+
+    <ltng:require scripts="{!join(',', 
+                           $Resource.DLS_Communites_CSS + '/Communites_CSS/script/jquery-3.2.1.slim.min.js')}"
+                  styles="{!join(',', 
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/styles.css',
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/bootstrap.css',
+                          $Resource.DLS_Communites_CSS + '/Communites_CSS/font-awesome/css/all.css')}"/>
+    
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- Service method for server callback -->
+    <c:ApexService aura:id="server"/>
+    
+    <div class="themed-page">
+        <!--div class="cHeaderPanel slds-container-fluid" style="{!'background:' +' url(' + v.backgroundImageURL +') no-repeat;background-position: top center;background-size: cover;}">
+                <div class="cHeaderOverlay">
+                    <div class="cHeaderLine slds-grid">
+                         <div class="slds-col slds-size_3-of-12">
+                              <img src="{!$Resource.CommunityDlsLogo}" style="width: 60%;"  alt="DLS Logo" onclick="{!c.redirectToHome}"/>
+                        </div>
+                        <div class="slds-col slds-size_5-of-12">
+                            <div class="searchRegion">
+                                {!v.search}
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_3-of-12">
+                            <div><forceCommunity:notifications/></div>
+                            <div>{!v.profileMenu}</div>
+                        </div>
+                    </div>
+                </div>
+                       </div-->
+        <div class="header">
+            <c:CommunityHeaderCmp communityName="{!v.communityName}" search="{!v.search}" profileMenu="{!v.profileMenu}"/>
+        </div>
+        <div class="navigation">
+           {!v.navBar}
+        </div>
+        <div class="mainContentArea" style="padding: 1rem;">
+            {!v.body}
+        </div>
+        <div class="footer">
+            <c:CommunityFooterCmp communityName="{!v.communityName}"/>
+        </div>
+    </div>
+</aura:component>

@@ -1,0 +1,120 @@
+<aura:component implements="force:appHostable" access="global" controller="AuditTrailReportController">
+    
+    <!-- Attributes to display the table -->
+    <aura:attribute name="tcdHistoryRecs" type="List" default="[]"/>
+    <aura:attribute name="showTable" type="Boolean" default="false"/>
+    <aura:attribute name="spinner" type="Boolean" default="fasle"/>
+    
+    <!--- Attribute to filter the records -->
+    <aura:attribute name="filterObj" type="Map" default="{}"/>
+    
+    <!-- Attributes to download the Audit Trail Report records as csv file -->
+    <aura:attribute name="tabelHeader" type="List" default=""/>
+    <aura:attribute name="tcdHistoryRecsToDownload" type="List" default="[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <!--loading spinner start-->
+    <aura:if isTrue="{!v.spinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    <!-- Loading spinner end-->   
+    <lightning:card>
+        <aura:set attribute="title">
+            <span class="slds-text-heading_large">Audit Trail Report</span>
+            <lightning:helptext iconName="utility:info" content="Displayed only recent 1000 records" class="slds-m-left_small customIcon"/>
+        </aura:set>
+        <aura:set attribute="actions">
+            <lightning:button aura:id="downloadBtnId" class="btn slds-float--right" variant="brand" label="Download" onclick="{!c.exportAuditTrailReportFile}" />
+        </aura:set>
+        <lightning:layout multipleRows="true">
+            <!-- Filters start -->
+            <lightning:layoutItem size="3" padding="around-small">
+                <c:LookupSearch aura:id="insId" selection="{!v.filterObj.selectedConName}" onSearch="{!c.contactLookupSearch}" 
+                                iconName="standard:record" objectName="Contact" fieldName="Name" condition="" label="Contact Name" 
+                                isMultiEntry="false" isRequired="false"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem size="3" padding="around-small">
+                <c:LookupSearch aura:id="byUserId" selection="{!v.filterObj.selectedUser}" onSearch="{!c.userLookupSearch}" 
+                                iconName="standard:record" objectName="User" fieldName="Name" condition="" label="By User" 
+                                isMultiEntry="false" isRequired="false"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem size="3" padding="around-small">
+                <c:LookupSearch aura:id="projId" selection="{!v.filterObj.selectedProjName}" onSearch="{!c.projectLookupSearch}" 
+                                iconName="standard:record" objectName="AcctSeed__Project__c" fieldName="Name" condition="" label="Project" 
+                                isMultiEntry="false" isRequired="false"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem size="3" padding="around-small">
+            </lightning:layoutItem>
+            <lightning:layoutItem size="3" padding="around-small">
+                <ui:inputDate aura:id="fromdate" label="From Date" class="field" value="{!v.filterObj.fromDateVal}" displayDatePicker="true" /> 
+            </lightning:layoutItem>
+            <lightning:layoutItem size="3" padding="around-small">
+                <ui:inputDate aura:id="todate" label="To Date" class="field" value="{!v.filterObj.toDateVal}" displayDatePicker="true" /> 
+            </lightning:layoutItem>
+            <!-- Filters End -->
+            <lightning:layoutItem size="3" padding="around-small">
+                <lightning:button aura:id="applyBtnId" variant="brand" class="btn" label="Apply" onclick="{!c.applyBtnClick}"/>
+            </lightning:layoutItem>
+            <!-- Button to download csv file -->
+            <lightning:layoutItem size="3" padding="around-small">
+            </lightning:layoutItem>
+        </lightning:layout>
+        <div>
+            <!-- Table start -->
+            <aura:if isTrue="{!v.tcdHistoryRecs.length > 0}">
+                <table class="slds-table slds-table--bordered slds-table--fixed-layout">
+                    <thead>
+                        <tr>
+                            <aura:iteration items="{!v.tabelHeader}" var ="h">
+                                <th scope="col"> 
+                                    <span class="slds-cell-wrap">{!h.label}</span>
+                                </th>
+                            </aura:iteration>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <aura:iteration items="{!v.tcdHistoryRecs}" var ="r">
+                            <tr>
+                                <td data-label="Modified DateTime">
+                                    <span class="slds-cell-wrap">{!r.dateAndTime}</span>
+                                </td>
+                                <td data-label="By User">
+                                    <span class="slds-cell-wrap">{!r.byUser}</span>
+                                </td>
+                                <td data-label="Field Edited">
+                                    <span class="slds-cell-wrap">{!r.fieldEdited}</span>
+                                </td>
+                                <td data-label="Old Value">
+                                    <span class="slds-cell-wrap">{!r.oldValue}</span>
+                                </td>
+                                <td data-label="New Value">
+                                    <span class="slds-cell-wrap">{!r.newValue}</span>
+                                </td>
+                                <td data-label="Contact Name">
+                                    <span class="slds-cell-wrap">{!r.contactName}</span>
+                                </td>
+                                <td data-label="Project">
+                                    <span class="slds-cell-wrap">{!r.project}</span>
+                                </td>
+                                <td data-label="Project Task">
+                                    <span class="slds-cell-wrap">{!r.projectTask}</span>
+                                </td>
+                                <td data-label="Time Card Line">
+                                    <span class="slds-cell-wrap">{!r.tclName}</span>
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+                <!-- Table end -->
+                <aura:set attribute="else">
+                    <center>No records to display</center>
+                </aura:set>
+            </aura:if>
+        </div>
+    </lightning:card>
+</aura:component>

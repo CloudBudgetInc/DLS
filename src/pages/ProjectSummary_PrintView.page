@@ -1,0 +1,160 @@
+<apex:page controller="LTSProjectSummaryViewCntrl" showHeader="false" sidebar="false">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <script src="{!URLFOR($Resource.Angular_min_Js_1_6_5)}"/>
+    <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    
+    <style>
+        .nowrapStyle {
+            white-space: normal !important;
+        }
+        
+        .img{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            //height: 10%;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+        }
+        
+    </style>
+    <apex:form >
+        <div ng-app="myApp" ng-controller="projectSummaryPrint" class="slds ng-cloak">
+        
+            <body onafterprint="redirectToSummary()">
+                <div style="display: none; background-color: rgba(222, 230, 230, 0.6);width: 100%; height: 100%; z-index: 1000; position: fixed; left: 0; top: 0; overflow: hidden; text-align: center; vertical-align: middle;" id="spinner">
+                    <img alt="Loading..." src="{!URLFOR($Resource.SLDS0_12_2,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+                </div>
+                
+                <div style="margin-top: 1%;">
+                    <table class="slds-table" ng-if="projectRecords.length > 0">
+                        <thead>
+                            <th>Name</th>
+                            <th>DLS Ref #</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th class="nowrapStyle">Hours/Week</th>
+                            <th class="nowrapStyle">Account Name</th>
+                            <th>Language</th>
+                            <th>Room(s)</th>
+                            <th class="nowrapStyle">Hours Remaining</th>
+                            <th class="nowrapStyle">Project Status</th>
+                            <th class="nowrapStyle">Active Instructor(s)</th>
+                            <th class="nowrapStyle">Active Student(s)</th>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="pro in projectRecords" class="slds-hint-parent">
+                                <td class="nowrapStyle" ng-bind="decodeHTML(pro.Name)"></td>
+                                <td ng-bind="pro.DLS_Ref__c"></td>
+                                <td>{{pro.Start_Date__c | date:'MM-dd-yy'}}</td>
+                                <td>{{pro.End_Date__c | date:'MM-dd-yy'}}</td>
+                                <td ng-bind="pro.Hours_Week__c"></td>
+                                <td class="nowrapStyle" ng-bind="decodeHTML(pro.AcctSeed__Account__r.Name)"></td>
+                                <td class="nowrapStyle" ng-bind="decodeHTML(pro.Language__r.Name)"></td>
+                                <td class="nowrapStyle" ng-bind="decodeHTML(pro.All_Active_Rooms__c)"></td>
+                                <td class="nowrapStyle" ng-bind="pro.Hours_Remaining__c"></td>
+                                <td ng-bind="pro.AcctSeed__Status__c"></td>
+                                <td class="nowrapStyle" ng-bind="decodeHTML(pro.Instructors__c)"></td>
+                                <td class="nowrapStyle" ng-bind="decodeHTML(pro.Students__c)"></td>
+                            </tr>
+                        </tbody>
+                    </table> 
+                </div>           
+            </body>
+        </div>
+    </apex:form>
+    <script>
+        
+        function redirectToSummary() {
+            var isSite = '{!$Site.Name}';
+            
+            if(!isSite){
+                window.location.href = '/apex/LTSProjectSummaryView';
+            }else {
+                var urlPrefix = '{!$Label.Community_Site_Prefix}';
+                sforce.one.navigateToURL(urlPrefix+'/s/project-summary');
+            }
+        } 
+
+        var app = angular.module('myApp',['ngRoute']);
+        app.controller('projectSummaryPrint', function($scope,$timeout,$location,$route,$routeParams) {
+            document.getElementById("spinner").style.display = 'block';
+            var url = $location.absUrl();
+            if(url.indexOf('param') != -1) {
+                var address = url;
+                var decodedString = '';
+                
+                var isSite = '{!$Site.Name}';
+                
+                if(!isSite) {
+                    decodedString = atob(decodeURIComponent(address).split('param=')[1]);
+                }else {
+                    decodedString = atob(decodeURIComponent(address).split('param=')[1].split('&tour')[0]);
+                }
+                console.log('::::::::::decodedString::::',decodedString);
+                var searchObj = JSON.parse(decodedString);
+                console.log(':::::::::searchObj::::',searchObj);
+                
+                var accId = searchObj['Account Name'];
+                var conId = searchObj['Contact'];
+                var position = searchObj['Contact Assignment Position'];
+                var RType = searchObj['Contact Assignment Record Type'];
+                var CAstatus = searchObj['Contact Assignment Status'];
+                var location = searchObj['Location'];
+                var proStatus = searchObj['Project Status'];
+                var orderByField = searchObj['orderByField'];
+                var sortingOrder = searchObj['sortingOrder'];
+                
+                console.log('::::::sortingOrder::::::::',orderByField,sortingOrder);
+                
+                $scope.projectRecords = [];
+                var contactId = '';
+                
+                if(conId){
+                    contactId = conId.Id;
+                }else {
+                    contactId = conId;
+                }
+                
+                Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.LTSProjectSummaryViewCntrl.projectRecordsForPrintView}',
+                accId,contactId,position,RType,CAstatus,location,proStatus,orderByField,sortingOrder,
+                    function(response, ev) {    
+                        if(ev.status) {
+                              console.log(':::::result::::::::',response);   
+                              $scope.projectRecords = response;                           
+                              document.getElementById("spinner").style.display = 'none';
+                              $timeout(function() {
+                                  window.print();
+                              },400);
+                             
+                      } else {
+                          console.log(':::::::error:::::::',ev);
+                      }
+                      $scope.$apply();
+                    },
+                ); 
+                
+                $scope.decodeHTML = function(encodedStr){
+                    if(encodedStr) {
+                        var parser = new DOMParser;
+                        var dom = parser.parseFromString(
+                            '<!doctype html><body>' + encodedStr,
+                            'text/html');
+                        var decodedString = dom.body.textContent;
+                        
+                        //console.log(decodedString);
+                        return decodedString;
+                    }else {
+                        return null;
+                    }
+                } 
+            }
+            
+        });
+    </script>
+    </html>
+</apex:page>

@@ -1,0 +1,62 @@
+<!-- sldsValidatorIgnore -->
+<template>
+    <template if:true={showSpinner}>
+        <lightning-spinner variant='brand' alternative-text="Loading"></lightning-spinner>
+    </template>
+    <div style="cursor:pointer;" onclick={navigateToHome}>
+        <lightning-icon icon-name="utility:back" alternative-text="Back" title="Back"></lightning-icon>
+        <span class="slds-col" style="font-size: 1.25rem;color: #1D4588!important;">&nbsp;Back</span>
+    </div>
+
+    <br />
+
+    <div class="cardPadding">
+        <div class="card-deck">
+            <div class="card">
+                <span class="card-body">
+                    <center><h5 class="card-title" style="font-size:1.5rem;">{jobList.Name}</h5></center><br/>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="6" class={ClassForPC} padding="around-small"
+                            small-device-size="6" medium-device-size="6" large-device-size="2">
+                            <div class="fontCls"><span class="labelCls">Date Posted:</span></div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" padding="around-small" small-device-size="6"
+                            medium-device-size="6" large-device-size="8">
+                            <div class="fontCls">{jobList.postedDate}</div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" small-device-size="12"
+                            medium-device-size="12" large-device-size="2"></lightning-layout-item>
+                        <lightning-layout-item size="6" class={ClassForPC} padding="around-small"
+                            small-device-size="6" medium-device-size="6" large-device-size="2">
+                            <div class="fontCls"><span class="labelCls">Location:</span></div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" padding="around-small" small-device-size="6"
+                            medium-device-size="6" large-device-size="8">
+                            <div class="fontCls">{jobList.Location__c}</div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" small-device-size="12"
+                            medium-device-size="12" large-device-size="2"></lightning-layout-item>
+                        <lightning-layout-item class={ClassForPC} padding="around-small" size="12"
+                            small-device-size="6" medium-device-size="6" large-device-size="2">
+                            <div class="fontCls"><span class="labelCls">Job Description:</span></div>
+                        </lightning-layout-item>
+                        <lightning-layout-item padding="around-small" size="12" small-device-size="6"
+                            medium-device-size="6" large-device-size="8">
+                            <lightning-formatted-rich-text class="fontCls" value={jobList.bpats__Job_Description__c}>
+                            </lightning-formatted-rich-text>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" small-device-size="6"
+                            medium-device-size="12" large-device-size="2"></lightning-layout-item>
+                        <lightning-layout-item size="12" small-device-size="6" medium-device-size="12"
+                            large-device-size="6">
+                            <div class="slds-align_absolute-center">
+                            <button class="btn btn-primary" onclick={navigateToApplication}
+                            name="Apply for this position">Apply for this position</button>
+                            </div>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </span>
+            </div>
+        </div>
+    </div>
+</template>

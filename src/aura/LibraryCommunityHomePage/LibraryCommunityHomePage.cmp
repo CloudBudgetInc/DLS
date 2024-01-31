@@ -1,0 +1,461 @@
+<aura:component controller="LibrarySearchController">
+    <aura:attribute name="userType" type="String" default=""/>
+    <aura:attribute name="currentContact" type="String" default=""/>
+    <aura:attribute name="displayMap" type="Map" default="{}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="tabName" type="String" default="Order"/>
+    <aura:attribute name="loanHeaders" type="List" default="[]"/>
+    <aura:attribute name="orderHeaders" type="List" default="[]"/>
+    <aura:attribute name="tableConfig" type="Map" default="{}" access="public"/>
+    <aura:attribute name="statusValues" type="List" default="['Loaned Out','Returned']"/>
+    <aura:attribute name="selectedStatus" type="String" default="Loaned Out"/>
+    <aura:attribute name="loanRecords" type="List" default="[]"/>
+    <aura:attribute name="orderRecords" type="List" default="[]"/>
+    <aura:attribute name="displayDevice" type="String"/>
+
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Regiser event to send clicked record details to parent -->
+    <aura:registerEvent name="childClickEvent" type="c:childClickEvent"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" variant="brand" alternativeText="Loading..." size="medium" class="slds-is-fixed"/>
+    </aura:if>
+    
+    <div class="card-deck">
+        <div class="card">
+            <div class="card-body">
+                <aura:if isTrue="{!v.userType != 'Instructor'}">
+                    <!--h5 class="card-title">My Material Requests</h5-->
+                    
+                    <div class="slds-grid">
+                        <span class="slds-col"><h5 class="card-title">My Material Requests</h5></span>
+                        <aura:if isTrue="{!v.tabName == 'Loan'}">
+                            <aura:if isTrue="{!v.displayDevice != 'Mobile'}">
+                                <span class="slds-col"></span>
+                                <span class="slds-col"></span>
+                                <label style="float: right;margin-right: 1rem;">Status</label>
+                                <span class="slds-col" style="margin-top: -2rem;">
+                                    <lightning:select label="" value="{!v.selectedStatus}" onchange="{!c.statusChanged}">
+                                        <aura:iteration items="{!v.statusValues}" var="status">
+                                            <option value="{!status}">{!status}</option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </span>
+                            </aura:if>
+                        </aura:if>
+                    </div>
+                    
+                    <ul class="nav nav-tabs"  role="tablist">
+                        <li class="nav-item">
+                            <a class="{!v.tabName == 'Order' ? 'nav-link active' : 'nav-link'}"  data-toggle="tab" name="Order" onclick="{!c.tabClick}" role="tab">Order</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="{!v.tabName == 'Loan' ? 'nav-link active' : 'nav-link'}"  data-toggle="tab"  name="Loan" onclick="{!c.tabClick}" role="tab" >Loan</a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" style="padding-top:1rem;">
+                        <!-- Order Tab -->
+                        <aura:if isTrue="{!v.tabName == 'Order'}">
+                            <!--aura:if isTrue="{!v.displayMap.orderRequests.length > 0}">
+                                <div class="containerTable table-responsive">
+                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                        <thead class="thead-light">
+                                            <tr class="slds-line-height_reset">
+                                                <th scope="col" class="wrap">Record Name</th>
+                                                <th scope="col" class="wrap">DLS Class #</th>
+                                                <th scope="col" class="wrap">Requested Date</th>
+                                                <th scope="col" class="wrap">Due Date</th>
+                                                <th scope="col" class="wrap">Ordered Date</th>
+                                                <th scope="col" class="wrap">Delivered Date</th>
+                                                <th scope="col" class="wrap">Status</th>
+                                                <th scope="col" class="wrap">Project End Date</th>
+                                                <th scope="col" class="wrap">Delivery Location</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <aura:iteration items="{!v.displayMap.orderRequests}" var="order">
+                                                <tr class="slds-hint-parent">
+                                                    <td data-label="Record Name" class="wrap">
+                                                        {!order.Name}
+                                                    </td>
+                                                    <td data-label="DLS Class #" class="wrap">
+                                                        {!order.Project__r.DLS_Class__c}
+                                                    </td>
+                                                    <td data-label="Requested Date" class="wrap">
+                                                        <ui:outputDate value="{!order.CreatedDate}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Due Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Due_Date__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Ordered Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Date_Ordered__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Delivered Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Date_Delivered__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Status" class="wrap">
+                                                        {!order.Request_Status__c}
+                                                    </td>
+                                                    <td data-label="Project End Date" class="wrap">
+                                                        <ui:outputDate value="{!order.Project__r.End_Date__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Delivery Location" class="wrap">
+                                                        {!order.Delivery_Location__c}
+                                                    </td>
+                                                </tr>
+                                            </aura:iteration>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <aura:set attribute="else">
+                                    <center><span>No Records To Display</span></center>
+                                </aura:set>
+                            </aura:if-->
+                            <aura:if isTrue="{!v.orderRecords.length > 0}">
+                                <div class="ldtTableCls orderTableCls">
+                                    <ldt:datatableDev aura:id="orderTable" dataRows="{!v.orderRecords}" header="{!v.orderHeaders}" config="{!v.tableConfig}"/>
+                                </div>
+                                <aura:set attribute="else">
+                                    <br/>
+                                    <center><span>No Records To Display</span></center>
+                                </aura:set>
+                            </aura:if>
+                            
+                        </aura:if>
+                        
+                        <!--Loan Tab -->
+                        <aura:if isTrue="{!v.tabName == 'Loan'}">
+                            
+                            <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                                <div>
+                                    <lightning:select label="Status" value="{!v.selectedStatus}" onchange="{!c.statusChanged}">
+                                        <aura:iteration items="{!v.statusValues}" var="status">
+                                            <option value="{!status}">{!status}</option>
+                                        </aura:iteration>
+                                    </lightning:select>
+                                </div>
+                            </aura:if>
+                            <!--aura:if isTrue="{!v.displayMap.loanRequests.length > 0}">
+                                <div class="containerTable table-responsive">
+                                    <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                        <thead class="thead-light">
+                                            <tr class="slds-line-height_reset">
+                                                <th scope="col" class="wrap">Record Name</th>
+                                                <th scope="col" class="wrap">DLS Class #</th>
+                                                <th scope="col" class="wrap">Material Title</th>
+                                                <th scope="col" class="wrap">Date Loaned Out</th>
+                                                <th scope="col" class="wrap">Date Returned</th>
+                                                <th scope="col" class="wrap">Status</th>
+                                                <th scope="col" class="wrap">Project End Date</th>
+                                                <th scope="col" class="wrap">Library Location</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <aura:iteration items="{!v.displayMap.loanRequests}" var="loan" indexVar="index">
+                                                <tr class="slds-hint-parent">
+                                                    <td data-label="Record Name" class="wrap">
+                                                        {!loan.Name}
+                                                    </td>
+                                                    <td data-label="DLS Class #" class="wrap">
+                                                        {!loan.Project__r.DLS_Class__c}
+                                                    </td>
+                                                    <td data-label="Material Name" class="wrap">
+                                                        {!loan.Materials_Name__r.Name}
+                                                    </td>
+                                                    <td data-label="Date Loaned Out" class="wrap">
+                                                        <ui:outputDate value="{!loan.Date_Loaned_Out__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Date Returned" class="wrap">
+                                                        <ui:outputDate value="{!loan.Date_Returned__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Status" class="wrap">
+                                                        {!loan.Request_Status__c}
+                                                    </td>
+                                                    <td data-label="Project End Date" class="wrap">
+                                                        <ui:outputDate value="{!loan.Project__r.End_Date__c}" format="MM/DD/YYYY"/>
+                                                    </td>
+                                                    <td data-label="Library Location" class="wrap">
+                                                        {!loan.Location__r.Name}
+                                                    </td>
+                                                </tr>
+                                            </aura:iteration>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <aura:set attribute="else">
+                                    <center><span>No Records To Display</span></center>
+                                </aura:set>
+                            </aura:if-->
+                            <aura:if isTrue="{!v.loanRecords.length > 0}">
+                                <div class="ldtTableCls LoanTableCls">
+                                    <ldt:datatableDev aura:id="loanTable" dataRows="{!v.loanRecords}" header="{!v.loanHeaders}" config="{!v.tableConfig}"/>
+                                </div>
+                                <aura:set attribute="else">
+                                    <br/>
+                                    <center><span>No Records To Display</span></center>
+                                </aura:set>
+                            </aura:if>
+                        </aura:if>
+                        
+                    </div>
+                </aura:if>
+                <aura:if isTrue="{!v.userType == 'Instructor'}">
+                    <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                         <div><h5 class="card-title">My Library Loans</h5></div>
+                            <div>
+                                <lightning:select label="Status" value="{!v.selectedStatus}" onchange="{!c.statusChanged}">
+                                    <aura:iteration items="{!v.statusValues}" var="status">
+                                        <option value="{!status}">{!status}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                        <aura:set attribute="else">
+                             <div class="slds-grid">
+                            <span class="slds-col"><h5 class="card-title">My Library Loans</h5></span>
+                            <span class="slds-col"></span>
+                            <span class="slds-col"></span>
+                            <span class="slds-col">
+                                <label style="float: right;margin-right: 1rem;">Status</label>
+                            </span>
+                            <span class="slds-col" style="margin-top: -2rem;">
+                                <lightning:select label="" value="{!v.selectedStatus}" onchange="{!c.statusChanged}">
+                                    <aura:iteration items="{!v.statusValues}" var="status">
+                                        <option value="{!status}">{!status}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </span>
+                        </div>
+                        </aura:set>
+                    </aura:if>
+                    <!--aura:if isTrue="{!v.displayMap.loanRequests.length > 0}">
+                        <div class="containerTable table-responsive">
+                            <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout">
+                                <thead class="thead-light">
+                                    <tr class="slds-line-height_reset">
+                                        <th scope="col" class="wrap">DLS Class #</th>
+                                        <th scope="col" style="width: 33%;" class="wrap">Material Title</th>
+                                        <th scope="col" class="wrap">Date Loaned Out</th>
+                                        <th scope="col" class="wrap">Date Returned</th>
+                                        <th scope="col" class="wrap">Status</th>
+                                        <th scope="col" class="wrap">Project End Date</th>
+                                        <th scope="col" class="wrap">Library Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <aura:iteration items="{!v.displayMap.loanRequests}" var="loan" indexVar="index">
+                                        <tr class="slds-hint-parent">
+                                            <td data-label="DLS Class #" class="wrap">
+                                                {!loan.Project__r.DLS_Class__c}
+                                            </td>
+                                            <td data-label="Material Name" class="wrap">
+                                                {!loan.Materials_Name__r.Name}
+                                            </td>
+                                            <td data-label="Date Loaned Out" class="wrap">
+                                                <ui:outputDate value="{!loan.Date_Loaned_Out__c}" format="MM/DD/YYYY"/>
+                                            </td>
+                                            <td data-label="Date Returned" class="wrap">
+                                                <ui:outputDate value="{!loan.Date_Returned__c}" format="MM/DD/YYYY"/>
+                                            </td>
+                                            <td data-label="Status" class="wrap">
+                                                {!loan.Request_Status__c}
+                                            </td>
+                                            <td data-label="Project End Date" class="wrap">
+                                                <ui:outputDate value="{!loan.Project__r.End_Date__c}" format="MM/DD/YYYY"/>
+                                            </td>
+                                            <td data-label="Library Location" class="wrap">
+                                                {!loan.Location__r.Name}
+                                            </td>
+                                        </tr>
+                                    </aura:iteration>
+                                </tbody>
+                            </table>
+                        </div>
+                        <aura:set attribute="else">
+                            <center><span>No Records To Display</span></center>
+                        </aura:set>
+                    </aura:if-->
+                    <aura:if isTrue="{!v.loanRecords.length > 0}">
+                        <div class="ldtTableCls LoanTableCls">
+                            <ldt:datatableDev aura:id="loanTable" dataRows="{!v.loanRecords}" header="{!v.loanHeaders}" config="{!v.tableConfig}"/>
+                        </div>
+                        <aura:set attribute="else">
+                            <br/>
+                            <center><span>No Records To Display</span></center>
+                        </aura:set>
+                    </aura:if>
+                </aura:if>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-deck" style="margin-top: 2rem;">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"> 
+                    My Favorites
+                    <div style="float: right;">
+                        <aura:if isTrue="{!or(v.displayMap.FavouriteContents.length > 0,v.displayMap.FavouriteMaterials.length > 0)}">
+                            <a onclick="{!c.showFavoriteDetail}">View All +</a>
+                        </aura:if>
+                    </div>
+                </h5>
+                <aura:if isTrue="{!or(v.displayMap.FavouriteContents.length > 0,v.displayMap.FavouriteMaterials.length > 0)}">
+                    <lightning:layout multipleRows="true">
+                        <!--aura:iteration items="{!v.displayMap.FavouriteContents}" var="favourite">
+                        <lightning:layoutItem size="4" padding="around-small">
+                            <div>
+                                <aura:if isTrue="{!favourite.Copyright__c == 'DLS'}">
+                                    <img src="{!$Resource.DLSDigitalContentImage}" class="imageCls"></img>
+                                </aura:if>
+                                <aura:if isTrue="{!favourite.Copyright__c != 'DLS'}">
+                                    <img src="{!$Resource.Non_DLSDigitalContentImage}" class="imageCls"></img>
+                                </aura:if>
+                            </div>
+                            <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                <aura:if isTrue="{!favourite.Average_Rating__c}">
+                                    <c:RatingCmp value="{!favourite.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                    <aura:set attribute="else">
+                                        <span style="font-size: smaller;">No Ratings</span>
+                                    </aura:set>
+                                </aura:if>
+                            </div>
+                            <div class="contentClass">{!favourite.Title}</div>
+                        </lightning:layoutItem>
+                    </aura:iteration-->
+                        <aura:iteration items="{!v.displayMap.FavouriteMaterials}" var="favourite">
+                            <lightning:layoutItem size="12" padding="around-small" class="bookCls" largeDeviceSize="4" mediumDeviceSize="4" smallDeviceSize="12">
+                                <div onclick="{!c.redirectToMaterialDetail}" data-value="{!favourite.Id}">
+                                    <div>
+                                        <aura:if isTrue="{!favourite.Book_Cover__c != null}">
+                                            <lightning:formattedRichText value="{!favourite.Book_Cover__c}" class="imageClass"></lightning:formattedRichText>
+                                            <aura:set attribute="else">
+                                                <img src="{!$Resource.Cover_Not_Found_Image}" class="imageCls"></img>
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                        <aura:if isTrue="{!favourite.Average_Rating__c}">
+                                            <c:RatingCmp value="{!favourite.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                            <aura:set attribute="else">
+                                                <span style="font-size: smaller;">No Ratings</span>
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div class="titleCls">{!favourite.Name}</div>
+                                    <div>
+                                        <aura:if isTrue="{!favourite.Total_Quantity_Available__c != null}">
+                                            <i class="far fa-check-circle"></i>&nbsp; Available: {!favourite.Total_Quantity_Available__c}
+                                            <aura:set attribute="else">
+                                                <i class="far fa-check-circle"></i>&nbsp; Available: N/A
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div>
+                                        <aura:if isTrue="{!favourite.Total_Quantity_Loaned_Out__c != null}">
+                                            <i class="far fa-book"></i>&nbsp; Loaned Out: {!favourite.Total_Quantity_Loaned_Out__c}
+                                            <aura:set attribute="else">
+                                                <i class="far fa-book"></i>&nbsp; Loaned Out: N/A
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </aura:iteration>
+                    </lightning:layout>
+                    <aura:set attribute="else">
+                        <center><span>No Records To Display</span></center>
+                    </aura:set>
+                </aura:if>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-deck" style="margin-top: 2rem;">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"> 
+                    My Rated
+                    <div style="float: right;">
+                        <aura:if isTrue="{!or(v.displayMap.TopRateContents.length > 0,v.displayMap.TopRateMaterials.length > 0)}">
+                            <a onclick="{!c.showTopRatedDetail}">View All +</a>
+                        </aura:if>
+                    </div>
+                </h5>
+                <aura:if isTrue="{!or(v.displayMap.TopRateContents.length > 0,v.displayMap.TopRateMaterials.length > 0)}">
+                    <lightning:layout multipleRows="true">
+                        <!--aura:iteration items="{!v.displayMap.TopRateContents}" var="content">
+                        <lightning:layoutItem size="4" padding="around-small">
+                            <div>
+                                <aura:if isTrue="{!content.Copyright__c == 'DLS'}">
+                                    <img src="{!$Resource.DLSDigitalContentImage}" class="imageCls"></img>
+                                </aura:if>
+                                <aura:if isTrue="{!content.Copyright__c != 'DLS'}">
+                                    <img src="{!$Resource.Non_DLSDigitalContentImage}" class="imageCls"></img>
+                                </aura:if>
+                            </div>
+                            <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                <aura:if isTrue="{!content.Average_Rating__c}">
+                                    <c:RatingCmp value="{!content.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                    <aura:set attribute="else">
+                                        <span style="font-size: smaller;">No Ratings</span>
+                                    </aura:set>
+                                </aura:if>
+                            </div>
+                            <div class="contentClass">{!content.Title}</div>
+                        </lightning:layoutItem>
+                    </aura:iteration-->
+                        <aura:iteration items="{!v.displayMap.TopRateMaterials}" var="material">
+                            <lightning:layoutItem size="12" padding="around-small" class="bookCls" largeDeviceSize="4" mediumDeviceSize="4" smallDeviceSize="12">
+                                <div onclick="{!c.redirectToMaterialDetail}" data-value="{!material.Id}">
+                                    <div>
+                                        <aura:if isTrue="{!material.Book_Cover__c != null}">
+                                            <lightning:formattedRichText value="{!material.Book_Cover__c}" class="imageClass"></lightning:formattedRichText>
+                                            <aura:set attribute="else">
+                                                <img src="{!$Resource.Cover_Not_Found_Image}" class="imageCls"></img>
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div style="padding-top:2px !important;padding-bottom: 3px;">
+                                        <aura:if isTrue="{!material.Average_Rating__c}">
+                                            <c:RatingCmp value="{!material.Average_Rating__c}" readOnly="true"></c:RatingCmp>
+                                            <aura:set attribute="else">
+                                                <span style="font-size: smaller;">No Ratings</span>
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div class="titleCls">{!material.Name}</div>
+                                    <div>
+                                        <aura:if isTrue="{!material.Total_Quantity_Available__c != null}">
+                                            <i class="far fa-check-circle"></i>&nbsp; Available: {!material.Total_Quantity_Available__c}
+                                            <aura:set attribute="else">
+                                                <i class="far fa-check-circle"></i>&nbsp; Available: N/A
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                    <div>
+                                        <aura:if isTrue="{!material.Total_Quantity_Loaned_Out__c != null}">
+                                            <i class="far fa-book"></i>&nbsp; Loaned Out: {!material.Total_Quantity_Loaned_Out__c}
+                                            <aura:set attribute="else">
+                                                <i class="far fa-book"></i>&nbsp; Loaned Out: N/A
+                                            </aura:set>
+                                        </aura:if>
+                                    </div>
+                                </div>
+                            </lightning:layoutItem>
+                        </aura:iteration>
+                    </lightning:layout>
+                    <aura:set attribute="else">
+                        <br/>
+                        <center><span>No Records To Display</span></center>
+                    </aura:set>
+                </aura:if>
+            </div>
+        </div>
+    </div>
+</aura:component>

@@ -1,0 +1,78 @@
+<aura:component controller="Mobile_SupervisorTimeApproval_Ctrl">
+    
+    <aura:attribute name="WeekRanges" type="List" access="public"/>
+    <aura:attribute name="selectedWeek" type="String" access="public"/>
+    <aura:attribute name="currentIndex" type="Integer" access="public"/> 
+    <aura:attribute name="wholeSummary" type="Object" access="public"/>
+    <aura:attribute name="summaryEntries" type="List" access="public"/>
+    <aura:attribute name="contactFilter" type="List" access="public"/>
+    <aura:attribute name="selectedContact" type="String" access="public"/>
+    <aura:attribute name="showSpinner" type="Boolean" access="public"/>
+    <aura:attribute name="displayNext" type="Boolean" access="public" default="true"/>
+    <aura:attribute name="displayPrevious" type="Boolean" access="public" default="true"/>
+    <aura:attribute name="grandTotal" type="Decimal" access="public"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- To handle the header cmp previous,next & go to approval link click functions -->
+    <aura:handler name="clickEvent" event="c.childClickEvent" action="{!c.handleHeaderClick}"/>
+    
+    <!-- Event for moving to the approval cmp from summary -->
+    <aura:registerEvent name="summaryEvent" type="c.childClickEvent"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    
+    <div style="overflow-y : scroll;">
+        <article aura:id="summary" class="slds-card slds-show">
+            <div class="slds-card__header">
+                <c:HeaderComponent headerName="{!v.selectedWeek}" subHeader="" previousIconDisplay="{!v.displayPrevious}" 
+                                   nextIconDisplay="{!v.displayNext}" displayApprovalSummaryLink="true" summaryLinkName="Go to Approval"/>
+                
+            </div>
+            <div class="slds-card__body slds-card__body_inner" aura:id="summaryBody" style="overflow-y: scroll;">
+                <lightning:layout verticalAlign="stretch" class="x-large">
+                    <lightning:layoutItem flexibility="auto" padding="around-small">
+                        <span>
+                            <lightning:select aura:id="contact" label="Contact" value="{!v.selectedContact}" onchange="{!c.contactChange}">
+                                <aura:iteration items="{!v.contactFilter}" var="con">
+                                    <option text="{!con.LastName}" value="{!con.Id}"/>
+                                </aura:iteration>
+                            </lightning:select>
+                        </span>
+                    </lightning:layoutItem>
+                </lightning:layout>
+                <div class="slds-grid slds-wrap">
+                    <table class="slds-table_bordered slds-p-horizontal_small slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-2">
+                        <tbody>
+                            <aura:if isTrue="{!not(empty(v.summaryEntries))}">
+                                <aura:iteration items="{!v.summaryEntries}" var="entry">
+                                    <tr>
+                                        <td class="slds-p-left_medium">
+                                            <div class="slds-p-top_small slds-p-bottom_small">{!entry.entryDate}</div>
+                                        </td>
+                                        <td class="slds-p-left_medium">
+                                            <div class="slds-p-top_small slds-p-bottom_small">{!entry.dayType}</div>
+                                        </td>
+                                        <td class="slds-p-right_x-large">
+                                            <div class="slds-p-top_small slds-p-bottom_small">{!entry.Hours}</div>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                                
+                                <tr>
+                                    <td class="slds-p-left_medium"> <div class="slds-p-top_small slds-p-bottom_small" style="font-weight: bold;">Total Hours</div></td>
+                                    <td></td>
+                                    <td><div class="slds-p-top_small slds-p-bottom_small">{!v.grandTotal}</div></td>
+                                </tr>
+                            </aura:if>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </article>
+    </div>
+    
+</aura:component>

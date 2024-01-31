@@ -1,0 +1,8 @@
+<aura:component >
+	<aura:attribute name="record" type="SObject"/>
+    <aura:attribute name="field" type="Object"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <span aura:id="textView">
+    
+    </span>
+</aura:component>

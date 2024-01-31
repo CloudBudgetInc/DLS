@@ -1,0 +1,780 @@
+<!-- Developed by Shalini on June 5 2017 to allow user to select students who don't need to receive Feedback form. -->
+
+
+<apex:page showHeader="true" sidebar="true" controller="notSendFeedbackController">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+        <script src="{!URLFOR($Resource.Filter)}"/>
+        <apex:includescript value="https://code.jquery.com/jquery-1.8.2.min.js"/>
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        <link rel="stylesheet" href="{!URLFOR($Resource.datePickerCss)}" />
+        <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+        <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+        <script src="{!URLFOR($Resource.moment)}" ></script>
+        <script src="{!URLFOR($Resource.moment_timezone_data)}" ></script>
+        <script src="{!URLFOR($Resource.jquery)}"></script>
+        
+        <apex:form >
+            <div class="slds" ng-app="myApp" ng-controller="myCtrl">
+                <div ng-hide="isLoaded" class="{{styleClass}}">
+                    <c:slds_Loading />
+                </div>
+                <style>
+                    .applyColour {
+                        background-color: rgba(128, 128, 128, 0.29);
+                    }
+                    ._720kb-datepicker-calendar {
+                        //position: absolute;
+                        width: 50% !important;
+                    }
+                    .reqClass{
+                        border: 2px solid rgb(194, 57, 52) !important;
+                    }
+                </style>
+                <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                    <div class="slds-media__body">
+                        <div class="slds-grid">
+                            <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="DLS Staff Time">Get Feedback Recipients</h1>
+                        </div>
+                    </div>
+                    <div class="slds-media slds-has-flexi-truncate">
+                        <div class="slds-media__body">
+                            
+                            <div style="width: 100%;text-align: right;">
+                                <input type="button" class="slds-button slds-button--neutral " ng-click="openModal()" value="Save"/><br/>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-form-element slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-left: 3%;">
+                                <label class="slds-form-element__label" for="jobTravel">Feedback Type:</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <select ng-model="selectedFeedback" class="slds-select" ng-change="getStudentsbasedonFilter();" >
+                                            <option value="2 Week">2 Week</option>
+                                            <option value="Monthly">Monthly</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-left: 3%;">
+                                <label class="slds-form-element__label" for="lookup">Review Date:</label>
+                                <datepicker date-format="MM/dd/yyyy">
+                                    <input type="text" ng-model="reviewDate" class="slds-input" placeholder="Review Date" ng-change="getStudentsbasedonFilter();"/>
+                                </datepicker>
+                            </div>
+                        </div>
+                        
+                        <div ng-show="displayWeeklyLink" class="slds-grid slds-wrap slds-grid--pull-padded-medium">                        
+                            <div class = "slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="text-align: left;padding-left: 2%;padding-top: 2%;">
+                                <a target="_blank" href="{{feedbacklink}}">Weekly Feedback Form Link</a> <br/>
+                                <a target="_blank" href="{{sendReportLink}}">Weekly Feedback Sent</a>
+                            </div>
+
+                            <div ng-hide="expiryDates.length > 0 && displayDates.length > 0" class = "slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="text-align: right;padding-top: 2%; padding-right: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Date &amp; Time to be sent:</label>
+                                <output name="Date" ng-model="Date">{{nextMonFirstWorkDay}}, 08.00AM</output>
+                            </div>
+                            
+                       </div>
+                       
+                        <div ng-show="displayMonthlyLink" class="slds-grid slds-wrap slds-grid--pull-padded-medium">                        
+                            <div class = "slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="text-align: left;padding-left: 2%;padding-top: 2%;">
+                                <a target="_blank" href="{{feedbacklink}}">Monthly Feedback Form Link</a> <br/>
+                                <a target="_blank" href="{{sendReportLink}}">Monthly Feedback Sent</a>
+                            </div>
+
+                            <div ng-hide="expiryDates.length > 0 && displayDates.length > 0" class = "slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="text-align: right;padding-top: 2%; padding-right: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Date &amp; Time to be sent:</label>
+                                <output name="Date" ng-model="Date">{{nextMonFirstWorkDay}}, 08.00AM</output>
+                            </div>
+                            
+                       </div>
+                    </div>
+                </div>
+                
+                <div ng-show="expiryDates.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                    <div ng-show="displayWeeklyLink" class="slds-card__body">
+                        <div class="slds-text-align--center"> The feedback forms have already sent for these dates : {{expdt}} </div>
+                    </div>
+                    <div ng-show="displayMonthlyLink" class="slds-card__body">
+                        <div class="slds-text-align--center"> The feedback forms have already sent for this Month : {{expdt}} </div>
+                    </div>
+                </div>
+                
+                <div ng-show="!displayDates.length > 0 && !expiryDates.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                    <div class="slds-card__body">
+                        <div class="slds-text-align--center"> No students found </div>
+                    </div>
+                </div>
+  
+                <div class="slds-card" style="margin-top: 1%;padding: 5px;" ng-repeat="key in displayDates | orderBy" ng-show="displayList[key].length > 0">
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-wrap slds-grid--pull-padded-medium">
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-left: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Feedback Type:</label>
+                                <output name="FeedbackType" ng-model="selectedFeedback">{{selectedFeedback}}</output>
+                                
+                            </div>
+                            
+                         <!--   <div ng-show="displayWeeklyLink" class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-right: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Date &amp; Time to be sent:</label>
+                                <output name="Date" ng-model="Date">{{key | date:'MM/dd/yyyy'}}, 08.00AM</output>
+                            </div> -->
+                            
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-right: 3%;">
+                                <label class="slds-form-element__label slds-text-body--regular">Project Manager : {{userMap[key]}}</label>
+                                <!--<output name="Date" ng-model="Date">{{userMap[key]}}</output>-->
+                            </div>
+                            
+                        </div>
+                        <div ng-hide="displayList[key].length > 0" class="slds-text-align--center"> No Students found. </div>
+                        <table ng-show="displayList[key].length > 0" class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" style="padding-top: 1%;">
+                            <thead>
+                                <th>Exclude?</th>
+                                <th>Project Name</th>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                            </thead>
+                            <tbody>
+                                <!--<tr ng-repeat="ca in displayList[key]" ng-class="(ca.students.Do_not_send_feedback_One_time__c == feedbackName+'/'+key) ? bgcolour : ''" > -->
+                                <tr ng-repeat="ca in displayList[key]" ng-class="(ca.setGreyColr == true) ? bgcolour : ''" >
+                                    <td>
+                                        <span class="slds-truncate" style="margin-right:56px;">
+                                            <label class="slds-checkbox checkbox_custom">
+                                                <input name="checkbox" type="checkbox" ng-model="ca.isReject" ng-change="saveSelectedValues(key,ca);" ng-disabled="ca.setGreyColr"/>
+                                                <span class="slds-checkbox--faux"></span>
+                                                <span class="slds-form-element__label slds-assistive-text"></span>
+                                            </label>
+                                        </span>
+                                    </td>
+                                    <td><a target="_blank" href="/{{ca.students.Project__c}}">{{ca.students.Project__r.Name}}</a></td>
+                                    <td><a target="_blank" href="/{{ca.students.Candidate_Name__c}}">{{ca.students.Candidate_Name__r.Name}}</a></td>
+                                    <td>{{ca.students.Email__c}}</td>
+                                    <td>{{ca.students.Project__r.Start_Date__c | date:'MM/dd/yyyy'}}</td>
+                                    <td>{{ca.students.Project__r.End_Date__c | date:'MM/dd/yyyy'}}</td>
+                                </tr> 
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div ng-show="displayDates.length > 0 && !expiryDates.length > 0" class="slds-card" style="margin-top: 1%;padding: 5px;" >
+                    <div style="width: 100%;text-align: center;">
+                        <input type="button" class="slds-button slds-button--neutral " ng-click="openModal()" value="Save"/><br/>
+                    </div>
+                </div>
+                
+                <div class="slds-modal {{modalStateForWrongdate}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Confirmation </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <span>{{showmsg}}</span>
+   
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="modalStateForWrongdate='';modalBackdropStateForWrongdate='';" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Proceed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForWrongdate}}"></div>
+                
+                <div class="slds-modal {{modalStateForConfirmation}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <span class="slds-text-heading--medium"> Do you want to exclude these students from receiving Feedback Form? </span>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <!--<span>Do you want to exclude these students from receiving Feedback Form?</span>-->
+                            
+                            <div ng-show="exclude.optionsReq" class="slds-notify slds-notify_toast slds-theme_error" style="background-color : rgb(194, 57, 52) !important;text-align:center;"> 
+                                <div class="slds-notify__content">
+                                    <h2 style="font-size : large;">Please select any one of the option.</h2>
+                                </div>
+                            </div><br/>
+                            
+                            <div class=" slds-grid slds-wrap">
+                                <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium">
+                                    <input type="radio" ng-model="exclude.option" value="Opt Out from All Surveys for This Project" ng-click="radioBtnClk();"> Opt Out from All Surveys for This Project</input>
+                            </div>                                
+                            <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium" style="padding-left: 3%;">
+                                    <input type="radio" ng-model="exclude.option" value="Opt Out From All Surveys Forever" ng-click="radioBtnClk();"> Opt Out From All Surveys Forever</input>
+                                </div>
+                                <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium">
+                                    <div ng-show="selectedFeedback == 'Monthly'">
+                                        <input type="radio" ng-model="exclude.option" value="Opt Out till Specific Date" ng-click="radioBtnClk();"> Opt Out till Specific Date</input>
+                                    </div>
+                                    <div ng-show="selectedFeedback == '2 Week'">
+                                        <input type="radio" ng-model="exclude.option" value="Opt Out for 2 Week Survey" ng-click="radioBtnClk();"> Opt Out for 2 Week Survey</input>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size--1-of-2 slds-p-horizontal--medium">
+                                    <div ng-show="exclude.option == 'Opt Out till Specific Date'">
+                                        <label class="slds-form-element__label" for="lookup">Exclude Date:</label>
+                                        <datepicker date-format="MM/dd/yyyy">
+                                            <input type="text" ng-model="exclude.monthlyDate" class="slds-input" placeholder="Exclude Date" ng-required="exclude.monthlyDateReq" ng-class="exclude.monthlyDateReq == true ? 'reqClass':''" />
+                                        </datepicker>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <div ng-click="savefunction();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Yes</div>
+                            <div ng-click="modalStateForConfirmation='';modalBackdropStateForConfirmation='';" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">No</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForConfirmation}}"></div>
+                
+                <div class="slds-modal {{modalStateForSaveAlert}}" aria-hidden="false" role="dialog">
+                    <div class="slds-modal__container" style="width: 100%;">
+                        <div class="slds-modal__header">
+                            <h2 class="slds-text-heading--medium"> Confirmation </h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium" style="overflow-x: auto !important;">
+                        
+                            <span>Do you want to save the changes?</span>
+   
+                        </div>
+                        <div class="slds-modal__footer">
+                            <!--<div ng-click="savefunction();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Yes</div>-->
+                            <div ng-click="openModal();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">Yes</div>
+                            <div ng-click="noButtonClick();" class="slds-button slds-button--neutral slds-button--brand" style="cursor: pointer;">No</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-modal-backdrop {{modalBackdropStateForSaveAlert}}"></div>
+            </div>
+        </apex:form>
+    </html>
+    <script>
+
+        var app = angular.module('myApp', ['720kb.datepicker']);
+        app.controller('myCtrl', function ($scope,$timeout,$location) {
+            $scope.pageurl = $location.absUrl().contains('Date');
+            console.log('::url::',$scope.pageurl);
+            console.log('::url:loc:::',$location.absUrl());
+            
+            if($location.absUrl().contains('+')) {
+                $scope.FeedbackType = $location.absUrl().split('=')[1].split('+')[0];
+                //console.log('::::FeedBackType:::',$scope.FeedbackType);
+                $scope.Date = moment($location.absUrl().split('=')[1].split('+')[1].split('%3D')[1]).format('YYYY-MM-DD');
+                //console.log(':::',$scope.Date);
+            }
+            $scope.nextMonFirstWorkDay;
+            $scope.checkIsReject = false;
+            $scope.displayList = {};
+            $scope.displayDates = [];
+            $scope.rejectedStudents = [];
+            $scope.rejectedStudContacts = [];
+            $scope.isLoaded = true;
+            $scope.reviewDate = moment($scope.Date).format('MM/DD/YYYY');
+            $scope.selectedFeedback = $scope.FeedbackType;
+            $scope.displayWeeklyLink = false;
+            $scope.displayMonthlyLink = false;
+            $scope.selectedValues = [];
+            $scope.selectedValuesObj = {};
+            $scope.userMap = [];
+            $scope.feedbackName;
+            $scope.exclude = {};
+            $scope.exclude.option = '';
+            $scope.exclude.monthlyDate;
+            $scope.exclude.optionsReq = false;
+            $scope.exclude.monthlyDateReq = false;
+            
+            /*Visualforce.remoting.Manager.invokeAction(  
+               '{!$RemoteAction.notSendFeedbackController.getStudents}',
+               $scope.FeedbackType,
+               $scope.Date,
+               function(result,ev){
+                   if(ev.status){
+                       $timeout(function(){
+                           $scope.caList = result.dateWithCAs;
+                           
+                           for(var i in $scope.caList){
+                               $scope.displayDates.push(i);
+                               if($scope.displayList[i] == undefined){
+                                   $scope.displayList[i] = [];
+                               }
+                               for(var j=0; j < $scope.caList[i].length; j++){
+                                   if($scope.caList[i][j].Do_not_send_feedback_One_time__c == undefined){
+                                       $scope.displayObj = {
+                                           isReject: false,
+                                           students: $scope.caList[i][j]
+                                       }
+                                   } else {
+                                       $scope.displayObj = {
+                                           isReject: true,
+                                           students: $scope.caList[i][j]
+                                       }
+                                   }
+                                   $scope.displayList[i].push($scope.displayObj);
+                               } 
+                           }
+                           //console.log('::$scope.displayList::',$scope.displayList);  
+                           //console.log(':::caList::',result); 
+                           $scope.isLoaded = true;   
+                       },0);
+                   } else {
+                        console.log('::::ev::::',ev);
+                        
+                        $scope.isLoaded = false;
+                   }
+               }, 
+               {escape: false}  
+            );*/
+            
+            var selectedFeedback;
+            var reviewDate;
+            var tempType;
+            var tempDate;
+            function init(){
+                console.log('::init called::');
+                //console.log('::$scope.selectedFeedback::',$scope.selectedFeedback);
+                //console.log(':$scope.reviewDate:::',$scope.reviewDate);
+                
+                $scope.bgcolour = 'applyColour';
+                $scope.caList = {};
+                $scope.displayList = {};
+                $scope.displayDates = [];
+                
+                
+                if($scope.selectedFeedback == '2 Week' || $scope.selectedFeedback == 'Weekly') {
+                    $scope.selectedFeedback = '2 Week';
+                }
+                
+                if($scope.selectedFeedback == '2 Week'){
+                    $scope.displayWeeklyLink = true;
+                    $scope.displayMonthlyLink = false;
+                } else if ($scope.selectedFeedback == 'Monthly'){
+                    $scope.displayMonthlyLink = true;
+                    $scope.displayWeeklyLink = false;
+                }
+                
+                if($scope.selectedFeedback && $scope.reviewDate){
+                    selectedFeedback = $scope.selectedFeedback;
+                    reviewDate = $scope.reviewDate;
+
+                    Visualforce.remoting.Manager.invokeAction(  
+                       '{!$RemoteAction.notSendFeedbackController.getStudents}',
+                       $scope.selectedFeedback,
+                       moment($scope.reviewDate).format('YYYY-MM-DD'),
+                       
+                       function(result,ev){
+                           if(ev.status){
+                               $timeout(function(){
+                                   //console.log('Start of getStudents method');
+                                   $scope.caList = result.dateWithCAs;
+                                   $scope.userMap = result.userMap;
+                                   $scope.nextMonFirstWorkDay = millisecondToString(result.nextMonthMailSendDate); //moment(result.NextMonthMailSendDate).format('MM/DD/YYYY');
+                                   $scope.mailSendDate = moment(result.nextMonthMailSendDate).format('YYYY-MM-DD');
+                                   
+                                   //console.log('$scope.mailSendDate ::::',$scope.mailSendDate);
+                                   if($scope.selectedFeedback == '2 Week'){
+                                       if($scope.reviewDate != millisecondToString(result.reviewdate)){ //moment(result.reviewdate).format('MM/DD/YYYY')
+                                           $scope.reviewDate = millisecondToString(result.reviewdate);
+                                           $scope.modalStateForWrongdate = 'slds-fade-in-open';
+                                           $scope.modalBackdropStateForWrongdate = 'slds-modal-backdrop--open';
+                                           $scope.showmsg = 'This is not working day. So the page is redirected to previous working day.';
+                                       }
+                                   } else if($scope.selectedFeedback == 'Monthly'){
+                                       if($scope.reviewDate != millisecondToString(result.reviewdate)){
+                                           $scope.reviewDate = millisecondToString(result.reviewdate);
+                                           $scope.modalStateForWrongdate = 'slds-fade-in-open';
+                                           $scope.modalBackdropStateForWrongdate = 'slds-modal-backdrop--open';
+                                           $scope.showmsg = 'The page is redirected to last working day of current month.';
+                                       }
+                                   }
+                                   $scope.expiryDates = result.expiryDates;
+                                   $scope.expdt = '';
+                                   $scope.feedbacklink = result.feedbackNameWithLink.Value__c;
+                                   $scope.sendReportLink = result.sndReportLink;
+                                   $scope.feedbackName = result.feedbackNameWithLink.Name;
+                                   for(var i = 0;i< $scope.expiryDates.length;i++){
+                                       
+                                       if($scope.expdt == ''){
+                                            $scope.expdt = $scope.expiryDates[i];
+                                        }else {
+                                            $scope.expdt += ','+$scope.expiryDates[i];
+                                        }
+                                   }
+                                   //console.log('::$scope.expiryDates:::',$scope.expiryDates);
+                                   for(var i in $scope.caList){
+                                       $scope.displayDates.push(i);
+                                       if($scope.displayList[i] == undefined){
+                                           $scope.displayList[i] = [];
+                                       }
+                                       for(var j=0; j < $scope.caList[i].length; j++){
+                                           
+                                           if($scope.selectedFeedback == '2 Week') {
+                                               if($scope.caList[i][j].Candidate_Name__r.Opt_Out_From_All_Surveys_Forever__c == true || $scope.caList[i][j].Opt_Out_From_All_Surveys_for_This_Projec__c == true || $scope.caList[i][j].Opt_Out_for_Weekly_Survey__c == true) {
+                                                   $scope.displayObj = {
+                                                       isReject: true,
+                                                       setGreyColr: true,
+                                                       students: $scope.caList[i][j]
+                                                   }
+                                               } else {
+                                                   $scope.displayObj = {
+                                                       isReject: false,
+                                                       setGreyColr: false,
+                                                       students: $scope.caList[i][j]
+                                                   }
+                                               }
+                                           } else if($scope.selectedFeedback == 'Monthly') {
+                                               //console.log('$scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c >= $scope.mailSendDate::::',$scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c >= $scope.mailSendDate);
+                                               //console.log('$scope.caList[i][j]:::::',$scope.caList[i][j]);
+                                               if($scope.caList[i][j].Candidate_Name__r.Opt_Out_From_All_Surveys_Forever__c == true || $scope.caList[i][j].Opt_Out_From_All_Surveys_for_This_Projec__c == true || ( $scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c && new Date($scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c) >= new Date($scope.mailSendDate))) {
+                                                   $scope.displayObj = {
+                                                       isReject: true,
+                                                       setGreyColr: true,
+                                                       students: $scope.caList[i][j]
+                                                   }
+                                               } else {
+                                                   $scope.displayObj = {
+                                                       isReject: false,
+                                                       setGreyColr: false,
+                                                       students: $scope.caList[i][j]
+                                                   }
+                                               }
+                                           }
+                                           /*if($scope.caList[i][j].Do_not_send_feedback_One_time__c != $scope.feedbackName+'/'+$scope.mailSendDate) { 
+                                               $scope.displayObj = {
+                                                   isReject: false,
+                                                   students: $scope.caList[i][j]
+                                               }
+                                           } else {
+                                               $scope.displayObj = {
+                                                   isReject: true,
+                                                   students: $scope.caList[i][j]
+                                               }
+                                           }*/
+                                           
+                                           $scope.displayList[i].push($scope.displayObj);
+                                       } 
+                                   }
+                                   //console.log('::$scope.displayList::',$scope.displayList);  
+                                   //console.log(':::caList::',result); 
+                                   //console.log('End of getStudents method');
+                                   $scope.isLoaded = true;   
+                               },0);
+                           } else {
+                                console.log('::::ev::::',ev);
+                                
+                                $scope.isLoaded = false;
+                           }
+                       }, 
+                       {escape: false}  
+                    );
+                    
+                }
+            }
+            init();
+            
+            // To fix the timezone issue
+            function millisecondToString(millisecond) {
+                var date = new Date(millisecond);            
+                date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); 
+                var day = date.getDate();
+                var month = date.getMonth() + 1;
+                if(day < 10) {
+                    day = '0' + day;
+                }
+                if(month < 10) {
+                    month = '0' + month;
+                }
+                return  month+ '/' +day+ '/' +date.getFullYear();
+            }
+            
+            $scope.getStudentsbasedonFilter = function() {
+                
+                if($scope.selectedValues.length > 0){
+                    tempType = $scope.selectedFeedback;
+                    tempDate = $scope.reviewDate;
+                    $scope.selectedFeedback = selectedFeedback;
+                    $scope.reviewDate = reviewDate;
+
+                    //console.log('::$scope.selectedFeedback::',$scope.selectedFeedback);
+                    $scope.modalStateForSaveAlert = 'slds-fade-in-open';
+                    $scope.modalBackdropStateForSaveAlert = 'slds-modal-backdrop--open';
+                    
+                } else {
+                    $scope.caList = {};
+                    $scope.displayList = {};
+                    $scope.displayDates = [];
+                    
+                    if($scope.selectedFeedback == '2 Week'){
+                        $scope.displayWeeklyLink = true;
+                        $scope.displayMonthlyLink = false;
+                    } else if ($scope.selectedFeedback == 'Monthly'){
+                        $scope.displayMonthlyLink = true;
+                        $scope.displayWeeklyLink = false;
+                    }
+                    
+                    //console.log('::$scope.reviewDate:::',$scope.reviewDate);
+                    if($scope.selectedFeedback && $scope.reviewDate){
+                        selectedFeedback = $scope.selectedFeedback;
+                        reviewDate = $scope.reviewDate;
+
+                        Visualforce.remoting.Manager.invokeAction(  
+                           '{!$RemoteAction.notSendFeedbackController.getStudents}',
+                           $scope.selectedFeedback,
+                           moment($scope.reviewDate).format('YYYY-MM-DD'),
+                           
+                           function(result,ev){
+                               if(ev.status){
+                                   $timeout(function(){
+                                       $scope.caList = result.dateWithCAs;
+                                       $scope.userMap = result.userMap;
+                                       $scope.nextMonFirstWorkDay = millisecondToString(result.nextMonthMailSendDate);//moment(result.NextMonthMailSendDate).format('MM/DD/YYYY');
+                                       $scope.mailSendDate = moment(result.nextMonthMailSendDate).format('YYYY-MM-DD');
+                                       
+                                       //console.log('$scope.mailSendDate ::::',$scope.mailSendDate);
+                                       if($scope.selectedFeedback == '2 Week'){
+                                           if($scope.reviewDate != millisecondToString(result.reviewdate)){
+                                               $scope.reviewDate = millisecondToString(result.reviewdate);
+                                               $scope.modalStateForWrongdate = 'slds-fade-in-open';
+                                               $scope.modalBackdropStateForWrongdate = 'slds-modal-backdrop--open';
+                                               $scope.showmsg = 'This is not working day. So the page is redirected to previous working day.';
+                                           }
+                                       } else if($scope.selectedFeedback == 'Monthly'){
+                                           if($scope.reviewDate != millisecondToString(result.reviewdate)){
+                                               $scope.reviewDate = millisecondToString(result.reviewdate);
+                                               $scope.modalStateForWrongdate = 'slds-fade-in-open';
+                                               $scope.modalBackdropStateForWrongdate = 'slds-modal-backdrop--open';
+                                               $scope.showmsg = 'The page is redirected to last working day of current month.';
+                                           }
+                                       }
+                                       $scope.expiryDates = result.expiryDates;
+                                       $scope.expdt = '';
+                                       $scope.feedbacklink = result.feedbackNameWithLink.Value__c;
+                                       $scope.sendReportLink = result.sndReportLink;
+                                       $scope.feedbackName = result.feedbackNameWithLink.Name;
+                                       for(var i = 0;i< $scope.expiryDates.length;i++){
+                                           
+                                           if($scope.expdt == ''){
+                                                $scope.expdt = $scope.expiryDates[i];
+                                           }else {
+                                                $scope.expdt += ','+$scope.expiryDates[i];
+                                           }
+                                       }
+                                       //console.log('::$scope.expiryDates:::',$scope.expiryDates);
+                                       for(var i in $scope.caList){
+                                           $scope.displayDates.push(i);
+                                           if($scope.displayList[i] == undefined){
+                                               $scope.displayList[i] = [];
+                                           }
+                                           for(var j=0; j < $scope.caList[i].length; j++){
+                                               if($scope.selectedFeedback == '2 Week') {
+                                                   if($scope.caList[i][j].Candidate_Name__r.Opt_Out_From_All_Surveys_Forever__c == true || $scope.caList[i][j].Opt_Out_From_All_Surveys_for_This_Projec__c == true || $scope.caList[i][j].Opt_Out_for_Weekly_Survey__c == true) {
+                                                       $scope.displayObj = {
+                                                           isReject: true,
+                                                           setGreyColr: true,
+                                                           students: $scope.caList[i][j]
+                                                       }
+                                                   } else {
+                                                       $scope.displayObj = {
+                                                           isReject: false,
+                                                           setGreyColr: false,
+                                                           students: $scope.caList[i][j]
+                                                       }
+                                                   }
+                                               } else if($scope.selectedFeedback == 'Monthly') {
+                                                   //console.log('$scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c >= $scope.mailSendDate::::',new Date($scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c) >= new Date($scope.mailSendDate));
+                                                   if($scope.caList[i][j].Candidate_Name__r.Opt_Out_From_All_Surveys_Forever__c == true || $scope.caList[i][j].Opt_Out_From_All_Surveys_for_This_Projec__c == true || ($scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c && new Date($scope.caList[i][j].Opt_Out_Monthly_Survey_Date__c) >= new Date($scope.mailSendDate))) {
+                                                       $scope.displayObj = {
+                                                           isReject: true,
+                                                           setGreyColr: true,
+                                                           students: $scope.caList[i][j]
+                                                       }
+                                                   } else {
+                                                       $scope.displayObj = {
+                                                           isReject: false,
+                                                           setGreyColr: false,
+                                                           students: $scope.caList[i][j]
+                                                       }
+                                                   }
+                                               }
+                                               /*if($scope.caList[i][j].Do_not_send_feedback_One_time__c != $scope.feedbackName+'/'+$scope.mailSendDate){ // i
+                                                   $scope.displayObj = {
+                                                       isReject: false,
+                                                       students: $scope.caList[i][j]
+                                                   }
+                                               } else {
+                                                   $scope.displayObj = {
+                                                       isReject: true,
+                                                       students: $scope.caList[i][j]
+                                                   }
+                                               }*/
+                                               $scope.displayList[i].push($scope.displayObj);
+                                           } 
+                                       }
+                                       //console.log('::$scope.displayList::',$scope.displayList);  
+                                       //console.log(':::caList::',result); 
+                                       $scope.isLoaded = true;   
+                                   },0);
+                               } else {
+                                    console.log('::::ev::::',ev);
+                                    
+                                    $scope.isLoaded = false;
+                               }
+                           }, 
+                           {escape: false}  
+                        );
+                    }
+                }
+                    
+            }
+            
+            $scope.saveSelectedValues = function(key,ca) {
+                if($scope.selectedValuesObj[key] == undefined){
+                    $scope.selectedValuesObj[key] = [];
+                }
+                if($scope.selectedValues.indexOf(ca) == -1){
+                    $scope.selectedValues.push(ca);
+                    $scope.selectedValuesObj[key].push(ca);
+                }
+                
+                console.log(':$scope.selectedValuesObj:::',$scope.selectedValuesObj);
+            }
+            
+            $scope.noButtonClick = function() {
+                $scope.selectedFeedback = tempType;
+                $scope.reviewDate = tempDate;
+                $scope.modalStateForSaveAlert = '';
+                $scope.modalBackdropStateForSaveAlert = '';
+                $scope.selectedValues = [];
+                $scope.selectedValuesObj = {}; 
+                init();  
+            }
+            
+            $scope.savefunction = function() {
+                
+                if(!$scope.exclude.option){
+                    $scope.exclude.optionsReq = true;
+                } else if ($scope.exclude.option == 'Opt Out till Specific Date' && !$scope.exclude.monthlyDate){
+                    $scope.exclude.monthlyDateReq = true;
+                } else {
+                    //console.log('Start of Save function:::');
+                    $scope.isLoaded = false;
+                    $scope.rejectedStudents = [];
+                    $scope.rejectedStudContacts = [];
+                    var uniqueContactIds = [];
+                    
+                    if($scope.selectedValues.length > 0){
+                        $scope.displayList = $scope.selectedValuesObj;    
+                    }
+                                
+                    console.log('::$scope.displayList;:::',$scope.displayList);
+                    for(var j in $scope.displayList){
+                        for(var i=0; i < $scope.displayList[j].length; i++){
+                            if($scope.selectedFeedback == '2 Week') {
+                                if($scope.displayList[j][i].isReject == true) {
+                                    if($scope.exclude.option == 'Opt Out for 2 Week Survey') {
+                                        $scope.displayList[j][i].students.Opt_Out_for_Weekly_Survey__c = true;
+                                        $scope.rejectedStudents.push($scope.displayList[j][i].students);
+                                    } else if($scope.exclude.option == 'Opt Out From All Surveys Forever') {
+                                        
+                                        if(!(uniqueContactIds.includes($scope.displayList[j][i].students.Candidate_Name__c))) {
+                                            var cont = {Id: $scope.displayList[j][i].students.Candidate_Name__c, Opt_Out_From_All_Surveys_Forever__c: true};
+                                            $scope.rejectedStudContacts.push(cont);
+                                            uniqueContactIds.push( $scope.displayList[j][i].students.Candidate_Name__c);
+                                        }
+                                        
+                                    } if($scope.exclude.option == 'Opt Out from All Surveys for This Project') {
+                                        $scope.displayList[j][i].students.Opt_Out_From_All_Surveys_for_This_Projec__c = true;
+                                        $scope.rejectedStudents.push($scope.displayList[j][i].students);
+                                    }
+                                }                            
+                            } else if($scope.selectedFeedback == 'Monthly') {
+                               if($scope.displayList[j][i].isReject == true) {
+                                    if($scope.exclude.option == 'Opt Out from All Surveys for This Project') {
+                                        $scope.displayList[j][i].students.Opt_Out_From_All_Surveys_for_This_Projec__c = true;
+                                        $scope.rejectedStudents.push($scope.displayList[j][i].students);
+                                    } else if($scope.exclude.option == 'Opt Out till Specific Date'){
+                                            $scope.displayList[j][i].students.Opt_Out_Monthly_Survey_Date__c = moment($scope.exclude.monthlyDate).format('YYYY-MM-DD');
+                                            $scope.rejectedStudents.push($scope.displayList[j][i].students);
+                                    } else if($scope.exclude.option == 'Opt Out From All Surveys Forever') {
+                                        
+                                        if(!(uniqueContactIds.includes($scope.displayList[j][i].students.Candidate_Name__c))) {
+                                            var cont = {Id: $scope.displayList[j][i].students.Candidate_Name__c, Opt_Out_From_All_Surveys_Forever__c: true};
+                                            $scope.rejectedStudContacts.push(cont);
+                                            uniqueContactIds.push($scope.displayList[j][i].students.Candidate_Name__c);
+                                        }
+                                        
+                                    }
+                                }                               
+                            }
+                            
+                            /*if($scope.displayList[j][i].isReject == true) {
+                                $scope.displayList[j][i].students.Do_not_send_feedback_One_time__c = $scope.feedbackName+'/'+$scope.mailSendDate; //+j;
+                                
+                            } else {
+                                $scope.displayList[j][i].students.Do_not_send_feedback_One_time__c = null;
+                            }*/
+                            
+                        }
+                    }  
+                    console.log('$scope.rejectedStudents:::::',$scope.rejectedStudents);
+                    console.log('$scope.rejectedStudContacts:::::',$scope.rejectedStudContacts);  
+                    Visualforce.remoting.Manager.invokeAction(  
+                       '{!$RemoteAction.notSendFeedbackController.updateCAs}',
+                       JSON.stringify($scope.rejectedStudents),
+                       JSON.stringify($scope.rejectedStudContacts),
+                       function(result,ev){
+                           if(ev.status){
+                               $timeout(function(){
+                                   //console.log('::::result::::',result);
+                                   $scope.isLoaded = true;  
+                               },0);
+                           } else {
+                                console.log('::::ev::::',ev);
+                                $scope.isLoaded = false;  
+                           }
+                       }, 
+                       {escape: false}  
+                    );
+                    $scope.modalStateForConfirmation = '';
+                    $scope.modalBackdropStateForConfirmation = '';
+                    $scope.modalStateForSaveAlert = '';
+                    $scope.modalBackdropStateForSaveAlert = '';
+                    $scope.selectedValues = [];
+                    $scope.selectedValuesObj = {};
+                    if(tempType && tempDate){
+                        $scope.selectedFeedback = tempType;
+                        $scope.reviewDate = tempDate;
+                        //console.log('::$scope.selectedFeedback:',$scope.selectedFeedback);
+                        //console.log(':$scope.reviewDate::',$scope.reviewDate);
+                    }
+                    //console.log('End of Save function:::');
+                    init();
+                }
+            }
+            
+            $scope.openModal = function(){
+                $scope.modalStateForConfirmation = 'slds-fade-in-open';
+                $scope.modalBackdropStateForConfirmation = 'slds-modal-backdrop--open';
+                $scope.modalStateForSaveAlert = '';
+                $scope.modalBackdropStateForSaveAlert = '';
+                $scope.exclude.optionsReq = false;
+                $scope.exclude.option = '';
+            }  
+            
+           $scope.radioBtnClk = function(){
+               $scope.exclude.optionsReq = false;
+               $scope.exclude.monthlyDateReq = false;
+           }
+       });
+    </script>
+
+</apex:page>

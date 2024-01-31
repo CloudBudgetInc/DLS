@@ -1,0 +1,24 @@
+.THIS input[type="checkbox"] {
+    width: 2rem !important;
+    height: 1.3rem  !important;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    border-width: 1px;
+    border-style: solid;
+    border-image: initial;
+    background: rgb(255, 255, 255);
+    transition: border 0.1s linear 0s, background-color 0.1s linear 0s;
+    background-color: rgb(233, 234, 236);
+    border-color: rgb(196, 198, 202);
+    margin-right: 0.5rem;
+}
+.THIS .labelCls {
+    color:black !important;
+    font-size: 1.1rem !important;
+}
+.THIS .fa-arrow-left {
+    font-size: 2rem!important;
+    cursor: pointer;
+    color: #055e89!important;
+}

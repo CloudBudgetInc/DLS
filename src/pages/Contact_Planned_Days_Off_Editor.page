@@ -1,0 +1,176 @@
+<apex:page standardController="Contact" extensions="ContactPlanned_DaysoffCtrl">
+    
+    <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+    <script src="{!URLFOR($Resource.Filter)}"/>
+    <script src="{!URLFOR($Resource.moment)}"></script>
+    
+    <link rel="stylesheet" href="{!URLFOR($Resource.DatePicker,'angular-datepicker-master/src/css/angular-datepicker.css')}"/>
+    <script src="{!URLFOR($Resource.DatePicker, '/angular-datepicker-master/dist/angular-datepicker.min.js')}"></script>
+
+    
+    <script>
+        var app = angular.module('schedule', ['720kb.datepicker']);
+        // Directive for Lookup Search option
+        app.service('ApexQuery', function($q) {
+                    
+            //Resolve Responses
+            function resolveResponse(response, ev, def) {
+                if(ev.status) {
+                    def.resolve(response);
+                } else {
+                    def.reject(ev);
+                }
+            }        
+            
+            //Get lookup record from a specific object
+            var getLookups = function(objectName, searchString, condition) {
+                var def = $q.defer();
+                if(!condition) { condition = ''; }
+                if(!searchString) { searchString = ''; }
+                Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ContactPlanned_DaysoffCtrl.getLookupRecords}',
+                    objectName,
+                    searchString,
+                    condition,
+                    function(response, ev) {
+                        resolveResponse(response, ev, def);
+                    },
+                    {escape: true}
+                );
+                return def.promise;
+            }
+            
+            return {
+                getLookups: getLookups
+            }
+        })
+        app.directive('lookup',function($document, ApexQuery, $timeout){
+            return {
+                restrict: 'E',
+                templateUrl:'lookup1.html',
+                replace:true,
+                scope: {
+                  data: '=',
+                  disabled: '=',
+                  object: '=',
+                  placeholder: '=',
+                  condition: '=',
+                  onChange: '=',
+                  parameter: '=',
+                  type: '=',
+                  status: '='
+                },
+                controller:function($scope, $timeout){
+                    $scope.accounts = [];
+                    $scope.searchTxt = '';
+                    $scope.objectName = '';
+                    $scope.isDropDownHidden = true;
+                    $scope.showLoadingDiv = false;
+                    
+                    $scope.$watch('data',function(newVal,oldVal){
+                        if(newVal && $scope.data && $scope.data.Name){
+                            $scope.searchTxt = $scope.data.Name;
+                        }else {
+                            $scope.searchTxt = '';
+                        }
+                    },true);
+                    
+                    $scope.fetchAccounts = function(){
+                        $scope.showLoadingDiv = true;
+                        $scope.accounts = [];
+                        
+                        $timeout(function(){
+                            ApexQuery.getLookups($scope.object, $scope.searchTxt, $scope.condition).then(
+                                function(data){
+                                    $scope.accounts = data;
+                                    $scope.showLoadingDiv = false;
+                                },function(error){}
+                            );
+                        },400);
+                    };
+                    
+                    $scope.updateDataModelAttr = function(selAcc){
+                        $scope.data = selAcc;
+                        $scope.searchTxt = selAcc.Name;
+                        $scope.toggleDropDown();
+                        console.log('inside project change', typeof $scope.change);
+                        $timeout(function() {
+                            if(typeof $scope.onChange == 'function') {
+                                $scope.onChange();
+                            }
+                        }, 0);
+                    };
+                    
+                     // Added by Sukanya for close dropdown list
+                    
+                    $scope.closeDropdownList = function(event) {
+                        if(!$scope.data) {
+                           $scope.isDropDownHidden = true;
+                        }
+                        event.stopPropagation();
+                    }
+                    
+                    window.addEventListener('click', function(event) {
+                        console.log('window clicked.');
+                        $scope.isDropDownHidden = true;
+                        $scope.$apply();
+                    });
+                },
+                link:function(scope,element,attr,ctrl) {
+                    
+                    scope.toggleDropDown = function(){
+                        scope.isDropDownHidden = !scope.isDropDownHidden;
+                        if(scope.isDropDownHidden){
+                            $document.bind('click', function(event){
+                                var isClickedElementChildOfPopup = event.target;
+                                if(isClickedElementChildOfPopup) {
+                                    return;
+                                }
+                                scope.isDropDownHidden = true;
+                                scope.$apply();
+                                $document.unbind('click');
+                            }); 
+                        }
+                        else{
+                             $document.unbind('click');
+                        }
+                    };
+                }
+            };
+        });
+    </script>
+    <div ng-app="schedule">
+        <c:Contact_PDO_Component contactId="{!contact.Id}"/>
+        
+     <!-- for Look up code -->
+          <script type="text/ng-template" id="lookup1.html">
+            <div class="slds">
+                <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                    <div class="slds-form-element">
+                        <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                            <input id="lookupf" ng-model="searchTxt" ng-disabled="disabled" ng-KeyPress="fetchAccounts(searchTxt)" ng-KeyDown="isDropDownHidden= false;data = ''"  class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" placeholder="{{placeholder}}" />
+                        </div>
+                    </div>
+                    <div class="slds-lookup__menu" role="listbox" ng-hide="isDropDownHidden">
+                        <ul class="slds-lookup__list" role="presentation" id="lookuplist">
+                            <li class="slds-lookup__item" ng-repeat="acc in accounts" ng-click="updateDataModelAttr(acc)">
+                                <a id="{{acc.Id}}" role="option">
+                                    {{acc.Name}}
+                                </a>
+                            </li>
+                            <li ng-if="!accounts.length && !showLoadingDiv" class="slds-text-align--center">
+                               No match found
+                            </li>
+                            <li ng-if="showLoadingDiv" class="slds-text-align--center">
+                               <img src="{!URLFOR($Resource.SLDS090,'/assets/images/spinners/slds_spinner_brand.gif')}" width="50" height="50"/>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </script>
+      <!-- End of look up code --->
+          
+        
+    </div>
+</apex:page>

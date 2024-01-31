@@ -1,0 +1,3 @@
+<aura:event type="APPLICATION" description="Event fired from other components to update the data table component">
+    <aura:attribute name="timePeriod" type="string"/>
+</aura:event>

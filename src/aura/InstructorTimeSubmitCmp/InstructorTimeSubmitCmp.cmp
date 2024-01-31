@@ -1,0 +1,263 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="InstructorTimeSubmitCtrl">
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="weekRangeValues" type="List" default="[]"/>
+    <aura:attribute name="dayRecords" type="List" default="[]"/>
+    <aura:attribute name="totalHrs" type="Decimal" default="0.00"/>
+    <aura:attribute name="selectedWeek" type="String" default=""/>
+    <aura:attribute name="instructorName" type="String" default=""/>
+    <aura:attribute name="instructorId" type="String" default=""/>
+    <aura:attribute name="agreedCondition" type="Boolean" default=""/>
+    <aura:attribute name="agreeTxt" type="String" default=""/>
+    <aura:attribute name="successTitle" type="String" default=""/>
+    <aura:attribute name="successMsg" type="String" default=""/>
+    <aura:attribute name="displaySuccessModal" type="Boolean" default="false"/>
+    <aura:attribute name="showSaveConfirmation" type="Boolean" default="false"/>
+    <aura:attribute name="confirmMsg" type="String" default=""/>
+    <aura:attribute name="urlParams" type="Map" default="{}"/>
+    <aura:attribute name="showSubmitBtn" type="Boolean" default=""/>
+    <aura:attribute name="submitMsg" type="String" default=""/>
+    <aura:attribute name="displayDevice" type="String" default=""/> 
+    <aura:attribute name="proIdStudentNames" type="Map" default="{}"/>
+    <aura:attribute name="notCompletedProjects" type="Map" default="{}"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    
+    <!-- Apex Server Call -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."  size="medium" class="slds-is-fixed"/>
+    </aura:if>
+    <div><br/>
+        <center><h5 class="card-title" style="font-size:2rem;">Review &amp; Submit Weekly Timesheets</h5></center>
+        <span style="{!v.displayDevice == 'Mobile' ? 'float: right;' :'float: right;margin-top: -4rem;'}">
+            <lightning:button label="Need Help?" class="needHelpClass btn btn-primary"/>
+        </span>
+    </div><br/>
+    <div  style="{!v.displayDevice != 'Mobile' ? 'display:none;' : ''}" ><br/><br/></div>
+    <div class="card-deck">
+        <div class="card">
+            <div class="card-body">
+                <div  style="{!v.displayDevice == 'Mobile' ? 'display:none;' : ''}" ><br/></div>
+                <form>
+                    <div class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                        <div class="{!v.displayDevice == 'Mobile' ? '' :'form-group col'}">
+                            <lightning:input name="" label="Instructor Name" value="{!v.instructorName}" disabled="true"/>
+                        </div>
+                        <div class="{!v.displayDevice == 'Mobile' ? '' :'form-group col'}">
+                            <lightning:select name="select" label="Week" value="{!v.selectedWeek}" onchange="{!c.getSelectedWeekInfo}">
+                                <aura:iteration items="{!v.weekRangeValues}" var="wk">
+                                    <option text="{!wk}"></option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </div>
+                    </div>
+                </form>
+                <aura:if isTrue="{!v.dayRecords.length > 0}">
+                    <div class="table-responsive"><br/>
+                        <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                            <thead class="thead-light">
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col" class="wrap">DLS Class #</th>    
+                                    <th scope="col" class="wrap">Project Task</th>
+                                    <th scope="col" class="wrap">Week Day</th>    
+                                    <th scope="col" class="wrap">Date</th>    
+                                    <th scope="col" class="wrap">Time</th>    
+                                    <th scope="col" class="wrap">Submitted Hours</th>    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.dayRecords}" var="day">
+                                    <tr class="slds-hint-parent">
+                                        <td data-label="DLS Class #" style="">{!day.projectName}</td>
+                                        <td class="wrap" data-label="Project Task">{!day.taskName}</td>
+                                        <td data-label="Week Day">{!day.weekDay}</td>
+                                        <td data-label="Date">{!day.displayDate}</td>
+                                        <td class="wrap" data-label="Time">
+                                            <aura:if isTrue="{!and(day.startTime1 != null, day.endTime1 != null)}">
+                                                <div>{!day.startTime1} - {!day.endTime1}</div>
+                                            </aura:if>
+                                            <aura:if isTrue="{!and(day.startTime2 != null, day.endTime2 != null)}">
+                                                <div>{!day.startTime2} - {!day.endTime2}</div>
+                                            </aura:if>
+                                        </td>
+                                        <td data-label="Submitted Hours">{!day.dayHours}</td>
+                                    </tr>
+                                </aura:iteration>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td style="font-weight: bold;">Total Hours</td>
+                                    <td style="font-weight: bold;">{!v.totalHrs}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <aura:set attribute="else"><br/>
+                        <center><p>No records to display</p></center>
+                    </aura:set>
+                    <aura:if isTrue="{!v.dayRecords.length > 0}">
+                        
+                        <lightning:layout multipleRows="true">
+                        	<lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '5'}">
+                            </lightning:layoutItem>
+                            <aura:if isTrue="{!v.showSubmitBtn}">
+                                <lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '6'}">
+                                	<lightning:input type="checkbox" aura:id="agreed" class="checkBoxCls" label="{!v.agreeTxt}" checked="{!v.agreedCondition}"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '1'}">
+                                	<lightning:button class="btn btn-primary" label="Submit" onclick="{!c.submitBtnClick}"/>
+                                </lightning:layoutItem>
+								<aura:set attribute="else">
+                                    <lightning:layoutItem padding="around-small" size="{!v.displayDevice == 'Mobile' ? '12' : '9'}">
+                                        <aura:if isTrue="{!v.submitMsg}">
+                                            <p>{!v.submitMsg}</p>
+                                        </aura:if>
+                                    </lightning:layoutItem>
+                                </aura:set>                                
+                            </aura:if>
+                        </lightning:layout>
+                        
+                    </aura:if>
+                </aura:if>
+            </div>
+        </div>
+    </div>
+    
+    <!--lightning:card>
+        <aura:set attribute="title">
+            <span class="slds-text-heading_large">Review &amp; Submit Weekly Timesheets</span>
+            <lightning:button label="Need Help?" class="needHelpClass"/>
+        </aura:set>
+        <div class="c-container">
+            <lightning:layout multipleRows="true">
+                <lightning:layoutItem size="2" padding="around-small">
+                </lightning:layoutItem>
+                <lightning:layoutItem size="8" padding="around-small" class="filterAlignment">
+                    
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="2" padding="around-small" class="headerClass">
+                            <span>Instructor Name</span>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" padding="around-small">
+                            <lightning:input name="" label="" value="{!v.instructorName}" disabled="true"/>
+                        </lightning:layoutItem>
+                        
+                        <lightning:layoutItem size="2" padding="around-small" class="headerClass">
+                            <span>Week</span>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="4" padding="around-small">
+                            <lightning:select name="select" label="" value="{!v.selectedWeek}" onchange="{!c.getSelectedWeekInfo}">
+                                <aura:iteration items="{!v.weekRangeValues}" var="wk">
+                                    <option text="{!wk}"></option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        
+                    </lightning:layout>
+                    
+                </lightning:layoutItem>
+                
+                
+                <lightning:layoutItem size="12" padding="around-small">
+                    <aura:if isTrue="{!v.dayRecords.length > 0}">
+                        <table class="slds-table slds-table_bordered">
+                            <thead>
+                                <tr>
+                                    <th class="slds-truncate">Week Day</th>
+                                    <th class="slds-truncate">Date</th>
+                                    <th class="slds-truncate">Time</th>
+                                    <th class="slds-truncate">Submitted Hours</th>
+                                    <th class="slds-truncate">DLS Class #</th>
+                                    <th class="slds-truncate">Project Task</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.dayRecords}" var="day">
+                                    <tr>
+                                        <td>{!day.weekDay}</td>
+                                        <td>{!day.displayDate}</td>
+                                        <td>
+                                            <aura:if isTrue="{!and(day.startTime1 != null, day.endTime1 != null)}">
+                                                <div>{!day.startTime1} - {!day.endTime1}</div>
+                                            </aura:if>
+                                            <aura:if isTrue="{!and(day.startTime2 != null, day.endTime2 != null)}">
+                                                <div>{!day.startTime2} - {!day.endTime2}</div>
+                                            </aura:if>
+                                        </td>
+                                        <td>{!day.dayHours}</td>
+                                        <td>{!day.projectName}</td>
+                                        <td>{!day.taskName}</td>
+                                    </tr>
+                                </aura:iteration>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td style="font-weight: bold;">Total Hours</td>
+                                    <td style="font-weight: bold;">{!v.totalHrs}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <aura:set attribute="else">
+                            <center>No Records To Display</center>
+                        </aura:set>
+                    </aura:if>
+                </lightning:layoutItem>
+                <aura:if isTrue="{!v.dayRecords.length > 0}">
+                    <aura:if isTrue="{!v.showSubmitBtn}">
+                        <lightning:layoutItem size="9" padding="around-small">
+                            <lightning:input type="checkbox" aura:id="agreed" class="checkBoxCls" label="{!v.agreeTxt}" checked="{!v.agreedCondition}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="3" padding="around-small">
+                            <lightning:button variant="brand" label="Submit" onclick="{!c.submitBtnClick}"/>
+                        </lightning:layoutItem>
+                        <aura:set attribute="else">
+                            <aura:if isTrue="{!v.submitMsg}">
+                             <lightning:layoutItem size="12" padding="around-small">
+                                    <p>{!v.submitMsg}</p>
+                                </lightning:layoutItem>
+                            </aura:if>
+                        </aura:set>
+                    </aura:if>
+                    
+                </aura:if>
+            </lightning:layout>
+        </div>
+    </lightning:card-->
+    
+    <!-- For Submit Confirmation -->
+    <aura:if isTrue="{!v.showSaveConfirmation}">
+        <c:sldsModal aura:id="confirmationModal" header="Confirmation" displayCloseImage="false">
+            <aura:set attribute="content">
+                <p style="padding-left: 1rem;font-size: medium;">
+                    <aura:unescapedHtml value="{!v.confirmMsg}"/>
+                </p>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button class="btn btn-primary" label="Proceed" onclick="{!c.proceedBtnClick}"/>
+                <lightning:button class="btn btn-primary" label="Cancel" onclick="{!c.cancelBtnClick}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    
+    <!-- For Success / Error Msg display -->
+    <aura:if isTrue="{!v.displaySuccessModal}">
+        <c:sldsModal aura:id="successModal">
+            <aura:set attribute="header">{!v.successTitle}</aura:set>
+            <aura:set attribute="displayCloseImage" value="false">
+            </aura:set>
+            <aura:set attribute="content">
+                <center><p style="font-size: medium;">{!v.successMsg}</p></center>
+            </aura:set>
+            <aura:set attribute="footer">
+                <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnSuccess}"/>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+</aura:component>

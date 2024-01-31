@@ -1,0 +1,46 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="QuoteListViewController">
+    <aura:attribute name="projectId" type="String" description="project id from parent component"/>
+    <aura:attribute name="quoteDetails" type="List" default="[]"/>
+    <aura:attribute name="displayDevice" type="String" default="" description="browser factor of device"/>
+    <aura:attribute name="communityName" type="String"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <c:ApexService aura:id="server"/>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Quotes</h5><br/> 
+            <aura:if isTrue="{!or(v.displayDevice != 'Mobile' ,and(v.displayDevice == 'Mobile',v.quoteDetails.length > 0))}">
+                <table class="table table-bordered table-striped container-table responsive-card-table slds-table_fixed-layout box">
+                    <thead class="thead-light">
+                        <tr class="slds-text-title_caps">
+                            <th>Quote Name</th>
+                            <th>Quote Date</th>
+                            <th>Registrar</th>
+                            <aura:if isTrue="{!v.communityName != 'client'}">
+                            	<th>Total Price</th>
+                            </aura:if>
+                        </tr>
+                    </thead>
+                    <tbody>                        
+                        <aura:iteration items="{!v.quoteDetails}" var="quote">
+                            <tr>
+                                <td class="wrap" data-label="Quote Name" >
+                                    <a href="javascript:void(0);" onclick="{!c.gotoQuoteDetailPage}" name="{!quote.quoteId}">{!quote.quoteNumber}</a>
+                                </td>
+                                <td class="wrap" data-label="Quote Date" >{!quote.quoteDate}</td>
+                                <td class="wrap" data-label="Registrar" >{!quote.registrar}</td>
+                                <aura:if isTrue="{!v.communityName != 'client'}">
+                                	<td class="wrap" data-label="Total Price" >{!quote.totalPrice}</td>
+                                </aura:if>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+                <aura:set attribute="else"><br/>
+                    <center>No records to display</center>
+                </aura:set>
+            </aura:if>
+        </div>
+    </div>
+</aura:component>

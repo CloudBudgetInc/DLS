@@ -1,0 +1,65 @@
+<aura:component controller="ExcludeFromDuplicateCtrl" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="query" type="String" access="PUBLIC"/>
+    <aura:attribute name="fileDetails" type="LIST"/>
+    <aura:attribute name="tableColumns" type="List"/>
+    <aura:attribute name="tableConfig" type="Map"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="showConfirmationModal" type="Boolean" default="false"/>
+    <aura:attribute name="selectedRows" type="LIST"/>
+    <aura:attribute name="toast" type="Map"/>
+    <aura:attribute name="baseUrl" type="String"/>
+    <aura:attribute name="limit" type="String"/>
+    <aura:attribute name="userDetails" type="Object"/>
+    
+    <aura:handler name="dtActionClick" event="ldt:clickedDtAction" action="{!c.tabActionHandler}"/>
+    <aura:handler name="dtCellClick" event="ldt:clickedDtCell" action="{!c.tabCellHandler}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" />        
+    </aura:if>
+    
+    <div>
+        <center>
+            <h5 class="card-title" style="font-size: 2.5rem !important; padding: 1rem;">Box Data</h5>
+        </center>
+        <div class="slds-grid sld-wrap slds-p-vertical_medium">
+            <div class="slds-col staticText slds-p-left_large">
+                *This Page will show maximum of {!v.limit} file details <br/>
+                *Please don't refresh the page<br/>
+                *It will take maximum 1 hour to reflect the changes in Potential Duplicate Check<br/>
+            </div>
+            <div class="slds-col_bump-left slds-p-right_medium">
+                <lightning:button label="Exclude from Duplicate" onclick="{!c.massSelectHandler}"/>
+            </div>
+        </div>
+        
+        <ldt:datatableDev aura:id="fileDuplicatesTable" dataRows="{!v.fileDetails}" 
+                          header="{!v.tableColumns}" config="{!v.tableConfig}"/>
+    </div>
+        
+    <c:sldsModal aura:id="confirmationModal" displayCloseImage="false" modalZIndexValue="9999" backdropZIndexValue="9005">
+        <aura:set attribute="header">
+            Confirmation
+        </aura:set>
+        <aura:set attribute="content">
+            <p class="slds-align_absolute-center">You have selected {!v.selectedRows.length} files to exclude from duplicate.</p>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button variant="brand" label="Proceed" onclick="{!c.confirmBtnClick}"/>
+            <lightning:button label="Cancel" onclick="{!c.cancelBtnClk}"/>
+        </aura:set>
+    </c:sldsModal>
+        
+    <c:sldsModal aura:id="toastModal" displayCloseImage="false" modalZIndexValue="9999" backdropZIndexValue="9005">
+        <aura:set attribute="header">
+            {!v.toast.header}
+        </aura:set>
+        <aura:set attribute="content">
+            <p class="slds-align_absolute-center">{!v.toast.message}</p>
+        </aura:set>
+        <aura:set attribute="footer">
+            <lightning:button variant="brand" label="OK" onclick="{!c.okayBtnClick}"/>                
+        </aura:set>
+    </c:sldsModal>    
+</aura:component>

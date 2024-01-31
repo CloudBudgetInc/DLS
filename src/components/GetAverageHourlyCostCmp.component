@@ -1,0 +1,62 @@
+<apex:component controller="GetAverageHourlyCostCmpController" access="global">     
+    
+    <apex:attribute name="languageName" description="" type="String" assignTo="{!languageNameValue}"/>
+    <apex:attribute name="costRateId" description="" type="String" assignTo="{!laborCostRateId}"/>
+    <apex:attribute name="avgRating" description="" type="Integer" />
+    
+    <apex:attribute name="candidateRating" description="" type="String" />
+    <apex:attribute name="hireDate" description="" type="Date" />
+    <apex:attribute name="highestDegree" description="" type="String" />
+    <apex:attribute name="knownLanguages" description="" type="Integer" />
+    <apex:attribute name="taughtatVendor" description="" type="Integer" />
+    <apex:attribute name="projectsTaught" description="" type="Integer" />
+    <apex:attribute name="studentsTaught" description="" type="Integer" />
+    <apex:attribute name="testsPerfomed" description="" type="Integer" />
+    <apex:attribute name="rateType" description="" type="String"/>
+    
+    <ol>
+        <li><b> Contact's DLS Candidate Rating :</b> {!candidateRating} </li>
+        <li><b> Contact's Average Get Feedback Rating :</b> {!avgRating}</li>
+        <li><b> Contact's Original Hire Date :</b>&nbsp;<apex:outputText value="{0,date,MM/dd/yy}"> <apex:param value="{!hireDate}" /> </apex:outputText></li>
+        <li><b> Contact’s Highest Degree Level :</b> {!highestDegree} </li>
+        <li><b> Contact's # of Known Languages :</b> {!knownLanguages} </li>
+        <li><b> Contact's # of Hours Taught at Vendor :</b> {!taughtatVendor} </li>
+        <li><b> Contact's # of classes (LT Projects) Taught :</b> {!projectsTaught} </li>
+        <li><b> Contact's # of Students Taught :</b> {!studentsTaught} </li>
+        <li><b> Contact's # of Tests Performed :</b> {!testsPerfomed} </li>
+    </ol>   
+    <br/>
+    
+    <apex:outputPanel rendered="{!if(OR(rateType == 'LT with Prep', rateType == 'LT without Prep'), true ,false)}">
+        <b> Average LT Hourly Cost with Prep for this language :</b> {!hourlyCost} <br/><br/>
+        <apex:outputPanel rendered="{!if(lCRMRec_WithPrep != NULL, true ,false)}">
+            <b>Annual LT with Prep Merit Budget :</b> {!if(lCRMRec_WithPrep.Annual_Merit_Budget__c !=  NULL, lCRMRec_WithPrep.Annual_Merit_Budget__c, 0.0)}<br/>
+            <b>YTD LT with Prep Merit Increases :</b> {!if(lCRMRec_WithPrep.YTD_Merit_Increases__c != NULL, lCRMRec_WithPrep.YTD_Merit_Increases__c, 0.0)}
+        </apex:outputPanel><br/><br/>
+        <b> Average LT Hourly Cost without Prep for this language :</b> {!hourlyCost_WithoutPrep} <br/><br/>
+        <apex:outputPanel rendered="{!if(lCRMRec_WithoutPrep != NULL, true ,false)}">
+            <b>Annual LT without Prep Merit Budget :</b> {!if(lCRMRec_WithoutPrep.Annual_Merit_Budget__c !=  NULL, lCRMRec_WithoutPrep.Annual_Merit_Budget__c, 0.0)}<br/>
+            <b>YTD LT without Prep Merit Increases :</b> {!if(lCRMRec_WithoutPrep.YTD_Merit_Increases__c != NULL, lCRMRec_WithoutPrep.YTD_Merit_Increases__c, 0.0)}
+        </apex:outputPanel>
+    </apex:outputPanel>
+    
+    <br/>
+    <apex:outputPanel rendered="{!if(conAssign.size > 0, true ,false)}">
+        <p>Please go to the <a href="{!$Label.Org_Prefix_Start_URL}/{!costRateId}"><b>Labor Cost Rate Record</b></a> to approve or reject this change.</p>
+        <p>Upon approval, the following projects will be updated with new Labor Cost Rate based on the effective date: </p> 
+        <table border="1" style="border-collapse: collapse;">
+            <tr>
+                <th width="25%" style="text-align: center; vertical-align: middle;">Project Name</th>
+                <th width="25%" style="text-align: center; vertical-align: middle;">Project Status</th> 
+            </tr>
+            <apex:repeat value="{!conAssign}" var="c">
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">{! c.Project__r.Name}</td>
+                    <td style="text-align: center; vertical-align: middle;">{! c.Project__r.AcctSeed__Status__c}</td> 
+                </tr>
+            </apex:repeat>
+        </table>
+                
+    </apex:outputPanel> 
+    
+</apex:component>

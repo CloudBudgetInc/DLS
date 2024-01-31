@@ -1,0 +1,22 @@
+.THIS .marginCls{
+    margin-top: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+.THIS .wrap {
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+.THIS .greenColor{
+    color: green !important;
+    font-weight: bold !important;
+    font-size: 0.875rem !important;
+}
+.THIS .slds-checkbox [type=checkbox][disabled]+.slds-checkbox__label .slds-checkbox_faux:after {
+    border-color: blue;
+}
+.THIS .cursorClass{
+    cursor:pointer;
+}
+.THIS .padTableCls{
+    padding: 0.5 rem;
+}

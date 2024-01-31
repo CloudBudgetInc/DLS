@@ -1,0 +1,55 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickActionWithoutHeader" access="global" Controller="GenericUrlLaunch_Ctrl">
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="showErrorMsg" type="Boolean" default="false"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="card" type="Map" default="{'title' : '', 'message' : ''}"/>	
+    <aura:attribute name="isLoad" type="Boolean" default="false"/>
+    <aura:attribute name="congaUrl" type="String" default=""/>
+
+
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+      <aura:if isTrue="{!!v.showErrorMsg}">
+        <aura:if isTrue="{!v.isLoad}">
+            <lightning:card>
+                <aura:set attribute="title">
+                    <p style="font-size: 1.5rem;;" class="slds-align_absolute-center slds-p-bottom_xx-small">Refund Calculation</p>
+                </aura:set>
+                <div style="font-size: 1rem;text-align: center;"><br/><br/>
+                    Would you like to generate <b>Refund Calculation</b> information
+                    <br/><br/> <br/>
+                </div>
+                <aura:set attribute="footer">
+                    <lightning:button label="Okay" title="Neutral action" variant="brand" onclick="{!c.launchUrl}"/>
+                    <lightning:button variant="brand" label="Close" onclick="{!c.closeAction}"/>
+                </aura:set>
+            </lightning:card>
+        </aura:if>
+        <aura:set attribute="else">
+            <lightning:card>
+                <aura:set attribute="title">
+                    <p style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">{!v.card.title}</p>
+                </aura:set>
+                <br/><br/>
+                <p style="font-size:1rem;">{!v.card.message}</p><br/><br/>
+                <aura:set attribute="footer">
+                    <lightning:button class="slds-float_right"
+                                      variant="brand"
+                                      label="Close"
+                                      onclick="{!c.closeAction}"/>
+                </aura:set>
+            </lightning:card>
+        </aura:set>
+    </aura:if>
+    
+</aura:component>

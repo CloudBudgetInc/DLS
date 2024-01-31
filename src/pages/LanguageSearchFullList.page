@@ -1,0 +1,310 @@
+<apex:page controller="LanguageSearchController">
+    <head>
+        <apex:includeScript value="{!URLFOR($Resource.DataTableJquery, 'DataTables-1.10.9/media/js/jquery.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.DataTableJquery, 'DataTables-1.10.9/media/js/jquery.dataTables.min.js')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.DataTableJquery, 'DataTables-1.10.9/media/css/jquery.dataTables.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+    </head>
+    <style>
+        .searchWaitingDivOpacity{
+            background:url("/img/loading32.gif")scroll no-repeat 46% 43% #fff;
+            top: 0;
+            height: 100%;
+            left: 0;
+            opacity: 0.8;
+            position: absolute;
+            width: 100%;
+            z-index: 1500;
+        }
+    </style>
+    <script>
+        var selctOptionId = '';
+        j$ = jQuery.noConflict();
+                j$(document).ready( function () {
+                var tbl = j$('[id$="table1"]').DataTable({
+                       
+                        });
+              
+                       
+                    });
+                    
+        function searchVal(){
+            var val=document.getElementById(selctOptionId).value;
+            //console.log('val:::',val);
+            
+            if(val != null && val != ''){
+                //console.log('val:::',val);
+                
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.LanguageSearchController.searchLanguageRelatedDetails}',
+                  val,
+                  function(response, ev) {
+                      if(ev.status) {
+                          jsonContactTable(response);
+                      } else {
+                          console.log(':::::::error:::::::',ev);
+                      }
+                  },
+                  {escape: true}
+              );
+            
+            }
+        
+        }
+    </script>
+    <body >
+        <div class="slds">
+        <div class="searchWaitingDivOpacity" style = "display:none;"></div>
+        <apex:form >
+            <div class="slds-grid slds-wrap">
+            
+                <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--1-of-12">
+                </div>
+                
+                <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--4-of-12" style="margin-top:2%;margin-bottom:4%;">
+                    
+                    <label class="slds-form-element__label" style="font-weight:bold;font-size: 18px;">Language</label>
+                    
+                    <apex:selectList id="lang1Id" multiselect="false" styleClass="slds-select" value="{!lang1}" size="1" style="width: 194px;">
+                        <apex:selectOptions value="{!Languages}" />
+                    </apex:selectList>
+                    
+                    <script>
+                        selctOptionId  = '{!$Component.lang1Id}';
+                    </script>
+                    
+                    <input type="button" class="slds-button slds-button--neutral" value="Search" onclick="searchVal();"/>
+                    
+                </div>
+                
+                <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                </div>
+                
+            </div>
+            <!-- Display search results -->
+            <div class="slds-col--padded slds-size--1-of-3 slds-medium-size--1-of-2 slds-large-size--12-of-12">
+                  <apex:outputpanel id="Contactlist">
+                        <div class="sobjectRecordsDiv"> </div>
+                        <br/><br/>
+                  </apex:outputpanel>
+             </div>
+            <!-- End of search results -->
+            
+            
+            <!-- Display popup for Language details related to contact -->
+                 <div aria-hidden="false" id="popupDisplay" role="dialog" class="slds-modal">
+                    <div class="slds-modal__container">
+                          <div class="slds-modal__header" style="background-color: rgb(22, 50, 92);color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Language Details</h2>
+                          </div>
+                          <div class="slds-modal__content">
+                              
+                              <span style="font-size: 15px;font-weight: bolder;">Mailing Address : </span><span id="addressDetail"></span>
+                              
+                          
+                             <table id="table" style="margin-top: 4%;">
+                                 <thead>
+                                     <th>Language Name</th>
+                                     <th>Speaking Proficiency</th>
+                                     <th>Listening Proficiency</th>
+                                     <th>Native Language</th>
+                                 </thead>
+                                <tbody id="lanDetail">
+                                    
+                                </tbody>
+                            </table>
+                         </div>
+                         <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Close" onclick="closeModel()"></input>
+                         </div>
+                   </div>
+              </div>
+              <div class="slds-modal-backdrop" id="popupDisplayEnd"></div>
+            <!--End of Language details-->
+            
+        </apex:form>
+        </div>
+    </body>
+    <script>
+       
+       
+       
+      
+       j$("#popupDisplay").addClass('');
+       j$("#popupDisplayEnd").addClass('');
+       
+        function jsonContactTable(output) {
+            j$('.searchWaitingDivOpacity').show();       
+            j$('.sobjectRecordsDiv').html('');
+            
+            var tableString = '';
+            var contactId = '';
+            tableString += '<table cellspacing="10" border="0" class="sobjectRecords"><thead><tr class="headerRow">';
+            
+            tableString +=  '<th>checkBox</th>'+
+                            '<th>Action</th>'+
+                            '<th>Name</th>'+
+                            '<th>Email</th>'+
+                            '<th>City/State</th>'+
+                            '<th>Mobile</th>'+
+                            '<th>Native Language</th>'+
+                            
+                        '</tr></thead><tbody class="dataRow">';
+            for (i = 0; i < output.length; i++) { 
+               contactId = output[i].Contact__c;
+               
+                    tableString += '<tr class="dataRow"><td>'+output[i].Native_Language__c+'</td><td class="dataCell"><a onclick="openLanguageDetails(\''+contactId+'\')">'+"View"+'</a></td>'+'<td class="dataCell"><a href="/'+output[i].Contact__c+'" target="_blank">'+output[i].Contact__r.Name
+                    if(typeof output[i].Contact__r.Email != 'undefined')
+                        tableString +='</a></td><td class="dataCell">'+output[i].Contact__r.Email+'</td>'+'<td class="dataCell">';
+                    else
+                        tableString +='</a></td><td class="dataCell">'+'</td>'+'<td class="dataCell">'
+                    
+                //if(typeof output[i].Contact__r.MailingStreet != 'undefined')
+                    //tableString += output[i].Contact__r.MailingStreet+'&nbsp;';
+                if(typeof output[i].Contact__r.MailingCity != 'undefined')
+                    tableString += output[i].Contact__r.MailingCity+',&nbsp;';
+                if(typeof output[i].Contact__r.MailingState != 'undefined')
+                    tableString += output[i].Contact__r.MailingState+'&nbsp;';
+                
+               /* if(typeof output[i].Contact__r.MailingPostalCode != 'undefined')
+                    tableString += output[i].Contact__r.MailingPostalCode+'&nbsp;';
+                if(typeof output[i].Contact__r.MailingCountry != 'undefined')
+                    tableString += output[i].Contact__r.MailingCountry;*/
+                    tableString += '<td class="dataCell">';
+                if(typeof output[i].Contact__r.MobilePhone != 'undefined')
+                    tableString +=output[i].Contact__r.MobilePhone+'</td>';
+                    tableString +='<td class="dataCell">';
+                    
+                    if(typeof output[i].Native_Language__c != 'undefined'){
+                    
+                        if(output[i].Native_Language__c != true) {
+                            tableString += '<input type="checkbox" style="zoom: 1.5;" checked disabled>' +'</td>';
+                        } else{
+                            tableString += '<input type="checkbox" style="zoom: 1.5;" disabled>' +'</td>';
+                        }
+                    }else {
+                        tableString +='<td class="dataCell">'+'</td>'
+                    }
+                    
+                    tableString +='</tr>';
+                    
+                    console.log('output[i].Native_Language__c:::', output[i].Native_Language__c);
+
+            }
+            
+            tableString += '</tbody></table>';
+            //console.log('tableString:::', tableString);
+            tableNoRecord = '<table cellspacing="10" border="0" class="sobjectRecords"><thead><tr class="headerRow"><th></th><th class="headerRow">Name</th>'+
+                            
+                            '</tr></thead><tbody><tr><td></td><td>No Record Found</td></tr></tbody></table>';
+            console.log('output.length::::',output.length);
+            if (output.length > 0 ) {
+                j$('.sobjectRecordsDiv').append(tableString);
+                
+            } else {
+                j$('.sobjectRecordsDiv').append(tableNoRecord);
+                
+            }
+            j$('.sobjectRecords').DataTable({   
+             "bPaginate": true,
+                
+             "aoColumns": [
+                         {"bVisible":false},
+                         {"bVisible":true},
+                         {"bVisible":true},
+                         {"bVisible":true},
+                         {"bVisible":true},
+                         {"bVisible":true},
+                         { "iDataSort": 0 ,"bVisible":true},
+             ]});
+            j$('.searchWaitingDivOpacity').hide();
+        }
+        
+        function openLanguageDetails(conId) {
+            
+            console.log(':::::fucntion::::::',conId);
+            var tbody = '';
+            
+            Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.LanguageSearchController.getLanguageDetails}',
+                  conId,
+                  function(response, ev) {
+                      if(ev.status) {
+                          console.log(':::::result::::::::',response);
+                          var RecordsArray = response;
+                          var addressValues = '';
+                          
+                          for(var i = 0;i < RecordsArray.length;i++) {
+                            if(RecordsArray[i].Contact__c == conId) {
+                                var s1 = '';
+                                var s2 = '';
+                                var s3 = '';
+                                
+                                if(RecordsArray[i].Speaking_Proficiency__c)
+                                    s1 = RecordsArray[i].Speaking_Proficiency__c;
+                                    
+                                if(RecordsArray[i].Listening_Proficiency__c)
+                                    s2 = RecordsArray[i].Listening_Proficiency__c;
+                                    
+                                if(RecordsArray[i].Native_Language__c)
+                                    s3 = true;
+                                else
+                                    s3 = false;
+                                    
+                                tbody += '<tr>'
+                                        + '<td>'+RecordsArray[i].Language_Name__c+'</td>'
+                                        + '<td>'+s1+'</td>'
+                                        + '<td>'+s2+'</td>';
+                                if(s3)
+                                    tbody += '<td><input type="checkbox" style="zoom: 1.5;" checked disabled>' +'</td>';
+                                else
+                                    tbody += '<td><input type="checkbox" style="zoom: 1.5;" disabled>' +'</td>';
+                                
+                               tbody += '</tr>';
+                                
+                                if(i == RecordsArray.length - 1) {
+                                    if(typeof RecordsArray[i].Contact__r.MailingStreet != 'undefined')
+                                       addressValues += RecordsArray[i].Contact__r.MailingStreet+'&nbsp;';
+                                        
+                                    if(typeof RecordsArray[i].Contact__r.MailingCity != 'undefined')
+                                        addressValues += RecordsArray[i].Contact__r.MailingCity+',&nbsp;';
+                                        
+                                    if(typeof RecordsArray[i].Contact__r.MailingState != 'undefined')
+                                        addressValues += RecordsArray[i].Contact__r.MailingState+'&nbsp;';
+                                    
+                                    if(typeof RecordsArray[i].Contact__r.MailingPostalCode != 'undefined')
+                                        addressValues += RecordsArray[i].Contact__r.MailingPostalCode+'&nbsp;';
+                                        
+                                    if(typeof RecordsArray[i].Contact__r.MailingCountry != 'undefined')
+                                        addressValues += RecordsArray[i].Contact__r.MailingCountry;
+                              
+                                }
+                            }
+                        }
+                        j$("#lanDetail").html(tbody);
+                        j$("#popupDisplay").addClass('slds-fade-in-open');
+                        j$("#popupDisplayEnd").addClass('slds-modal-backdrop--open');
+                        
+                        j$("#addressDetail").html(addressValues);
+                        
+                      } else {
+                          console.log(':::::::error:::::::',ev);
+                      }
+                  },
+                  {escape: true}
+              );
+        }
+        
+        function closeModel() {
+            j$("#popupDisplay").removeClass('slds-fade-in-open');
+            j$("#popupDisplayEnd").removeClass('slds-modal-backdrop--open');
+        }
+        
+        jQuery(document).ready(function($){  
+            //jsonContactTable();
+        });
+    </script>
+
+
+  
+</apex:page>

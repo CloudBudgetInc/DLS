@@ -1,0 +1,72 @@
+.THIS th.slds-is-sorted--asc a.toggle:after {
+    opacity: 0 ;
+}
+.THIS th.slds-is-sorted--desc a.toggle:after {
+    opacity: 0 ;
+}
+.THIS .selectSize  {
+    position: relative;
+    width: 20% !important;
+}
+
+
+.THIS .imgAction3{
+    background-color: steelblue;
+}
+.THIS .imgAction1{
+    background-color: #81b4d6;
+    border-radius: 50%;
+    line-height: 1;
+    padding: 6px;
+    max-width: 1.8 rem!important;
+    max-height: 2rem!important;
+}
+.THIS .imgAction2{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.8rem!important;
+    max-height: 2rem!important;
+}
+.THIS .slds-dropdown-trigger {
+    padding-left: 6% ;
+}
+
+.THIS .rowClass{
+    width:10%;
+}
+.THIS .ldtdev .slds-card__footer {
+   
+    display: none;
+}
+.THIS   .slds-tabs--default .slds-card{
+    background: rgb(204, 218, 239) !important;
+    border: 0px !important;
+}
+.THIS .helpTextClass .slds-form-element__icon {
+    padding-top: 0;
+}
+.THIS .tableCls .slds-card{
+    margin-top:-15px !important;
+    border: 0px !important;
+}
+.THIS .slds-spinner_container {
+    position:fixed !important;
+    background-color: rgba(0, 0, 0, 0.10) !important;
+    z-index: 1000000 !important;
+}
+.THIS .addComp .slds-dropdown-trigger{
+       padding-left: 0%;
+}
+.THIS.langTestCls .slds-dropdown-trigger {
+    padding-left: 0px !important;
+    padding-bottom: 15px !important;
+}
+.THIS .transferCAClass .slds-dropdown-trigger{
+    padding:0% !important;
+}
+.THIS .transferCAClass .form-element__label,.THIS .transferCAClass .slds-form-element__label {
+    font-weight: 500 !important;    
+}
+.THIS  .transferCAClass .uiInput--default .form-element__label {    
+    display: none !important;    
+}

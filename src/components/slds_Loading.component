@@ -1,0 +1,20 @@
+<apex:component >
+    <style>
+      .modal {
+            position:   fixed;
+            z-index:    25000;
+            top:        0;
+            left:       0;
+            height:     100%;
+            width:      100%;
+            background: rgba(230, 233, 239, 0.91) 
+                        url('{!URLFOR($Resource.SLDS091,'/assets/images/spinners/slds_spinner_brand.gif')}') 
+                        50% 50% 
+                        no-repeat; 
+            background-size: 60px 60px; 
+        } 
+    </style>
+    <div class = "modal" >    
+    </div>
+
+</apex:component>

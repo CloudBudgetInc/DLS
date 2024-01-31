@@ -1,0 +1,633 @@
+<apex:page standardStyleSheets="false" showHeader="false" sidebar="false" cache="false">
+      <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <title>Clean Company</title>
+      <apex:stylesheet value="{!URLFOR($Resource.CC_html_template, 'css/styles.css')}" />      
+      <apex:includeScript value="{!URLFOR($Resource.CC_html_template, 'js/jquery-1.5.2.min.js')}" /> 
+      <apex:includeScript value="{!URLFOR($Resource.CC_html_template, 'js/superfish.js')}" />
+      <style type="text/css" title="currentStyle" media="screen">
+.atsMaster {
+    WIDTH: 100%;
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-Serif;
+}
+.atsForm {
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+}
+.atsInput {
+    width: 300px;
+}
+.atsSelect {
+}
+.atsButton {
+}
+.atsError {
+    COLOR: #ff0000;
+}
+table.atsError tbody tr td {
+    COLOR: #ff0000;
+}
+table.atsError tr td {
+    COLOR: #ff0000;
+}
+.atsRequired {
+    COLOR: #ff0000;
+}
+.atsSelectedJobTitle {
+    PADDING-RIGHT: 1px;
+    PADDING-LEFT: 1px;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 1px;
+    PADDING-TOP: 1px;
+}
+.atsSelectedJobText {
+    BORDER-RIGHT: #000000 1px solid;
+    PADDING-RIGHT: 2px;
+    BORDER-TOP: #000000 1px solid;
+    PADDING-LEFT: 2px;
+    PADDING-BOTTOM: 2px;
+    BORDER-LEFT: #000000 1px solid;
+    PADDING-TOP: 2px;
+    BORDER-BOTTOM: #000000 1px solid;
+    BACKGROUND-COLOR: #d3d3d3;
+}
+.atsNavBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+.atsNavHello {
+    FLOAT: left;
+}
+.atsNavLinks {
+    FLOAT: right;
+}
+#atsSearchBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+#atsSearchTitle {
+    font-size: 16px;
+    color: #00353A;
+    margin: 0;
+    padding: 0 0 10px 0;
+    font-family: Arial, Helvetica, sans-Serif;
+    font-weight: bold;
+    display:none;
+}
+#atsNoJobsMessage {
+}
+.atsSearchTable {
+    padding: 6px;
+    BORDER-TOP: #000000 0px solid;
+    BORDER-RIGHT: #000000 0px solid;
+    BORDER-LEFT: #000000 0px solid;
+    BORDER-BOTTOM: #000000 0px solid;
+    WIDTH: 100%;
+}
+.atsSearchTdLeft {
+    PADDING-RIGHT: 4px;
+    PADDING-LEFT: 2px;
+    PADDING-BOTTOM: 4px;
+    PADDING-TOP: 4px;
+    TEXT-ALIGN: right;
+    float: left;
+    white-space: nowrap;
+}
+.atsSearchTdRight {
+    PADDING-RIGHT: 4px;
+    PADDING-LEFT: 4px;
+    PADDING-BOTTOM: 4px;
+    PADDING-TOP: 4px;
+}
+#atsSearchResultsBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+#atsSearchResultsTitle {
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 4px;
+}
+#atsNoResultsMessage {
+}
+#atsSearchResultsText {
+    PADDING-BOTTOM: 10px;
+}
+.atsSearchResultsTable {
+    WIDTH: 100%;
+}
+.atsSearchResultsHead {
+    PADDING-RIGHT: 4px;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 2px;
+}
+.atsSearchResultsData {
+    padding: 8px 5px;
+    border-top: #ccc 1px solid;
+    vertical-align: top;
+}
+#atsJobDetailsBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+#atsJobDetailsHeader {
+    MARGIN-BOTTOM: 10px;
+}
+#atsJobDetailsFooter {
+    MARGIN-TOP: 10px;
+}
+.atsJobDetailsTable {
+    PADDING-BOTTOM: 10px;
+}
+.atsJobDetailsTdLeft {
+    PADDING-RIGHT: 15px;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-TOP: 5px;
+    WIDTH: 25%;
+    VALIGN: top;
+}
+.atsJobDetailsTdRight {
+    PADDING-BOTTOM: 5px;
+    PADDING-TOP: 5px;
+    WIDTH: 75%;
+    COLOR: #4C6A82;
+    FONT-WEIGHT: bold;
+    VALIGN: top;
+}
+.atsJobDetailsTdTwoColumn {
+    PADDING-TOP: 15px;
+    COLOR: #000000;
+    FONT-WEIGHT: normal;
+}
+#atsJobDetailsLoginBox {
+    MARGIN-TOP: 20px;
+}
+.atsJobDetailsAlreadyLogin {
+    FONT-WEIGHT: bold;
+}
+#atsJobDetailsLoginTitle {
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 2px;
+}
+.atsLoginTable {
+    BORDER-RIGHT: #000000 1px solid;
+    PADDING-RIGHT: 6px;
+    BORDER-TOP: #000000 1px solid;
+    PADDING-LEFT: 6px;
+    PADDING-BOTTOM: 6px;
+    BORDER-LEFT: #000000 1px solid;
+    PADDING-TOP: 6px;
+    BORDER-BOTTOM: #000000 1px solid;
+}
+.atsLoginAlreadyRegisteredTd {
+    BORDER-RIGHT: #000000 1px solid;
+    PADDING-RIGHT: 6px;
+    PADDING-LEFT: 6px;
+    PADDING-BOTTOM: 6px;
+    WIDTH: 48%;
+    PADDING-TOP: 6px;
+}
+#atsAlreadyRegisteredTitle {
+    FONT-WEIGHT: bold;
+}
+#atsAlreadyRegisteredText {
+    PADDING-BOTTOM: 8px;
+}
+.atsAlreadyRegisteredTable {
+    WIDTH: 100%;
+}
+.atsAlreadyRegisteredTdLeft {
+    PADDING-RIGHT: 4px;
+    PADDING-BOTTOM: 8px;
+}
+.atsAlreadyRegisteredTdRight {
+    PADDING-BOTTOM: 8px;
+}
+.atsLoginNotRegisteredTd {
+    PADDING-RIGHT: 6px;
+    PADDING-LEFT: 6px;
+    PADDING-BOTTOM: 6px;
+    WIDTH: 52%;
+    PADDING-TOP: 6px;
+}
+#atsNotRegisteredTitle {
+    FONT-WEIGHT: bold;
+}
+#atsNotRegisteredText {
+}
+#atsNotRegisteredUL {
+    MARGIN-TOP: 0px;
+    MARGIN-BOTTOM: 8px;
+}
+#atsSecurePasswordMessage {
+}
+#atsForgotPasswordBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+#atsForgotPasswordTitle {
+    FONT-WEIGHT: bold;
+}
+#atsForgotPasswordText {
+}
+#atsForgotPasswordError {
+    MARGIN-TOP: 10px;
+    FONT-WEIGHT: bold;
+    MARGIN-BOTTOM: 10px;
+    COLOR: #ff0000;
+}
+.atsForgotPasswordTable {
+    PADDING-TOP: 6px;
+}
+.atsForgotPasswordTdLeft {
+    PADDING-RIGHT: 4px;
+}
+.atsForgotPasswordTdCenter {
+    PADDING-RIGHT: 4px;
+}
+.atsForgotPasswordTdRight {
+    PADDING-RIGHT: 4px;
+}
+#atsSentPasswordBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+#atsSentPasswordTitle {
+    FONT-WEIGHT: bold;
+}
+#atsSentPasswordText {
+}
+#atsSentPasswordReturnToJobDetail {
+    MARGIN-TOP: 10px;
+}
+#atsFormBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+#atsFormText {
+}
+.atsFormTable {
+    WIDTH: 100%;
+    float: left;
+}
+.atsFormTable textarea {
+    width: 300px;
+    height: 80px;
+    border: 2px solid #cccccc;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+.atsFormTable input {
+    width: 300px;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+#atsFormTdRequiredText {
+    TEXT-ALIGN: right;
+}
+.atsFormTdError {
+    TEXT-ALIGN: left;
+}
+.atsFormTdTitle {
+    FONT-WEIGHT: bold;
+    padding: 0;
+    BORDER-BOTTOM: #ccc 1px solid
+}
+.atsFormTdLeft {
+    PADDING-TOP: 8px;
+    TEXT-ALIGN: right;
+    white-space: nowrap;
+}
+.atsFormTdRight {
+    PADDING-RIGHT: 50px;
+    PADDING-LEFT: 8px;
+    PADDING-TOP: 8px;
+    TEXT-ALIGN: left;
+}
+.atsFormTdTwoColumnLeft {
+    PADDING-TOP: 8px;
+    TEXT-ALIGN: left;
+}
+.atsFormTdTwoColumnUpload {
+    PADDING-TOP: 8px;
+    TEXT-ALIGN: left;
+    float: left;
+}
+.atsFormTdTwoColumnUpload input {
+    width: 20px;
+}
+.atsFormTdTwoColumnUpload textarea, .atsFormTdTwoColumnLeft textarea {
+    width: 540px;
+    height: 200px;
+    border: 2px solid #cccccc;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+.atsFormTdTwoColumnCenter {
+    PADDING-TOP: 8px;
+    TEXT-ALIGN: center;
+}
+#atsDisplayBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+.atsDisplayTdSavedMsg {
+    FONT-WEIGHT: bold;
+    COLOR: #0000ff;
+    PADDING-TOP: 10px;
+}
+.atsDisplayTdError {
+    TEXT-ALIGN: left;
+}
+.atsDisplayTable {
+    WIDTH: 100%;
+}
+.atsDisplayTdTitle {
+    FONT-WEIGHT: bold;
+    PADDING-TOP: 16px;
+    BORDER-BOTTOM: #ccc 1px solid;
+    margin-bot: 6px;
+}
+.atsDisplayTdLeft {
+    PADDING-TOP: 10px;
+    TEXT-ALIGN: left;
+}
+.atsDisplayTdRight {
+    PADDING-TOP: 10px;
+    TEXT-ALIGN: right;
+}
+.atsDisplayTdCenter {
+    PADDING-TOP: 10px;
+    TEXT-ALIGN: center;
+}
+#atsApplicationSubmittedBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+#atsApplicationSubmittedMain {
+    FONT-WEIGHT: bold;
+}
+#atsApplicationSubmittedHomepage {
+    MARGIN-TOP: 10px;
+}
+#atsApplicationSubmittedSub {
+    MARGIN-TOP: 10px;
+}
+#atsErrorPageBox {
+    PADDING-BOTTOM: 20px;
+    PADDING-TOP: 10px;
+}
+.atsErrorPageMessage {
+    FONT-WEIGHT: bold;
+    COLOR: #ff0000;
+}
+.demotitle {
+    FONT-WEIGHT: bold;
+    COLOR: #ff0000;
+    FONT-FAMILY: Tahoma, Arial, Helvetica;
+    FONT-SIZE: 22px;
+}
+.tcdemo_Container_Title {
+    FONT-WEIGHT: Normal;
+    COLOR: #000000;
+    FONT-FAMILY: Tahoma, Arial, Helvetica;
+    FONT-SIZE: 15px;
+}
+.atsMailJob {
+    text-align: right;
+    padding: 3px 0 3px 0;
+    margin: 0;
+}
+.atsMailJobImage {
+}
+.atsMailJob a:link {
+    text-decoration:none;
+}
+.atsMailJob a:visited {
+    text-decoration:none;
+}
+.atsMailJob a:hover {
+    text-decoration:underline;
+}
+.atsMailJob a:active {
+    text-decoration:none;
+}
+.atsEmailTable, .atsPreScreen {
+    padding: 6px;
+    WIDTH: 100%;
+}
+.atsEmailTdLeft {
+    PADDING-RIGHT: 4px;
+    PADDING-LEFT: 2px;
+    PADDING-BOTTOM: 4px;
+    PADDING-TOP: 4px;
+    TEXT-ALIGN: right;
+    float: left;
+    white-space: nowrap;
+}
+.atsEmailTdRight {
+    PADDING-RIGHT: 4px;
+    PADDING-LEFT: 4px;
+    PADDING-BOTTOM: 4px;
+    PADDING-TOP: 4px;
+    ;
+}
+.atsEmailTable textarea {
+    width: 300px;
+    height: 120px;
+    border: 2px solid #cccccc;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+.atsEmailTable input, .atsPreScreen select, .atsPreScreen input {
+    width: 300px;
+    padding: 5px;
+    font-family: Tahoma, sans-serif;
+}
+.atsPreScreen td {
+    padding: 5px;
+}
+.block ul#js-menu {
+    list-style:none;
+    padding-left:10px;
+    margin:18px 0 18px 0;
+}
+.block ul#js-menu li {
+    padding-left: 0;
+    padding-bottom:10px;
+}
+.block ul#js-menu {
+    font-size: 12px;
+    font-style:italic;
+}
+.block ul#js-menu li {
+background:url( {
+!URLFOR($Resource.cleancorp, 'images/primary/check.gif')
+}
+) no-repeat;
+background-position:0px 1px;
+}
+.confirmationaccept {
+background:#e5f7e3 url( {
+!URLFOR($Resource.OperationMessages, 'check.gif')
+}
+) no-repeat;
+background-position:7px 7px;
+border:1px solid #c5e1c8;
+font-weight:700;
+color:#005e20;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+.confirmationerror {
+background:#ffebeb url( {
+!URLFOR($Resource.OperationMessages, 'x.gif')
+}
+) no-repeat;
+background-position:7px 7px;
+border:1px solid #f5c1c2;
+font-weight:700;
+color:#9e0b0f;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+.confirmationwarning {
+background:#fffeeb url( {
+!URLFOR($Resource.OperationMessages, 'warning.gif')
+}
+) no-repeat;
+background-position:7px 7px;
+border:1px solid #e6e5d8;
+font-weight:700;
+color:#555;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+.confirmationquestion {
+background:#e8f8fe url( {
+!URLFOR($Resource.OperationMessages, 'question.gif')
+}
+) no-repeat;
+background-position:7px 7px;
+border:1px solid #cfdfe5;
+font-weight:700;
+color:#004a80;
+width:300px;
+padding:8px 8px 8px 28px;
+}
+
+.atsReferralTypeSelector input {
+       width: 16px;
+}
+
+.atsMaster ul li{list-style-type:disc; margin-left:2.5em; padding-left:0; display:list-item; margin-top:10px;}
+
+h1, h2, h3{ display:block;}
+body a{text-decoration:underline;}
+body a:hover{color:#66AF45; text-decoration:none;}
+body .sf-menu a,body .sf-menu a:hover, body a.link2, body a.link2:hover, body a.link-search, body a.link-
+
+search:hover{ text-decoration:none; color:#fff;}
+.block p{border-top:1px solid #e5e5e5; padding-top:30px;}
+body h1 a{ text-decoration:none;}
+body{ background-color:#fff;}
+#content{ margin-bottom:40px;}
+input, select, textarea{ margin-right:5px;}
+
+.addthis_toolbox{ margin-top:15px;}
+
+</style>
+      </head>
+      <body id="page1">
+      <div class="header">
+            <div class="main">
+                  <div class="wrapper">
+                        <div class="search">
+                              <form id="search-form" name="search-form">
+                                    <div class="extra-wrap"> <span class="text-search">Search</span>
+                                          <input type="text" value="" onFocus="if(this.value=='-enter your e-mail here-')
+
+{this.value=''}" onBlur="if(this.value==''){this.value=''}" />
+                                          <a class="link-search" onClick="document.getElementById('search-form').submit
+
+()">Go!</a> </div>
+                              </form>
+                        </div>
+                        <h1> <a href="#"> <span class="text-1">Clean Company</span><br />
+                              <span class="text-2">business company</span> </a> </h1>
+                  </div>
+            </div>
+            <div class="nav">
+                  <ul class="sf-menu">
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">about us</a></li>
+                        <li><a href="#">our services</a></li>
+                        <li><a href="#">latest news</a>
+                              <ul>
+                                    <li><a href="#">latest news 1</a></li>
+                                    <li><a href="#">latest news 2</a></li>
+                                    <li><a href="#">latest news 3</a></li>
+                              </ul>
+                        </li>
+                        <li><a href="#">projects</a></li>
+                        <li><a href="#">partners</a></li>
+                        <li><a href="#">Links</a></li>
+                        <li class="active"><a href="#">careers</a></li>
+                        <li class="last"><a href="#">contacts</a></li>
+                  </ul>
+                  <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+      </div>
+      <div id="content">
+            <div class="main pad1">
+                  <div class="box">
+                        <div class="fleft"> <span class="text-4">We are one of the largest providers of the leading 
+
+business strategies!</span><br />
+                              <span class="text-5">Offering award-winning solutions to improve and stimulate your 
+
+business</span> </div>
+                        <a href="#" class="link2 fright">details</a> </div>
+            </div>
+            <div class=" container_12">
+                  <div class="wrapper">
+                        <div class="grid_9">
+                              <apex:insert name="body"/>
+                        </div>
+                        <div class="grid_3">
+                              <div class="sidebar">
+                                    <div class="block">
+                                          <h2>Careers</h2>
+                                          <h3>Best opportunity to succeed.</h3>
+                                          <ts2:Menu ></ts2:Menu>
+                                    </div>
+                                    <div class="block">
+                                          <p>If you have any questions about applying for a position please contact us at: 
+
+1-888-44-CLEAN.</p>
+                                    </div>
+                              </div>
+                        </div>
+                  </div>
+            </div>
+      </div>
+      <div class="footer">
+            <div id="footer">
+                  <div class="copyright"><span class="text-3">Clean Company</span><span class="text-4"> 
+
+&copy; 2011| <a href="#">Privacy policy</a></span></div>
+                  <div class="fright"><span class="footer-link"> </span></div>
+            </div>
+      </div>
+      </body>
+      </html>
+</apex:page>

@@ -1,0 +1,24 @@
+.THIS .slds-card {
+    position: relative !important;
+    padding: 0 !important;
+    background: rgb(255, 255, 255) !important;
+    border: 1px solid #d4d4d4 !important;
+    border-radius: .25rem !important;
+    background-clip: padding-box !important;
+    box-shadow: none !important;
+}
+.THIS .box--x-small {
+    padding: 0.5rem;
+}
+.THIS .slds-card__body+.slds-card__body{
+    float: right !important;
+    margin-right: -14px !important;
+    margin-bottom: 0 !important;
+    margin-top: -28px !important;
+}
+
+.THIS .selfServiceArticleLayout {
+    font-size: .75rem !important;
+    line-height: 1.5em !important;
+    box-sizing: border-box !important;
+}

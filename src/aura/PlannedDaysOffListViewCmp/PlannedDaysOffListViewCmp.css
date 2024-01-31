@@ -1,0 +1,60 @@
+.THIS .viewSelectClass {
+    width: 11.5rem!important;
+}
+
+.THIS .slds-card {
+    border:white !important;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0)!important;
+}
+.THIS .ldtDatatableDev select {
+     height: -1em !important; 
+}
+.THIS .newBtnCls{
+    padding-top:-20rem;
+}
+.THIS .itemMenuContainer{
+    display: none !important;
+}
+.THIS abbr[title]{
+    text-decoration: none !important;
+}
+.THIS .ldtdev .slds-table_fixed-layout {
+    table-layout: auto !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(1){
+    width: 20% !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(2){
+    width: 30% !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(3){
+    width: 15% !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(4){
+    width: 15% !important;
+}
+.THIS .ldtdev .slds-table_cell-buffer  th:nth-child(5){
+    width: 15% !important;
+}
+.THIS .ldtdev .slds-th__action {
+    height: auto !important;
+}
+.THIS .ldtDatatableDev table tbody tr>td:first-child{
+    padding-left: 10px !important;
+}
+.THIS .imgAction2{
+    border-radius: 50%;
+    line-height: 1;
+    max-width: 1.8rem!important;
+    max-height: 2rem!important;
+}
+.THIS .imgAction1{
+    max-width: 29px!important;
+    max-height:28px!important;
+}
+
+@media (max-width: 48em) {    
+    .THIS .card-body{
+        padding: .50rem !important;
+    }
+}

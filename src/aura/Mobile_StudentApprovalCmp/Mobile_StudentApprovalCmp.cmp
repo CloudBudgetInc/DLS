@@ -1,0 +1,159 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" Controller="StudentApproval_Controller">
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="weekDateFilters" type="List" default="[]"/>
+    <aura:attribute name="selectedWeek" type="String" default=""/>
+    <aura:attribute name="selectedProject" type="String" default=""/>
+    <aura:attribute name="projectId"  type="String" default=""/>
+    <aura:attribute name="studentOverAllSum" type="String" default=""/>
+    <aura:attribute name="instructorId"  type="String" default=""/>
+    <aura:attribute name="projectFilter" type="List" default="[]"/>
+    <aura:attribute name="studentId" type="String" default=""/>
+    <aura:attribute name="selectedRowValue" type="String" default=""/>
+    <aura:attribute name="projectRelatedFilter" type="Map" default="{}"/>
+    <aura:attribute name="weekDetailInfo" type="Map" default="{}"/>
+    <aura:attribute name="studentRowEntries" type="List" default="[]"/>
+    <aura:attribute name="projectRTName" type="String" default=""/>
+    <aura:attribute name="projectInstructorName" type="String" default=""/>
+    <aura:attribute name="weekDay" type="List" default="['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']"/>
+    <aura:attribute name="studentColTHMap" type="Map" default="{}"/>
+    <aura:attribute name="topicId" type="String" default=""/>
+    <aura:attribute name="isDisplaySaveBtn" type="Boolean" default="false"/>
+    <aura:attribute name="weekDateRange" type="List" default="[]"/>
+    <aura:attribute name="weeklyViewRowsInfo" type="Map" default="{weeklyViewRow : [] , showStuHrs : true}"/>
+    <aura:attribute name="studentSummaryDetails" type="Map" default="{isHomeView : true,isBackFromDailyView : false ,isDailyView : false}"/>
+    <aura:attribute name="weeklyViewColorCodeMap" type="Map" default="{}"/>
+    <aura:attribute name="fromCommunityUrlMap" type="Map" default="{}"/>
+    
+    <!-- Handler Component -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!--Child Event to get TimeCardDay and Attendence Records-->
+    <aura:handler name="getTCDAttendanceRecords" event="c.childClickEvent" action="{!c.handleChildEvent}"/>
+    
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand"  size="medium" alternativeText="Loading" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- W-002636 Mobile Timekeeping UI Development-->
+    
+    <aura:if isTrue="{!v.studentSummaryDetails.isHomeView}">
+        <center><h5 class="card-title" style="font-size:1.5rem;">DLS TIMESHEET STUDENT APPROVAL</h5></center>
+        <div class="card">
+            <span class="card-body cardCls">
+                <div>
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="12" padding="around-medium">
+                            <lightning:combobox name="Week"  label="Week:" class="comboCls" aura:id="weekInput" value="{!v.selectedWeek}" options="{!v.weekDateFilters}" onchange="{!c.onChangeWeekClk}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" padding="around-medium">
+                            <lightning:combobox name="ClassNumber" style="margin-top:-1.3rem;" aura:id="dlsClassNo" label="Class Number:" value="{!v.selectedProject}" options="{!v.projectFilter}" onchange="{!c.onchangeProject}"/>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                </div>
+                <aura:if isTrue="{!v.weeklyViewRowsInfo.weeklyViewRow.length > 0}">
+                    <div class="slds-grid slds-wrap">
+                        <table class="slds-table_bordered">
+                            <thead>
+                                <th style="width:30%;"></th>
+                                <th style="width:13%;"></th>
+                                <th style="{!v.weeklyViewRowsInfo.showStuHrs ? 'width:23%;' : 'width:40%;'}" class="stuInsTextCls"><div>Instructor</div><div>Hours</div></th>
+                                
+                                <aura:if isTrue="{!v.weeklyViewRowsInfo.showStuHrs}">
+                                    <th style="width:23%;" class="stuInsTextCls"><div>Student</div><div>Hours</div></th>
+                                </aura:if>
+                                
+                                <th style="weeklyViewRowsInfo.showStuHrs ? 'width:11%;font-weight:bold;' : 'width:17%;font-weight:bold;'}"></th> 
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.weeklyViewRowsInfo.weeklyViewRow}" var="i" indexVar="index">
+                                    <tr data-myid="{!i.date+'~'+index}" onclick="{!c.dateRowclick}" >
+                                        <td class="slds-p-left_small">
+                                            <div class="slds-p-top_small slds-p-bottom_small">{!i.displayDate}</div>
+                                        </td>
+                                        <td class="slds-p-left_small">
+                                            <div class="slds-p-top_small slds-p-bottom_small centerCls">{!i.day}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-p-top_small slds-p-bottom_small centerCls" style="{!'color:'+i.instructorColorCode+';font-weight:bold;text-align:center;'}">{!i.instructorHrs}</div>
+                                        </td>
+                                        
+                                        <aura:if isTrue="{!v.weeklyViewRowsInfo.showStuHrs}">
+                                            <td>
+                                                <div class="slds-p-top_small slds-p-bottom_small centerCls"  style="{!'color:'+i.studentColorCode+';font-weight:bold;text-align:center;'}">{!i.studentHrs}</div>
+                                            </td>
+                                        </aura:if>
+                                        
+                                        <td>
+                                            <lightning:icon iconName="action:more" class="viewMoreCls"  style="border-radius: 1rem !important;"/>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                                <tr>
+                                    <td class="slds-p-left_small">
+                                        <div class="slds-p-top_small slds-p-bottom_small  slds-p-left_small"><b>Total Hours</b></div>
+                                    </td>
+                                    <td class="slds-p-left_small"></td>
+                                    <td>
+                                        <div class="slds-p-top_small slds-p-bottom_small centerCls">{!v.weekDetailInfo.TotalHrsDayColEntries.TotaldayHrs}</div>
+                                    </td>
+                                    
+                                    <aura:if isTrue="{!v.weeklyViewRowsInfo.showStuHrs}">
+                                        <td>
+                                            <div class="slds-p-top_small slds-p-bottom_small centerCls">{!v.studentOverAllSum}</div>
+                                        </td>
+                                    </aura:if>
+                                     
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div><br/>
+                    <center><lightning:button label="Notes" class="btn btn-primary" variant="brand" onclick="{!c.notesModal}"/></center> 
+                    <br/>
+                </aura:if>
+            </span>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.studentSummaryDetails.isDailyView}">
+        <c:StudentApproval_DailyView studentId="{!v.studentId}" studentSummaryDetails="{!v.studentSummaryDetails}" projectInstructorName="{!v.projectInstructorName}" studentRowEntries="{!v.studentRowEntries}" weekDetailInfo="{!v.weekDetailInfo}" selectedProject="{!v.selectedProject}" selectedWeek="{!v.selectedWeek}" showSpinner="{!v.showSpinner}" topicId="{!v.topicId}" projectRTName="{!v.projectRTName}" isDisplaySaveBtn="{!v.isDisplaySaveBtn}"/>
+    </aura:if>
+    
+    <!--Notes Comment Model-->
+    <aura:if isTrue="{!v.studentSummaryDetails.isNotesModal}">
+        <c:sldsModal aura:id="notesComment" >
+            <aura:set attribute="header">
+                Notes       
+            </aura:set>
+            <aura:set attribute="content">
+                <aura:if isTrue="{!v.weekDetailInfo.notes.length > 0}">
+                    <div class="slds-grid slds-wrap slds-grid_pull-padded">
+                        <table class="slds-table slds-table_bordered">
+                            <thead></thead>
+                            <tbody>
+                                <aura:iteration items="{!v.weekDetailInfo.notes}" var="note">
+                                    <aura:if isTrue="{!and(note.notes != null,note.notes != '')}">
+                                        <tr>
+                                            <td >
+                                                <span><span class="notesBldCls">Comment:</span><span class="slds-p-right_small notesCls"><aura:unescapedHtml value="{!note.notes}"/></span></span>  
+                                            </td>
+                                        </tr>
+                                    </aura:if>                          
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                    </div>
+                    <aura:set attribute="else">
+                        <center><div>No records to display</div></center>
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+            <aura:set attribute="footer">
+                <div>
+                    <lightning:button label="Close" class="btn btn-primary" onclick="{!c.closeNotes}"/>
+                </div>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+</aura:component>

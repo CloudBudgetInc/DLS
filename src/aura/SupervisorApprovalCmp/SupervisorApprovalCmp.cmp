@@ -1,0 +1,277 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global" controller="Mobile_SupervisorTimeApproval_Ctrl">
+    <aura:attribute name="displaySummary" type="Boolean" default="true" access="public"/>
+    <aura:attribute name="displayDetail" type="Boolean" default="false" access="public"/>
+    <aura:attribute name="dateSummaryDetails" type="List" access="public" description="date based summary"/>  
+    <aura:attribute name="projectSummaryDetails" type="List" access="public" description="project based summary"/>  
+    <aura:attribute name="weekRangeInfo" type="List" access="public" description="pending week info"/>
+    <aura:attribute name="TotalHrsObj" type="Object" access="public" description="grand total info"/>
+    <aura:attribute name="notesDisplay" type="Boolean"/>
+    <aura:attribute name="notesDetails" type="List" access="public" description="filtered notes based on contact"/>
+    <aura:attribute name="wholeNotesDetails" type="Object" description="all contact related notes"/>
+    <aura:attribute name="showSpinner" type="Boolean" access="public"/>
+    <aura:attribute name="displayInfoModal" type="Boolean" access="public"/>
+    <aura:attribute name="summaryDetails" type="Object" access="public" description="contains all attributes related to Summary"/>
+    <aura:attribute name="specificWeekInfo" type="Object" access="public" description="current week related all info"/>
+    <aura:attribute name="selectedRowValue" type="String" access="public" description="selected row value info"/>
+    <aura:attribute name="overAllActionMsg" type="String" access="public"/>
+    <!--<aura:attribute name="selectedDAName" type="String" access="public"/>-->
+    <aura:attribute name="confirmationaAlert" type="Boolean" access="public" description="display over all action approve,reject confirmation modal"/>
+    <aura:attribute name="DAApproverMsg" type="String" access="public"/>
+    <aura:attribute name="actionType" type="String" access="public"/>
+    <aura:attribute name="emailType" type="String" access="public"/>
+    <aura:attribute name="updatedTCD" type="List" access="public"/>
+    <aura:attribute name="successTitle" type="String" access="public"/>
+    <aura:attribute name="successMsg" type="String" access="public"/>
+    <aura:attribute name="totalPendingHrs" type="Decimal" access="public"/>
+    <aura:attribute name="gotoSumaryClicked" type="Boolean" access="public" default="false"/>
+    <aura:attribute name="displaySemiMonthly" type="Boolean" access="public"/>
+    <aura:attribute name="weekchanged" type="Boolean" access="public" default="false"/>
+    <aura:attribute name="approverChanged" type="Boolean" default="false"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <!-- To handle header cmp related event -->
+    <aura:handler name="clickEvent" event="c.childClickEvent" action="{!c.handleChildEvent}"/>
+    
+    <!-- To handle details component related event -->
+    <aura:handler name="approvalDetailEvent" event="c.childClickEvent" action="{!c.handlerDetailEvent}"/>
+    
+    <!-- To handle summary cmp related event -->
+    <aura:handler name="summaryEvent" event="c.childClickEvent" action="{!c.monthlySummaryEvent}"/>
+    
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner aura:id="mySpinner" alternativeText="Loading..."/>
+    </aura:if>
+    
+    <div style="overflow-y : scroll;">
+        <aura:if isTrue="{!v.displaySummary}">
+            <article aura:id="summary" class="slds-card slds-show">
+                <div class="slds-card__header">
+                    <c:HeaderComponent headerName="{!v.summaryDetails.selectedWeekName}" subHeader="" previousIconDisplay="{!v.summaryDetails.displayPreviousIcon}" 
+                                       nextIconDisplay="{!v.summaryDetails.displayNextIcon}" displayApprovalSummaryLink="true" summaryLinkName="Go to Summary"/>
+                    
+                </div>
+                <div class="slds-card__body slds-card__body_inner" aura:id="summaryBody" style="overflow-y: scroll;">
+                    <lightning:layout verticalAlign="stretch" class="x-large">
+                        <lightning:layoutItem flexibility="auto" padding="around-small">
+                            <span>
+                                <lightning:select aura:id="contact" label="Contact" value="{!v.summaryDetails.selectedContactId}" onchange="{!c.contactFilter}">
+                                    <aura:iteration items="{!v.summaryDetails.contactList}" var="con">
+                                        <option text="{!con.LastName}" value="{!con.Id}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </span>
+                            <span>
+                                <lightning:select aura:id="DAUser" label="Approve as Delegate Approver" value="{!v.summaryDetails.selectedDAUser}" onchange="{!c.DAChange}">
+                                    <option text="--None--" value="--None--"/>
+                                    <aura:iteration items="{!v.summaryDetails.delegatedApprovers}" var="usr">
+                                        <option text="{!usr.Name}" value="{!usr.Id}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </span>
+                            <span>
+                                <lightning:select aura:id="project" label="Display Type" value="{!v.summaryDetails.selecedSummaryType}" onchange="{!c.viewChange}">
+                                    <aura:iteration items="{!v.summaryDetails.displayType}" var="type">
+                                        <option text="{!type}" value="{!type}"/>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </span>
+                        </lightning:layoutItem>
+                        
+                    </lightning:layout>
+                    <div class="slds-grid slds-wrap">
+                        <table class="slds-table_bordered slds-p-horizontal_small slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-2">
+                            <tbody>
+                                <aura:if isTrue="{!v.summaryDetails.showDateGrouping}">
+                                    <aura:if isTrue="{!not(empty(v.dateSummaryDetails))}">
+                                        <aura:iteration items="{!v.dateSummaryDetails}" var="wk">
+                                            <tr onclick="{!c.dateRowclick}" data-value="{!wk.dateVal}">
+                                                <td class="slds-p-left_medium">
+                                                    <div class="slds-p-top_small slds-p-bottom_small">{!wk.dateToDisplay}</div>
+                                                </td>
+                                                <td class="slds-p-right_x-large">
+                                                    <div class="slds-p-top_small slds-p-bottom_small">{!wk.dayType}</div>
+                                                </td>
+                                                <td class="slds-p-right_medium">
+                                                    <div class="slds-p-top_small slds-p-bottom_small">{!wk.pendingHrs}</div>
+                                                </td>
+                                                <td class="slds-p-right_medium">
+                                                    <div class="slds-p-top_small slds-p-bottom_small approvedclass">{!wk.approvedHrs}</div>
+                                                </td>
+                                                <td class="slds-p-right_medium">
+                                                    <div class="slds-p-top_small slds-p-bottom_small rejectedclass">{!wk.rejectedHrs}</div>
+                                                </td>
+                                            </tr>
+                                        </aura:iteration>
+                                        <aura:set attribute="else">
+                                            <span class="slds-align_absolute-center slds-p-around_medium">No records to approve</span>
+                                        </aura:set>
+                                    </aura:if>
+                                    
+                                    <aura:set attribute="else">
+                                        <aura:if isTrue="{!not(empty(v.projectSummaryDetails))}">
+                                            <aura:iteration items="{!v.projectSummaryDetails}" var="wk">
+                                                <tr onclick="{!c.dateRowclick}" data-value="{!wk.projectId}">
+                                                    <td class="slds-p-left_medium">
+                                                        <div class="slds-p-top_small slds-p-bottom_small">{!wk.projectName}</div>
+                                                    </td>
+                                                    <td class="slds-p-right_medium">
+                                                        <div class="slds-p-top_small slds-p-bottom_small">{!wk.pendingHrs}</div>
+                                                    </td>
+                                                    <td class="slds-p-right_medium">
+                                                        <div class="slds-p-top_small slds-p-bottom_small approvedclass">{!wk.approvedHrs}</div>
+                                                    </td>
+                                                    <td class="slds-p-right_medium">
+                                                        <div class="slds-p-top_small slds-p-bottom_small rejectedclass">{!wk.rejectedHrs}</div>
+                                                    </td>
+                                                </tr>
+                                            </aura:iteration>
+                                            <aura:set attribute="else">
+                                                <span class="slds-align_absolute-center slds-p-around_medium">No records to approve</span>
+                                            </aura:set>
+                                        </aura:if>
+                                        
+                                    </aura:set>
+                                </aura:if>
+                                <aura:if isTrue="{!or(not(empty(v.dateSummaryDetails)),not(empty(v.projectSummaryDetails)))}">
+                                    <tr>
+                                        <td class="slds-p-left_medium"> <div class="slds-p-top_small slds-p-bottom_small" style="font-weight: bold;">Total Hours</div></td>
+                                        <aura:if isTrue="{!v.summaryDetails.showDateGrouping}">
+                                            <td></td>
+                                        </aura:if>    
+                                        <td><div class="slds-p-top_small slds-p-bottom_small">{!v.TotalHrsObj.pendingHrsTotal}</div></td>
+                                        <td><div class="slds-p-top_small slds-p-bottom_small approvedclass">{!v.TotalHrsObj.approvedHrsTotal}</div></td>
+                                        <td><div class="slds-p-top_small slds-p-bottom_small rejectedclass">{!v.TotalHrsObj.rejectedHrsTotal}</div></td>
+                                    </tr>
+                                </aura:if>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <footer class="slds-card__footer">
+                    <aura:if isTrue="{!not(empty(v.updatedTCD))}">
+                        <span style="font-size: 16px;color: red;" class="slds-align_absolute-center">Changes saved temporarily</span><br/>
+                    </aura:if>
+                    <div class="slds-grid slds-p-around_x-small">
+                        <div class="slds-col">
+                            <lightning:button variant="brand" label="Notes" onclick="{!c.displayNotes}"/>
+                        </div>
+                        <aura:if isTrue="{!not(empty(v.updatedTCD))}">
+                            <div class="slds-col">
+                                <lightning:button variant="brand" label="Save All Changes" onclick="{!c.saveBtnClick}"/>
+                            </div>
+                        </aura:if>
+                        <div class="slds-col">
+                            <!--<lightning:button variant="brand" label="Reject All" onclick="{!c.rejectAllClick}"/>-->
+                        </div>
+                    </div>
+                </footer>
+            </article>
+        </aura:if>
+        
+        <!-- Display detail information-->
+        <aura:if isTrue="{!v.displayDetail}">
+            <c:ApprovalDetailCmp summaryDetails="{!v.summaryDetails}" specificWeekInfo="{!v.specificWeekInfo}" selectedRowValue="{!v.selectedRowValue}" updatedTCD="{!v.updatedTCD}"/>
+        </aura:if>
+        
+        <!-- Semi monthly summary information cmp -->
+        <aura:if isTrue="{!v.displaySemiMonthly}">
+            <c:ApprovalSemiMonthlyCmp/>
+        </aura:if>
+        
+        <!-- Notes display modal -->
+        <aura:if isTrue="{!v.notesDisplay}">
+            <c:sldsModal aura:id="notesModal">
+                <aura:set attribute="header">Notes</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <aura:if isTrue="{!v.notesDetails.length > 0}">
+                        <ui:scrollerWrapper class="scrollerSize">
+                            <div class="slds-grid slds-wrap slds-grid_pull-padded">
+                                <table class="slds-table_bordered slds-p-horizontal_small slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-2">
+                                    <tbody>
+                                        <aura:iteration items="{!v.notesDetails}" var="note">
+                                            <tr>
+                                                <td>
+                                                    <div class="slds-p-top_small slds-p-bottom_small">
+                                                        <aura:if isTrue="{!and(note.Edited != null,note.Edited != '')}">
+                                                            <span style="font-weight: bold;">Edited: </span><span>{!note.Edited}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.ChargeCode != null,note.ChargeCode != '')}">
+                                                            <span style="font-weight: bold;">Charge Code: </span><span>{!note.ChargeCode}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.TaskName != null,note.TaskName != '')}">
+                                                            <span style="font-weight: bold;">Task Name: </span><span>{!note.TaskName}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.Daydate != null,note.Daydate != '')}">
+                                                            <span style="font-weight: bold;">Date: </span><span>{!note.Daydate}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.OldHours != null,note.OldHours != '')}">
+                                                            <span style="font-weight: bold;">Old Hours: </span><span>{!note.OldHours}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.NewHours != null,note.NewHours != '')}">
+                                                            <span style="font-weight: bold;">New Hours: </span><span>{!note.NewHours}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.OldStatus != null,note.OldStatus != '')}">
+                                                            <span style="font-weight: bold;">Old Status: </span><span>{!note.OldStatus}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.NewStatus != null,note.NewStatus != '')}">
+                                                            <span style="font-weight: bold;">New Status: </span><span>{!note.NewStatus}</span><br/>
+                                                        </aura:if>
+                                                        <aura:if isTrue="{!and(note.Comment != null,note.Comment != '')}">
+                                                            <span style="font-weight: bold;">Comment: </span><span>{!note.Comment}</span><br/>
+                                                        </aura:if>                          
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </aura:iteration>
+                                    </tbody>
+                                </table>
+                            </div>
+                       </ui:scrollerWrapper>
+                        <aura:set attribute="else">
+                            <div style="padding-left:6rem;">Data not found.</div>
+                        </aura:set>
+                    </aura:if>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="neutral" label="Close" class="buttonCls" onclick="{!c.closeNotes}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        <!-- Notes display modal end -->
+        
+        <!-- Succes / Error msg display model --> 
+        <aura:if isTrue="{!v.displayInfoModal}">
+            <c:sldsModal aura:id="successModal">
+                <aura:set attribute="header">{!v.successTitle}</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <p>{!v.successMsg}</p>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="brand" label="Close" class="buttonCls" onclick="{!c.closeClickOnSuccess}"/>
+                </aura:set>
+            </c:sldsModal>        
+        </aura:if>
+        
+        <!-- Unsaved data validation Modal -->
+        <aura:if isTrue="{!v.confirmationaAlert}">
+            <c:sldsModal aura:id="AlertModal">
+                <aura:set attribute="header">Confirmation</aura:set>
+                <aura:set attribute="displayCloseImage" value="false">
+                </aura:set>
+                <aura:set attribute="content">
+                    <p>Would you like to save changes?</p>
+                </aura:set>
+                <aura:set attribute="footer">
+                    <lightning:button variant="brand" label="Yes" class="buttonCls" onclick="{!c.yesClickonAlert}"/>
+                    <lightning:button variant="brand" label="No" class="buttonCls" onclick="{!c.noClickonAlert}"/>
+                </aura:set>
+            </c:sldsModal>
+        </aura:if>
+        <!-- End of unsaved data validation modal -->
+        
+    </div>
+</aura:component>

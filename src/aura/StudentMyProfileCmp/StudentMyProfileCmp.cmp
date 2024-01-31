@@ -1,0 +1,170 @@
+<aura:component controller="StudentMyProfileController" implements="forceCommunity:availableForAllPageTypes" access="global">
+    <aura:attribute name="dummyContactRec" type="Map" access="PUBLIC" description="Holding Contact information copy"/>
+    <aura:attribute name="profileInfo" type="Map" access="PUBLIC" description="Holding Contact information copy"/>
+    <aura:attribute name="viewMode" type="Boolean" default="true" access="PUBLIC" description="To switch between view and edit mode"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false" access="PUBLIC"/>
+    <aura:attribute name="displayDevice" type="String" default=""/>
+    <aura:attribute name="showUserEmailUpdationModal" type="Boolean" default="false"/>
+
+    
+    <!-- Handlers -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <br/><center><h5 class="card-title" style="font-size:2rem;">MY PROFILE</h5></center><br/>
+    
+    <center><ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active"  id="contactInfo-tab" data-toggle="tab" href="#contactInfo" role="tab" aria-controls="contactInfo" aria-selected="true">Contact Information</a>
+        </li>
+        </ul>
+    </center>
+    <div class="tab-content" style="padding-top:1rem;">
+        <div class="tab-pane active show" id="contactInfo" role="tabpanel" aria-labelledby="contactInfo-tab">
+            <div class="card-deck">
+                <div class="card">
+                    <span class="card-body" style="{!v.displayDevice == 'Mobile' ? 'padding:0.50rem !important;' : ''}">
+                            <h5 class="card-title">NAME</h5>
+                        <div align="right">
+                            <aura:if isTrue="{!v.viewMode}">
+                                <lightning:button variant="brand"  class="btn btn-primary" label="Edit" onclick="{!c.editContactInfo}"/> 
+                                <aura:set attribute="else">
+                                    <lightning:button variant="brand"  class="btn btn-primary"  label="Save" onclick="{!c.saveContact}"/>
+                                    <lightning:button variant="brand"  class="btn btn-secondary" label="Cancel" onclick="{!c.cancelEdit}"/>
+                                </aura:set>
+                            </aura:if>
+                        </div>
+                        <form>
+                            <div  class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text"  label="First Name" required="true" aura:id="inputFields" value="{!v.profileInfo.firstName}" disabled="{!v.viewMode}"/>
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text" label="Middle Name"  value="{!v.profileInfo.middleName}" disabled="{!v.viewMode}"/>
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text" label="Last Name" required="true"  aura:id="inputFields" value="{!v.profileInfo.lastName}" disabled="{!v.viewMode}"/>
+                                </div>
+                            </div>
+                            <div  class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:select label="Salutation" value="{!v.profileInfo.salutation}" disabled="{!v.viewMode}">
+                                        <option value="">--None--</option>
+                                        <aura:iteration items="{!v.profileInfo.salutationPickList}" var="i">
+                                            <option value="{!i}" selected="{!(v.profileInfo.salutation == i)}">{!i}</option>
+                                        </aura:iteration>
+                                    </lightning:select> 
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? '' :'form-group col'}"></div>
+                                <div class="{!v.displayDevice == 'Mobile' ? '' :'form-group col'}"></div>
+                            </div><br/>
+                        </form>
+                        <aura:if isTrue="{!v.displayDevice == 'Mobile'}">
+                            <h5 class="card-title"><div>CONTACT</div>INFO</h5>
+                            <aura:set attribute="else">
+                                <h5 class="card-title">CONTACT INFO</h5>
+                            </aura:set>
+                        </aura:if>
+                        <form>
+                            <div  class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text"  label="Email" required="true" aura:id="inputFields" value="{!v.profileInfo.email}"  disabled="{!v.viewMode}" />
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text" label="Mobile" value="{!v.profileInfo.mobilePhone}"  disabled="{!v.viewMode}"/>
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}"></div>            
+                            </div>
+                            <div  class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text" label="Home Phone"  value="{!v.profileInfo.homePhone}" disabled="{!v.viewMode}"/>
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:select label="Preferred Phone" value="{!v.profileInfo.preferredPhone}" disabled="{!v.viewMode}">
+                                        <option value="">--None--</option>
+                                        <aura:iteration items="{!v.profileInfo.preferredPhonePickList}" var="prepPhone">
+                                            <option value="{!prepPhone}" selected="{!(v.profileInfo.preferredPhone == prepPhone)}">{!prepPhone}</option>
+                                        </aura:iteration>
+                                    </lightning:select> 
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}"></div>            
+                            </div>
+                            <div  class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:select label="Time Zone" value="{!v.profileInfo.timeZone}" disabled="{!v.viewMode}">
+                                        <option value="">--None--</option>
+                                        <aura:iteration items="{!v.profileInfo.timeZonePicklist}" var="zone">
+                                            <option value="{!zone}" selected="{!(v.profileInfo.timeZone == zone)}">{!zone}</option>
+                                        </aura:iteration>
+                                    </lightning:select> 
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}"></div> 
+                                <div class="{!v.displayDevice == 'Mobile' ? '' :'form-group col'}"></div>
+                            </div><br/>
+                        </form>
+                        
+                        <h5 class="card-title">ADDRESS</h5>
+                        <form>
+                            <div class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text" label="Mailing Street" required="true" aura:id="inputFields" value="{!v.profileInfo.mailingStreet}" disabled="{!v.viewMode}" />
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input  label="Mailing City" type="text" required="true" aura:id="inputFields"  value="{!v.profileInfo.mailingCity}"  disabled="{!v.viewMode}"/>
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? '' :'form-group col'}"></div>
+                            </div>
+                            <div  class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input  type="text" label="Mailing State" required="true"  aura:id="inputFields" value="{!v.profileInfo.mailingState}" disabled="{!v.viewMode}"/>
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:input type="text" label="Postal Code" required="true" aura:id="inputFields" value="{!v.profileInfo.mailingPostalCode}" disabled="{!v.viewMode}"/>
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? '' :'form-group col'}"></div>
+                            </div>
+                        </form><br/>
+                        
+                        <h5 class="card-title">PREFERENCES</h5>
+                        <form>
+                            <div  class="{!v.displayDevice == 'Mobile' ? '' :'row'}">
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}">
+                                    <lightning:select label="Time Approval Preference" value="{!v.profileInfo.timeApprovalPreference}" disabled="{!v.viewMode}">
+                                        <aura:if isTrue="{!v.profileInfo.timeApprovalPreference == null}">
+                                            <option value="">--None--</option>
+                                        </aura:if>
+                                        <aura:iteration items="{!v.profileInfo.timeApprovalPreferencePickList}" var="timePrep">
+                                            <option value="{!timePrep}" selected="{!(v.profileInfo.timeApprovalPreference == timePrep)}">{!timePrep}</option>
+                                        </aura:iteration>
+                                    </lightning:select>                          
+                                </div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}"></div>
+                                <div class="{!v.displayDevice == 'Mobile' ? 'inputClass' :'form-group col inputClass'}"></div>            
+                            </div>
+                        </form>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <!-- To update user record if contact email is changed-->
+    <aura:if isTrue="{!v.showUserEmailUpdationModal}">
+        <c:sldsModal modelWidth="45%" aura:id="userUpdate"  displayCloseImage="false" header="Message"> 
+            <aura:set attribute="content">
+                <p style=" font-size: 1rem;">This will update your DLS Online user email &amp; user name. Please use the new email for future login purpose.</p> 
+            </aura:set>
+            <aura:set attribute="footer">
+                <div>
+                    <lightning:button class="btn btn-primary" label="OK" onclick="{!c.updateContactAndUser}"/>
+                </div>
+            </aura:set>
+        </c:sldsModal>
+    </aura:if>
+    
+    <!-- Spinner Component -->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner variant="brand" size="medium" alternativeText="Loading" class="slds-is-fixed"/>
+    </aura:if>
+    
+</aura:component>

@@ -1,0 +1,34 @@
+<aura:component extends="c:BoxFolderCreationUtilCmp" implements="flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickActionWithoutHeader,force:hasSObjectName" controller="GenericUrlLaunch_Ctrl" access="global" >
+	<aura:attribute name="sObjectName" type="String" />
+    <aura:attribute name="record" type="Object" description="The record object to be displayed"/>
+	<aura:attribute name="simpleRecord" type="Object" description="A simplified view record object to be displayed"/>
+	<aura:attribute name="recordError" type="String" description="An error message bound to force:recordData"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="isBoxFolderAvailable" type="Boolean" default="false"/>
+    
+    <force:recordData aura:id="record"
+    layoutType="FULL"
+    recordId="{!v.recordId}"
+    fields="Id, Name, Cost_Rate_Name__c"
+    targetError="{!v.recordError}"
+    targetRecord="{!v.record}"
+    targetFields ="{!v.simpleRecord}" 
+    recordUpdated="{!c.doInit}"
+    mode="VIEW"/>
+    
+    <aura:handler event="c:boxFolderCreationEvt" action="{!c.doInit}"/>
+    
+     <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <lightning:empApi aura:id="empApi" />
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+    
+    <aura:if isTrue="{!v.isBoxFolderAvailable}">
+    	<c:CongaTemplateSelectionComp sObjectName="{!v.sObjectName}" recordId="{!v.recordId}" record="{!v.simpleRecord}" launchedFrom="Docusign"/>
+	</aura:if>
+</aura:component>

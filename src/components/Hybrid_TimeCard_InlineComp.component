@@ -1,0 +1,1075 @@
+<apex:component controller="Project_TimeCard_Ctrl">
+    
+    <apex:attribute name="parentId" description="Project Id/Contact Id" type="String" required="true"/>
+    <apex:attribute name="parentType" description="Type of the Object" type="String" required="true" />
+    
+    <script src="{!URLFOR($Resource.MomentjsResource)}"></script>
+    <script src="{!URLFOR($Resource.MomentTimezone_Data)}"></script>
+    
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+     <style>
+        /**
+         * Hide when Angular is not yet loaded and initialized
+         */
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+          display: none !important;
+        }
+
+        // To wrap and show the Request Notes field
+        .slds .slds-table td {
+            white-space: normal;    
+        }
+        .nowrapStyle {
+            white-space: normal !important;
+        }
+        
+        .body {
+           font-size: 0.8125rem !important;
+        }
+        
+    </style>
+    <apex:form >
+        <div class="slds ng-cloak" ng-app="myApp" ng-controller="projectTimeCard_Ctrl">
+            <div ng-hide="isLoaded">
+                <c:slds_Loading />
+            </div>
+            
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;font-size: 0.8125rem !important;">
+                <div class="slds-card__header slds-grid">
+                    <div class="slds-media slds-media--center slds-has-flexi-truncate" ng-show="tableViewDisplay">
+                        <div class="slds-media__body">
+                            <span class="slds-text-heading--small" ng-show="tableViewDisplay">
+                                <a ng-click="FirstLevelClick()">{{HeaderValues.Period}} </a> <span ng-if="HeaderValues.periodValues.Flag">-></span> 
+                                <a ng-click="SecondLevelClick()">{{HeaderValues.periodValues.Name}}</a> <span ng-if="HeaderValues.cardValues.Flag">-></span>
+                                <a>{{HeaderValues.cardValues.Name}}</a>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col--padded slds-size--1-of-5 slds-medium-size--1-of-2 slds-large-size--2-of-12" ng-hide="tableViewDisplay">
+                            <div class="slds-form-element" ng-hide="tableViewDisplay" style="margin-top: -1.75 rem;">
+                                <label ng-if = "parentType == 'AcctSeed__Project__c'" class="slds-form-element__label">Instructor</label>
+                                <label ng-if = "parentType == 'Contact'" class="slds-form-element__label">Project</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <select ng-model="selectedIns" ng-options="key as value for (key , value) in insIdNameMap" class="slds-select" >
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-5 slds-medium-size--1-of-2 slds-large-size--2-of-12" ng-hide="tableViewDisplay">
+                            <div class="slds-form-element {{startDateError}} slds-is-required" style="margin-top: -1.25 rem;">
+                                <label class="slds-form-element__label">Start Date</label>
+                                <div class="slds-form-element__control">
+                                    <datepicker date-format="MM-dd-yyyy">
+                                        <input class="slds-input" ng-model="selectedStartDate" type="text" Id="StartDate"/>
+                                    </datepicker>
+                                </div>
+                                <div ng-show="startDateError" style="color:red;">
+                                    Start Date is required
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-5 slds-medium-size--1-of-2 slds-large-size--2-of-12" ng-hide="tableViewDisplay">
+                            <div class="slds-form-element {{endDateError}} slds-is-required" style="margin-top: -1.25 rem;">
+                                <label class="slds-form-element__label">End Date</label>
+                                <div class="slds-form-element__control">
+                                    <datepicker date-format="MM-dd-yyyy">
+                                        <input class="slds-input" ng-model="selectedEndDate" type="text" Id="StartDate"/>
+                                    </datepicker>
+                                </div>
+                                <div ng-show="endDateError" style="color:red;">
+                                    End Date is required
+                                </div>
+                                <div ng-show="seDateError" style="color:red;">
+                                    End Date should be greater than start date
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-5 slds-medium-size--1-of-2 slds-large-size--2-of-12" ng-hide="tableViewDisplay">
+                            <div class="slds-form-element slds-is-required" style="margin-top: -1.25 rem;">
+                                <label class="slds-form-element__label">Project Task</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-select_container">
+                                        <select ng-model="selectedProjTask" ng-options="key as value for (key , value) in ptIdNameMap" class="slds-select" >
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-5 slds-medium-size--1-of-2 slds-large-size--2-of-12">
+                            <div class="slds-form-element" style="margin-top: 10%;">
+                                <label class="slds-checkbox--toggle slds-grid">
+                                    <span class="slds-form-element__label slds-text-heading--label slds-m-bottom--none">Activity View</span>
+                                    <input type="checkbox" name="checkbox" aria-describedby="toggle-desc" ng-click="UIToggleFunction()" />
+                                    <span id="toggle-desc" class="slds-checkbox--faux_container" aria-live="assertive">
+                                        <span class="slds-checkbox--faux"></span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-4 slds-medium-size--1-of-2 slds-large-size--2-of-12" style="margin-top: 2%;">
+                            <input ng-hide="tableViewDisplay" type="button" class="slds-button slds-button--brand" style="cursor: pointer; width: 100px;float: left;margin-top:-0.5rem;margin-left: 2.75rem;" value="Apply Filter" ng-click="getTimeCardDays();"></input>
+                            <div ng-show="displayError" style="color:red;">
+                            {{dateErrorMsg}}
+                            </div>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-4 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="margin-top: 1%;">
+                            <div ng-hide="tableViewDisplay" class="slds-button slds-button slds-button--icon" style="color: #16325c;margin-left: 2%;font-size:13px;" aria-describedby="help" title="Displayed recent 200 records in Activity View.">
+                                <a>Not seeing all records?</a>
+                                <span class="slds-assistive-text">Displayed recent 200 records in Activity View.</span>
+                            </div>
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-4 slds-medium-size--1-of-2 slds-large-size--3-of-12">
+                        </div>
+                        <div class="slds-col--padded slds-size--1-of-4 slds-medium-size--1-of-2 slds-large-size--3-of-12" style="margin-top: 1%;" ng-hide="tableViewDisplay || (!summaryTimeCardDays.length > 0)">
+                            <div style="width: 100%;text-align: center;padding-left: 10px;">                                
+                                <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="download();">Download</div>                               
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                               
+                <div class="slds-card__body" ng-show="displayPeriods && tableViewDisplay">
+                    <div class="slds-col--padded slds-size--11-of-12" style="text-align:center;" ng-hide="timeCardPeriodList.length > 0">
+                        <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                    </div>
+                    <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%"  ng-show="timeCardPeriodList.length > 0">
+                        <thead>
+                            <th scope="col">
+                                <span class="slds-truncate">Time Card Period</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Pending Hours</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Approved Hours</span>
+                            </th>
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent" ng-repeat="period in timeCardPeriodList | orderBy:'AcctSeed__End_Date__c':true">
+                                <td data-label="Time Card Period">
+                                    <a ng-click="displayTimecardDetails(period.Id,period)">{{period.AcctSeed__Start_Date__c  | date: 'MM/dd/yyyy'}} - {{period.AcctSeed__End_Date__c  | date: 'MM/dd/yyyy'}}</a>
+                                </td>
+                                <td data-label="Pending Hours">
+                                    <span class="slds-truncate">{{periodIdMap[period.Id].pendingHours}}</span>
+                                </td>
+                                <td data-label="Approved Hours">
+                                    <span class="slds-truncate">{{periodIdMap[period.Id].ApprovedHours}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total</td>
+                                <td><span ng-bind="getHoursSum(timeCardPeriodList,'pendingHours',periodIdMap)"></span></td>
+                                <td><span ng-bind="getHoursSum(timeCardPeriodList,'ApprovedHours',periodIdMap)"></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Time Card details --->
+                <div class="slds-card__body" ng-show="displayCards && tableViewDisplay">
+                    <div class="slds-col--padded slds-size--11-of-12" style="text-align:center;" ng-hide="timeCarddetails.length > 0">
+                        <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                    </div>
+                    
+                    <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%"  ng-show="timeCarddetails.length > 0">
+                        <thead>
+                            <th scope="col">
+                                <span ng-if = "parentType == 'AcctSeed__Project__c'" class="slds-truncate">Instructor</span>
+                                <span ng-if = "parentType == 'Contact'" class="slds-truncate">Project</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Pending Hours</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Approved Hours</span>
+                            </th>
+                        </thead>
+                        <tbody ng-if = "parentType == 'AcctSeed__Project__c'" >  
+                            <tr class="slds-hint-parent" ng-repeat="card in timeCarddetails">
+                                <td data-label="Instructor">
+                                    <a ng-click="displayLineDetails(card.Id,card)">{{card.Intructor__r.Name}}</a>
+                                </td>                            
+                                <td data-label="Pending Hours">
+                                    <span class="slds-truncate">{{cardIdMap[card.Id].pendingHours}}</span>
+                                </td>
+                                <td data-label="Approved Hours">
+                                    <span class="slds-truncate">{{cardIdMap[card.Id].ApprovedHours}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total</td>
+                                <td><span ng-bind="getHoursSum(timeCarddetails,'pendingHours',cardIdMap)"></span></td>
+                                <td><span ng-bind="getHoursSum(timeCarddetails,'ApprovedHours',cardIdMap)"></span></td>
+                            </tr>
+                        </tbody>
+                        <tbody ng-if = "parentType == 'Contact'">
+                            <tr class="slds-hint-parent" ng-repeat= "timepro in timeCarddetails">  
+                                <td data-label="Project">
+                                    <a ng-click="displayLineDetails(timepro.proId,timepro.proName)">{{timepro.proName}}</a>
+                                </td>
+                                <td data-label="Pending Hours">
+                                    <span class="slds-truncate">{{timepro.proPenHrs}}</span>
+                                </td>
+                                <td data-label="Approved Hours">
+                                    <span class="slds-truncate">{{timepro.proAppHrs}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total</td>
+                                <td><span ng-bind="getProHoursSum(timeCarddetails,'proPenHrs')"></span></td>
+                                <td><span ng-bind="getProHoursSum(timeCarddetails,'proAppHrs')"></span></td>
+                            </tr>
+                        </tbody> 
+                    </table>
+                </div>
+                <!-- End of time Card Details --->
+                
+                <!-- Time card Line With day details --->
+                
+                <div class="slds-card__body" ng-show="displayLines && tableViewDisplay">
+                    <div class="slds-col--padded slds-size--11-of-12" style="text-align:center;" ng-hide="timeCardLineRecords.length > 0">
+                        <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                    </div>
+                    <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%"  ng-show="timeCardLineRecords.length > 0">
+                        <thead>
+                            <th scope="col">
+                                <span class="slds-truncate">Charge Code</span>
+                                <p title="Task Name / Payroll Item / Billable" style="margin-top: -19px;margin-left: 90px;">
+                                    <span class="slds-icon__container">
+                                        <svg aria-hidden="true" class="slds-icon slds-icon-text-default" style="width:20px;height:20px;">
+                                            <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3, '/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                        </svg>
+                                    </span>
+                                </p>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">{{dateLableArray[0]}}</span>
+                                <div>MON</div>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">{{dateLableArray[1]}}</span>
+                                <div>TUE</div>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">{{dateLableArray[2]}}</span>
+                                <div>WED</div>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">{{dateLableArray[3]}}</span>
+                                <div>THU</div>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">{{dateLableArray[4]}}</span>
+                                <div>FRI</div>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">{{dateLableArray[5]}}</span>
+                                <div>SAT</div>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">{{dateLableArray[6]}}</span>
+                                <div>SUN</div>
+                            </th>
+                            <th scope="col" style="text-align:center;">
+                                <span class="slds-truncate">Total Hours</span>
+                            </th>
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent" ng-repeat="line in timeCardLineRecords">
+                                <td data-label="Charge Code">
+                                    <span class="slds-truncate">{{line.ChargeCode}}</span>
+                                </td>
+                                <td data-label="" ng-repeat="day in line.DayRecords" style="text-align:center;">
+                                    <span class="slds-truncate">{{day.Hours}}</span>
+                                </td>
+                                <td data-label="Total Hours" style="text-align:center;">
+                                    <span class="slds-truncate">{{line.TotalHours}}</span>
+                                </td>
+                            </tr>
+                            <tr class="slds-hint-parent">
+                                <td>Total Hours</td>
+                                <td data-label="Total Hours" style="text-align:center;"><span ng-bind="getHoursSumValues(daysList[0])"></span></td> 
+                                <td data-label="Total Hours" style="text-align:center;"><span ng-bind="getHoursSumValues(daysList[1])"></span></td> 
+                                <td data-label="Total Hours" style="text-align:center;"><span ng-bind="getHoursSumValues(daysList[2])"></span></td> 
+                                <td data-label="Total Hours" style="text-align:center;"><span ng-bind="getHoursSumValues(daysList[3])"></span></td> 
+                                <td data-label="Total Hours" style="text-align:center;"><span ng-bind="getHoursSumValues(daysList[4])"></span></td> 
+                                <td data-label="Total Hours" style="text-align:center;"><span ng-bind="getHoursSumValues(daysList[5])"></span></td> 
+                                <td data-label="Total Hours" style="text-align:center;"><span ng-bind="getHoursSumValues(daysList[6])"></span></td> 
+                                <td style="text-align:center;"><span ng-bind="totalhours()"></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- End of time card line with day details --->
+                
+                <!-- Start of List view of Time Card Days -->
+                <div class="slds-card__body" ng-hide="tableViewDisplay">
+                    <div class="slds-col--padded slds-size--11-of-12" style="text-align:center;" ng-hide="summaryTimeCardDays.length > 0">
+                        <span class="tile__label slds-text-heading--label-normal">Data not found</span>
+                    </div>
+                    <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%"  ng-show="summaryTimeCardDays.length > 0">
+                        <thead>
+                            <th scope="col">
+                                <span class="slds-truncate">Date</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Week Day</span>
+                            </th>
+                            <th scope="col" class="nowrapStyle">
+                                <p title="Total hours before approved">
+                                    <span class="slds-hyphenate">Before Approved</span>
+                                    <svg class="slds-icon slds-icon--x-small slds-icon-text-default" aria-hidden="true" style="width:17px;height:17px;">
+                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3,'/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                    </svg>
+                                </p>
+                                
+                            </th>
+                            <th scope="col" class="nowrapStyle">
+                                <p title="Total approved hours">
+                                    <span class="slds-hyphenate">Approved Hours</span>
+                                    <svg class="slds-icon slds-icon--x-small slds-icon-text-default" aria-hidden="true" style="width:17px;height:17px;">
+                                        <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3,'/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                    </svg>
+                                </p>
+                                
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Status</span>
+                            </th>
+                            <th ng-if = "parentType == 'Contact'" scope="col" class="nowrapStyle">
+                                <span class="slds-hyphenate">Project Name</span>
+                            </th>
+                            <th scope="col" class="nowrapStyle">
+                                <span class="slds-hyphenate">Project Task Name</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Billable</span>
+                            </th>
+                            <th scope="col">
+                                <span class="slds-truncate">Classification</span>
+                            </th>
+                            <th ng-if = "parentType == 'AcctSeed__Project__c'" scope="col" class="nowrapStyle">
+                                <span class="slds-hyphenate">Instructor Name</span>
+                            </th>
+                            <th scope="col" class="nowrapStyle">
+                                <span class="slds-hyphenate">Location Name</span>
+                            </th>
+                            <th scope="col" class="nowrapStyle" ng-show='showHomeDeptColumn'>
+                                <span class="slds-hyphenate">Home Dept</span>
+                            </th>
+                            <th scope="col" class="nowrapStyle">
+                                <span class="slds-hyphenate">Payroll Item</span>
+                            </th>
+                        </thead>
+                        <tbody>
+                            <tr class="slds-hint-parent" ng-repeat="day in summaryTimeCardDays">
+                                <td data-label="">
+                                    <span class="slds-truncate">{{day.AcctSeed__Date__c | date:"MM/dd/yyyy"}}</span>
+                                </td>
+                                <td data-label="">
+                                    <span class="slds-truncate">{{day.Week_Day__c}}</span>
+                                </td>
+                                <td data-label="Before Approved">
+                                    <span class="slds-truncate">{{day.Total_Hours_Before_Approved__c}}</span>
+                                </td>
+                                <td data-label="Approved Hours">
+                                    <span class="slds-truncate">{{day.AcctSeed__Hours__c}}</span>
+                                </td>
+                                <td data-label="">
+                                    <span class="slds-truncate">{{day.Status__c}}</span>
+                                </td>
+                                <td ng-if = "parentType == 'Contact'" data-label="" class="nowrapStyle">
+                                    <span class="slds-hyphenate">{{day.AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.AcctSeed__Project__r.Name}}</span>
+                                </td>
+                                <td data-label="" class="nowrapStyle">
+                                    <span class="slds-hyphenate">{{day.AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.Name}}</span>
+                                </td>
+                                <td data-label="">
+                                    <input type="checkbox" class="slds-checkbox_add-button" ng-model="day.AcctSeed__Time_Card_Line__r.AcctSeed__Billable__c" ng-disabled="day.AcctSeed__Time_Card_Line__r.AcctSeed__Billable__c"/>
+                                </td>
+                                <td data-label="">
+                                    <span class="slds-truncate">{{day.QB_Classification__c}}</span>
+                                </td>
+                                <td ng-if = "parentType == 'AcctSeed__Project__c'" data-label="" class="nowrapStyle">
+                                    <span class="slds-hyphenate">{{day.AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name}}</span>
+                                </td>
+                                <td data-label="" class="nowrapStyle">
+                                    <span class="slds-hyphenate">{{day.AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.AcctSeed__Project__r.Training_Location__r.Name}}</span>
+                                </td>
+                                <td data-label="" ng-show='showHomeDeptColumn'>
+                                    <span class="slds-truncate">{{day.AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Home_Dept__c}}</span>
+                                </td>
+                                <td data-label="">
+                                    <span class="slds-truncate">{{day.AcctSeed__Time_Card_Line__r.Payroll_Item__c}}</span>
+                                </td>
+                            </tr>
+                            <tr class="slds-hint-parent" ng-if="displayTotalSum">
+                                <td>Total</td>
+                                <td></td>
+                                <td>
+                                    <p title="The Total displayed are for all of the Projects Time Entries. Time Entries over 200 records will not be displayed in the table above. Use the Download button to view all Time Entries.">
+                                        <span class="slds-hyphenate">{{totalHrsBeforeApproved}}</span>
+                                        <svg class="slds-icon slds-icon--x-small slds-icon-text-default" aria-hidden="true" style="width:17px;height:17px;">
+                                            <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3,'/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                        </svg>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p title="The Total displayed are for all of the Projects Time Entries. Time Entries over 200 records will not be displayed in the table above. Use the Download button to view all Time Entries.">
+                                        <span class="slds-hyphenate">{{totalApprovedHrs}}</span>
+                                        <svg class="slds-icon slds-icon--x-small slds-icon-text-default" aria-hidden="true" style="width:17px;height:17px;">
+                                            <use xlink:href="{!URLFOR($Resource.SLDS_2_1_3,'/assets/icons/utility-sprite/svg/symbols.svg#info')}"></use>
+                                        </svg>
+                                    </p>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- End of List view of Time Card Days -->
+            
+            </div>
+           
+        </div>
+        </apex:form>
+     
+    </html>
+    
+    <script>
+    
+    var underscore = angular.module('underscore', []);
+      underscore.factory('_', ['$window', function($window) {
+          return $window._; // assumes underscore has already been loaded on the page
+      }]);
+    
+    var app = angular.module('myApp', ['ngRoute','720kb.datepicker','underscore']);
+    app.service('globalService', function(){
+        this.parentId = '{!parentId}';
+        this.parentType = '{!parentType}';
+    });
+    
+    app.controller('projectTimeCard_Ctrl', function($scope,$window,$timeout, globalService,$routeParams,$location,$route,_) {
+       
+        $scope.parentId = globalService.parentId;
+        $scope.parentType = globalService.parentType;
+        
+        $scope.selectedStartDate = '';
+        $scope.selectedEndDate = '';
+        $scope.startDateError = '';
+        $scope.endDateError = '';
+        $scope.seDateError = '';
+        
+        $scope.timeCardLineList = [];
+        $scope.timeCardPeriodList = [];
+        $scope.timeCardList = [];
+        $scope.periodIdMap = {};
+        $scope.cardIdMap = {};
+        $scope.timePerRanProMap = {};
+        $scope.summaryTimeCardDays = [];
+        $scope.showHomeDeptColumn = true;
+        $scope.insIdNameMap = {};
+        $scope.selectedIns = 'All';
+        $scope.selectedProjTask = 'All';
+        var obj = Object.keys($scope.insIdNameMap);
+        //console.log('::obj::',obj);
+        
+        $scope.isLoaded = false;
+        $scope.isLoaded = true;
+        
+        $scope.HeaderValues = [];
+        $scope.HeaderValues.Period = 'All';
+        $scope.HeaderValues.periodValues = {};
+        $scope.HeaderValues.cardValues = {};
+        
+        $scope.timeCarddetails = [];
+        $scope.timeCardLineRecords =  [];
+        
+        $scope.displayPeriods = true;
+        $scope.displayCards = false;
+        $scope.displayLines = false;
+        
+        $scope.totalTCDCount = 200;
+        $scope.noOfCallOuts = 0;
+        $scope.summaryTCD = [];
+        $scope.totalHrsBeforeApproved;
+        $scope.totalApprovedHrs;
+
+        if($scope.parentType == 'Contact' && $scope.selectedIns == 'All')
+            $scope.displayTotalSum = false;
+        else
+            $scope.displayTotalSum = true;
+        
+        $scope.tableViewDisplay = true;
+        var i = 0;
+        $scope.UIToggleFunction = function() {
+            if(i == 0) {
+                $scope.tableViewDisplay = false;
+                
+                if($scope.parentType == 'Contact' && $scope.selectedIns == 'All')
+                    $scope.displayTotalSum = false;
+                else
+                    $scope.displayTotalSum = true;
+                    
+                i = 1;
+            }else {
+                $scope.tableViewDisplay = true;
+                $scope.displayTotalSum = true;
+                i = 0;
+            }
+            //console.log('tableViewDisplay ::::',$scope.tableViewDisplay);
+        }
+        
+        $scope.getInitialValues = function(){
+            $scope.isLoaded = false;
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.Project_TimeCard_Ctrl.getInitialValues}',
+              $scope.parentId, $scope.parentType,
+              function(response, ev) {
+                  $timeout(function(){
+                     
+                      //console.log('::::::daysIns:::::',response);
+                      $scope.timeCardLineList = response.timeCardLineList;
+                      $scope.timeCardPeriodList = response.timeCardPeriod;
+                      $scope.timeCardList = response.timeCardList;
+                      $scope.periodIdMap = response.periodMap;
+                      $scope.cardIdMap = response.cardMap;
+                      $scope.timePerRanProMap = response.timePerRanProMap;
+                                            
+                      // Miliseconds to date formation function call
+                      for(var i = 0;i < $scope.timeCardPeriodList.length;i++) {
+                          $scope.timeCardPeriodList[i].AcctSeed__Start_Date__c = millisecondToString($scope.timeCardPeriodList[i].AcctSeed__Start_Date__c);
+                          $scope.timeCardPeriodList[i].AcctSeed__End_Date__c = millisecondToString($scope.timeCardPeriodList[i].AcctSeed__End_Date__c);
+                      
+                      }
+                      $scope.isLoaded = true;
+                  });
+              },
+              {escape: true}
+            );
+        }
+
+        
+        $scope.getTimeCardDays = function(){
+            
+            $scope.startDateError = '';
+            $scope.endDateError = '';
+            $scope.seDateError = '';
+            $scope.processFlag = true;
+            if($scope.parentType == 'Contact' && $scope.selectedIns == 'All')
+                $scope.displayTotalSum = false;
+            else
+                $scope.displayTotalSum = true;
+                
+            if(angular.isDefined($scope.selectedStartDate) || angular.isDefined($scope.selectedEndDate)) {
+                
+                if(!$scope.selectedStartDate && $scope.selectedEndDate) {
+                    $scope.startDateError = 'slds-has-error';
+                    $scope.processFlag = false;
+                } else if(!$scope.selectedEndDate && $scope.selectedStartDate) {
+                    $scope.endDateError = 'slds-has-error';
+                    $scope.processFlag = false;
+                } else if($scope.selectedStartDate && $scope.selectedEndDate) {
+                    var startDate = new Date(moment($scope.selectedStartDate,'MM-DD-YYYY').format('YYYY-MM-DD'));
+                    var endDate = new Date(moment($scope.selectedEndDate,'MM-DD-YYYY').format('YYYY-MM-DD'));
+                    if(startDate > endDate) {
+                        $scope.seDateError = true;
+                        $scope.processFlag = false;
+                    }
+                }
+            }
+            
+            console.log('moment scope.selectedStartDate::::',moment($scope.selectedStartDate,'MM-DD-YYYY').format('YYYY-MM-DD'));
+            //console.log(':::::::insId::::proId::::::::::::',$scope.selectedIns,$scope.proId);
+            if($scope.processFlag) {
+                $scope.isLoaded = false;
+                var hideHomeDeptColumnRecordTypes = ['DLI_W_LT_Projects','DODA_Projects','Language_Training_Projects','Linguist_Support_Projects'];
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.Project_TimeCard_Ctrl.getDaysByInstructor}',
+                  $scope.selectedIns,
+                  $scope.parentId, 
+                  //$scope.parentType,
+                  $scope.selectedStartDate,
+                  $scope.selectedEndDate,
+                  $scope.selectedProjTask,
+                  function(response, ev) {
+                      $timeout(function(){
+                          //console.log('::::::daysIns::::',response);
+                          $scope.getTCDTotalHours();
+
+                          $scope.summaryTimeCardDays = response;
+                          for(var i = 0;i < $scope.summaryTimeCardDays.length;i++) {
+                              $scope.summaryTimeCardDays[i].AcctSeed__Date__c = millisecondToString($scope.summaryTimeCardDays[i].AcctSeed__Date__c);
+                              if(hideHomeDeptColumnRecordTypes.indexOf($scope.summaryTimeCardDays[i].AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.AcctSeed__Project__r.RecordType.DeveloperName) != -1){
+                                  $scope.showHomeDeptColumn = false;
+                              }
+                              if($scope.summaryTimeCardDays[i].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name){
+                                  var insName = $scope.summaryTimeCardDays[i].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name;
+                                  $scope.summaryTimeCardDays[i].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name = insName.replace('&#39;',"'");
+                              }
+                          }
+                          
+                          $scope.isLoaded = true;
+                      });
+                  },
+                  {escape: true}
+                );
+            }
+        }
+        
+        $scope.getInstructorFilterValues = function(){
+            $scope.isLoaded = false;
+            //console.log(':::::::::insId::::proId::::::::::::',$scope.selectedIns,$scope.proId);
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.Project_TimeCard_Ctrl.getInstructorFilterValues}',
+              $scope.parentId, $scope.parentType,
+              function(response, ev) {
+                  $timeout(function(){
+                      //console.log('::::::daysIns:::::',response);
+                      $scope.insIdNameMap = response;
+                      $scope.isLoaded = true;
+                  });
+              },
+              {escape: true}
+            );
+        }
+        
+         $scope.getProjectTaskFilterValues = function(){
+            $scope.isLoaded = false;
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.Project_TimeCard_Ctrl.getProjectTaskFilterValues}',
+              $scope.parentId,
+              function(response, ev) {
+                  $timeout(function(){
+                      $scope.ptIdNameMap = response;
+                      $scope.isLoaded = true;
+                  });
+              },
+              {escape: true}
+            );
+        }
+        
+        function PeriodTotalHrsFormation() {
+            for(var i = 0;i < $scope.timeCardPeriodList.length;i++) {
+                var pendingHours = 0;
+                var approvedHrs = 0;
+                if($scope.timeCardPeriodList[i].AcctSeed__Time_Cards__r && $scope.timeCardPeriodList[i].AcctSeed__Time_Cards__r.records) {
+                    var cardRecords = $scope.timeCardPeriodList[i].AcctSeed__Time_Cards__r.records;
+                    for(var j = 0;j < cardRecords.length;j++) {
+                        pendingHours = pendingHours + parseFloat(cardRecords[j].of_Pending_Time_Logs__c);
+                        approvedHrs = approvedHrs + parseFloat(cardRecords[j].of_Approved_Hours__c);
+                    }
+                    
+                    $scope.timeCardPeriodList[i].PendingHrs = ((pendingHours * 100) / 100).toFixed(2);
+                    $scope.timeCardPeriodList[i].ApprovedHrs = ((approvedHrs * 100) / 100).toFixed(2);
+                }
+            }
+        }
+      
+        $scope.displayTimecardDetails = function(periodId,period) {
+            $scope.timeCarddetails = [];
+            $scope.periodId = periodId;
+            
+            $scope.HeaderValues.periodValues = {Id:periodId,Name:moment(period.AcctSeed__Start_Date__c).format('MM/DD/YYYY')+' - '+moment(period.AcctSeed__End_Date__c).format('MM/DD/YYYY'),periodRec:period,Flag:true};
+            
+            if($scope.parentType == 'Contact') {
+                var dt = moment(period.AcctSeed__Start_Date__c).format('MM/DD/YYYY')+' - '+moment(period.AcctSeed__End_Date__c).format('MM/DD/YYYY');
+                for(var i = 0;i < $scope.timePerRanProMap[dt].length;i++) {
+                    $scope.timeCarddetails.push($scope.timePerRanProMap[dt][i]);
+                }
+            } else {
+                for(var i = 0;i < $scope.timeCardList.length;i++) {
+                    if($scope.timeCardList[i].AcctSeed__Time_Card_Period__c == periodId)
+                        $scope.timeCarddetails.push($scope.timeCardList[i]);
+                }
+            }
+                        
+            $scope.displayPeriods = false;
+            $scope.displayCards = true;
+            $scope.displayLines = false;
+        }
+        
+        $scope.FirstLevelClick = function() {
+            
+            $scope.displayPeriods = true;
+            $scope.displayCards = false;
+            $scope.displayLines = false;
+            
+            $scope.HeaderValues.periodValues = {};
+            $scope.HeaderValues.cardValues = {};
+        }
+        
+        $scope.SecondLevelClick = function() {
+            $scope.HeaderValues.cardValues = {};
+            $scope.displayTimecardDetails($scope.HeaderValues.periodValues.Id,$scope.HeaderValues.periodValues.periodRec);
+        }
+        
+        // cardId has the value of TimeCard Id and cardRec has TimeCard Record when the parentType is Project
+        // cardId has the value of Project Id and cardRec has Project Name when the parentType is Contact
+        
+        $scope.displayLineDetails = function(cardId,CardRec) { 
+           
+            if($scope.parentType == 'Contact') {
+                $scope.HeaderValues.cardValues = {Id:cardId,Name:CardRec,CardRec:CardRec,Flag:true};
+            
+            } else {
+                $scope.HeaderValues.cardValues = {Id:cardId,Name:CardRec.Intructor__r.Name,CardRec:CardRec,Flag:true};
+            }
+            $scope.daysList = [];
+            $scope.dateLableArray = [];
+            
+            var WeekStart = moment($scope.HeaderValues.periodValues.Name.split(' - ')[0]);
+            var WeekEnd = moment($scope.HeaderValues.periodValues.Name.split(' - ')[1]);
+            
+            while(WeekStart.isBefore(WeekEnd) || WeekStart.isSame(WeekEnd)) {
+                $scope.daysList.push(WeekStart.format('YYYY-MM-DD'));
+                $scope.dateLableArray.push(WeekStart.format('MM/DD/YY'));
+                WeekStart.add(1, 'days').format('YYYY-MM-DD');
+            }
+            
+            var timeCardLineIds = [];
+            
+            $scope.timeCardLineRecords = [];
+            for(var i = 0;i < $scope.timeCardLineList.length;i++) {
+                var val = '';
+                if($scope.parentType == 'Contact') {
+                    if($scope.timeCardLineList[i].AcctSeed__Project_Task__c) {
+                        val = $scope.timeCardLineList[i].AcctSeed__Project_Task__r.AcctSeed__Project__c; 
+                    }      
+                } else {
+                    val = $scope.timeCardLineList[i].AcctSeed__Time_Card__c;
+                }
+                if(val == cardId && $scope.timeCardLineList[i].AcctSeed__Time_Card__r.AcctSeed__Time_Card_Period__c == $scope.periodId) {
+                    var CCode = $scope.timeCardLineList[i].AcctSeed__Project_Task__r.Name+' / '+$scope.timeCardLineList[i].Payroll_Item__c+' / '+$scope.timeCardLineList[i].AcctSeed__Billable__c;
+                
+                    var obj = {ChargeCode:CCode,TaskId:$scope.timeCardLineList[i].AcctSeed__Project_Task__c,TaskName:$scope.timeCardLineList[i].AcctSeed__Project_Task__r.Name};
+                    
+                    if($scope.timeCardLineList[i].AcctSeed__Time_Card_Days__r) {
+                        var timeDaysList = $scope.timeCardLineList[i].AcctSeed__Time_Card_Days__r; 
+                                                                       
+                        obj.DayRecords = [];
+                        
+                        for(var j = 0;j < $scope.daysList.length;j++) {
+                            var childObj = {};
+                            for(var k = 0;k < timeDaysList.length;k++) {
+
+                                if($scope.daysList[j] == millisecondToString(timeDaysList[k].AcctSeed__Date__c)) {
+                                    var hrs = ((timeDaysList[k].Total_Hours_Before_Approved__c * 100) / 100).toFixed(2); 
+                                    childObj = {Date:$scope.daysList[j],Hours:hrs};
+                                    break;
+                                }
+                            }
+                            if(!childObj) {
+                                childObj =  {Date:$scope.daysList[j],Hours:''};
+                            }
+                            
+                            obj.DayRecords.push(childObj);
+                        }
+                          
+                    }else {
+                        obj.DayRecords = [];
+                        obj.DayRecords.push({Date:$scope.daysList[0],Hours:''});
+                        obj.DayRecords.push({Date:$scope.daysList[1],Hours:''});
+                        obj.DayRecords.push({Date:$scope.daysList[2],Hours:''});
+                        obj.DayRecords.push({Date:$scope.daysList[3],Hours:''});
+                        obj.DayRecords.push({Date:$scope.daysList[4],Hours:''});
+                        obj.DayRecords.push({Date:$scope.daysList[5],Hours:''});
+                        obj.DayRecords.push({Date:$scope.daysList[6],Hours:''});
+                    }
+                    
+                    if(timeCardLineIds.indexOf($scope.timeCardLineList[i].Id) == -1) {
+                        $scope.timeCardLineRecords.push(obj);
+                        timeCardLineIds.push($scope.timeCardLineList[i].Id);
+                    }
+                }
+            }
+            
+            //console.log(':::::::$scope.timeCardLineRecords::::::',$scope.timeCardLineRecords.length);
+            
+            $scope.displayPeriods = false;
+            $scope.displayCards = false;
+            $scope.displayLines = true;
+        }
+        
+        $scope.getHoursSumValues = function(dateValue) {
+            
+            var sum = 0;
+            for(var i = 0 ;i < $scope.timeCardLineRecords.length;i++) {
+                
+                var totalHrs = 0;
+                var dayRecords = $scope.timeCardLineRecords[i].DayRecords;
+                for(var j = 0;j < dayRecords.length;j++) {
+                    
+                    if(new Date(dayRecords[j].Date).getTime() == new Date(dateValue).getTime() && dayRecords[j].Hours) {
+                      sum = sum + parseFloat(dayRecords[j].Hours);
+                    }
+                    
+                    if(dayRecords[j].Hours)
+                        totalHrs = totalHrs + parseFloat(dayRecords[j].Hours);
+                    
+                    $scope.timeCardLineRecords[i].TotalHours = ((totalHrs * 100) / 100).toFixed(2);
+                }
+            } 
+            return ((sum * 100) / 100).toFixed(2);
+        }   
+        
+        $scope.totalhours = function() {
+            var sum = 0;
+            for(var i = 0 ;i < $scope.timeCardLineRecords.length;i++) {
+               sum = sum + parseFloat($scope.timeCardLineRecords[i].TotalHours);
+            } 
+            return ((sum * 100) / 100).toFixed(2);
+        } 
+        
+        $scope.getProHoursSum = function(rec,hrsval) {
+            
+            var sum = 0;
+            if(rec) {
+                for(var i = 0;i < rec.length;i++){
+                    sum = sum + rec[i][hrsval];
+                }
+            }
+            
+            return sum;
+        }
+        
+        $scope.getHoursSum = function(records,field,map){
+            
+            var sum = 0;
+            if(records){         
+                for(var i = 0;i < records.length;i++){
+                    if(field){
+                        if(map){
+                            if(map[records[i].Id][field] != null){
+                                sum = sum + map[records[i].Id][field];
+                            }
+                        } else {
+                            if(records[i][field] != null){
+                                sum = sum + records[i][field];
+                            }
+                        }
+                    }
+                }            
+            }
+            return sum;
+        }
+
+        $scope.getTCDTotalHours = function(){
+            
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.Project_TimeCard_Ctrl.getTCDTotalHours}',
+                $scope.selectedIns,
+                $scope.parentId, 
+                $scope.parentType,
+                $scope.selectedProjTask,
+              function(response, ev) {
+                $timeout(function() {
+                    //console.log('::::::totalCount::::',response);
+                    $scope.totalHrsBeforeApproved = response[0].expr0;
+                    $scope.totalApprovedHrs = response[0].expr1;
+                    //console.log('::::::$scope.totalHrsBeforeApproved::::', $scope.totalHrsBeforeApproved);
+                    //console.log('::::::$scope.totalApprovedHrs ::::', $scope.totalApprovedHrs );
+                });
+              },
+              {escape: true}
+            );
+        }
+        
+        
+        function downloadCSV(csvContent, filename) { 
+            //console.log('::csvContent::',csvContent);               
+            var encodedData = encodeURI(csvContent);                
+            //console.log('::encodedData::',encodedData);                  
+            var link = document.createElement("a");                    
+            link.setAttribute('href', encodedData);                    
+            link.setAttribute('download', filename + '.csv');                    
+            link.click();               
+                       
+        }
+        
+        function generateCSV(arrayOfData, tableHeader) {        
+            var csvContent = "data:text/csv;charset=utf-8,"; 
+            for(var i = 0; i < tableHeader.length; i++) {                    
+                csvContent += tableHeader[i].text;                    
+                if(i != tableHeader.length - 1)                        
+                    csvContent += ',';                
+            }                
+            csvContent += '\n';                
+            //console.log('arrayOfData::::',arrayOfData);                
+            for(var i = 0; i < arrayOfData.length; i++) {                    
+                for(var j = 0; j < tableHeader.length; j++) {                        
+                    if(arrayOfData[i][tableHeader[j].api] == undefined){                            
+                        arrayOfData[i][tableHeader[j].api] = '';                            
+                        csvContent += arrayOfData[i][tableHeader[j].api];                        
+                    }else{                            
+                        csvContent += arrayOfData[i][tableHeader[j].api];                        
+                    }                        
+                    //console.log('arrayOfData[i][tableHeader[j].api]:::::',arrayOfData[i][tableHeader[j].api]);                        
+                    if(j != tableHeader.length - 1)                            
+                        csvContent += ',';                    
+                }                    
+                if(i != arrayOfData.length - 1)                        
+                    csvContent += '\n';                
+            }                
+            //console.log('csvContent:::',csvContent);                
+            return csvContent;            
+        }   
+        
+        function getTCDForDownload(offSetCount, callOutCount) {
+            let summaryTCD = [];
+            Visualforce.remoting.Manager.invokeAction(
+              '{!$RemoteAction.Project_TimeCard_Ctrl.getTCDForDownload}',
+              $scope.selectedIns,
+              $scope.parentId, 
+              //$scope.parentType,
+              offSetCount,
+                $scope.selectedStartDate,
+                $scope.selectedEndDate,
+                $scope.selectedProjTask,
+              function(response, ev) {
+                  $timeout(function(){
+                      //console.log('::::::getTCDForDownload::::', response);
+                      for(var i = 0;i < response.length;i++) {
+                        response[i].AcctSeed__Date__c = millisecondToString(response[i].AcctSeed__Date__c);
+                      }
+                      $scope.summaryTCD.push(...response);
+                      /*console.log('callOutCount:::::::::', callOutCount);
+                      console.log('noOfCallOuts:::::::::', $scope.noOfCallOuts);
+                      console.log('::::::checking::::::::::', callOutCount < $scope.noOfCallOuts);
+                      console.log('::::::checking::::::::::', offSetCount);*/
+                      
+                      if(callOutCount != $scope.noOfCallOuts) {
+                      
+                        offSetCount = offSetCount + $scope.totalTCDCount;
+                        callOutCount = callOutCount + 1;
+                        getTCDForDownload(offSetCount, callOutCount);
+                        
+                      } else {
+                        processDatabeforeDownload();
+                      }
+                  });
+              },
+              {escape: true}
+            );
+        }
+
+        function processDatabeforeDownload() {
+            //console.log('::summaryTCD::::', $scope.summaryTCD);
+            var summarytimedays = angular.copy($scope.summaryTCD);
+            for(var j = 0; j < summarytimedays.length; j++) { 
+                summarytimedays[j].AcctSeed__Date__c = moment(summarytimedays[j].AcctSeed__Date__c).format('MM/DD/YYYY');
+                summarytimedays[j].Billable = summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Billable__c;
+                summarytimedays[j].Location_Name = (summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.AcctSeed__Project__r.Training_Location__c != null ? summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.AcctSeed__Project__r.Training_Location__r.Name : '');
+                summarytimedays[j].Home_Dept = summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Home_Dept__c;
+                summarytimedays[j].Payroll_Item = summarytimedays[j].AcctSeed__Time_Card_Line__r.Payroll_Item__             
+                summarytimedays[j].Classification = summarytimedays[j].QB_Classification__c;
+                
+                //W-007852 - Timesheet Download Glitch on Project Detail Page
+                // Apostrophe(&#039;) is replaced with specials characters '
+                // comma is replaced with &;
+                if(summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.Name){
+                    var proTaskName = summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.Name;
+                    summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.Name = proTaskName.replace(','," &");
+                }                
+                summarytimedays[j].Project_Task_Name = summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.Name;               
+                
+                if(summarytimedays[i].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name){
+                    var insName = summarytimedays[i].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name;
+                    summarytimedays[i].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name = insName.replace('&#39;',"'");
+                }
+                summarytimedays[j].Instructor_Name = summarytimedays[j].AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__r.Name;
+            
+            }
+            var arrayOfData = summarytimedays;                        
+            var tableHeader = [{api:'AcctSeed__Date__c',text:'Date'},{api:'Week_Day__c',text:'Week Day'},{api:'Total_Hours_Before_Approved__c',text:'Before Approved'},{api:'AcctSeed__Hours__c',text:'Approved Hours'},{api:'Status__c',text:'Status'},{api:'Project_Task_Name',text:'Project Task Name'},{api:'Billable',text:'Billable'},{api:'Classification',text:'Classification'},{api:'Instructor_Name',text:'Instructor Name'},{api:'Location_Name',text:'Location Name'},{api:'Home_Dept',text:'Home Dept'},{api:'Payroll_Item',text:'Payroll Item'}];  
+            var filename = 'Project Timesheet Report';
+            downloadCSV(generateCSV(arrayOfData, tableHeader),filename);
+            $scope.UIToggleFunction();
+        }
+
+        $scope.download = function(){
+            
+            $scope.startDateError = '';
+            $scope.endDateError = '';
+            $scope.seDateError = '';
+            $scope.processFlag = true;
+                
+            if(angular.isDefined($scope.selectedStartDate) || angular.isDefined($scope.selectedEndDate)) {
+                
+                if(!$scope.selectedStartDate && $scope.selectedEndDate) {
+                    $scope.startDateError = 'slds-has-error';
+                    $scope.processFlag = false;
+                } else if(!$scope.selectedEndDate && $scope.selectedStartDate) {
+                    $scope.endDateError = 'slds-has-error';
+                    $scope.processFlag = false;
+                } else if($scope.selectedStartDate && $scope.selectedEndDate) {
+                    var startDate = new Date(moment($scope.selectedStartDate,'MM-DD-YYYY').format('YYYY-MM-DD'));
+                    var endDate = new Date(moment($scope.selectedEndDate,'MM-DD-YYYY').format('YYYY-MM-DD'));
+                    if(startDate > endDate) {
+                        $scope.seDateError = true;
+                        $scope.processFlag = false;
+                    }
+                }
+            }
+            
+            if($scope.processFlag) {
+                Visualforce.remoting.Manager.invokeAction(
+                  '{!$RemoteAction.Project_TimeCard_Ctrl.getTCDCount}',
+                  $scope.selectedIns,
+                  $scope.parentId, 
+                  //$scope.parentType,
+                  $scope.selectedStartDate,
+                  $scope.selectedEndDate,
+                  $scope.selectedProTask,
+                  function(response, ev) {
+                      $timeout(function(){
+                          //console.log('::::::dayscount::::', response);
+                          $scope.noOfCallOuts = 1;
+                          if(response > $scope.totalTCDCount) {
+                            $scope.noOfCallOuts = Math.floor(response / $scope.totalTCDCount);
+                          }
+                          //console.log('::::::noOfCallOuts::::', response);                      
+                          getTCDForDownload(0, 0);
+                         // console.log('::::::$scope.summaryTimeCardDays::::', $scope.summaryTimeCardDays);
+                      });
+                  },
+                  {escape: true}
+                );
+            }
+        }
+        
+        function millisecondToString(millisecond) {
+            var date = new Date(millisecond);            
+            date.setTime(date.getTime() + date.getTimezoneOffset()*1000*60); // To fix the time zone issue.from 2012/6/31 to 2012/7/1 
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            if(day < 10) {
+                day = '0' + day;
+            }
+            if(month < 10) {
+                month = '0' + month;
+            }
+            return date.getFullYear() + '-' +month + '-' + day;
+        }
+        
+        PeriodTotalHrsFormation();
+        $scope.getInstructorFilterValues();
+        $scope.getTimeCardDays();
+        $scope.getInitialValues();
+        $scope.getTCDTotalHours();
+        $scope.getProjectTaskFilterValues();
+    });
+    </script> 
+</apex:component>

@@ -1,0 +1,40 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName" access="global" Controller="ContactAffiliation_Ctrl">
+    <aura:attribute name="sObjectName" type="String"/>
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="activeTab" type="String" default="Client/Partner"/>
+    <aura:attribute name="recordTypeName" type="String" default="Client_Partner"/>
+    <aura:attribute name="selectedStatus" type="String" default="All"/>
+    <aura:attribute name="contactAffilationJSON" type="String" default=""/>
+    
+    <aura:attribute name="contactAffilationList" type="List" default="[]"/>
+    <aura:attribute name="tabNames" type="List" default="[]"/>
+    <aura:attribute name="statusPickList" type="List" default="[]"/>
+
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+
+    
+    <aura:handler event="c:reloadEvent" action="{!c.tabChange}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+      
+    <lightning:card> 
+        <!-- Spinner Component-->
+        <aura:if isTrue="{!v.showSpinner}">
+            <lightning:spinner alternativeText="Loading" variant="brand" size="small"/>
+        </aura:if>
+
+        <aura:set attribute="title">
+            <h1 style="font-weight:bold;">Contact Affiliation</h1>
+        </aura:set>
+        
+        <lightning:tabset onselect="{!c.tabChange}" selectedTabId="{!v.activeTab}">
+            <aura:iteration items="{!v.tabNames}" var="tab"  indexVar="Index">
+                <lightning:tab label="{!tab}" id="{!tab}">
+                    <c:ContactAffiliationCmp statusPickList="{!v.statusPickList}" parentObjName="{!v.sObjectName}" parentId="{!v.recordId}" contactAffilationList="{!v.contactAffilationList}" recordTypeName ="{!v.recordTypeName}" contactAffilationJSON="{!v.contactAffilationJSON}" selectedTab="{!v.activeTab}" selectedStatus="{!v.selectedStatus}"/>
+                </lightning:tab>
+            </aura:iteration>
+        </lightning:tabset> 
+    </lightning:card>
+</aura:component>

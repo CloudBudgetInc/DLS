@@ -1,0 +1,1330 @@
+<apex:page showHeader="true" sidebar="false" controller="ProjectTaskCreationContr">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <script src="{!URLFOR($Resource.Angular_min_js)}"/>
+        <script src="{!URLFOR($Resource.Angular_ngRoute)}"></script>
+        <script src="{!URLFOR($Resource.Filter)}"/>
+        <!--<apex:stylesheet value="{!URLFOR($Resource.SLDS_2_1_3, 'assets/styles/salesforce-lightning-design-system.css')}" />-->
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        
+        <style>
+            /**
+            * Hide when Angular is not yet loaded and initialized
+            */
+            [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+            display: none !important;            
+            }
+            
+            .img {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            //height: 10%;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+            }
+            
+            .invisible {
+                visibility: hidden;
+            }
+            
+            .visible {
+                visibility: visible;
+            }
+            .nowrapStyle {
+                white-space: normal !important;
+            }     
+        </style>
+        <apex:form Id="form1">
+            <div class="slds ng-cloak" ng-app="PTApp" ng-controller="Project_Task_Controller"> 
+                <div style="display: none; background-color: rgba(222, 230, 230, 0.6);width: 100%; height: 100%; z-index: 1000; position: fixed; left: 0; top: 0; overflow: hidden; text-align: center; vertical-align: middle;" id="spinner">
+                    <img alt="Loading..." src="{!URLFOR($Resource.SLDS0_12_2,'assets/images/spinners/slds_spinner_brand.gif')}"  class="img" style="height: 10%;"/>
+                </div>
+            
+                <div class="slds-page-header" role="banner" style="background-color: rgb(22, 50, 92);color: white;">
+                    <div class="slds-grid">                    
+                        <div class="slds-media__body">
+                            <div class="slds-grid">
+                                <h1 style="font-weight: 300;font-size: 24px;line-height: 1.25;" title="Manage Project Task">Manage Project Task</h1>
+                            </div>
+                        </div>                   
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                            <div style="width: 100%;text-align: center;">                                
+                                <div class="slds-button slds-button--neutral" style="cursor: pointer;" ng-click="crtprojecttask()">Save</div>                               
+                            </div>                        
+                        </div> &nbsp;                   
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                            <div style="width: 100%;text-align: center;">
+                                <div  class="slds-button slds-button--neutral" style="cursor: pointer;">
+                                    <a style="text-decoration:none" href="{!$Site.Prefix}/{{projId}}">Cancel</a>
+                                </div>
+                            </div>                        
+                        </div>                         
+                    </div> 
+                </div>
+                <div class="slds-card" ng-show= "NoMasterPT">                    
+                    <div class="slds-card__body">
+                        <p>No Master PT found for this Project  Record Type</p> 
+                    </div>
+                </div>
+                <div class="slds-card" ng-hide= "NoMasterPT">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">Existing Project Task</span>
+                                    </a>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    <div class="slds-card__body">                                
+                         <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                             <thead>
+                                <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <div class="slds-hyphenate">Project Task Name</div>
+                                </th>                                
+                                <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <div class="slds-hyphenate">Project Task Type</div>                                
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <span class="slds-truncate slds-align--absolute-center">Payroll Item</span>                                        
+                                </th>
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-hyphenate">CLIN</div>
+                                </th>  
+                                <th scope="col" class="slds-cell-wrap">
+                                    <span class="slds-align--absolute-center">Quantity</span>                                        
+                                </th> 
+                                <th scope="col" class="slds-cell-wrap">
+                                    <span class="slds-align--absolute-center">Rate</span>                                        
+                                </th> 
+                                <th scope="col" class="slds-cell-wrap">
+                                    <span class="slds-truncate slds-align--absolute-center">Unit</span>                                        
+                                </th>
+                                <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <div class="slds-hyphenate">Display In Time Card</div>
+                                </th>                                
+                                <!--<th scope="col" class="nowrapStyle">
+                                    <div class="slds-hyphenate">Labor GL Account</div>                                        
+                                </th>-->
+                                <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <div class="slds-hyphenate">Descripiton</div>                                        
+                                </th> 
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-hyphenate">Parent Project Task</div>
+                                </th> 
+                                <th scope="col" class="slds-cell-wrap">
+                                    <div class="slds-hyphenate">Billable</div>
+                                </th> 
+                                <!--<th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <span class="slds-hyphenate">OH Applied(%)</span>                                        
+                                </th> 
+                                <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <span class="slds-hyphenate">GA Applied(%)</span>                                        
+                                </th> -->                     
+                            </thead> 
+                            
+                            <tbody ng-show= "displayProTaskList.length > 0 ">
+                                <tr ng-repeat="oldpt in displayProTaskList" class="slds-hint-parent">    
+                                    
+                                    <td class="slds-cell-wrap" data-label="Project Task Name">
+                                        
+                                            <span style="float: left;">
+                                                <legend class="slds-form-element__legend slds-form-element__label">
+                                                        <abbr ng-show="oldpt.highlight" class="slds-required" style="float: left;text-decoration:none;color:red" title="required">*</abbr>
+                                                </legend>
+                                                <button type="button" class="slds-button slds-button_icon slds-button_icon slds-button_icon-x-small slds-m-right_x-small" ng-show="oldpt.showExpand" ng-click="showChildPT(oldpt);">
+                                                    <svg class="slds-button__icon slds-button__icon_small" aria-hidden="true">
+                                                        <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevronright')}" />
+                                                    </svg>
+                                                </button> 
+                                                <button type="button" class="slds-button slds-button_icon slds-button_icon slds-button_icon-x-small slds-m-right_x-small" ng-hide="oldpt.hideExpand" ng-click="hideChildPT(oldpt);">
+                                                    <svg class="slds-button__icon slds-button__icon_small" aria-hidden="true">
+                                                        <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, '/assets/icons/utility-sprite/svg/symbols.svg#chevrondown')}" />
+                                                    </svg>
+                                                </button>
+                                                <span ng-show="oldpt.showRec && !oldpt.showExpand && oldpt.hideExpand">{{oldpt.rec.Name}} </span> <!-- style="padding-left:1.4rem;"-->
+                                                <span ng-show="oldpt.showRec && (oldpt.showExpand || !oldpt.hideExpand)">{{oldpt.rec.Name}} </span> <!-- style="padding-left:0.2rem;"-->
+                                                <span ng-hide="oldpt.showRec" >{{oldpt.rec.Name}}</span> <!-- style="padding-left:3rem;"-->
+                                            </span>
+                                        
+                                    </td>                                                  
+                                    <td class="slds-cell-wrap" data-label="Project Task Type">
+                                        <span ng-bind="oldpt.rec.Project_Task_Type__c"/>
+                                    </td>                                                                       
+                                    <td data-label="Payroll Item">
+                                        <div>
+                                            <legend class="slds-form-element__legend slds-form-element__label">
+                                                
+                                                <multi-picklist style="float: left;" class="slds-is-selected slds-align--absolute-center" on-blur="payrollUpdate" options="oldpt.PayrollList" selected-options="oldpt.rec.Payroll_Item__c" rec="oldpt.rec"></multi-picklist>
+                                            </legend> 
+                                        </div>                                       
+                                    </td>
+                                  
+                                    <td class="slds-cell-wrap" data-label="Clin">  
+                                        <lookup data="oldpt.rec.clinRec" object="'CLIN__c'" placeholder="''" parameter1="oldpt.rec" parameter2="oldpt" condition= "'Contract__c =\''+proContractId+'\''" on-change="RecordChangeCapturingFunction"></lookup>
+                                        <!-- <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="oldpt.rec.CLIN__r.Name" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"  /> -->
+                                    </td> 
+                                  
+                                    <td class="slds-cell-wrap" data-label="quantity" style="width:100px;">
+                                        <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="oldpt.rec.Total_Qty_Planned__c" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"  />
+                                    </td>
+                                    <td class="slds-cell-wrap" data-label="rate" style="width:100px;">
+                                        <input class="slds-input slds-align--absolute-center" type="text" name="options" ng-model="oldpt.rec.Rate__c" 
+                                         ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"/>
+                                    </td>
+                                    <td class="slds-cell-wrap" data-label="unit" style="width: 6%">
+                                        <select class="slds-select" ng-model="oldpt.rec.Unit__c" ng-options="item for item in unitList" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)" />
+                                    </td>
+                                    <td class="slds-cell-wrap" data-label="rate" style="text-align:center">
+                                        <input class = "slds-align--absolute-center" type="checkbox" name="options" id="checkbox-308" ng-model="oldpt.rec.AcctSeed__Display_in_Time_Card__c" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"/>
+                                    </td>                                    
+                                    <td class="slds-cell-wrap" data-label="labor">
+                                          <!--<a ng-href="/{{oldpt.rec.AcctSeed__Labor_GL_Account__c}}" target="_blank">{{oldpt.rec.GL_Acc_Name}}</a>-->
+                                          <textarea class="slds-textarea slds-align--absolute-center" name="options" ng-model="oldpt.rec.Description__c" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"/>
+                                    </td>
+                                    <td class="slds-cell-wrap" data-label="Parent PT">
+                                        <!--
+                                        <select ng-model="oldpt.rec.Parent_Project_Task__c" ng-options="item.Id as item.Name for item in filteredParentPTs[oldpt.rec.Id]" class="slds-select" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"></select>
+                                        <div ng-show="oldpt.showError" style="color: #D8000C;font-size:8px;">This is required</div>
+                                        -->
+                                        <span ng-bind="oldpt.rec.Parent_Project_Task__r.Name" ng-show="oldpt.rec.Parent_Project_Task__c != null"/>
+                                    </td> 
+                                    <td class="slds-cell-wrap" data-label="billable" style="text-align:center">
+                                        <input class = "slds-align--absolute-center" type="checkbox" name="options" id="checkbox-308" ng-model="oldpt.rec.Billable__c"  ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"/>
+                                    </td> 
+                                    <!--<td class="slds-cell-wrap" data-label="OH" style="width:100px;">
+                                        <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="oldpt.rec.OH_Applied__c" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"  />
+                                    </td>
+                                    <td class="slds-cell-wrap" data-label="GA" style="width:100px;">
+                                        <input class="slds-input  slds-align--absolute-center" type="text" name="options" ng-model="oldpt.rec.G_A_Applied__c" ng-change="RecordChangeCapturingFunction(oldpt.rec,oldpt)"  />
+                                    </td>-->                             
+                                </tr> 
+                            </tbody>
+                            <tbody ng-hide= "displayProTaskList.length > 0 ">
+                                <tr class="slds-hint-parent"> 
+                                    <td class="slds-cell-wrap" data-label="Project Task Name">
+                                        <p>No Records Found</p>                                           
+                                    </td>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                </tr>                                      
+                            </tbody>                                  
+                         </table>
+                                                   
+                     </div>
+                </div>
+                <div class="slds-card" ng-hide= "NoMasterPT">
+                    <div class="slds-card__header slds-grid">
+                        <header class="slds-media slds-media--center slds-has-flexi-truncate">                        
+                            <div class="slds-media__body slds-truncate">
+                                <h2>
+                                    <a href="javascript:void(0);" class="slds-text-link--reset">
+                                        <span class="slds-text-heading--small">New Project Task</span>
+                                    </a>
+                                </h2>
+                            </div>
+                        </header> 
+                    </div>
+                    <div class="slds-card__body">                                  
+                        <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover" width="100%" >
+                           <thead>
+                              <th scope="col" class="slds-cell-wrap">
+                                  <span class="slds-truncate nowrapStyle">SELECT</span>
+                              </th>
+                              <th scope="col" class="slds-cell-wrap">
+                                  <span class="slds-truncate nowrapStyle">Sort Order</span>                                        
+                              </th>                              
+                              <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <div class="slds-hyphenate">Project Task Name</div>
+                              </th> 
+                              <!-- <th scope="col" ng-show="languagelookupField">
+                                  <div class="slds-hyphenate">Language LU</div>
+                              </th> -->    
+                                                      
+                              <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                    <div class="slds-hyphenate">Project Task Type</div>                                
+                              </th>
+                              
+                              <th scope="col" class="slds-cell-wrap">
+                                  <div class="slds-hyphenate">CLIN</div>
+                              </th> 
+                              
+                              <th scope="col" class="slds-cell-wrap">
+                                  <span class="slds-truncate slds-align--absolute-center">Payroll Item</span>                                    
+                              </th>
+                              <th scope="col" class="slds-cell-wrap">
+                                    <span class="slds-truncate slds-align--absolute-center">Quantity</span>                                        
+                              </th> 
+                              <th scope="col" class="slds-cell-wrap">
+                                  <span class="slds-truncate slds-align--absolute-center">Rate</span>                                        
+                              </th> 
+                              <th scope="col" class="slds-cell-wrap">
+                                  <span class="slds-truncate slds-align--absolute-center">Unit</span>                                        
+                              </th> 
+                              <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                  <div class="slds-hyphenate">Display In Time Card</div>                                        
+                              </th>                              
+                              <!--<th scope="col" class="nowrapStyle">
+                                  <div class="slds-hyphenate">Labor GL Account</div>                                        
+                              </th>-->
+                              <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                  <div class="slds-hyphenate">Description</div>                                        
+                              </th> 
+                              <th scope="col" class="slds-cell-wrap">
+                                  <div >Parent Project Task</div>                                        
+                              </th> 
+                              <th scope="col" class="slds-cell-wrap">
+                                <span class="slds-truncate">Billable</span>                                        
+                              </th> 
+                              <!--<th scope="col" class="nowrapStyle slds-cell-wrap">
+                                <span class="slds-hyphenate">OH Applied(%)</span>                                        
+                              </th> 
+                              <th scope="col" class="nowrapStyle slds-cell-wrap">
+                                <span class="slds-hyphenate">GA Applied(%)</span>                                        
+                              </th> -->                      
+                          </thead>
+                          <!--<tbody ng-hide= "newprojtaskList.length > 0">
+                            <tr class="slds-hint-parent">
+                                  <td data-label="Project Task Name">
+                                        <p>No Records Found</p>                                      
+                                  </td> 
+                                  
+                              </tr>                                        
+                          </tbody> -->   
+                          <tbody >
+                              <tr ng-show= "newprojtaskList.length > 0 " class="slds-hint-parent slds-cell-wrap" ng-repeat="newpt in newprojtaskList | orderBy:'rec.AcctSeed__Sort_Order__c':false" >                                    
+                                  
+                                  <td data-label="SELECT">
+                                      <input type="checkbox" name="options" id="checkbox-308" ng-model="newpt.sel"/>  
+                                  </td>
+                                  <td data-label="Sort Order">
+                                      <span ng-bind="newpt.rec.AcctSeed__Sort_Order__c"></span>
+                                  </td> 
+                                  <td data-label="Project Task Name" class="nowrapStyle slds-cell-wrap">
+                                      <div class="slds-hyphenate" ng-hide="newpt.isNew">{{newpt.rec.Name}}</div>
+                                      <input class="slds-input slds-align--absolute-center" ng-show="newpt.isNew" style="width:120px;" type="text" name="PtName" ng-model="newpt.rec.Name"/> 
+                                  </td>
+                                  <!-- <td data-label="Language LU" ng-show="languagelookupField"> 
+                                      <lookup data="newpt.rec.languageRec" object="'Language__c'" placeholder="''">{{languageRec}}</lookup>
+                                  </td> -->  
+                                  
+                                  <td data-label="Project Task Type"  class="slds-cell-wrap">
+                                      <span ng-bind="newpt.rec.Project_Task_Type__c" ng-hide="newpt.isNew"/>
+                                      <select class="slds-select slds-align--absolute-center"  ng-show="newpt.isNew" ng-model="newpt.rec.Project_Task_Type__c" style="width:80px;" ng-options="ptt for ptt in projectTaskTypeList" />
+                                  </td>                                  
+                                  
+                                  <td data-label="Clin" class="slds-cell-wrap"> 
+                                      <lookup data="newpt.rec.clinRec" object="'CLIN__c'" placeholder="''" condition= "'Contract__c =\''+proContractId+'\''"></lookup>
+                                  </td> 
+                                         
+                                  <td data-label="Payroll Item" class="slds-cell-wrap"> 
+                                        <div>
+                                        <legend class="slds-form-element__legend slds-form-element__label">
+                                            
+                                            <multi-picklist class="slds-is-selected" options="newpt.PayrollList" selected-options="newpt.rec.Payroll_Item__c"></multi-picklist>
+                                        </legend>
+                                    </div>
+                                  </td>
+                                  <td data-label="Quantity" class="slds-cell-wrap">
+                                      <input class="slds-input slds-align--absolute-center" style="width:80px;" type="text" name="options" ng-model="newpt.rec.Total_Qty_Planned__c"/>  
+                                  </td>
+                                  <td data-label="Rate" class="slds-cell-wrap">
+                                      <input class="slds-input slds-align--absolute-center" style="width:80px;" type="text" name="options" ng-model="newpt.rec.Rate__c"/>  
+                                  </td>
+                                  <td data-label="Unit" class="slds-cell-wrap">
+                                      <select class="slds-select slds-align--absolute-center" ng-model="newpt.rec.Unit__c" style="width:80px;" ng-options="item for item in unitList" />
+                                  </td>
+                                  <td data-label="Display in time card" class="slds-cell-wrap" style="text-align:center">
+                                      <input class = "slds-align--absolute-center" type="checkbox" id="checkbox-308" name="options" ng-model="newpt.rec.AcctSeed__Display_in_Time_Card__c"/>  
+                                  </td>
+                                  <!--<td data-label="utilization category">
+                                      <a ng-href="/{{newpt.rec.AcctSeed__Labor_GL_Account__c}}" target="_blank">{{newpt.rec.GL_Acc_Name}}</a>
+                                  </td>-->
+                                  <td data-label="Description" class="slds-cell-wrap">
+                                      <textarea class="slds-textarea slds-align--absolute-center" style="width:150px;" name="Descrip" ng-model="newpt.rec.Description__c"/>  
+                                  </td>
+                                  <td data-label="Parent PT" class="slds-cell-wrap">
+                                      <select name="parentPT" ng-model="newpt.rec.Parent_Project_Task__c" ng-options="item.Id as item.Name for item in parentPTs" class="slds-select" ng-required="newpt.isParentReq"></select>
+                                      <h1 ng-show="newpt.showError" style="color: #D8000C;font-size:8px;">This is required</h1>
+                                  </td>
+                                  <td data-label="Billable" class="slds-cell-wrap" style="text-align:center">
+                                      <input class = "slds-align--absolute-center" type="checkbox" id="checkbox-308" name="options" ng-model="newpt.rec.Billable__c"/>  
+                                  </td>
+                                  <!--<td data-label="OH Applied" class="slds-cell-wrap">
+                                      <input class="slds-input slds-align--absolute-center" style="width:80px;" type="text" name="OH" ng-model="newpt.rec.OH_Applied__c"></input>                                  
+                                  </td>
+                                  <td data-label="G A Applied" class="slds-cell-wrap">
+                                      <input class="slds-input slds-align--absolute-center" style="width:80px;" type="text" name="GA" ng-model="newpt.rec.G_A_Applied__c"></input>
+                                  </td> -->
+                               </tr>
+                               <tr>
+                                <td>
+                                    <div class="slds-col slds-no-flex ">
+                                        <div style="width: 110%;text-align: left;" class="slds-cell-wrap">                                
+                                            <input type="button" class="slds-button slds-button--brand" style="cursor: pointer;" value="New" ng-click="SelectRecordtype();"></input>                               
+                                        </div>                        
+                                    </div>
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td ng-hide= "newprojtaskList.length > 0">
+                                    <p>No Records Found</p>     
+                                </td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                             </tr>
+                          </tbody>
+                          
+                       </table>                             
+                    </div>
+                    
+                </div>
+                <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForError}}">
+                    <div class="slds-modal__container">
+                        <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium">
+                            <div>
+                                <center><p>{{errorMessageforAllSave}}</p></center>                               
+                            </div>
+                            <div ng-show="newProjectTaskRType">
+                                <center><select class="slds-select slds-align--absolute-center" ng-model="newPTRecTypeId" ng-options="Id as name for (name,Id) in PTRecordTypeMap"/></center>
+                                <span ng-show="RTrequired" style="color:red;">This is required</span>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForError()"></input>
+                            <input ng-show="newProjectTaskRType" type="button" class="slds-button slds-button--neutral" value="Cancel" ng-click="modalStateForError = '';modalBackdropStateForError = '';"></input>
+                        </div>
+                    </div>                       
+                </div>
+                
+                <div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForSelectLanguage}}">
+                    <div class="slds-modal__container">
+                        <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Error</h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium">
+                            <div>
+                                <center><p>{{errorMsg}}</p></center>                               
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="cancelPage()"></input>
+                        </div>
+                    </div>   
+                </div>
+                <div class="{{modalBackdropStateForSelectLanguage}}"></div>
+                
+                <!--<div aria-hidden="false" role="dialog" class="slds-modal {{modalStateForError1}}">
+                    <div class="slds-modal__container">
+                        <div class="slds-modal__header" style="background-color: cadetblue;color: white;">
+                            <h2 class="slds-text-heading--medium" style="font-weight: 300;font-size: 24px;line-height: 1.25;">Message</h2>
+                        </div>
+                        <div class="slds-modal__content slds-p-around--medium">
+                            <div>
+                                <center><p>{{errorMessageforAllSave1}}</p></center>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <input type="button" class="slds-button slds-button--neutral" value="Okay" ng-click="OkayForError1()"></input>
+                        </div>
+                    </div>                       
+                </div>-->
+                
+                <script type="text/ng-template" id="multiplePick.html">
+                    <div id="mulipicklist" class="slds">
+                        <div class="slds-picklist" aria-expanded="true">
+                            <button type="button" class="slds-button slds-button--neutral slds-picklist__label" aria-haspopup="true" ng-click="toggleDropdown($event)" style="width: 100%;">
+                                <span class="slds-truncate">{{count}} Selected</span>
+                                <svg aria-hidden="true" class="slds-icon">
+                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, 'assets/icons/utility-sprite/svg/symbols.svg#down')}"></use>
+                                </svg>
+                            </button>
+                            <div class="slds-dropdown slds-dropdown--left slds-dropdown--menu" ng-class="{'slds-hide': !isOptVisible}" style="position: absolute;width: 100%;">
+                                <ul class="slds-dropdown__list" role="menu"  style="overflow-y: scroll;">
+                                    <li id="{{$index}}"  href="#"  class="slds-dropdown__item" style="font-size: initial;" ng-repeat="inp in pickListOptions track by $index"  ng-class="{'slds-is-selected':isSelected(inp)}" ng-click="toggleSelectOption(inp)">
+                                        <a href="javascript:void(0)" role="menuitemradio">
+                                            <p class="">
+                                                <svg ng-class="{'visible': isSelected(inp)}" aria-hidden="true" class="slds-icon slds-icon--selected slds-icon--x-small slds-icon-text-default slds-m-right--x-small invisible" style="position: initial;">
+                                                    <use xlink:href="{!URLFOR($Resource.SLDS0_12_2, 'assets/icons/utility-sprite/svg/symbols.svg#check')}"></use>
+                                                </svg>
+                                                {{inp}}
+                                            </p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </script>
+                <!-- for Look up code -->
+                  <script type="text/ng-template" id="lookup1.html">
+                    <div class="slds">
+                        <div class="slds-lookup" data-select="multi" data-scope="single" data-typeahead="true">
+                            <div class="slds-form-element">
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                                    <input id="lookupf" ng-model="searchTxt" ng-disabled="disabled" ng-KeyPress="fetchAccounts(searchTxt)" ng-KeyDown="isDropDownHidden= false;data = ''"  class="slds-input" type="text" aria-autocomplete="list" role="combobox" aria-expanded="true" placeholder="{{placeholder}}" />
+                                </div>
+                            </div>
+                            <div class="slds-lookup__menu" role="listbox" ng-hide="isDropDownHidden">
+                                <ul class="slds-lookup__list" role="presentation" id="lookuplist">
+                                    <li class="slds-lookup__item" ng-repeat="acc in accounts" ng-click="updateDataModelAttr(acc)">
+                                        <a id="{{acc.Id}}" role="option">
+                                            {{acc.Name}}
+                                        </a>
+                                    </li>
+                                    <li ng-if="!accounts.length && !showLoadingDiv" class="slds-text-align--center">
+                                       No match found
+                                    </li>
+                                    <li ng-if="showLoadingDiv" class="slds-text-align--center">
+                                       <img src="{!URLFOR($Resource.SLDS090,'/assets/images/spinners/slds_spinner_brand.gif')}" width="50" height="50"/>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </script>
+              <!-- End of look up code --->
+            </div>    
+        </apex:form>
+    </html>
+    <script>
+        var app = angular.module('PTApp', ['ngRoute']);
+        app.controller('Project_Task_Controller', function($scope,$timeout,$routeParams,$location,$route,$window) {
+            
+            document.getElementById("spinner").style.display = 'block';            
+                                                         
+            $scope.accprojtaskList = [];
+            $scope.modalStateForError = '';
+            $scope.modalBackdropStateForError = '';
+            $scope.errorMessageforAllSave = '';
+            console.log(':url::',$location.absUrl());
+            $scope.projId = $location.absUrl().split('Id=')[1].split('&')[0];
+            $scope.proLanguageId = $location.absUrl().split('LanguageId=')[1];
+            $scope.proLanguageName = $location.absUrl().split('Language=')[1].split('&')[0];
+            $scope.proContractId = $location.absUrl().split('ContractId=')[1].split('&')[0];
+            console.log(':language::',$scope.proLanguageId);
+            console.log(':language::',$scope.proLanguageName);
+            $scope.InternalProj;
+            console.log('projId::::',$scope.projId);
+            $scope.languagelookupField = false;
+            $scope.PayrollList = [];
+            $scope.laboraccList = [];
+            $scope.GLaccout = {};
+            $scope.laborId;
+            $scope.laborName;
+            //$scope.payitem = true;
+            $scope.newProjectTaskRType = false; 
+            $scope.newPTRecTypeId; 
+            $scope.parentChildPTMap = {};
+            $scope.childPTList = [];
+            $scope.childPTMap = {};
+            $scope.filteredParentPTs = {};
+            $scope.parentPTs = [];
+            $scope.errorMsg = '';
+            $scope.isTransInterpretationProj = false;
+            $scope.parentPTs.push({Id:undefined,Name:'---select---'});
+            
+            console.log(':::***:::$scope.projId:::',$scope.projId);
+           
+            if($scope.proLanguageId.indexOf('&tour=') != -1) {
+                $scope.proLanguageId = $scope.proLanguageId.split('&tour=')[0];
+            } 
+            
+            if($scope.projId){
+                var projId = $scope.projId;
+                document.getElementById("spinner").style.display = 'block';
+                                 
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ProjectTaskCreationContr.checkRecordTypeName}',
+                        projId,
+                        function(records, ev) {
+                            if(ev.status) {
+                                document.getElementById("spinner").style.display = 'none';
+                                $scope.isTransInterpretationProj = records;
+                                console.log('isTransInterpretationProj ===============',$scope.isTransInterpretationProj);     
+                                if($scope.isTransInterpretationProj){
+                                    console.log('TRUE===');
+                                    $scope.errorMsg = 'Manage Project Task not supported for Translation & Interpretation Projects. Please use Standard button';
+                                    $scope.modalStateForSelectLanguage = 'slds-fade-in-open';
+                                    $scope.modalBackdropStateForSelectLanguage = 'slds-backdrop slds-backdrop--open';
+                                }else{
+                                    console.log('FALSE===============');
+                                    initial();
+                                }                    
+
+                            }                        
+                            document.getElementById("spinner").style.display = 'none';
+                            $scope.$apply();
+                        },
+                        {escape: true}
+                    );
+            }
+            
+            function initial(){
+                if($scope.projId && $scope.proLanguageId) {
+                    document.getElementById("spinner").style.display = 'block';
+                                 
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ProjectTaskCreationContr.picklistvalues}',
+                        'AcctSeed__Project_Task__c',
+                        'Unit__c',
+                        function(records, ev) {
+                            if(ev.status) {
+                                document.getElementById("spinner").style.display = 'none';
+                                $scope.unitList = records;                          
+                                
+                            }                        
+                            document.getElementById("spinner").style.display = 'none';
+                            $scope.$apply();
+                        },
+                        {escape: true}
+                    );
+                    
+                    // Commented payrollitem related code by Vinitha Jul 13, 2017 
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ProjectTaskCreationContr.picklistvalues}',
+                        'AcctSeed__Project_Task__c',
+                        'Payroll_Item__c',
+                        function(records, ev) {
+                            if(ev.status) {
+                                document.getElementById("spinner").style.display = 'none';
+                                $scope.PayrollList = records;                          
+                            }                        
+                            document.getElementById("spinner").style.display = 'none';
+                            $scope.$apply();
+                        },
+                        {escape: true}
+                    );
+                    
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ProjectTaskCreationContr.picklistvalues}',
+                        'AcctSeed__Project_Task__c',
+                        'Project_Task_Type__c',
+                        function(records, ev) {
+                            if(ev.status) {
+                                document.getElementById("spinner").style.display = 'none';
+                                $scope.projectTaskTypeList = records;                          
+                            }                        
+                            document.getElementById("spinner").style.display = 'none';
+                            $scope.$apply();
+                        },
+                        {escape: true}
+                    ); 
+                    
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ProjectTaskCreationContr.getRecordType}',
+                        function(records, ev) {
+                            if(ev.status) {
+                                document.getElementById("spinner").style.display = 'none';
+                                $scope.PTRecordTypeMap = records;                          
+                            }                        
+                            document.getElementById("spinner").style.display = 'none';
+                            $scope.$apply();
+                        },
+                        {escape: true}
+                    );
+                    
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ProjectTaskCreationContr.projecttask}',
+                        $scope.projId,
+                        function(records, ev) { 
+                            $scope.totalrecords = records.proTaList;
+                            //$scope.OHApplied = records.OHApplied;
+                            //$scope.GAApplied = records.GAApplied;
+                            //console.log('::oh::',$scope.totalrecords,$scope.OHApplied,$scope.GAApplied);              
+                            if($scope.totalrecords.length > 0){                        
+                                if(ev.status) {
+                                    document.getElementById("spinner").style.display = 'none';
+                                    $scope.rec = ev.status; 
+                                    $scope.oldprojtaskList = []; 
+                                    $scope.newprojtaskList = [];
+                                    $scope.displayProTaskList = [];
+                                    $scope.oldprojtaskSource = [];
+                                    $scope.totalProTaskList = $scope.totalrecords;
+                                    
+                                    for(var i = 0; i < $scope.totalrecords.length; i++) {                            
+                                        /*var temp = $scope.totalrecords[i].AcctSeed__Labor_GL_Account__c;
+                       
+                                        if(temp.length > 15)
+                                            temp = temp.substring(0,15);
+                                        console.log('::::temp',temp);                              
+                                        $scope.laboraccList.push(temp);*/
+                                        $scope.projecttask = {};
+                                        $scope.projecttask['sel'] = true;  
+                                        $scope.projecttask['isNew'] = false;                                  
+                                        if($scope.totalrecords[i].Id) {
+                                            if($scope.totalrecords[i].CLIN__c) {
+                                                $scope.totalrecords[i].clinRec = {Id : $scope.totalrecords[i].CLIN__c, Name : $scope.totalrecords[i].CLIN__r.Name};
+                                            }
+                                            $scope.projecttask['rec'] = $scope.totalrecords[i];  
+                                            $scope.projecttask['highlight'] = false;                                        
+                                            $scope.projecttask.PayrollList = $scope.PayrollList;
+                                            
+                                            
+                                            if($scope.totalrecords[i].Project_Task_Type__c == 'Language Training' || $scope.totalrecords[i].Project_Task_Type__c == 'Preparation time'){
+                                                 if($scope.totalrecords[i].Parent_Project_Task__c != null){
+                                                     if($scope.parentChildPTMap[$scope.totalrecords[i].Parent_Project_Task__c] == undefined){
+                                                         $scope.parentChildPTMap[$scope.totalrecords[i].Parent_Project_Task__c] = [];
+                                                     }
+                                                     $scope.parentChildPTMap[$scope.totalrecords[i].Parent_Project_Task__c].push($scope.projecttask);
+                                                 }
+                                                 console.log('Project Task Name:::'+$scope.totalrecords[i].Name);
+                                                 console.log('include of Additional::'+$scope.totalrecords[i].Name.includes('Additional'));
+                                                 if($scope.totalrecords[i].Name.includes('Additional') || $scope.totalrecords[i].Name.includes('Preparation')) {
+                                                     $scope.projecttask.isParentReq = true;
+                                                 } else {
+                                                     $scope.projecttask.isParentReq = false;
+                                                 }
+                                             }
+                                             $scope.oldprojtaskSource.push($scope.projecttask);
+                                        } else {
+                                            $scope.projecttask['rec'] = $scope.totalrecords[i];                                        
+                                            $scope.projecttask.PayrollList = $scope.PayrollList;
+                                            console.log('include of Additional::'+$scope.totalrecords[i].Name.includes('Additional'));
+                                            if($scope.totalrecords[i].Name.includes('Additional') || $scope.totalrecords[i].Name.includes('Preparation')) {
+                                                $scope.projecttask.isParentReq = true;
+                                            } else {
+                                                $scope.projecttask.isParentReq = false;
+                                            }
+                                            $scope.newprojtaskList.push($scope.projecttask);
+                                            console.log('$scope.totalrecords:projtList:::',$scope.projecttask);
+                                        }                                                              
+                                    }
+                                    $scope.oldprojtaskList = angular.copy($scope.oldprojtaskSource);
+                                    
+                                    for(var i = 0;i < $scope.oldprojtaskList.length;i++) {
+                                         if($scope.oldprojtaskList[i].rec.Parent_Project_Task__c == null){
+                                             $scope.oldprojtaskList[i].showRec = true;
+                                             if($scope.parentChildPTMap[$scope.oldprojtaskList[i].rec.Id] != undefined){
+                                                 $scope.oldprojtaskList[i].showExpand = false;
+                                                 $scope.oldprojtaskList[i].hideExpand = false;
+                                             } else {
+                                                 $scope.oldprojtaskList[i].showExpand = false;
+                                                 $scope.oldprojtaskList[i].hideExpand = true;
+                                             }
+                                             
+                                             
+                                             $scope.displayProTaskList.push($scope.oldprojtaskList[i]);
+                                             $scope.parentPTs.push($scope.oldprojtaskList[i].rec);
+                                             
+                                         } else {
+                                             $scope.oldprojtaskList[i].showRec = false;
+                                             $scope.oldprojtaskList[i].showExpand = false;
+                                             $scope.oldprojtaskList[i].hideExpand = true;
+                                         }
+                                     }
+                                     for(var i = 0;i < $scope.oldprojtaskList.length;i++) { 
+                                         for(var j=0; j<$scope.displayProTaskList.length; j++) {
+                                            if($scope.oldprojtaskList[i].rec.Id != $scope.displayProTaskList[j].rec.Id){
+                                                if($scope.filteredParentPTs[$scope.oldprojtaskList[i].rec.Id] == undefined){
+                                                    $scope.filteredParentPTs[$scope.oldprojtaskList[i].rec.Id] = [];
+                                                    $scope.filteredParentPTs[$scope.oldprojtaskList[i].rec.Id].push({Id:undefined,Name:'---select---'});
+                                                }
+                                                $scope.filteredParentPTs[$scope.oldprojtaskList[i].rec.Id].push($scope.displayProTaskList[j].rec);
+                                            } 
+                                         }
+                                     }
+                                     //console.log(':::filteredParentPTs::',$scope.filteredParentPTs);
+                                     console.log($scope.displayProTaskList);
+                                     for(var i = 0;i < $scope.displayProTaskList.length;i++) {
+                                         var childPTList = [];
+                                         for(var j = 0;j < $scope.oldprojtaskSource.length;j++) {
+                                            if(($scope.oldprojtaskSource[j].rec.Project_Task_Type__c == 'Language Training' || $scope.oldprojtaskSource[j].rec.Project_Task_Type__c == 'Preparation time') && $scope.oldprojtaskSource[j].rec.Parent_Project_Task__c == $scope.displayProTaskList[i].rec.Id){
+                                                var index = $scope.displayProTaskList.indexOf($scope.displayProTaskList[i]);
+                                                childPTList.push($scope.oldprojtaskList[j]);
+                                                $scope.childPTMap[$scope.displayProTaskList[i].rec.Id] = childPTList;
+                                                $scope.displayProTaskList.splice(index+1,0,$scope.oldprojtaskList[j]);
+                                            }
+                                        }
+                                        
+                                     }
+                                     //getlabor();                                
+                                }
+                                
+                                // Added by vinitha July 1,17 for languagelookupField only show language training record type 
+                                for(var i = 0; i < $scope.newprojtaskList.length; i++){
+                                
+                                    if($scope.newprojtaskList[i].rec.Project_Task_Type__c == 'Language Training'){
+                                        $scope.languagelookupField = true;
+                                    }
+                                }
+                                
+                            } else{
+                                $scope.NoMasterPT = true;
+                            }
+                            document.getElementById("spinner").style.display = 'none';
+                            $scope.$apply();
+                        },
+                        {escape: true}
+                    ); 
+                    
+                    function getlabor(){
+                        console.log(':::::laborrec',$scope.laboraccId);
+                        Visualforce.remoting.Manager.invokeAction(                    
+                            '{!$RemoteAction.ProjectTaskCreationContr.laborrec}',
+                            JSON.stringify($scope.laboraccList),                    
+                            function(records, ev) {
+                                if(ev.status) {
+                                    document.getElementById("spinner").style.display = 'none';
+                                    $scope.GLaccout = {};
+                                    $scope.GLaccout = records;
+                                    for(var i = 0;i < $scope.oldprojtaskList.length;i++) {
+                                        if($scope.GLaccout[$scope.oldprojtaskList[i].rec.AcctSeed__Labor_GL_Account__c]) {
+                                            $scope.oldprojtaskList[i].rec.GL_Acc_Name = $scope.GLaccout[$scope.oldprojtaskList[i].rec.AcctSeed__Labor_GL_Account__c];                                         
+                                        }
+                                    }
+                                    for(var i = 0;i < $scope.newprojtaskList.length;i++) {
+                                        if($scope.GLaccout[$scope.newprojtaskList[i].rec.AcctSeed__Labor_GL_Account__c]) {
+                                            $scope.newprojtaskList[i].rec.GL_Acc_Name = $scope.GLaccout[$scope.newprojtaskList[i].rec.AcctSeed__Labor_GL_Account__c];                                         
+                                        }
+                                    }
+                                }
+                                                           
+                                document.getElementById("spinner").style.display = 'none';
+                                $scope.$apply();
+                            },
+                            {escape: true}
+                        ); 
+                    }
+                    
+                } else {
+                    $scope.errorMsg = 'Select Language for this Project';
+                    $scope.modalStateForSelectLanguage = 'slds-fade-in-open';
+                    $scope.modalBackdropStateForSelectLanguage = 'slds-backdrop slds-backdrop--open';
+                }
+            }
+            
+            
+            $scope.cancelPage = function(){
+              
+                console.log(':$scope.projId::',$scope.projId);
+                
+                modalStateForSelectLanguage = '';
+                modalBackdropStateForSelectLanguage = '';
+                
+                var uiTheme = '{!$User.UIThemeDisplayed}';
+                
+                if(uiTheme == 'Theme4d' || uiTheme == 'Theme4t') {
+                    sforce.one.navigateToURL('/'+$scope.projId);
+                    //sforce.one.back(true);
+                }else {
+                    window.location.href = '/'+$scope.projId;
+                }
+            }
+            
+            $scope.OkayForError =  function() {
+            
+                if($scope.newProjectTaskRType) {
+                    console.log('newPTRecTypeId::::',$scope.newPTRecTypeId);
+                    if($scope.newPTRecTypeId) {
+                        $scope.AddProjectTask();
+                        $scope.RTrequired = false;
+                        $scope.modalStateForError = '';
+                        $scope.modalBackdropStateForError = '';
+                    } else {
+                        $scope.RTrequired = true; 
+                    }
+                } else {
+                    $scope.modalStateForError = '';
+                    $scope.modalBackdropStateForError = '';
+                }
+                document.getElementById("spinner").style.display = 'none';
+            } 
+            
+            /*$scope.OkayForError1 =  function() {
+            
+                $scope.modalStateForError1 = '';
+                $scope.modalBackdropStateForError1 = '';
+                //$scope.payitem = true;
+                for(var i=0; i < $scope.tempaccprojtaskList.length; i++) {
+                    var index = $scope.accprojtaskList.indexOf($scope.tempaccprojtaskList[i]);
+                    $scope.accprojtaskList.splice(index, 1);
+                }
+                document.getElementById("spinner").style.display = 'none';
+            }*/   
+            //Added by GRK on July 6, 2017 to allow users to add new project Task.
+            $scope.SelectRecordtype = function() {
+                $scope.newProjectTaskRType = true;
+                $scope.errorMessageforAllSave = 'Please select Record Type';
+                $scope.modalStateForError = 'slds-fade-in-open';
+                $scope.modalBackdropStateForError = 'slds-modal-backdrop--open'; 
+            }
+            
+            $scope.AddProjectTask = function() {
+                var PTrec = {
+                    sel: true,
+                    rec: {
+                        AcctSeed__Project__c: $scope.projId,
+                        RecordtypeId: $scope.newPTRecTypeId,
+                        AcctSeed__Sort_Order__c: undefined,
+                        Name: undefined,
+                        //languageRec: $scope.languageRec,
+                        Language_LU__c: $scope.proLanguageId,
+                        Project_Task_Type__c: undefined,
+                        Payroll_Item__c: undefined,
+                        //Quantity__c into Total_Qty_Planned__c on dec 2017
+                        Total_Qty_Planned__c: undefined,    
+                        Rate__c: undefined,
+                        Unit__c: undefined,
+                        AcctSeed__Display_in_Time_Card__c: undefined,
+                        //AcctSeed__Labor_GL_Account__c: undefined,
+                        Parent_Project_Task__c: undefined,
+                        Billable__c: undefined,
+                        //OH_Applied__c: $scope.OHApplied,
+                        //G_A_Applied__c: $scope.GAApplied
+                    },
+                    PayrollList: $scope.PayrollList,
+                    isNew: true
+                }               
+                $scope.newprojtaskList.push(PTrec);
+                console.log(':$scope.newprojtaskList::',$scope.newprojtaskList);
+            }
+            
+            $scope.RecordChangeCapturingFunction = function(oldRecord,orgRec) { 
+                console.log('oldRecord::::',oldRecord);
+                console.log('orgRec::::',orgRec); 
+                console.log('::accprojtaskList:::',$scope.accprojtaskList);   
+                
+                if($scope.accprojtaskList.indexOf(oldRecord) == -1) {
+                    $scope.accprojtaskList.push(oldRecord); 
+                }
+                if($scope.oldprojtaskList.indexOf(orgRec) >= 0 ) {
+                    var temp = $scope.oldprojtaskList.indexOf(orgRec);
+                    $scope.oldprojtaskList[temp].highlight = true;
+                } 
+            } 
+            
+            $scope.payrollUpdate = function(payRoll, recd) {
+                console.log('payRoll:::::',payRoll);
+                console.log('recd:::::::',recd);
+                if($scope.accprojtaskList.indexOf(recd) == -1) {
+                    $scope.accprojtaskList.push(recd);                     
+                }
+                if($scope.oldprojtaskList.indexOf(recd) >= 0 ) {
+                    var temp = $scope.oldprojtaskList.indexOf(recd);
+                    $scope.oldprojtaskList[temp].highlight = true;
+                }
+            }
+                   
+            $scope.crtprojecttask = function() {
+                                
+                document.getElementById("spinner").style.display = 'block';
+                $scope.tempaccprojtaskList = [];
+                //$scope.accprojtaskList = [];
+                $scope.hasError = false;
+                for(var i = 0; i < $scope.newprojtaskList.length ; i++){                    
+                    if($scope.newprojtaskList[i].sel){
+                        //Added by vinitha July 1 2017 for binding the language lookup value to corresponding project task name
+                        
+                        if($scope.newprojtaskList[i].rec && $scope.newprojtaskList[i].rec.Name == 'Language Training- {Language}'){ 
+                            $scope.newprojtaskList[i].rec.Name = 'Language Training- '+$scope.proLanguageName;
+                            //$scope.newprojtaskList[i].rec.Language_LU__c = $scope.proLanguageId;
+                        }   
+                        if($scope.newprojtaskList[i].rec.Total_Qty_Planned__c) {
+                            $scope.newprojtaskList[i].rec.Total_Qty_Planned__c = $scope.newprojtaskList[i].rec.Total_Qty_Planned__c;
+                        }        
+                        if($scope.newprojtaskList[i].isParentReq == true && (!$scope.newprojtaskList[i].rec.hasOwnProperty('Parent_Project_Task__c') || ($scope.newprojtaskList[i].rec.hasOwnProperty('Parent_Project_Task__c') && angular.isUndefined($scope.newprojtaskList[i].rec['Parent_Project_Task__c'])))) {
+                            $scope.newprojtaskList[i].showError = true;
+                            $scope.hasError = true;
+                        }
+                        console.log('hasError:::',$scope.hasError);
+                        
+                        delete $scope.newprojtaskList[i].rec.languageRec;
+                        $scope.tempaccprojtaskList.push($scope.newprojtaskList[i].rec);
+                    
+                    }
+                }
+                                
+                for(var j=0; j < $scope.tempaccprojtaskList.length; j++) {
+                    $scope.accprojtaskList.push($scope.tempaccprojtaskList[j]);
+                }
+                                
+                //PayrollItem related code commented by Vinitha July 13,2017
+                /*for(var i = 0; i < $scope.oldprojtaskList.length ; i++) { 
+                    console.log('oldprojtaskList:::::',$scope.oldprojtaskList[i]);
+                    if(($scope.oldprojtaskList[i].rec.Unit__c == 'Hrs' || $scope.oldprojtaskList[i].rec.Unit__c == 'Days') && !$scope.oldprojtaskList[i].rec.Payroll_Item__c){
+                        $scope.payitem = false;
+                        console.log('Inside no PayrollItem');
+                    }
+                }
+                console.log('$scope.accprojtaskList:::::',$scope.accprojtaskList);
+                for(var i = 0; i < $scope.accprojtaskList.length ; i++) {
+                    console.log('$scope.accprojtaskList[i]:::::',$scope.accprojtaskList[i]); 
+                    if(($scope.accprojtaskList[i].Unit__c == 'Hrs' || $scope.accprojtaskList[i].Unit__c == 'Days') && !$scope.accprojtaskList[i].Payroll_Item__c){
+                        $scope.payitem = false;
+                        //$scope.errorMessageforAllSave1 = 'Payroll Item Is Required';
+                        //$scope.modalStateForError1 = 'slds-fade-in-open';
+                        //$scope.modalBackdropStateForError = 'slds-modal-backdrop--open';
+                    }
+                    delete $scope.accprojtaskList[i].GL_Acc_Name; 
+                } */
+               
+                var accprojtaskList = angular.copy($scope.accprojtaskList);
+              
+                for(var x= 0 ; x < accprojtaskList.length; x++) {
+                    if(accprojtaskList[x].Parent_Project_Task__c == undefined){
+                        accprojtaskList[x].Parent_Project_Task__c = null;    
+                    }
+                    if(accprojtaskList[x].clinRec) {
+                        accprojtaskList[x].CLIN__c = accprojtaskList[x].clinRec.Id;
+                    }   
+                    
+                    delete accprojtaskList[x].clinRec;
+                    delete accprojtaskList[x].GL_Acc_Name;
+                    delete accprojtaskList[x].$$hashKey;
+                }
+               
+                if($scope.hasError == false) { // To stay in the Page when no parent is selected for a parent required PT
+                    if(accprojtaskList.length > 0) {                    
+                        
+                        Visualforce.remoting.Manager.invokeAction(
+                            '{!$RemoteAction.ProjectTaskCreationContr.createprojecttask}',
+                            accprojtaskList,
+                            function(records, ev) {
+                                if(ev.status) {
+                                    console.log('ev.status:::::',ev.status);
+                                    if(records == 'Inserted') {                                    
+                                        //$window.location.href = '/'+$scope.projId;
+                                        $scope.cancelPage();
+                                    } else {                                                                                                           
+                                        console.log('::::record',records);                               
+                                    }
+                                } else {
+                                        $scope.errorMessageforAllSave = ev.message;
+                                        $scope.modalStateForError = 'slds-fade-in-open';
+                                        $scope.modalBackdropStateForError = 'slds-modal-backdrop--open'; 
+                                }
+                                //document.getElementById("spinner").style.display = 'none';
+                                
+                                $scope.$apply();
+                            },
+                            {escape: true}
+                        );
+                    } else {
+                        $scope.errorMessageforAllSave = 'Please select atleast one project task';
+                        $scope.modalStateForError = 'slds-fade-in-open';
+                        $scope.modalBackdropStateForError = 'slds-modal-backdrop--open';    
+                    } 
+                } else {
+                    document.getElementById("spinner").style.display = 'none';
+                }              
+            }
+            $scope.showChildPT = function(parentRec){
+                $scope.childPTList = [];
+                var index = $scope.displayProTaskList.indexOf(parentRec);
+                console.log('::index::',index);
+                $scope.displayProTaskList[index].showExpand = false;
+                $scope.displayProTaskList[index].hideExpand = false;
+                for(var i = 0;i < $scope.oldprojtaskSource.length;i++) {
+                    if(($scope.oldprojtaskSource[i].rec.Project_Task_Type__c == 'Language Training' || $scope.oldprojtaskSource[i].rec.Project_Task_Type__c == 'Preparation time')&& $scope.oldprojtaskSource[i].rec.Parent_Project_Task__c == parentRec.rec.Id){
+                        $scope.childPTList.push($scope.oldprojtaskList[i]);                 
+                    }
+                }
+                if($scope.childPTList.length > 0){
+                    for(var i = 0;i < $scope.childPTList.length;i++) {
+                        $scope.displayProTaskList.splice(index+(i+1),0,$scope.childPTList[i]);
+                    }
+                }
+                
+            } 
+              
+            $scope.hideChildPT = function(parentRec){
+                $scope.childPTList = [];
+                var index = $scope.displayProTaskList.indexOf(parentRec);
+                $scope.displayProTaskList[index].showExpand = true;
+                $scope.displayProTaskList[index].hideExpand = true;
+                
+                for(var i = 0;i < $scope.oldprojtaskSource.length;i++) {
+                    if(($scope.oldprojtaskSource[i].rec.Project_Task_Type__c == 'Language Training' || $scope.oldprojtaskSource[i].rec.Project_Task_Type__c == 'Preparation time') && $scope.oldprojtaskSource[i].rec.Parent_Project_Task__c == parentRec.rec.Id){
+                        $scope.childPTList.push($scope.oldprojtaskList[i]);                 
+                    }
+                }
+                if($scope.childPTList.length > 0){
+                    for(var i = 0;i < $scope.childPTList.length;i++) {
+                        $scope.displayProTaskList.splice(index+1,1);
+                    }
+                }
+            }  
+        })
+        .directive('multiPicklist',function($document){
+        return {
+            restrict: 'EA',
+            templateUrl:'multiplePick.html',
+            replace:true,
+            scope: {
+              pickListOptions : '=?options',
+              selectedOptions : '=?',
+              isVisible: '=?onBlur',
+              onBlur: '=',
+              rec: '='
+            },
+            controller:function($scope){
+            
+                //var selectedOptArr = [];
+                $scope.count = 0;
+                $scope.selectedOptArr = [];
+               
+                $scope.toggleSelectOption = function (option) {
+                    console.log(':::$scope.selectedOptArr'+$scope.selectedOptArr);
+                    var intIndex = $scope.selectedOptArr.indexOf(option);
+                    if(intIndex > -1){
+                         $scope.selectedOptArr.splice(intIndex, 1);
+                    }
+                    else{
+                        $scope.selectedOptArr.push(option);
+                    }
+                    $scope.updateSelectedOptions($scope.selectedOptArr);
+                };
+            
+                $scope.updateSelectedOptions = function(temp){
+                    console.log(temp);
+                    $scope.selectedOptions = $scope.toString(temp,";");
+                    $scope.count = $scope.selectedOptArr.length; 
+                };
+
+                $scope.$watch(function(scope) {scope.selectedOptions}, function(newVar, oldVar){
+                    console.log('inside watcher');
+                    updatePicklist(newVar);
+                }, true);
+                
+                function updatePicklist(selectedList) {
+                    selectedOptArr = [];
+                    if(selectedList){
+                        selectedOptArr = selectedList;
+                    }
+                }
+                
+                $scope.isSelected = function(opt){
+                    
+                    if($scope.selectedOptArr){
+                        return $scope.selectedOptArr.indexOf(opt) > -1;
+                        console.log(':::$scope.selectedOptArr::',$scope.selectedOptArr);
+                    } else {
+                        return false;
+                    }
+                };
+                
+                $scope.toString = function(temp,exp){
+                    return temp.join(exp);
+                };
+                
+                $scope.toArray = function(temp,exp){
+                    return temp.split(exp);
+                };
+                
+                $scope.filterOptions = function(){
+                    if($scope.selectedOptions){
+                        $scope.selectedOptArr = $scope.toArray($scope.selectedOptions, ';');
+                        console.log("assigning is selected", $scope.selectedOptArr)
+                    }else{
+                        $scope.selectedOptArr = [];
+                    }
+                    $scope.count = $scope.selectedOptArr.length;   
+                };
+               
+            },
+            link:function(scope, element, attr, ctrl){
+               console.log('link called.');
+               if(scope.selectedOptions){
+                   scope.filterOptions();
+               }
+               
+               var showOptions;
+               
+               var bindHandler = function(event){
+                    console.log("binding");
+                    var isClickedElementChildOfPopup = element[0].contains(event.target)
+                      
+                    if(isClickedElementChildOfPopup)
+                      return;
+                      
+                    console.log(element,isClickedElementChildOfPopup,event.target,element[0].contains(event.target));
+                    scope.$apply(function(){
+                        scope.toggleDropdown(event);
+                    });
+                    
+               }
+                
+               scope.toggleDropdown = function ($event) {
+                   
+                   scope.isOptVisible = !scope.isOptVisible;
+                   console.log("going to bind",scope.isOptVisible);
+                    if(scope.isOptVisible){
+                        console.log('if');
+                        $document.bind('click',bindHandler); 
+                    }
+                    else{
+                        console.log('else');
+                        console.log("unbinding", scope.selectedOptions);
+                        console.log("Scope.rec:", scope.rec);
+                        $document.unbind('click');
+                        //console.log('onBlur', scope.onBlur, typeof scope.onBlur);
+                        if(typeof scope.onBlurClone === 'function') {
+                            scope.onBlurClone(scope.selectedOptions,scope.rec);
+                        } else if(typeof scope.onBlur === 'function') {
+                            scope.onBlurClone = scope.onBlur;
+                            scope.onBlur(scope.selectedOptions,scope.rec);
+                        }
+                        scope.isVisible = !scope.isVisible;                       
+                    }
+                };
+            }
+        };
+    })
+    
+    // Directive for Lookup Search option
+        .service('ApexQuery', function($q) {
+                    
+            //Resolve Responses
+            function resolveResponse(response, ev, def) {
+                if(ev.status) {
+                    def.resolve(response);
+                } else {
+                    def.reject(ev);
+                }
+            }        
+            
+            //Get lookup record from a specific object
+            var getLookups = function(objectName, searchString, condition) {
+                var def = $q.defer();
+                if(!condition) { condition = ''; }
+                if(!searchString) { searchString = ''; }
+                Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.ProjectTaskCreationContr.getLookupRecords}',
+                    objectName,
+                    searchString,
+                    condition,
+                    function(response, ev) {
+                        resolveResponse(response, ev, def);
+                    },
+                    {escape: true}
+                );
+                return def.promise;
+            }
+            
+            return {
+                getLookups: getLookups
+            }
+        })
+        .directive('lookup',function($document, ApexQuery, $timeout){
+            return {
+                restrict: 'E',
+                templateUrl:'lookup1.html',
+                replace:true,
+                scope: {
+                  data: '=',
+                  disabled: '=',
+                  object: '=',
+                  placeholder: '=',
+                  condition: '=',
+                  onChange: '=',
+                  parameter1: '=',
+                  parameter2: '=',
+                  type: '='
+                },
+                controller:function($scope, $timeout){
+                  
+                    $scope.accounts = [];
+                    $scope.searchTxt = '';
+                    $scope.objectName = '';
+                    $scope.isDropDownHidden = true;
+                    $scope.showLoadingDiv = false;
+                    
+                    $scope.$watch('data',function(newVal,oldVal){                        
+                        if(newVal && $scope.data && $scope.data.Name){
+                            $scope.searchTxt = $scope.data.Name;
+                        }else {
+                            $scope.searchTxt = '';
+                        }
+                    },true);
+                    
+                    $scope.fetchAccounts = function(){
+                        $scope.showLoadingDiv = true;
+                        $scope.accounts = [];
+
+                        $timeout(function(){
+                            ApexQuery.getLookups($scope.object, $scope.searchTxt, $scope.condition).then(
+                                function(data){
+                                    $scope.accounts = data;
+                                    $scope.showLoadingDiv = false;
+                                },function(error){}
+                            );
+                        },400);
+                    };
+                    
+                    $scope.updateDataModelAttr = function(selAcc){
+                        $scope.data = selAcc;
+                        $scope.searchTxt = selAcc.Name;
+                        $scope.toggleDropDown();
+                        console.log('inside project change', typeof $scope.change);
+                        $timeout(function() {
+                            if(typeof $scope.onChange == 'function') {
+                                $scope.onChange($scope.parameter1,$scope.parameter2);
+                            }
+                        }, 0);
+                    };
+                    
+                    $scope.closeDropdownList = function(event) {
+                        if(!$scope.data) {
+                           $scope.isDropDownHidden = true;
+                        }
+                        event.stopPropagation();
+                    }
+                    
+                    window.addEventListener('click', function(event) {
+                        console.log('window clicked.');
+                        $scope.isDropDownHidden = true;
+                        $scope.$apply();
+                    });
+                },
+                link:function(scope,element,attr,ctrl) {                    
+                    scope.toggleDropDown = function(){
+                        scope.isDropDownHidden = !scope.isDropDownHidden;
+                        if(scope.isDropDownHidden){
+                            $document.bind('click', function(event){
+                                //var isClickedElementChildOfPopup = $('#lookuplist')
+                                //  .find(event.target)
+                                //  .length > 0;
+                                var isClickedElementChildOfPopup = event.target;
+                                if(isClickedElementChildOfPopup) {
+                                    return;
+                                }
+                                scope.isDropDownHidden = true;
+                                scope.$apply();
+                                $document.unbind('click');
+                            }); 
+                        }
+                        else{
+                             $document.unbind('click');
+                        }
+                    };
+                }
+            };
+        });
+    </script>
+</apex:page>

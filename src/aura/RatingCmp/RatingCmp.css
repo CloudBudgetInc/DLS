@@ -1,0 +1,11 @@
+.THIS .star-on-png:before {
+    content: "\f005";
+    color: gold;
+}
+.THIS .star-half-png:before {
+    color: gold;
+}
+.THIS .star-off-png:before {
+    content: "\f005";
+    color: grey;
+}

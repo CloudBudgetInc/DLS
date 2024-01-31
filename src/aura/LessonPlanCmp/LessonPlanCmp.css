@@ -1,0 +1,28 @@
+.THIS .btnColor{
+    background-color: #055e89 !important;
+}
+.THIS .requiredCls{
+    text-decoration: none none !important;
+}
+.THIS .label-hidden > label {
+    display: none;
+}
+.THIS .requiredClass {
+    border-left-color: red !important;
+    border-left-width: 3px !important;
+}
+.THIS .requiredClass .slds-input, .THIS .requiredClass .slds-select  {
+    border-left-color: red !important;
+    border-left-width: 3px !important;
+}
+.THIS .hide-error-message > .slds-form-element__help {
+    display: none;
+}
+.THIS .fa-arrow-left{
+    font-size:2rem !important;
+    cursor:pointer;
+    color: #055e89 !important;
+}
+.THIS .hide-title > header.slds-card__header {
+    display: none;
+}

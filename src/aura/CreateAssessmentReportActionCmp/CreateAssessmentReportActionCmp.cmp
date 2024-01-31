@@ -1,0 +1,53 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName,force:lightningQuickActionWithoutHeader" access="global" Controller="Assessment_Report_Helper">
+    <aura:attribute name="recordId" type="String"/>
+    <aura:attribute name="card" type="Map" default="{'showMsg' : false}"/>
+    <aura:attribute name="showSpinner" type="Boolean" default="false"/>
+    <aura:attribute name="trainingReportInfo" type="Map" default="{}"/>
+    <aura:attribute name="reportTypes" type="List" default="[]"/>
+
+
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+        
+    <!-- Spinner Component-->
+    <aura:if isTrue="{!v.showSpinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand" size="medium" class="slds-is-fixed" />
+    </aura:if>
+    
+    <!-- server side action service component -->
+    <c:ApexService aura:id="server"/>
+        
+    
+    <lightning:card>
+        <aura:set attribute="title">
+            <p style="font-size: 150%;" class="slds-align_absolute-center slds-p-bottom_xx-small">{!v.card.title}</p>
+        </aura:set>
+        <aura:if isTrue="{!v.card.showMsg}"> 
+           <br/> <p style="font-size:1rem;text-align: center;">{!v.card.message}</p><br/><br/>
+            <aura:set attribute="else">
+                <div>
+                    <lightning:select name="Report Type" aura:id="reportTypeInput" label="Report type" required="true" value="{!v.trainingReportInfo.Language_Training_Status__c}">
+                        <option value="">--None--</option>
+                        <aura:iteration items="{!v.reportTypes}" var="rt">
+                            <option value="{!rt}">{!rt}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                </div>
+                <div>
+                    <ui:inputDate  label="Report Date" aura:id="reportDateInput" displayDatePicker="true" required='true' format="MM/DD/yyyy" value="{!v.trainingReportInfo.Report_Date__c}"/><br/>
+                </div>
+            </aura:set>
+        </aura:if>
+        <aura:set attribute="footer">
+            <aura:if isTrue="{!v.card.showCloseBtn}">
+                <lightning:button class="slds-float_right" variant="brand" label="Close" onclick="{!c.closeAction}"/>
+                <aura:set attribute="else">
+                    <lightning:button class="slds-float_right slds-m-left_small whitecolorCls" variant="brand" label=" Cancel " onclick="{!c.closeAction}"/>&nbsp;&nbsp;
+                    <lightning:button class="slds-float_right colorCls" label=" Proceed " onclick="{!c.createAssesmentReports}"/>
+                </aura:set>
+            </aura:if>   
+        </aura:set>
+    </lightning:card>
+    
+</aura:component>

@@ -1,0 +1,13 @@
+<apex:page standardController="Accounting_Seed_Time_Snapshot__c">
+   <apex:stylesheet value="{!URLFOR($Resource.SLDS0_12_2, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+   <apex:form >
+       <div class="slds ng-cloak">
+            <div class="slds-card" style="margin-top: 1%;padding: 15px;">
+                <div class="slds-card__body">
+                    <center><p>Insufficient Privilege</p></center>
+                </div>
+            </div>
+        
+         </div>
+     </apex:form>
+</apex:page>

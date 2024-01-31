@@ -1,0 +1,15 @@
+.THIS .cardPadding{
+    padding:2rem;
+}
+@media (max-width: 48em) {
+    .THIS .ldtDatatableDev table tbody tr>td:first-child {
+        padding-left: 0.75rem!important;
+    }
+    
+    .THIS .card-body{
+        padding: .50rem !important;
+    }
+}
+.THIS .itemMenuContainer{
+    display: none !important;
+}

@@ -1,0 +1,64 @@
+.THIS .fa-arrow-left{
+    font-size:2rem !important;
+    cursor:pointer;
+    color: #055e89 !important;
+}
+.THIS .darkborder1 {
+    border-top: 2px solid black !important;
+}
+.THIS .cardClass {
+	padding-top: 0;
+	padding-bottom: 0;
+	padding-left: .4rem;
+	padding-right: .4rem;
+}
+.THIS .selectClass {
+    margin-top: -1.75rem !important;
+}
+.THIS .card-title {
+    margin-top: .75rem !important;
+}
+.THIS .editIcon{
+    position: absolute;
+    margin-top: -2rem;
+    margin-left: 6rem;
+}
+.THIS .errorClass {
+    background-color: rgb(255, 255, 255) !important;
+    box-shadow: rgb(194, 57, 52) 0px 0px 0px 1px inset;
+    background-clip: padding-box;
+    border-color: rgb(194, 57, 52);
+}
+.THIS .btnCls{
+    text-align : center !important;
+}
+.THIS .editInputCls {
+    padding: 0.125rem !important;
+}
+.THIS .reverseIcon{
+    position: absolute;
+    margin-top: -2rem;
+    margin-left: 5.5rem;
+}
+@media (max-width: 600px) {
+    .THIS .studenEditIcon{
+        position: absolute;
+        margin-top: -2rem;
+        margin-left: 10rem;
+    }
+}
+@media (min-width: 600px) {
+    .THIS .studenEditIcon{
+        position: absolute;
+        margin-top: -2rem;
+        margin-left: 15rem;
+    }
+}
+.THIS .studentReverseIcon {
+    position: absolute;
+    margin-top: -2rem;
+    margin-left: 6rem;
+}
+.THIS .validationBtnCls {
+    margin-top: 1rem !important;
+}

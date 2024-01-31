@@ -1,0 +1,8 @@
+.THIS .colorCls{
+    background-color: var(--lwc-brandTextLink,rgb(1, 118, 211)) !important;
+    color: white !important;
+}
+.THIS .whitecolorCls{
+    color: var(--lwc-brandTextLink,rgb(1, 118, 211)) !important; 
+    background-color: white !important;
+}
