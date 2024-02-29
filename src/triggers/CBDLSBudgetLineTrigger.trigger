@@ -2,11 +2,12 @@
  * Created by Alex JR on 1/8/2024.
  */
 
-trigger CBDLSBudgetLineTrigger on cb5__CBBudgetLine__c (before insert, before update) {
+trigger CBDLSBudgetLineTrigger on cb5__CBBudgetLine__c (after insert, after update) {
 
+	cb5__CBScenario__c scenario = [SELECT Id FROM cb5__CBScenario__c WHERE Name = :'Salary Allocation' LIMIT 1];
 	for (cb5__CBBudgetLine__c bl : Trigger.new) {
-		cb5__CBScenario__c scenario = [SELECT Id FROM cb5__CBScenario__c WHERE Name =: 'Salary Allocation' LIMIT 1];
 		if (bl.cb5__CBScenario__c == scenario.Id) continue;
+		if (bl.cb5__ParentBudgetLine__c != null) continue;
 		Id v1 = bl.cb5__CBVariable1__c, v2 = bl.cb5__CBVariable2__c, divId;
 		String variableName;
 		if (v1 != null) {

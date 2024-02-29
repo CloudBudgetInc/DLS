@@ -17,8 +17,14 @@
 					</lightning-layout-item>
 					<lightning-layout-item>
 						<div class="slds-p-top_large">
-							<lightning-button label="Update/Create" onclick={generateCalculationRules} variant="success" disabled={generateButtonDisabled}
+							<lightning-button label="Update/Create Calculation Rules" onclick={generateCalculationRules}
+											  variant="success" disabled={generateButtonDisabled}
 											  title="Create or update Calculation Rules based on templates for the selected budget year">
+							</lightning-button>
+							<lightning-button label="Run Recalculation"
+											  onclick={runUpdatingInBatchForSelectedBudgetYear} variant="success"
+											  disabled={generateButtonDisabled}
+											  title="Recalculate the allocation of salaried staff to departments">
 							</lightning-button>
 						</div>
 					</lightning-layout-item>

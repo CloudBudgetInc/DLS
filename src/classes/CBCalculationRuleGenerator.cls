@@ -111,8 +111,18 @@ public with sharing class CBCalculationRuleGenerator {
 		cr.cb5__copyScenario__c = false;
 		cr.cb5__copyBudgetYear__c = true;
 		cr.cb5__copyDivision__c = true;
-		cr.cb5__copyVariable1__c = true;
-		cr.cb5__copyVariable2__c = true;
+		if (crt.CBVariable1__c != null) {
+			cr.cb5__CBVariable1__c = crt.CBVariable1__c;
+			cr.cb5__copyVariable1__c = false;
+		} else {
+			cr.cb5__copyVariable1__c = true;
+		}
+		if (crt.CBVariable2__c != null) {
+			cr.cb5__CBVariable2__c = crt.CBVariable2__c;
+			cr.cb5__copyVariable2__c = false;
+		} else {
+			cr.cb5__copyVariable2__c = true;
+		}
 		cr.cb5__copyVariable3__c = true;
 		cr.cb5__copyVariable4__c = true;
 		cr.cb5__copyVariable5__c = true;

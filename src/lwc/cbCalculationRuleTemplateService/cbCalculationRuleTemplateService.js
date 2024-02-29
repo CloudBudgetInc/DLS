@@ -25,6 +25,8 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 import {LightningElement, track} from 'lwc';
 import getBudgetYearsServer from '@salesforce/apex/CBCalculationRuleGenerator.getBudgetYearsServer';
 import generateCalculationRulesServer from '@salesforce/apex/CBCalculationRuleGenerator.generateCalculationRulesServer';
+import runUpdatingInBatchForSelectedBudgetYearServer
+	from '@salesforce/apex/CBCalculationRuleAllocationService.runUpdatingInBatchForSelectedBudgetYearServer';
 
 
 export default class CBCalculationRuleTemplateService extends LightningElement {
@@ -58,5 +60,18 @@ export default class CBCalculationRuleTemplateService extends LightningElement {
 		message = message ? 'ERROR!' : 'DONE!';
 		alert(message);
 	};
+
+	runUpdatingInBatchForSelectedBudgetYear = () => {
+		if (!this.budgetYearId) {
+			alert('First, choose a budget year');
+			return null;
+		}
+		if (!confirm('Are you sure? This process will take some time')) {
+			return null;
+		}
+		runUpdatingInBatchForSelectedBudgetYearServer({byId: this.budgetYearId})
+			.then(() => alert('Process is started'))
+			.catch(e => alert(e))
+	}
 
 }
