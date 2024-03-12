@@ -52,6 +52,23 @@ public with sharing class CBAllocationBatch implements Database.Batchable<sObjec
 
 	public void finish(Database.BatchableContext BC) {
 		insert new cb5__CBLog__c(Name = 'Salary allocation', cb5__Status__c = 'DONE', cb5__Type__c = 'TASK QUEUE', cb5__Title__c = 'Done', cb5__Description__c = 'SALARY ALLOCATION IS DONE');
+		List<cb5__CBTaskQueue__c> taskQueues = [
+				SELECT Id, (SELECT Id FROM cb5__CB_Tasks__r)
+				FROM cb5__CBTaskQueue__c
+				WHERE cb5__Description__c = :CBCalculationRuleAllocationService.TQ_DESCRIPTION
+		];
+		if (taskQueues.size() > 0) {
+			List<cb5__CBTask__c> tasks = new List<cb5__CBTask__c>();
+			for (cb5__CBTaskQueue__c tq : taskQueues) {
+				tq.cb5__Status__c = 'Idle';
+				for (cb5__CBTask__c t : tq.cb5__CB_Tasks__r) {
+					tasks.add(t);
+					t.cb5__Status__c = 'Idle';
+				}
+			}
+			update taskQueues;
+			update tasks;
+		}
 	}
 
 }

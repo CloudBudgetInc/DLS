@@ -27,6 +27,8 @@ import getBudgetYearsServer from '@salesforce/apex/CBCalculationRuleGenerator.ge
 import generateCalculationRulesServer from '@salesforce/apex/CBCalculationRuleGenerator.generateCalculationRulesServer';
 import runUpdatingInBatchForSelectedBudgetYearServer
 	from '@salesforce/apex/CBCalculationRuleAllocationService.runUpdatingInBatchForSelectedBudgetYearServer';
+import updateTaskQueueForSelectedBudgetYearServer
+	from '@salesforce/apex/CBCalculationRuleAllocationService.updateTaskQueueForSelectedBudgetYearServer';
 
 
 export default class CBCalculationRuleTemplateService extends LightningElement {
@@ -72,6 +74,20 @@ export default class CBCalculationRuleTemplateService extends LightningElement {
 		runUpdatingInBatchForSelectedBudgetYearServer({byId: this.budgetYearId})
 			.then(() => alert('Process is started'))
 			.catch(e => alert(e))
+	};
+
+	updateTaskQueueForSelectedBudgetYear = () => {
+		if (!this.budgetYearId) {
+			alert('First, choose a budget year');
+			return null;
+		}
+		if (!confirm('Are you sure you want to update a task queue?')) {
+			return null;
+		}
+		updateTaskQueueForSelectedBudgetYearServer({byId: this.budgetYearId})
+			.then(() => alert('Task queue created'))
+			.catch(e => alert(e))
+
 	}
 
 }

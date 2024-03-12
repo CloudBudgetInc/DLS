@@ -27,8 +27,9 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 public with sharing class CBCalculationRuleAllocationService {
 
-	public static cb5__CBBudgetLine__c parentBudgetLine; // allocatedBudgetLine
-	public static List<cb5__CBBudgetLine__c> allocatedBudgetLines; // allocatedBudgetLine
+	public static cb5__CBBudgetLine__c parentBudgetLine; // allocatedBudgetLine - main budget line before allocation
+	public static List<cb5__CBBudgetLine__c> allocatedBudgetLines; // allocatedBudgetLines
+	public static final String TQ_DESCRIPTION = 'Salary Allocation';
 
 	public static Map<String, String> budgetYearNameIdMap {
 		get {
@@ -44,7 +45,6 @@ public with sharing class CBCalculationRuleAllocationService {
 		set;
 	}
 
-	//public static List<cb5__CBPeriod__c> periods = [SELECT Id FROM cb5__CBPeriod__c WHERE cb5__CBBudgetYear__c = :parentBudgetLine.cb5__CBBudgetYear__c];
 	public static List<cb5__CBPeriod__c> periods {
 		get {
 			if (periods == null) {
@@ -69,10 +69,21 @@ public with sharing class CBCalculationRuleAllocationService {
 		set;
 	}
 
+	public static Map<Id, String> accountMap {
+		get {
+			if (accountMap == null) {
+				accountMap = new Map<Id, String>();
+				for (cb5__CBAccount__c acc : [SELECT Id,Name FROM cb5__CBAccount__c]) accountMap.put(acc.Id, acc.Name);
+			}
+			return accountMap;
+		}
+		set;
+	}
+
 	public static void runAllocationProcess(cb5__CBBudgetLine__c budgetLine) {
 		if (!triggerIsNeeded(budgetLine)) return;
 		parentBudgetLine = budgetLine;
-		allocatedBudgetLines = getAllocatedBudgetLines();
+		allocatedBudgetLines = getAllocatedBudgetLines(); // get children lines
 		List<cb5__CBCalculationRule__c> calculationRules = getRelatedCalculationRules();
 		Map<String, cb5__CBNonFinancialLibrary__c> NFLibraries = getNFLibraries(calculationRules);
 		Map<String, cb5__CBBudgetLine__c> autoParentBudgetLines = getAutoParentBudgetLines(calculationRules);
@@ -81,27 +92,34 @@ public with sharing class CBCalculationRuleAllocationService {
 		updateTotalsInAutoAllocatedBudgetLines(autoParentBudgetLines.values());
 	}
 
+	/**
+	 * @return children budget lines of the main parent budget line
+	 */
 	public static List<cb5__CBBudgetLine__c> getAllocatedBudgetLines() {
-		return [
-				SELECT Name, cb5__CBVariable1__c, cb5__CBVariable2__c, (
-						SELECT cb5__CBPeriod__c, cb5__Value__c
-						FROM cb5__CBAmounts__r
-				)
-				FROM cb5__CBBudgetLine__c
-				WHERE cb5__ParentBudgetLine__c = :parentBudgetLine.Id
-		];
+		return [SELECT Name, cb5__CBVariable1__c, cb5__CBVariable2__c, (SELECT cb5__CBPeriod__c, cb5__Value__c FROM cb5__CBAmounts__r) FROM cb5__CBBudgetLine__c WHERE cb5__ParentBudgetLine__c = :parentBudgetLine.Id];
 	}
 
+	/**
+	 * Method checks if this line need to recalculate amounts
+	 * @param budgetLine
+	 * @return true if line is before allocation and a parent
+	 */
 	private static Boolean triggerIsNeeded(cb5__CBBudgetLine__c budgetLine) {
 		return budgetLine.cb5__ParentBudgetLine__c == null && scenarioNameIdMap.get('Salary Allocation') == budgetLine.cb5__CBScenario__c;
 	}
 
+	/**
+	 * Method deletes old allocated budget lines after allocation
+	 */
 	private static void deleteOldAutoChildLines(List<cb5__CBCalculationRule__c> calculationRules) {
 		Set<String> calcSetIds = new Set<String>();
 		for (cb5__CBCalculationRule__c cr : calculationRules) calcSetIds.add(cr.Id);
 		delete [SELECT Id FROM cb5__CBBudgetLine__c WHERE cb5__CBCalculationRule__c IN:calcSetIds AND cb5__Code__c = :parentBudgetLine.Id AND cb5__ParentBudgetLine__c != null];
 	}
 
+	/**
+	 * @return list of calculation rules that related to the current budget line
+	 */
 	public static List<cb5__CBCalculationRule__c> getRelatedCalculationRules() {
 		String budgetYearName = budgetYearNameIdMap.get(parentBudgetLine.cb5__CBBudgetYear__c);
 		List<cb5__CBCalculationRule__c> r = new List<cb5__CBCalculationRule__c>();
@@ -110,6 +128,8 @@ public with sharing class CBCalculationRuleAllocationService {
 			if (bl.cb5__CBVariable1__c != null) analytics.add(bl.cb5__CBVariable1__c);
 			if (bl.cb5__CBVariable2__c != null) analytics.add(bl.cb5__CBVariable2__c);
 		}
+
+
 		for (cb5__CBCalculationRule__c cr : [
 				SELECT Id, Name, cb5__SourceParentFilter__c, cb5__CBVariable1__c, cb5__CBVariable2__c, cb5__CBAccount__c, cb5__NFL1__c, cb5__ResultName__c
 				FROM cb5__CBCalculationRule__c
@@ -125,6 +145,11 @@ public with sharing class CBCalculationRuleAllocationService {
 		return r;
 	}
 
+	/**
+	 * @param calculationRules
+	 *
+	 * @return list of NFL needed for calculation rules
+	 */
 	public static Map<String, cb5__CBNonFinancialLibrary__c> getNFLibraries(List<cb5__CBCalculationRule__c> calculationRules) {
 		Set<String> fractionIds = new Set<String>();
 		for (cb5__CBCalculationRule__c cr : calculationRules) {
@@ -132,7 +157,6 @@ public with sharing class CBCalculationRuleAllocationService {
 			fractionIds.add(cr.cb5__NFL1__c);
 		}
 		Map<String, cb5__CBNonFinancialLibrary__c> r = new Map<String, cb5__CBNonFinancialLibrary__c>();
-
 		Map<String, cb5__CBNonFinancialLibrary__c> libMap = new Map<String, cb5__CBNonFinancialLibrary__c>();
 		for (cb5__CBNonFinancialLibrary__c lib : [
 				SELECT Id, (
@@ -143,48 +167,64 @@ public with sharing class CBCalculationRuleAllocationService {
 				)
 				FROM cb5__CBNonFinancialLibrary__c
 				WHERE Id IN:fractionIds
-		]) {
-			libMap.put(lib.Id, lib);
-		}
-		for (cb5__CBCalculationRule__c cr : calculationRules) {
-			r.put(cr.Id, libMap.get(cr.cb5__NFL1__c));
-		}
+		]) libMap.put(lib.Id, lib);
+		for (cb5__CBCalculationRule__c cr : calculationRules) r.put(cr.Id, libMap.get(cr.cb5__NFL1__c));
 		return r;
 	}
 
 	/**
+	 * Method returns parent budget lines after allocation
 	 * @return key is calculationRule Id, value is parent auto line
 	 */
 	public static Map<String, cb5__CBBudgetLine__c> getAutoParentBudgetLines(List<cb5__CBCalculationRule__c> calculationRules) {
-		Set<String> crIds = new Set<String>();
 		Map<String, cb5__CBBudgetLine__c> r = new Map<String, cb5__CBBudgetLine__c>();
-		for (cb5__CBCalculationRule__c cr : calculationRules) crIds.add(cr.Id);
-		List<cb5__CBBudgetLine__c> existedParentBudgetLines = [SELECT Id, cb5__CBCalculationRule__c FROM cb5__CBBudgetLine__c WHERE cb5__CBCalculationRule__c IN:crIds AND cb5__isAllocation__c = true AND cb5__ParentBudgetLine__c = null];
-		for (cb5__CBBudgetLine__c bl : existedParentBudgetLines) r.put(bl.cb5__CBCalculationRule__c, bl);
-		List<cb5__CBBudgetLine__c> newBudgetLines = new List<cb5__CBBudgetLine__c>();
-		String mainScenarioId = scenarioNameIdMap.get('Main');
-		for (cb5__CBCalculationRule__c cr : calculationRules) {
-			cb5__CBBudgetLine__c budgetLine = r.get(cr.Id);
-			if (budgetLine == null) {
-				budgetLine = new cb5__CBBudgetLine__c(Name = 'TEST', cb5__CBBudgetYear__c = parentBudgetLine.cb5__CBBudgetYear__c, cb5__CBCalculationRule__c = cr.Id);
-				if (cr.cb5__CBVariable1__c != null) budgetLine.cb5__CBVariable1__c = cr.cb5__CBVariable1__c;
-				if (cr.cb5__CBVariable2__c != null) budgetLine.cb5__CBVariable2__c = cr.cb5__CBVariable2__c;
-				budgetLine.cb5__CBAccount__c = cr.cb5__CBAccount__c;
-				budgetLine.cb5__CBScenario__c = mainScenarioId;
-				budgetLine.cb5__isAllocation__c = true;
-				newBudgetLines.add(budgetLine);
-			}
-		}
-		if (newBudgetLines.size() > 0) {
-			insert newBudgetLines;
-			List<cb5__CBAmount__c> newAmounts = new List<cb5__CBAmount__c>();
-			for (cb5__CBBudgetLine__c bl : newBudgetLines) {
-				for (cb5__CBPeriod__c p : periods) {
-					newAmounts.add(new cb5__CBAmount__c(cb5__Value__c = 0, cb5__CBPeriod__c = p.Id, cb5__CBBudgetLine__c = bl.Id));
+		try {
+			Set<String> crIds = new Set<String>(); // list of applicable calculation rule Ids
+			for (cb5__CBCalculationRule__c cr : calculationRules) crIds.add(cr.Id);
+			List<cb5__CBBudgetLine__c> existedParentBudgetLines = [
+					SELECT Id, cb5__CBCalculationRule__c, cb5__CBAccount__c
+					FROM cb5__CBBudgetLine__c
+					WHERE cb5__CBCalculationRule__c IN:crIds AND cb5__isAllocation__c = true AND cb5__ParentBudgetLine__c = null AND cb5__CBBudgetYear__c = :parentBudgetLine.cb5__CBBudgetYear__c
+			];
+			for (cb5__CBBudgetLine__c bl : existedParentBudgetLines) r.put(bl.cb5__CBCalculationRule__c, bl); // key is CR Id, value is budget line parent
+			List<cb5__CBBudgetLine__c> newBudgetLines = new List<cb5__CBBudgetLine__c>(); // new parent budget lines if they were not created
+			String mainScenarioId = scenarioNameIdMap.get('Main');
+			Map<Id, String> calculationRuleNameMap = new Map<Id, String>();
+			for (cb5__CBCalculationRule__c cr : calculationRules) {
+				calculationRuleNameMap.put(cr.Id, cr.Name);
+				cb5__CBBudgetLine__c budgetLine = r.get(cr.Id); // try to get existed parent budget line
+				if (budgetLine == null) { // if it is not exist, create a new one
+					budgetLine = new cb5__CBBudgetLine__c(
+							Name = 'Parent Budget Line',
+							cb5__CBBudgetYear__c = parentBudgetLine.cb5__CBBudgetYear__c,
+							cb5__CBCalculationRule__c = cr.Id,
+							cb5__CBAccount__c = cr.cb5__CBAccount__c,
+							cb5__CBScenario__c = mainScenarioId,
+							cb5__isAllocation__c = true
+					);
+					if (cr.cb5__CBVariable1__c != null) budgetLine.cb5__CBVariable1__c = cr.cb5__CBVariable1__c;
+					if (cr.cb5__CBVariable2__c != null) budgetLine.cb5__CBVariable2__c = cr.cb5__CBVariable2__c;
+					newBudgetLines.add(budgetLine);
 				}
 			}
-			insert newAmounts;
-			for (cb5__CBBudgetLine__c bl : newBudgetLines) r.put(bl.cb5__CBCalculationRule__c, bl);
+			if (newBudgetLines.size() > 0) {
+				insert newBudgetLines;
+				List<cb5__CBAmount__c> newAmounts = new List<cb5__CBAmount__c>();
+				for (cb5__CBBudgetLine__c bl : newBudgetLines) { // for each new parent budget line
+					for (cb5__CBPeriod__c p : periods) { // create respective number of amounts with periods and zero
+						newAmounts.add(new cb5__CBAmount__c(cb5__Value__c = 0, cb5__CBPeriod__c = p.Id, cb5__CBBudgetLine__c = bl.Id));
+					}
+				}
+				insert newAmounts;
+				for (cb5__CBBudgetLine__c bl : newBudgetLines) r.put(bl.cb5__CBCalculationRule__c, bl);
+			}
+			for (cb5__CBBudgetLine__c bl : r.values()) {
+				bl.Name = (accountMap.get(bl.cb5__CBAccount__c) + ' (' + calculationRuleNameMap.get(bl.cb5__CBCalculationRule__c) + ')').left(80);
+			}
+			update r.values();
+		} catch (Exception e) {
+			System.debug('ERROR:' + e);
+			throw e;
 		}
 		return r;
 	}
@@ -208,7 +248,8 @@ public with sharing class CBCalculationRuleAllocationService {
 							cb5__CBBudgetYear__c = parentBudgetLine.cb5__CBBudgetYear__c,
 							cb5__CBCalculationRule__c = cr.Id,
 							cb5__DrillDownIds__c = bl.Id,
-							cb5__Code__c = parentBudgetLine.Id
+							cb5__Code__c = parentBudgetLine.Id,
+							cb5__SystemAccessKey__c = bl.Id // workaround for delete trigger only
 					);
 					if (cr.cb5__CBVariable1__c != null) newAutoChildBudgetLine.cb5__CBVariable1__c = cr.cb5__CBVariable1__c;
 					if (cr.cb5__CBVariable2__c != null) newAutoChildBudgetLine.cb5__CBVariable2__c = cr.cb5__CBVariable2__c;
@@ -289,6 +330,28 @@ public with sharing class CBCalculationRuleAllocationService {
 		if (byId == null) return;
 		CBAllocationBatch ab = new CBAllocationBatch(byId);
 		Id test = Database.executeBatch(ab, 1);
+	}
+
+	@AuraEnabled
+	public static void updateTaskQueueForSelectedBudgetYearServer(String byId) {
+		List<cb5__CBTaskQueue__c> taskQueues = [SELECT Id FROM cb5__CBTaskQueue__c WHERE cb5__RelatedTo__c = :byId AND cb5__Description__c = :TQ_DESCRIPTION];
+		if (taskQueues.size() == 0) {
+			String tqName = 'Salary Allocation ' + [SELECT Name FROM cb5__CBBudgetYear__c WHERE Id = :byId LIMIT 1][0].Name;
+			cb5__CBTaskQueue__c tq = new cb5__CBTaskQueue__c(
+					Name = tqName,
+					cb5__Status__c = 'Idle',
+					cb5__RelatedTo__c = byId,
+					cb5__Description__c = TQ_DESCRIPTION
+			);
+			insert tq;
+			cb5__CBTask__c task = new cb5__CBTask__c(
+					cb5__CBTaskQueue__c = tq.Id,
+					Name = tqName,
+					cb5__Status__c = 'Idle',
+					cb5__Parameter1__c = byId,
+					cb5__ClassName__c = 'CBAllocationProcess');
+			insert task;
+		}
 	}
 
 
