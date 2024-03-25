@@ -1,5 +1,5 @@
 /** 
-Copyright (c) 2022, CloudBudget, Inc.
+Copyright (c) 2024, CloudBudget, Inc.
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -57,26 +57,15 @@ public with sharing class CBMetricTriggerService {
 			NFLMap.put(lib.Id, dataItemMap);
 		}
 
-
 		for (Metric__c m : metrics) {
 			Id goalId = metricGoalIdMap.get(m.Id);
 			Id NFLId = goalIdNFLMap.get(goalId);
-			System.debug('goalId = ' + goalId);
-			System.debug('NFLId = ' + NFLId);
-			System.debug('m.Start_Date__c = ' + m.Start_Date__c);
 			Map<Date, cb5__CBNonFinancialItem__c> dataItemMap = NFLMap.get(NFLId);
 			cb5__CBNonFinancialItem__c item = dataItemMap.get(m.Start_Date__c);
-			System.debug('dataItemMap = ' + dataItemMap);
-			System.debug('item = ' + item);
 			if (item == null) continue;
 			item.cb5__Value__c = m.Budget_Value__c;
-			System.debug('item and Value = ' + item);
 		}
 
-		System.debug('ITEMS TO UPDATE !!!!!!!!!!!!!!!!!!!! ');
-		for (cb5__CBNonFinancialItem__c item : itemsToUpdate) {
-			System.debug('ITEM:' + item);
-		}
 		update itemsToUpdate;
 
 

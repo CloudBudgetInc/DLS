@@ -128,8 +128,6 @@ public with sharing class CBCalculationRuleAllocationService {
 			if (bl.cb5__CBVariable1__c != null) analytics.add(bl.cb5__CBVariable1__c);
 			if (bl.cb5__CBVariable2__c != null) analytics.add(bl.cb5__CBVariable2__c);
 		}
-
-
 		for (cb5__CBCalculationRule__c cr : [
 				SELECT Id, Name, cb5__SourceParentFilter__c, cb5__CBVariable1__c, cb5__CBVariable2__c, cb5__CBAccount__c, cb5__NFL1__c, cb5__ResultName__c
 				FROM cb5__CBCalculationRule__c
@@ -234,11 +232,8 @@ public with sharing class CBCalculationRuleAllocationService {
 		Map<cb5__CBBudgetLine__c, List<cb5__CBBudgetLine__c>> budgetLinesMapping = new Map<cb5__CBBudgetLine__c, List<cb5__CBBudgetLine__c>>();
 		List<cb5__CBBudgetLine__c> budgetLinesToInsert = new List<cb5__CBBudgetLine__c>();
 		for (cb5__CBBudgetLine__c bl : allocatedBudgetLines) {
-			//System.debug('Allocated BL: ' + bl);
 			for (cb5__CBCalculationRule__c cr : calculationRules) {
-				//System.debug('CR:' + cr);
 				if ((cr.cb5__CBVariable1__c != null && cr.cb5__CBVariable1__c == bl.cb5__CBVariable1__c) || (cr.cb5__CBVariable2__c != null && cr.cb5__CBVariable2__c == bl.cb5__CBVariable2__c)) {
-					System.debug('NAME:' + bl.Name);
 					cb5__CBBudgetLine__c newAutoChildBudgetLine = new cb5__CBBudgetLine__c(
 							Name = bl.Name,
 							cb5__Description__c = 'Allocated from budget line "' + bl.Name + '" using Calculation Rule "' + cr.Name + '" (' + System.now() + ')',
@@ -264,7 +259,6 @@ public with sharing class CBCalculationRuleAllocationService {
 			}
 		}
 		insert budgetLinesToInsert;
-		//System.debug('Inserted: ' + budgetLinesToInsert.size());
 		List<cb5__CBAmount__c> newAmounts = new List<cb5__CBAmount__c>();
 		for (cb5__CBBudgetLine__c bl : budgetLinesMapping.keySet()) {
 			List<cb5__CBBudgetLine__c> internalList = budgetLinesMapping.get(bl);
@@ -281,7 +275,6 @@ public with sharing class CBCalculationRuleAllocationService {
 				}
 			}
 		}
-		//System.debug('AMOUNTS TO INSERT' + newAmounts.size());
 		insert newAmounts;
 	}
 
@@ -295,7 +288,6 @@ public with sharing class CBCalculationRuleAllocationService {
 				FROM cb5__CBBudgetLine__c
 				WHERE cb5__ParentBudgetLine__c IN:parentAutoLineIds
 		]) {
-			//System.debug('CHILD LINE : ' + bl);
 			List<cb5__CBBudgetLine__c> internalList = parentChildBudgetLines.get(bl.cb5__ParentBudgetLine__c);
 			if (internalList == null) {
 				internalList = new List<cb5__CBBudgetLine__c>();
@@ -303,25 +295,18 @@ public with sharing class CBCalculationRuleAllocationService {
 			}
 			internalList.add(bl);
 		}
-		//System.debug('parentChildBudgetLines = ' + parentChildBudgetLines);
 		List<cb5__CBAmount__c> amountsToUpdate = new List<cb5__CBAmount__c>();
 		for (cb5__CBBudgetLine__c parentBL : autoParentBudgetLines) {
 			List<cb5__CBBudgetLine__c> internalList = parentChildBudgetLines.get(parentBL.Id);
-			//System.debug('IntLIST : ' + internalList);
 			if (internalList == null) continue;
-			//System.debug('GO GO GO Internal Size : ' + internalList.size());
 			for (cb5__CBAmount__c a : parentBL.cb5__CBAmounts__r) a.cb5__Value__c = 1;
 			for (cb5__CBBudgetLine__c childBL : internalList) {
-				//System.debug('CHILD!: ' + childBL + ' size = ' + parentBL.cb5__CBAmounts__r.size());
 				for (Integer i = 0; i < parentBL.cb5__CBAmounts__r.size(); i++) {
 					parentBL.cb5__CBAmounts__r[i].cb5__Value__c += childBL.cb5__CBAmounts__r[i].cb5__Value__c;
-					//System.debug('Child Amount = ' + childBL.cb5__CBAmounts__r[i].cb5__Value__c + ' Parent: ' + parentBL.cb5__CBAmounts__r[i].cb5__Value__c);
 				}
 			}
 			amountsToUpdate.addAll(parentBL.cb5__CBAmounts__r);
 		}
-		//System.debug('Amounts to update: ' + amountsToUpdate);
-		//System.debug('Amounts to update: ' + amountsToUpdate.size());
 		update amountsToUpdate;
 	}
 

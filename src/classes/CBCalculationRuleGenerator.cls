@@ -21,6 +21,8 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Controller serves to take calculation rule templates and based on them generates calculation rules for selected budget year
  */
 public with sharing class CBCalculationRuleGenerator {
 
@@ -93,7 +95,6 @@ public with sharing class CBCalculationRuleGenerator {
 		} else {
 			Integer i = 1 / 0;
 		}
-
 		cr.Name = name;
 		cr.cb5__Mode__c = 'many-to-one';
 		cr.cb5__CBAccount__c = crt.ResultAccount__c;
@@ -128,6 +129,4 @@ public with sharing class CBCalculationRuleGenerator {
 		cr.cb5__copyVariable5__c = true;
 		return cr;
 	}
-
-
 }

@@ -34,7 +34,6 @@ global with sharing class CBAllocationProcess implements cb5.CBProcessInterface 
 	 * @param param2 extra parameter for the future extensions
 	 */
 	global void runProcess(String byId, String param2) {
-		System.debug('PROCESS : ' + byId);
 		CBAllocationBatch ab = new CBAllocationBatch(byId);
 		Id test = Database.executeBatch(ab, 1);
 	}

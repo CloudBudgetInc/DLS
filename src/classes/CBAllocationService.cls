@@ -1,5 +1,5 @@
 /** 
-Copyright (c) 2022, CloudBudget, Inc.
+Copyright (c) 2024, CloudBudget, Inc.
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -45,24 +45,15 @@ public with sharing class CBAllocationService {
 			}
 		}
 		Map<Id, Decimal> totalByMonthMap = new Map<Id, Decimal>();
-		System.debug('depTotalAmountsMap size = ' + depTotalAmountsMap.size());
 		for (Map<Id, Decimal> depValuesByMonth : depTotalAmountsMap.values()) {
 			for (Id perId : depValuesByMonth.keySet()) {
-
 				Decimal oldValue = totalByMonthMap.get(perId);
 				Decimal newValue = depValuesByMonth.get(perId);
-				System.debug('PerId = ' + perId + ' old=' + oldValue + ' new =' + newValue);
 				if (oldValue == null) oldValue = 0;
 				if (newValue == null) newValue = 0;
 				totalByMonthMap.put(perId, oldValue + newValue);
 			}
 		}
-
-		System.debug(depTotalAmountsMap);
-		System.debug(totalByMonthMap.size());
-		System.debug(totalByMonthMap);
-
-
 	}
 
 }

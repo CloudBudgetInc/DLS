@@ -1,5 +1,5 @@
 /** 
-Copyright (c) 2022, CloudBudget, Inc.
+Copyright (c) 2024, CloudBudget, Inc.
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -22,9 +22,8 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
 
+Controller serves to generate NFL from CRM goals.
  */
-
-
 public with sharing class CBGoalTriggerService {
 
 	public static void updateGoalMetrics(List<Goal__c> applicableGoals) {
@@ -54,13 +53,11 @@ public with sharing class CBGoalTriggerService {
 			for (Metric__c m : metrics) {
 				Decimal percent = dataValueMap.get(m.Start_Date__c);
 				percent = percent == null ? 0 : percent;
-				System.debug('Date: ' + m.Start_Date__c + ' value:' + percent);
 				m.Budget_Value__c = (g.YearlyHours__c * percent).round(System.RoundingMode.CEILING);
 			}
 			metricsToUpdate.addAll(metrics);
 		}
 		update metricsToUpdate;
-		System.debug('UPDATE ^' + metricsToUpdate);
 	}
 	
 }
