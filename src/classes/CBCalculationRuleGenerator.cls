@@ -93,7 +93,7 @@ public with sharing class CBCalculationRuleGenerator {
 		} else if (crt.CBVariable2__c != null) {
 			filter += 'cb5__CBVariable2__c = \'' + crt.CBVariable2__c + '\'';
 		} else {
-			Integer i = 1 / 0;
+			Integer i = 1 / 0; // Ex case
 		}
 		cr.Name = name;
 		cr.cb5__Mode__c = 'many-to-one';

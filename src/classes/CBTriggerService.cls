@@ -41,6 +41,13 @@ public with sharing class CBTriggerService {
 		}
 		set;
 	}
+	public static Map<Id, String> CRMAccountMap {
+		get {
+			if (CRMAccountMap == null) CRMAccountMap = getCRMAccountMap();
+			return CRMAccountMap;
+		}
+		set;
+	}
 	public static Map<Id, String> var1Var2IdToNameMap {
 		get {
 			if (var1Var2IdToNameMap == null) var1Var2IdToNameMap = getVar1Var2IdToNameMap();
@@ -73,6 +80,11 @@ public with sharing class CBTriggerService {
 	private static Map<Id, String> getAccountMap() {
 		Map<Id, String> r = new Map<Id, String>();
 		for (cb5__CBAccount__c acc : [SELECT Id, Name FROM cb5__CBAccount__c]) r.put(acc.Id, acc.Name);
+		return r;
+	}
+	private static Map<Id, String> getCRMAccountMap() {
+		Map<Id, String> r = new Map<Id, String>();
+		for (cb5__CBVariable3__c var3 : [SELECT Id, Name FROM cb5__CBVariable3__c]) r.put(var3.Id, var3.Name);
 		return r;
 	}
 	private static Map<Id, String> getVar1Var2IdToNameMap() {

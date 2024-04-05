@@ -33,19 +33,19 @@ public with sharing class CBGoalTriggerService {
 			goalIds.add(g.Id);
 			NFLIds.add(g.Seasonality__c);
 		}
-
 		Map<Id, Map<Date, Decimal>> itemsMap = new Map<Id, Map<Date, Decimal>>(); // key is NFLib Id
-		for (cb5__CBNonFinancialLibrary__c lib : [SELECT Id, (SELECT cb5__Value__c, cb5__CBPeriod__r.cb5__Start__c FROM cb5__NonFinancialItems__r ORDER BY cb5__CBPeriod__r.cb5__Start__c) FROM cb5__CBNonFinancialLibrary__c]) {
+		for (cb5__CBNonFinancialLibrary__c lib : [
+				SELECT Id, (SELECT cb5__Value__c, cb5__CBPeriod__r.cb5__Start__c FROM cb5__NonFinancialItems__r ORDER BY cb5__CBPeriod__r.cb5__Start__c)
+				FROM cb5__CBNonFinancialLibrary__c
+		]) {
 			Map<Date, Decimal> dataValueMap = new Map<Date, Decimal>();
 			for (cb5__CBNonFinancialItem__c item : lib.cb5__NonFinancialItems__r) dataValueMap.put(item.cb5__CBPeriod__r.cb5__Start__c, item.cb5__Value__c);
 			itemsMap.put(lib.Id, dataValueMap);
 		}
-
 		Map<Id, List<Metric__c>> metricsMap = new Map<Id, List<Metric__c>>(); // key is goal Id
 		for (Goal__c g : [SELECT Id, (SELECT Id, Budget_Value__c, Start_Date__c FROM Metrics__r ORDER BY Start_Date__c) FROM Goal__c WHERE Id IN:goalIds]) {
 			metricsMap.put(g.Id, g.Metrics__r);
 		}
-
 		List<Metric__c> metricsToUpdate = new List<Metric__c>();
 		for (Goal__c g : applicableGoals) {
 			List<Metric__c> metrics = metricsMap.get(g.Id);
@@ -59,5 +59,4 @@ public with sharing class CBGoalTriggerService {
 		}
 		update metricsToUpdate;
 	}
-	
 }

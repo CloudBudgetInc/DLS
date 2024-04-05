@@ -7,6 +7,7 @@ trigger CBDLSBudgetLineTrigger on cb5__CBBudgetLine__c (before insert, before up
 	cb5__CBScenario__c selAllocScenario = [SELECT Id FROM cb5__CBScenario__c WHERE Name = :'Salary Allocation' LIMIT 1];
 	/**
 	 * Set a lookup to division if Var1 or Var2 selected
+	 * Set combined name of BL
 	 */
 	if (Trigger.isBefore && (Trigger.isInsert || Trigger.isUpdate)) {
 
@@ -23,12 +24,11 @@ trigger CBDLSBudgetLineTrigger on cb5__CBBudgetLine__c (before insert, before up
 				divId = CBTriggerService.varDivisionMap.get(v2);
 				variableName = CBTriggerService.var1Var2IdToNameMap.get(v2);
 			}
-			System.debug('divId = ' + divId);
 			bl.cb5__CBDivision__c = divId;
-			System.debug('bl.cb5__CBDivision__c = ' + bl.cb5__CBDivision__c);
 			variableName = variableName == null ? '' : ' (' + variableName + ')';
 			String accountName = bl.cb5__CBAccount__c == null ? 'Account not specified' : CBTriggerService.accountMap.get(bl.cb5__CBAccount__c);
-			bl.Name = (accountName + variableName).left(80);
+			String CRMAccountName = bl.cb5__CBVariable3__c == null ? '' : ' (' + CBTriggerService.CRMAccountMap.get(bl.cb5__CBVariable3__c) + ')' ;
+			bl.Name = (accountName + variableName + CRMAccountName).left(80);
 		}
 	}
 

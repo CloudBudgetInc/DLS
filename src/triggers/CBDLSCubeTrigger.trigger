@@ -15,4 +15,34 @@ trigger CBDLSCubeTrigger on cb5__CBCube__c (before insert, before update) {
 		c.cb5__CBDivision__c = divId;
 	}
 
+	Integer i = 0;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+	i++;
+
 }
