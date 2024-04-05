@@ -278,11 +278,15 @@ public with sharing class CBCalculationRuleAllocationService {
 		insert newAmounts;
 	}
 
+	/**
+	 * This method takes allocated parent budget lines and recalculates their amounts
+	 * @param autoParentBudgetLines allocated parent budget lines in Main scenario
+	 */
 	public static void updateTotalsInAutoAllocatedBudgetLines(List<cb5__CBBudgetLine__c> autoParentBudgetLines) {
-		Map<String, List<cb5__CBBudgetLine__c>> parentChildBudgetLines = new Map<String, List<cb5__CBBudgetLine__c>>();
+		Map<String, List<cb5__CBBudgetLine__c>> parentChildBudgetLines = new Map<String, List<cb5__CBBudgetLine__c>>(); // key is parent budget line. value is a list of its children budget lines
 		Set<String> parentAutoLineIds = new Set<String>();
 		for (cb5__CBBudgetLine__c bl : autoParentBudgetLines) parentAutoLineIds.add(bl.Id);
-		autoParentBudgetLines = [SELECT Id, (SELECT cb5__Value__c FROM cb5__CBAmounts__r) FROM cb5__CBBudgetLine__c WHERE Id IN:parentAutoLineIds];
+		autoParentBudgetLines = [SELECT Id, (SELECT cb5__Value__c FROM cb5__CBAmounts__r ORDER BY cb5__CBPeriod__r.cb5__Start__c) FROM cb5__CBBudgetLine__c WHERE Id IN:parentAutoLineIds];
 		for (cb5__CBBudgetLine__c bl : [
 				SELECT Id, cb5__ParentBudgetLine__c, (SELECT cb5__Value__c FROM cb5__CBAmounts__r ORDER BY cb5__CBPeriod__r.cb5__Start__c)
 				FROM cb5__CBBudgetLine__c
@@ -297,15 +301,15 @@ public with sharing class CBCalculationRuleAllocationService {
 		}
 		List<cb5__CBAmount__c> amountsToUpdate = new List<cb5__CBAmount__c>();
 		for (cb5__CBBudgetLine__c parentBL : autoParentBudgetLines) {
+			for (cb5__CBAmount__c a : parentBL.cb5__CBAmounts__r) a.cb5__Value__c = 0; // nullify parent amounts
+			amountsToUpdate.addAll(parentBL.cb5__CBAmounts__r); // add amounts to common list of amounts
 			List<cb5__CBBudgetLine__c> internalList = parentChildBudgetLines.get(parentBL.Id);
-			if (internalList == null) continue;
-			for (cb5__CBAmount__c a : parentBL.cb5__CBAmounts__r) a.cb5__Value__c = 1;
+			if (internalList == null) continue;  // parent budget line does not have any children
 			for (cb5__CBBudgetLine__c childBL : internalList) {
 				for (Integer i = 0; i < parentBL.cb5__CBAmounts__r.size(); i++) {
 					parentBL.cb5__CBAmounts__r[i].cb5__Value__c += childBL.cb5__CBAmounts__r[i].cb5__Value__c;
 				}
 			}
-			amountsToUpdate.addAll(parentBL.cb5__CBAmounts__r);
 		}
 		update amountsToUpdate;
 	}
@@ -833,7 +837,7 @@ public with sharing class CBCalculationRuleAllocationService {
 		i++;
 		i++;
 		i++;
-		
+
 	}
 
 
