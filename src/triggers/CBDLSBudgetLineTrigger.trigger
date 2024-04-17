@@ -12,10 +12,8 @@ trigger CBDLSBudgetLineTrigger on cb5__CBBudgetLine__c (before insert, before up
 	if (Trigger.isBefore && (Trigger.isInsert || Trigger.isUpdate)) {
 
 		for (cb5__CBBudgetLine__c bl : Trigger.new) {
-			if (bl.cb5__CBScenario__c == selAllocScenario.Id) continue;
-			if (bl.cb5__ParentBudgetLine__c != null || bl.cb5__isAllocation__c) continue;
+			if (bl.cb5__CBScenario__c == selAllocScenario.Id && bl.cb5__isAllocation__c) continue;
 			Id v1 = bl.cb5__CBVariable1__c, v2 = bl.cb5__CBVariable2__c, divId;
-			System.debug('V1 = ' + v1 + '   V2 =' + v2);
 			String variableName;
 			if (v1 != null) {
 				divId = CBTriggerService.varDivisionMap.get(v1);
