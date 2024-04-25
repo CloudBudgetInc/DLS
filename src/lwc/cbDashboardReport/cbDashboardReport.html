@@ -1,0 +1,223 @@
+<template>
+
+	<lightning-card title="CB Dashboard Report">
+
+		<lightning-layout slot="actions">
+			<lightning-layout-item>
+				<div class="slds-p-top_large">
+					<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadToExcel}>
+					</lightning-button>
+				</div>
+			</lightning-layout-item>
+			<lightning-layout-item>
+				<lightning-combobox
+						name="selectedType"
+						label="Type"
+						value={selectedType}
+						placeholder="Select Type"
+						options={typeSO}
+						onchange={handleChangeType}></lightning-combobox>
+			</lightning-layout-item>
+			<lightning-layout-item>
+				<lightning-combobox
+						name="selectedPeriodId"
+						label="Period"
+						value={selectedPeriodId}
+						placeholder="Select Some Period"
+						options={periodSO}
+						onchange={handleChangePeriod}></lightning-combobox>
+			</lightning-layout-item>
+
+		</lightning-layout>
+
+		<template lwc:if={readyToRender}>
+			<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+				   aria-label="Example table of Opportunities with vertical borders">
+				<thead>
+				<tr class="slds-line-height_reset">
+					<th>
+						<div class="slds-truncate" title="Label">Label</div>
+					</th>
+
+					<template lwc:if={renderActual}>
+						<th>
+							<div class="slds-truncate dec" title="Current Month Actual">Current Month Actual</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Prior Month Actual">Prior Month Actual</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Dollar Diff">Dollar Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Percent Diff">Percent Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Prior Year Month">Prior Year Month</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Dollar Diff">Dollar Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Percent Diff">Percent Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="YTD">YTD</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Prior Year YTD">Prior Year YTD</div>
+						</th>
+
+					</template>
+
+					<template lwc:if={renderBudget}>
+						<th>
+							<div class="slds-truncate dec" title="Current Month Budget">Current Month Budget</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Prior Month Budget">Prior Month Budget</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Dollar Diff">Dollar Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Percent Diff">Percent Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Prior Year Month">Prior Year Month</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Dollar Diff">Dollar Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Percent Diff">Percent Diff</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="YTD">YTD</div>
+						</th>
+						<th>
+							<div class="slds-truncate dec" title="Prior Year YTD">Prior Year YTD</div>
+						</th>
+					</template>
+
+				</tr>
+
+				</thead>
+				<tbody>
+
+				<template for:each={reportLines} for:item="rl">
+					<tr class={rl.styleClass} key={rl}>
+						<th class={rl.styleClass}>
+							{rl.label}
+						</th>
+						<!-- ACTUAL SECTION -->
+						<template lwc:if={renderActual}>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentDiffActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentDiffPercentActual} class="dec"
+															format-style="percent"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearDiffActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearDiffPercentActual} class="dec"
+															format-style="percent"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentYTDActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYTDActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+						</template>
+						<!-- ACTUAL SECTION -->
+
+						<!-- BUDGET SECTION -->
+						<template lwc:if={renderBudget}>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentDiffBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentDiffPercentBudget} class="dec"
+															format-style="percent"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearDiffBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearDiffPercentBudget} class="dec"
+															format-style="percent"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentYTDBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYTDBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+						</template>
+						<!-- BUDGET SECTION -->
+
+					</tr>
+				</template>
+
+
+				</tbody>
+			</table>
+		</template>
+
+
+		<template if:true={showSpinner}>
+			<lightning-spinner alternative-text="Loading"></lightning-spinner>
+		</template>
+	</lightning-card>
+
+</template>

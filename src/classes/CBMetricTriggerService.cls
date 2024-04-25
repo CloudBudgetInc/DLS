@@ -36,7 +36,7 @@ public with sharing class CBMetricTriggerService {
 	 * @param metrics list of goal metrics
 	 */
 	public static void updateNFLWithHours(List<Metric__c> metrics) {
-		NFLMetricTriggerNeeded = false; // switch off the next trigger for metrics
+		/*NFLMetricTriggerNeeded = false; // switch off the next trigger for metrics
 		Set<Id> goalIds = new Set<Id>();
 		Map<Id, Id> metricGoalIdMap = new Map<Id, Id>();
 		for (Metric__c m : metrics) {
@@ -70,7 +70,7 @@ public with sharing class CBMetricTriggerService {
 			if (item == null) continue;
 			item.cb5__Value__c = m.Budget_Value__c;
 		}
-		update itemsToUpdate;
+		update itemsToUpdate;*/
 	}
 
 	/**
@@ -79,13 +79,26 @@ public with sharing class CBMetricTriggerService {
 	 */
 	public static void updateMetricsWithHours(List<cb5__CBNonFinancialItem__c> nflItems) {
 		NFLMetricTriggerNeeded = false; // switch off the next trigger for NFLs
-		Set<String> NFLibItemIds = new Set<String>();
 		Set<String> NFLibIds = new Set<String>();
 		Map<Date, Date> periodStartBudgetYearMap = new Map<Date, Date>();
 		Map<String, Map<Date, Decimal>> nflMap = new Map<String, Map<Date, Decimal>>(); // key is NFL Id, value is map where key is Start Date, value is amount
-		for (cb5__CBNonFinancialItem__c item : nflItems) NFLibItemIds.add(item.Id);
-		for (cb5__CBNonFinancialItem__c item : [SELECT cb5__CBPeriod__r.cb5__Start__c, cb5__CBPeriod__r.cb5__CBBudgetYear__r.cb5__Start__c, cb5__NonFinancialLibrary__c, cb5__Value__c FROM cb5__CBNonFinancialItem__c WHERE Id IN:NFLibItemIds]) {
-			NFLibIds.add(item.cb5__NonFinancialLibrary__c);
+		for (cb5__CBNonFinancialItem__c item : nflItems) NFLibIds.add(item.cb5__NonFinancialLibrary__c);
+
+		List<Goal__c> goals = [
+				SELECT Id,CBHours__c,CBHours2__c,CBHours3__c,Start_Date__c, (SELECT Start_Date__c, Budget_Value__c FROM Metrics__r)
+				FROM Goal__c
+				WHERE CBHours__c IN:NFLibIds OR CBHours2__c IN:NFLibIds OR CBHours3__c IN:NFLibIds
+		];
+		for (Goal__c g : goals) {
+			NFLibIds.add(g.CBHours__c);
+			NFLibIds.add(g.CBHours2__c);
+			NFLibIds.add(g.CBHours3__c);
+		}
+		for (cb5__CBNonFinancialItem__c item : [
+				SELECT cb5__CBPeriod__r.cb5__Start__c, cb5__CBPeriod__r.cb5__CBBudgetYear__r.cb5__Start__c, cb5__NonFinancialLibrary__c, cb5__Value__c
+				FROM cb5__CBNonFinancialItem__c
+				WHERE cb5__NonFinancialLibrary__c IN:NFLibIds
+		]) {
 			periodStartBudgetYearMap.put(item.cb5__CBPeriod__r.cb5__Start__c, item.cb5__CBPeriod__r.cb5__CBBudgetYear__r.cb5__Start__c);
 			Map<Date, Decimal> internalMap = nflMap.get(item.cb5__NonFinancialLibrary__c);
 			if (internalMap == null) {
@@ -94,20 +107,29 @@ public with sharing class CBMetricTriggerService {
 			}
 			internalMap.put(item.cb5__CBPeriod__r.cb5__Start__c, item.cb5__Value__c);
 		}
-		List<Metric__c> metricsToUpsert = new List<Metric__c>();
-		for (Goal__c goal : [SELECT Id, CBHours__c, Start_Date__c, (SELECT Start_Date__c, Budget_Value__c FROM Metrics__r) FROM Goal__c WHERE CBHours__c IN:NFLibIds]) {
-			Map<Date, Decimal> NFLInternalMap = nflMap.get(goal.CBHours__c);
-			for (Date startDate : NFLInternalMap.keySet()) {
-				if (periodStartBudgetYearMap.get(startDate) != goal.Start_Date__c) continue; // if NFL item is out of the goal budget year just skip it
-				Metric__c respectiveMetric = getRespectiveMetric(goal, startDate);
-				Decimal newValue = NFLInternalMap.get(startDate);
-				if (respectiveMetric.Budget_Value__c != newValue) {
-					respectiveMetric.Budget_Value__c = newValue;
-					metricsToUpsert.add(respectiveMetric);
-				}
-			}
+		Map<String, Metric__c> metricsToUpsert = new Map<String, Metric__c>();
+		for (Goal__c goal : goals) {
+			if (goal.CBHours__c == null) break;
+			populateMetrics(nflMap, goal, periodStartBudgetYearMap, metricsToUpsert, goal.CBHours__c, true);
+			populateMetrics(nflMap, goal, periodStartBudgetYearMap, metricsToUpsert, goal.CBHours2__c, false);
+			populateMetrics(nflMap, goal, periodStartBudgetYearMap, metricsToUpsert, goal.CBHours3__c, false);
 		}
-		upsert metricsToUpsert;
+		upsert metricsToUpsert.values();
+	}
+
+	private static void populateMetrics(Map<String, Map<Date, Decimal>> nflMap, Goal__c goal, Map<Date, Date> periodStartBudgetYearMap, Map<String, Metric__c> metricsToUpsert, String nflId, Boolean isFirstCBHour) {
+		if (nflId == null) return;
+		Map<Date, Decimal> NFLInternalMap = nflMap.get(nflId);
+		for (Date startDate : NFLInternalMap.keySet()) {
+			if (periodStartBudgetYearMap.get(startDate) != goal.Start_Date__c) continue; // if NFL item is out of the goal budget year just skip it
+			Metric__c respectiveMetric = getRespectiveMetric(goal, startDate);
+			System.debug('RESP METRIC = ' + respectiveMetric);
+			Decimal newValue = NFLInternalMap.get(startDate);
+			respectiveMetric.Budget_Value__c = isFirstCBHour ? newValue : respectiveMetric.Budget_Value__c + newValue;
+			String metricKey = goal.Id + String.valueOf(startDate);
+			System.debug('Key = ' + metricKey);
+			metricsToUpsert.put(metricKey, respectiveMetric);
+		}
 	}
 
 	@TestVisible
