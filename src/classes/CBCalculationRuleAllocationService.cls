@@ -80,10 +80,15 @@ public with sharing class CBCalculationRuleAllocationService {
 		set;
 	}
 
+	/**
+	 *
+	 *
+	 * @param budgetLine budget line from the before allocation scenario. One employee = one budget line
+	 */
 	public static void runAllocationProcess(cb5__CBBudgetLine__c budgetLine) {
 		if (!triggerIsNeeded(budgetLine)) return;
 		parentBudgetLine = budgetLine;
-		allocatedBudgetLines = getAllocatedBudgetLines(); // get children lines
+		allocatedBudgetLines = getAllocatedBudgetLines(); // get children lines of the budget line from the before allocation scenario
 		List<cb5__CBCalculationRule__c> calculationRules = getRelatedCalculationRules();
 		Map<String, cb5__CBNonFinancialLibrary__c> NFLibraries = getNFLibraries(calculationRules);
 		Map<String, cb5__CBBudgetLine__c> autoParentBudgetLines = getAutoParentBudgetLines(calculationRules);
@@ -109,7 +114,7 @@ public with sharing class CBCalculationRuleAllocationService {
 	}
 
 	/**
-	 * Method deletes old allocated budget lines after allocation
+	 * Method deletes old child allocated budget lines in the main scenario
 	 */
 	private static void deleteOldAutoChildLines(List<cb5__CBCalculationRule__c> calculationRules) {
 		Set<String> calcSetIds = new Set<String>();
@@ -119,6 +124,7 @@ public with sharing class CBCalculationRuleAllocationService {
 
 	/**
 	 * @return list of calculation rules that related to the current budget line
+	 * related calculation rules may have the similar Var 1 or Var 2
 	 */
 	public static List<cb5__CBCalculationRule__c> getRelatedCalculationRules() {
 		String budgetYearName = budgetYearNameIdMap.get(parentBudgetLine.cb5__CBBudgetYear__c);
@@ -146,7 +152,7 @@ public with sharing class CBCalculationRuleAllocationService {
 	/**
 	 * @param calculationRules
 	 *
-	 * @return list of NFL needed for calculation rules
+	 * @return list of NFL fractions needed for calculating the calculation rules
 	 */
 	public static Map<String, cb5__CBNonFinancialLibrary__c> getNFLibraries(List<cb5__CBCalculationRule__c> calculationRules) {
 		Set<String> fractionIds = new Set<String>();
@@ -171,7 +177,8 @@ public with sharing class CBCalculationRuleAllocationService {
 	}
 
 	/**
-	 * Method returns parent budget lines after allocation
+	 * Method returns parent budget lines for budget lines in main scenario
+	 * In case if the parent budget line does not exist, it will be created
 	 * @return key is calculationRule Id, value is parent auto line
 	 */
 	public static Map<String, cb5__CBBudgetLine__c> getAutoParentBudgetLines(List<cb5__CBCalculationRule__c> calculationRules) {
