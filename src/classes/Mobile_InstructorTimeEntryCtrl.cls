@@ -2,7 +2,7 @@
 - Class to handler mobile instructor time entry process
 - Added by NS on Feb 5 2020
 *****************************************************************************/
-public without sharing class Mobile_InstructorTimeEntryCtrl {
+public without sharing class Mobile_InstructorTimeEntryCtrl { 
 
 
     /***************************************************************

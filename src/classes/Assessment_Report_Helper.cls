@@ -145,7 +145,8 @@ public class Assessment_Report_Helper{
             
             // W-007837 : Create new FSI Labor Cost Rate Rate Type & Offer Letter (SEP-1-2023)
             // Should not create training reports for FSI projects
-            if(pr.AcctSeed__Account__c != null && pr.AcctSeed__Account__r.Name != null && pr.DLI_Project_Type__c != 'EI' && !pr.AcctSeed__Account__r.Name.contains('FSI') && pr.RecordType.DeveloperName != 'FSI_Projects') {
+            // JMAS project type condition Added on May 15 2024 : W-008048 - JMAS Projects - No Longer Need Initial and Final assessments/reports/scores : To prevent the auto creation of training reports for DODA project with JMAS project type
+            if(pr.AcctSeed__Account__c != null && pr.AcctSeed__Account__r.Name != null && pr.DLI_Project_Type__c != 'EI' && !pr.AcctSeed__Account__r.Name.contains('FSI') && pr.RecordType.DeveloperName != 'FSI_Projects' && pr.Project_Type__c != 'JMAS') {
             
                 if(pr.AcctSeed__Account__r.Name.contains('DLI') || pr.RecordTypeId == dliRTId_Proj) {
                     projIdReportTypes.put(pr.Id,AccountNameARMap.get('DLI'));
@@ -154,7 +155,8 @@ public class Assessment_Report_Helper{
                 } else if((pr.AcctSeed__Account__r.Name == 'PVT' || pr.AcctSeed__Account__r.Name.contains('PVT')) && pr.QB_Classification__c != 'OF0MTT0PS') {  //&& projFinalReportMap.containskey(pr.Id) && projFinalReportMap.get(pr.Id) == true
                     projIdReportTypes.put(pr.Id,AccountNameARMap.get('PVT'));
                     isFromPvt = true;
-                } else if(pr.AcctSeed__Account__r.Name.contains('DODA') && pr.QB_Classification__c != 'OF0MTT0PS') { // Added QB_Classification__c condition on June 16 2023
+                } else if(pr.AcctSeed__Account__r.Name.contains('DODA') && pr.QB_Classification__c != 'OF0MTT0PS') { 
+                    // Added QB_Classification__c condition on June 16 2023
                     // W-007783 : Issue with DLI Training Report Auto Cancellation when DLI Project End Date isChanged 
                     // To prevent reports creation for partner school projects 
                     if(pr.Program_Iteration__c != null) {
@@ -233,7 +235,7 @@ public class Assessment_Report_Helper{
                     stDate = stDate.addMonths(1).toStartOfMonth().addDays(-1);
                     Integer i = 0;
                     
-                    //System.debug('::stDate:::'+stDate);
+                    System.debug('::stDate:::'+stDate);
                     
                     while(stDate <= pr.End_Date__c) {
                                         
@@ -295,13 +297,23 @@ public class Assessment_Report_Helper{
                             lastDate = stDate;
                         }
                     }
+                    System.debug('::::::projIdMonthlyDates:====::'+projIdMonthlyDates);
                     // To add the End Date of the project if the Date is greater than 10 and the DLI account related project
-                    if((pr.AcctSeed__Account__r.Name.contains('DLI') || pr.AcctSeed__Account__r.Name.contains('FCS') || pr.AcctSeed__Account__r.Name.contains('APMO') || pr.AcctSeed__Account__r.Name.contains('PGLS') || pr.RecordTypeId == dliRTId_Proj) && pr.End_Date__c.day() > 10 && projIdMonthlyDates.containskey(pr.Id) && lastDate != null && !projIdMonthlyDates.get(pr.Id).contains(lastDate)) {
-                        projIdMonthlyDates.get(pr.Id).add(pr.End_Date__c);
+                    if((pr.AcctSeed__Account__r.Name.contains('DLI') || pr.AcctSeed__Account__r.Name.contains('FCS') || pr.AcctSeed__Account__r.Name.contains('APMO') || pr.AcctSeed__Account__r.Name.contains('PGLS') || pr.RecordTypeId == dliRTId_Proj) && pr.End_Date__c.day() > 10){
+                        
+                        if(projIdMonthlyDates.containskey(pr.Id) && lastDate != null && !projIdMonthlyDates.get(pr.Id).contains(lastDate)){
+                            projIdMonthlyDates.get(pr.Id).add(pr.End_Date__c);
+                        }
+                        // W-008052 : APMO Project Failed to Auto-create Monthly Progress Report
+                        // Auto-create training reports for the projects (excluding the PGLS project) with a short date range (within one month).
+                        if(!pr.AcctSeed__Account__r.Name.contains('PGLS') && pr.Start_Date__c.day() < 11 && !projIdMonthlyDates.containskey(pr.Id)){
+                            projIdMonthlyDates.put(pr.Id, new List<Date>{pr.End_Date__c});   
+                        }
                     }
                 }
             }
         }    
+        System.debug('::::::projIdMonthlyDates:####::'+projIdMonthlyDates);
         System.debug('::::::projIdsToQueryExistingARs:::'+projIdsToQueryExistingARs);
         
         if(projIdsToQueryExistingARs.size() > 0){
@@ -716,7 +728,9 @@ public class Assessment_Report_Helper{
             //System.debug('reports::::::'+reports);
             System.debug('reports Size::'+reports.size());            
             // To Create DLI Monthly Observation Report 
-            if(launchedFrom == 'ScheduleTrigger' && dLIObsReport == true) {
+            // Added on May 16 2024 - W-008050 : Issue with DLI Observation Report Creation on DLI Project
+            // To create DLI observation reports when the project's end date is extended 
+            if((launchedFrom == 'ScheduleTrigger' || launchedFrom == 'Project_Trigger') && dLIObsReport == true) {
                 List<Assessment_Report__c> obsRpt = Assessment_Report_Helper.createObservationReportRecs(projId,cas, projIdMonthlyDates, 'ScheduleTrigger');
                 if(obsRpt != null && obsRpt.size() > 0) {
                     //System.debug('obsRpt::::'+obsRpt);
@@ -725,7 +739,7 @@ public class Assessment_Report_Helper{
                 }
             }            
             if(reports.size() > 0 ) {
-                //System.debug('reports::::'+reports);
+                System.debug('reports::::'+reports);
                 Insert reports;
             }
         }
@@ -896,13 +910,16 @@ public class Assessment_Report_Helper{
         
         // Added on June 16 2023 - W-007783 : Issue with DLI Training Report Auto Cancellation when DLI Project End Date isChanged 
         // To prevent reports creation for partner school projects 
-        Map<Id, AcctSeed__Project__c> projRecMap = new Map<Id, AcctSeed__Project__c>([SELECT Id, Name, AcctSeed__Account__r.Name, RecordType.DeveloperName FROM AcctSeed__Project__c WHERE Id IN : proIds AND (((NOT(AcctSeed__Account__r.Name LIKE '%DODA%')) AND (NOT(AcctSeed__Account__r.Name LIKE '%PVT%'))) OR ((AcctSeed__Account__r.Name LIKE '%DODA%' OR AcctSeed__Account__r.Name LIKE '%PVT%') AND QB_Classification__c != 'OF0MTT0PS'))]);
+        // Added on May 15 2024 : W-008048 - JMAS Projects - No Longer Need Initial and Final assessments/reports/scores : To prevent the auto creation of observation report for DODA project with JMAS project type
+        Map<Id, AcctSeed__Project__c> projRecMap = new Map<Id, AcctSeed__Project__c>([SELECT Id, Name, AcctSeed__Account__r.Name, RecordType.DeveloperName FROM AcctSeed__Project__c WHERE Id IN : proIds AND (((NOT(AcctSeed__Account__r.Name LIKE '%DODA%')) AND (NOT(AcctSeed__Account__r.Name LIKE '%PVT%'))) OR (((AcctSeed__Account__r.Name LIKE '%DODA%' AND Project_Type__c != 'JMAS') OR AcctSeed__Account__r.Name LIKE '%PVT%') AND QB_Classification__c != 'OF0MTT0PS'))]);
         Map<Id, Contact_Assignments__c> caMapFromCATrigger = new Map<Id, Contact_Assignments__c>();
         
         if(projRecMap.size() > 0){
         
             // DLI Monthly Observation Report changes
-            if(launchedFrom == 'CATrigger' || launchedFrom == 'ScheduleTrigger') {
+            // Added on May 16 2024 - W-008050 : Issue with DLI Observation Report Creation on DLI Project
+            // To create DLI observation reports when the project's end date is extended 
+            if(launchedFrom == 'CATrigger' || launchedFrom == 'ScheduleTrigger' || launchedFrom == 'Project_Trigger') {
                 
                 if(projIdMonthlyDates == null){
                     projIdMonthlyDates = new Map<Id,List<Date>>();
@@ -913,7 +930,7 @@ public class Assessment_Report_Helper{
                     caMapFromCATrigger = new Map<Id, Contact_Assignments__c>(insCA);   
                 }
                 
-                for(Assessment_Report__c obsRt : [SELECT Id,Name,Report_Date__c,Project__c FROM Assessment_Report__c WHERE Project__c IN: proIds AND recordType.DeveloperName = 'DLI_Observation_Report']) {
+                for(Assessment_Report__c obsRt : [SELECT Id,Name,Report_Date__c,Project__c FROM Assessment_Report__c WHERE Project__c IN: proIds AND recordType.DeveloperName IN ('DLI_Observation_Report', 'Observation_Report')]) {
                     if(!projIdObsRptDateMap.containskey(obsRt.Project__c)) {
                         projIdObsRptDateMap.put(obsRt.Project__c, new List<Date>{obsRt.Report_Date__c});
                     } else {
@@ -1315,8 +1332,8 @@ public class Assessment_Report_Helper{
         
 
         for( AcctSeed__Project__c pr : projects ) {
-            
-            if(pr.AcctSeed__Account__c != null && pr.AcctSeed__Account__r.Name != null && pr.DLI_Project_Type__c != 'EI') {
+            // JMAS project type condition Added on May 15 2024 : W-008048 - JMAS Projects - No Longer Need Initial and Final assessments/reports/scores : To prevent the auto creation of training reports for DODA project with JMAS project type
+            if(pr.AcctSeed__Account__c != null && pr.AcctSeed__Account__r.Name != null && pr.DLI_Project_Type__c != 'EI' && pr.Project_Type__c != 'JMAS') {
                 if(pr.AcctSeed__Account__r.Name.contains('DLI') || pr.RecordTypeId == dliRTId_Proj) {
                     projIdReportTypes = AccountNameARMap.get('DLI');
                 } else if((pr.AcctSeed__Account__r.Name == 'PVT' || pr.AcctSeed__Account__r.Name.contains('PVT')) && pr.QB_Classification__c != 'OF0MTT0PS') {  //&& projFinalReportMap.containskey(pr.Id) && projFinalReportMap.get(pr.Id) == true
@@ -1447,7 +1464,7 @@ public class Assessment_Report_Helper{
             arMap.putAll(ManageProjectDatescontroller.assessRep_MPD);
         }
         
-        List<Assessment_Report__c> allARs = [SELECT Id, Report_Date__c, Project__c, Language_Training_Status__c, Test_Report_Type__c 
+        List<Assessment_Report__c> allARs = [SELECT Id, Report_Date__c, Project__c, Language_Training_Status__c, Test_Report_Type__c, RecordType.DeveloperName 
                                                 FROM Assessment_Report__c 
                                                 WHERE Project__c IN : allProjdIds AND Status__c NOT IN : arStatus AND 
                                                     RecordType.DeveloperName NOT IN ('Annual_Instructor_Performance_Review')];
@@ -1509,8 +1526,10 @@ public class Assessment_Report_Helper{
                         - because while calling createAssessReport() method it will create duplicate monthly reports if they due date as mid of month()
                         - Ex : FCS Project (SD : 01/05/2023 ED : 17/07/2023) its Monthly Reports are (31/05/2023, 30/06/2023, 17/07/2023)
                         - Updating project's end date from 17/07/2023 to 24/08/2023 it will create duplicate report for 31/07/2023, so we are updating 17/07/2023 report date as 31/07/2023
+                        - Added DLI observation recordtype condition on May 23 2024 : W-008050 - Issue with DLI Observation Report Creation on DLI Project
+                        - To fix "DUPLICATES_DETECTED, There is an existing Training Report with this Name" issue
                         *************/
-                    if(a.Language_Training_Status__c == 'Monthly' || a.Test_Report_Type__c == 'Monthly'){
+                    if(a.Language_Training_Status__c == 'Monthly' || a.Test_Report_Type__c == 'Monthly' || a.RecordType.DeveloperName == 'DLI_Observation_Report'){
                             
                         if((oldProjMap.get(a.Project__c).End_Date__c.month() == a.Report_Date__c.month() || oldProjMap.get(a.Project__c).End_Date__c == a.Report_Date__c) && 
                             projIdAndMonthlyDate.containsKey(a.Project__c) && projIdAndMonthlyDate.get(a.Project__c) != a.Report_Date__c){

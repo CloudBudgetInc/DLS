@@ -18,6 +18,8 @@
             fields.splice(index, 1);             
             index = fields.indexOf('RecordType.DeveloperName');
             fields.splice(index, 1);
+        	index = fields.indexOf('Not_Enough_Data_for_AR__c');
+            fields.splice(index, 1);
 
         if (assessmentReport.RecordType.DeveloperName == 'Observation_Report' || assessmentReport.RecordType.DeveloperName == 'DLI_Observation_Report') {
             if (assessmentReport.Status__c != 'Completed') {
@@ -32,24 +34,26 @@
                     index = fields.indexOf('Annual_Review_Strengths__c');
                     fields.splice(index, 1);
                 }
-                for (let field of fields) { 
+                for (let field of fields) {
                     if(field == 'Annual_Review_Areas_for_Further_Develop__c' || field == 'Annual_Review_Strengths__c'){
-                        if(!assessmentReport[field]){
-                            valid = false;                        
-                            error.errorMsg += '<li>' + fieldsAPILabelMap[field] + '</li>';
-                        }else{
-                            let fieldValue = assessmentReport[field].split(";"),
-                                hasOtherValue = fieldValue.indexOf('Other') != -1;
-                            
-                            if(hasOtherValue && field == 'Annual_Review_Areas_for_Further_Develop__c' && !assessmentReport['AR_Further_Developments_Other_Comments__c']){
+                        if(!assessmentReport.Not_Enough_Data_for_AR__c) {
+                            if(!assessmentReport[field]){
                                 valid = false;                        
-                                error.errorMsg += '<li>' + fieldsAPILabelMap['AR_Further_Developments_Other_Comments__c'] + '</li>';
-                            }else if(hasOtherValue && field == 'Annual_Review_Strengths__c' && !assessmentReport['AR_Strengths_Other_Comments__c']){
-                                valid = false;                        
-                                error.errorMsg += '<li>' + fieldsAPILabelMap['AR_Strengths_Other_Comments__c'] + '</li>';
+                                error.errorMsg += '<li>' + fieldsAPILabelMap[field] + '</li>';
+                            }else{
+                                let fieldValue = assessmentReport[field].split(";"),
+                                    hasOtherValue = fieldValue.indexOf('Other') != -1;
+                                
+                                if(hasOtherValue && field == 'Annual_Review_Areas_for_Further_Develop__c' && !assessmentReport['AR_Further_Developments_Other_Comments__c']){
+                                    valid = false;                        
+                                    error.errorMsg += '<li>' + fieldsAPILabelMap['AR_Further_Developments_Other_Comments__c'] + '</li>';
+                                }else if(hasOtherValue && field == 'Annual_Review_Strengths__c' && !assessmentReport['AR_Strengths_Other_Comments__c']){
+                                    valid = false;                        
+                                    error.errorMsg += '<li>' + fieldsAPILabelMap['AR_Strengths_Other_Comments__c'] + '</li>';
+                                }
                             }
                         }
-                    }else if (!assessmentReport[field]) {
+                    } else if (!assessmentReport[field]) {
                         valid = false;                        
                         error.errorMsg += '<li>' + fieldsAPILabelMap[field] + '</li>';
                     }

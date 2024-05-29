@@ -459,7 +459,7 @@ private class CAbasedUserCreation_Schedule_Test{
             Id dliRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('DLI_W_LT_Projects').getRecordTypeId();
             Id usrId = UserInfo.getUserId();
             
-            AcctSeed__Project__c proj = new AcctSeed__Project__c(Moodle_Course_Id__c = 'Test Course Id', AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = dliRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+            AcctSeed__Project__c proj = new AcctSeed__Project__c(Moodle_Course_Id__c = 'Test Course Id', AcctSeed__Account__c = a.Id, Name = 'Test CA Based User Creation Project 6',AcctSeed__Status__c = 'Active',RecordTypeId = dliRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
             insert proj;
                             
             List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
@@ -528,7 +528,7 @@ private class CAbasedUserCreation_Schedule_Test{
             Id dliRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('DLI_W_LT_Projects').getRecordTypeId();
             Id usrId = UserInfo.getUserId();
             
-            AcctSeed__Project__c proj = new AcctSeed__Project__c(Moodle_Course_Id__c = 'Test Course Id', AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = dliRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+            AcctSeed__Project__c proj = new AcctSeed__Project__c(Moodle_Course_Id__c = 'Test Course Id', AcctSeed__Account__c = a.Id, Name = 'Test CA Based User Creation Project 7',AcctSeed__Status__c = 'Active',RecordTypeId = dliRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
             insert proj;
                             
             List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
@@ -607,7 +607,7 @@ private class CAbasedUserCreation_Schedule_Test{
             Id dliRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('DLI_W_LT_Projects').getRecordTypeId();
             Id usrId = UserInfo.getUserId();
             
-            AcctSeed__Project__c proj = new AcctSeed__Project__c(Moodle_Course_Id__c = 'Test Course Id', AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = dliRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+            AcctSeed__Project__c proj = new AcctSeed__Project__c(Moodle_Course_Id__c = 'Test Course Id', AcctSeed__Account__c = a.Id, Name = 'Test CA Based User Creation Project 8',AcctSeed__Status__c = 'Active',RecordTypeId = dliRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
             insert proj;
                             
             List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{

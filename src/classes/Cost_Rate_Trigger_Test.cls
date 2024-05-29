@@ -993,6 +993,37 @@ public class Cost_Rate_Trigger_Test {
         System.assertEquals(1,newConAssList.size());
         Test.stopTest();
     }
+      // To cover PayRateModificationProcess
+    public static testMethod void TestMethodPayRateModification2A(){
+                                
+        Pay_Rate_Modification_Handler.isFromCRModify = TRUE;
+        
+        List<Contact> conList = [SELECT Id FROM Contact WHERE Email != NULL AND RecordType.DeveloperName = 'DLS_Employee'];
+        List<Contact_Assignments__c> conAssList = [SELECT Id FROM Contact_Assignments__c WHERE RecordType.DeveloperName = 'Instructor' LIMIT 1];
+        System.debug('conList==='+conList);
+        
+        List<AcctSeed__Cost_Rates__c>  costrateList = new List<AcctSeed__Cost_Rates__c>{
+            new AcctSeed__Cost_Rates__c(Status__c = 'Approved', Contact__c = conList[0].Id, Exempt_Status__c = 'Non-Exempt', Pay_Type__c = 'Hourly', Rate_Type__c = 'LT with Prep',AcctSeed__Hourly_Cost__c = 20,Payroll_Item__c='R',Per_Test_Cost__c = 20)
+        };
+               
+        Test.startTest();
+        insert costrateList;  
+        
+        conAssList[0].Rate_Card_Rate__c = costrateList[0].Id;
+        conAssList[0].Candidate_name__c = conList[0].Id;
+        update conAssList;
+            
+        List<AcctSeed__Cost_Rates__c>  priorCostRate = new List<AcctSeed__Cost_Rates__c>{
+            new AcctSeed__Cost_Rates__c(Contact__c = conList[0].Id,Annual_Salary_Cost__c = 20 ,New_Department_Name__c = 'OF0QAT',Salary_Cost_Per_Hour__c=20,Effective_Date__c = system.today().addDays(-1), Prior_Version__c = costrateList[0].Id, Pay_Type__c = 'Hourly', Status__c = 'Draft', Rate_Type__c = 'FT Salary & Benefits',AcctSeed__Hourly_Cost__c = 80,Payroll_Item__c='R')
+        };
+        insert priorCostRate;
+            
+        List<Contact_Assignments__c> newConAssList = [SELECT Id FROM Contact_Assignments__c WHERE (Rate_Card_Rate__c = :priorCostRate[0].Id OR Drafted_Labor_Cost_Rate__c = :priorCostRate[0].Id)];
+        System.assertEquals(1,newConAssList.size());
+        Test.stopTest();
+    }
+    
+
     
       // To cover PayRateModificationProcess
     public static testMethod void TestMethodPayRateModification3(){

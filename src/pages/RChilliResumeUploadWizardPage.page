@@ -546,7 +546,7 @@
                                             </div>
                                             <div ng-if="wl.exp.showPresent">
                                                 <div ng-click="showEndDate(WorkList.indexOf(wl))">
-                                                    <input style="cursor:pointer !important; background-color:white !important;" class="slds-input" type="text" value="Present" disabled="true"/>
+                                                    <input style="cursor:pointer !important; background-color:white !important;" class="slds-input" type="text" value="Present" ng-click="showEndDate(WorkList.indexOf(wl))"/> <!--Modified By Dhinesh-25/03/2024-- W-008016 - Removed Disable and added click method-->
                                                 </div>
                                             </div>
                                         </td>
@@ -646,7 +646,7 @@
                                             </div>
                                             <div ng-if="wl.exp.showPresent">
                                                 <div ng-click="showEndDate(WorkList.indexOf(wl))">
-                                                    <input style="cursor:pointer !important; background-color:white !important;" class="slds-input" type="text" value="Present" disabled="true"/>
+                                                    <input style="cursor:pointer !important; background-color:white !important;" class="slds-input" type="text" ng-click="showEndDate(WorkList.indexOf(wl))" value="Present"/> <!--Modified By Dhinesh-25/03/2024-- W-008016 - Removed Disable and added click method-->
                                                 </div>
                                             </div>
                                         </td>
@@ -1327,8 +1327,8 @@
                             <table class="slds-table slds-table--bordered slds-table--cell-buffer">
                                 <thead>
                                     <tr class="slds-text-heading--label">
-                                        <td class="slds-truncate">NAME OF THE PUBLICATION/AWARD	</td>
-                                        <td class="slds-truncate">COMPANY/INSTITUTION NAME	</td>                                        
+                                        <td class="slds-truncate">NAME OF THE PUBLICATION/AWARD </td>
+                                        <td class="slds-truncate">COMPANY/INSTITUTION NAME  </td>                                        
                                         <td class="slds-truncate">Year</td>
                                         
                                     </tr>
@@ -1933,7 +1933,7 @@
                                                                   
                         if(Object.keys(records).length > 0){                            
                             $scope.responseFile = records;      
-                        	$scope.uploadXML();
+                            $scope.uploadXML();
                         }else{
                             $scope.uploadBlock = 'ng-show';
                             document.getElementById("spinner").style.display = 'none';                                                        
@@ -2247,7 +2247,7 @@
                         //window.location.href = '{!$Site.Prefix}/'+records;
                         //window.location.href = '/apex/CreateBookMark?id='+records+'&header=Would you like to Bookmark this contact&returnURL='+records;
                         if(!$scope.skipBookmark){
-                        	$scope.toBookmark();
+                            $scope.toBookmark();
                         }else{
                             //window.location.href = '/' + $scope.jobId;
                             window.close();

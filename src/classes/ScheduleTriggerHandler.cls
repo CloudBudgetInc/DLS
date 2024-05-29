@@ -7,15 +7,45 @@ public class ScheduleTriggerHandler {
     public static void updateEvents(Map<Id, Schedule__c> schIdMap) {
         
         List<Events__c> eveList = new List<Events__c>();
+        //Code to populate LCR Events W-007994
+        Map<String,Id> ConIdProjIdWithLCRId = new Map<String,Id>();
+        Set<Id> insIds = new Set<Id>();
+        Set<Id> projIds = new Set<Id>();
+        List<Events__c> tmpEventList = new List<Events__c>();
         
-        for(Events__c eve : [SELECT Id, Room__c, Instructor__c, Schedule__c FROM Events__c WHERE Schedule__c IN :schIdMap.keySet()]) {
-            eve.Room__c = schIdMap.get(eve.Schedule__c).Room__c;
-            eve.Instructor__c = schIdMap.get(eve.Schedule__c).Instructor__c;
-            eveList.add(eve);
+        for(Schedule__c sch : schIdMap.values()) {
+            insIds.add(sch.Instructor__c);
+            projIds.add(sch.Project__c);
         }
+        // Queried and assigned it to a list inorder to check whether the Sch contains Events before querying Contact Assignments
+        tmpEventList = [SELECT Id, Room__c, Instructor__c, Schedule__c, Project__c FROM Events__c WHERE Schedule__c IN :schIdMap.keySet()];
         
-        if(eveList.size() > 0) {
-            update eveList;
+        if(tmpEventList.size() > 0) {
+            for(Contact_Assignments__c ca : [SELECT Id,Name,Candidate_Name__c,Drafted_Labor_Cost_Rate__c,Rate_Card_Rate__c,Project__c FROM Contact_Assignments__c WHERE Project__c != null AND Project__c IN :projIds AND Candidate_Name__c IN:insIds AND RecordType.DeveloperName = 'Instructor' AND Status__c = 'Active']){
+                String tmp = ca.Candidate_Name__c + '~' + ca.Project__c;
+                if(!ConIdProjIdWithLCRId.containskey(tmp)) {
+                    if(ca.Rate_Card_Rate__c != null) {
+                        ConIdProjIdWithLCRId.put(tmp,ca.Rate_Card_Rate__c);
+                    } else if(ca.Drafted_Labor_Cost_Rate__c != null) {
+                        ConIdProjIdWithLCRId.put(tmp,ca.Drafted_Labor_Cost_Rate__c);
+                    }
+                }
+            }
+            
+            for(Events__c eve : tmpEventList) {
+                eve.Room__c = schIdMap.get(eve.Schedule__c).Room__c;
+                eve.Instructor__c = schIdMap.get(eve.Schedule__c).Instructor__c;
+                //Code to populate LCR Events W-007994
+                String Str = eve.Instructor__c + '~' + eve.Project__c;
+                if( ConIdProjIdWithLCRId.containskey(Str) &&  ConIdProjIdWithLCRId.get(Str) != null && eve.Labor_Cost_Rate__c != ConIdProjIdWithLCRId.get(Str)) {
+                    eve.Labor_Cost_Rate__c = ConIdProjIdWithLCRId.get(Str);
+                }
+                eveList.add(eve);
+            }
+            
+            if(eveList.size() > 0) {
+                update eveList;
+            }
         }
     }   
     

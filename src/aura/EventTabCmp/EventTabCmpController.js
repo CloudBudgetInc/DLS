@@ -74,11 +74,14 @@
                         'target':'_blank'
                     },
                     {
-                        'label':'Project Task',
-                        'name':'Project_Task__r.Name',
-                        'type':'text',
+                        'label': 'PROJECT TASK',
+                        'name': 'Project_Task__r.Name',
+                        'type': 'reference',
+                        'value': 'Project_Task__c',
+                        'sortable': true,
+                        'target': '_blank',
                         'truncate': {
-                            "characterLength": 30,
+                            "characterLength": 40,
                         },
                         'width': '20%'
                     },
@@ -258,7 +261,7 @@
                 eventObj.projTask = [];
                 
                 cmp.set("v.eventObj",eventObj);
-                
+                helper.endTimeValue(cmp, event, helper);
                 helper.initializeTable(cmp, event, helper);
                 
             } else {                

@@ -95,6 +95,7 @@
                     pdoRec.Project__c = (pdoRec.Project__c == 'All' ? null : pdoRec.Project__c);
                     pdoRec['All_Projects__c'] = (pdoRec.Project__c == 'All' ? true : false);
                     pdoRec.Type__c = rowRecord.type;
+                    pdoRec.requestOffRT = rowRecord.requestOffRT;
                     pdoRec.Description__c = rowRecord.description;
                     
                     plannedOffDays.push(pdoRec);
@@ -108,8 +109,17 @@
             	cmp.find("editOffModel").open();
             }else{
                 var contactRecord = cmp.get("v.contactRec");
+                //Modified By Siva Prasanth - 24/04/2024 - W-006581 - Planned Days Off Message Specific for DODA Students
+                var projectValues = cmp.get('v.projectValues');
+                var filteredproList = [];
+                
+                for(var pro = 0;pro < projectValues.length;pro++){
+                    if(projectValues[pro].label && (projectValues[pro].label != '--None--' && projectValues[pro].label != 'All')){
+                        filteredproList.push(projectValues[pro]);
+                    }
+                }
                 //Modified By Dhinesh - 19/03/2021 - W-006581 - Planned Days Off Message Specific for DODA Students
-                if(contactRecord.RecordType.DeveloperName == 'Student' && contactRecord.Account.Name == 'DODA' && cmp.get('v.projectValues').length < 1){
+                if(contactRecord.RecordType.DeveloperName == 'Student' && contactRecord.Account.Name == 'DODA' && filteredproList.length < 1){
                     
                     cmp.set("v.successHeader", 'Warning');                    
                     cmp.set("v.successTitle" ,"Per your class type, any requests for planned days off need to be directly coordinated and pre-approved with your agency's Language Manager (not DLS). If you have further questions, please contact your DLS Language Training Supervisor.");

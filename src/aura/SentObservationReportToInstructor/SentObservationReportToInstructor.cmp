@@ -18,7 +18,7 @@
         default="['RecordType.DeveloperName','Instructor__c','Date_Completed__c',
          'Status__c', 'Class_Observed_Level__c' ,'Class_Observed_Skill_Grammar_Focus__c', 
          'Class_Observed_Topic__c', 'Comments__c', 'Annual_Review_Strengths__c', 'Annual_Review_Areas_for_Further_Develop__c',
-         'AR_Further_Developments_Other_Comments__c', 'AR_Strengths_Other_Comments__c']" />
+         'AR_Further_Developments_Other_Comments__c', 'AR_Strengths_Other_Comments__c', 'Not_Enough_Data_for_AR__c']" />
 
     <force:recordData aura:id="recordLoader" fields="{!v.fields}" recordId="{!v.recordId}"
         targetFields="{!v.assessmentReport}" recordUpdated="{!c.doInit}" />

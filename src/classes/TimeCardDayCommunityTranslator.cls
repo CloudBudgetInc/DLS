@@ -124,6 +124,7 @@ public class TimeCardDayCommunityTranslator {
             proStuInfo.projectRTName = pro.RecordType.DeveloperName;
             proStuInfo.projectRTId = pro.RecordTypeId;
             proStuInfo.noStudentApproval = pro.No_Student_Approval__c; 
+            proStuInfo.dliProType = pro.DLI_Project_Type__c; 
             proStuInfo.noStudentHrsVerification = projectIdWithNoStudHrsVerificationMap.containsKey(pro.Id) ? (pro.No_Student_Hours_Verification__c || projectIdWithNoStudHrsVerificationMap.get(pro.Id)) : pro.No_Student_Hours_Verification__c;
             
             String studentNames = '';
@@ -157,11 +158,11 @@ public class TimeCardDayCommunityTranslator {
     - Method to form the existing TCD information as wrapper to display in cmp
     - Added by NS on MAR 5 2019 for Instructor Time Entry
     ******************************************************************************************/
-    public static TimeCardDayCommunityDomain.InstructorRowDetails instructorTimeEntryRowWrapperFormation(Date startDate,Date endDate,String projectName,String studentNames,String contactId,List<AcctSeed__Time_Card_Line__c> lineDetails,List<Accounting_Seed_Time_Snapshot__c> snapshot,List<AcctSeed__Project_Task__c> taskRecords,List<Contact_Assignments__c> caRecord,Map<Id,Integer> taskIdTimeCount,Map<Id,String> taskIdTimeMap,List<Contact_Assignments__History> caHistory,List<AcctSeed__Cost_Rates__c> oldCRRecord,List<Contact_Assignments__c> studentCAs,Map<Id,List<Attendance__c>> stuAttendanceMap,Boolean alreadyCaseSubmitted,List<Planned_Days_Off__c> daysOffList,Set<Date> holidayDates,Map<Id,String> taskIdTimezone){
+    public static TimeCardDayCommunityDomain.InstructorRowDetails instructorTimeEntryRowWrapperFormation(Date startDate,Date endDate,String projectName,String studentNames,String contactId,List<AcctSeed__Time_Card_Line__c> lineDetails,List<Accounting_Seed_Time_Snapshot__c> snapshot,List<AcctSeed__Project_Task__c> taskRecords,List<Contact_Assignments__c> caRecord,Map<Id,Integer> taskIdTimeCount,Map<Id,String> taskIdTimeMap,List<Contact_Assignments__History> caHistory,List<AcctSeed__Cost_Rates__c> oldCRRecord,List<Contact_Assignments__c> studentCAs,Map<Id,List<Attendance__c>> stuAttendanceMap,Boolean alreadyCaseSubmitted,List<Planned_Days_Off__c> daysOffList,Set<Date> holidayDates,Map<Id,String> taskIdTimezone,Map<Id,Map<String,List<String>>> proTaskWithAmPMDays){
    
         TimeCardDayCommunityDomain.InstructorRowDetails weekDetails = new TimeCardDayCommunityDomain.InstructorRowDetails();
         weekDetails.federalHolidays = HolidayService.getHolidaysWithRecurrence(startDate,endDate);
-        weekDetails.entries = instructorDayRowFormation(startDate,endDate,projectName,studentNames,lineDetails,taskRecords,caRecord,taskIdTimeCount,taskIdTimeMap,caHistory,oldCRRecord,taskIdTimezone,weekDetails.federalHolidays);
+        weekDetails.entries = instructorDayRowFormation(startDate,endDate,projectName,studentNames,lineDetails,taskRecords,caRecord,taskIdTimeCount,taskIdTimeMap,caHistory,oldCRRecord,taskIdTimezone,weekDetails.federalHolidays,proTaskWithAmPMDays);
         weekDetails.notes = notesFormation(snapshot);
         weekDetails.defaultCostRateRateType = taskRecords.size() > 0 ? taskRecords[0].AcctSeed__Project__r.Default_Cost_Rate_Rate_Type__c : '';
         /*for(TimeCardDayCommunityDomain.NotesDetails note : weekDetails.notes){
@@ -220,6 +221,7 @@ public class TimeCardDayCommunityTranslator {
                         if(day.taskType != 'Preparation time' && day.status == 'Approved' || day.studentApprovalStatus == 'Approved') {
                             day.showReverseIcon = true;
                         }else {
+     
                             day.showEditIcon = true;
                         }
                         
@@ -275,7 +277,7 @@ public class TimeCardDayCommunityTranslator {
     /***************************************************************************************
      - Instructor Time Entry Day rows formation 
     ****************************************************************************************/
-    public static List<TimeCardDayCommunityDomain.InstructorDayDetails> instructorDayRowFormation(Date st,Date ed,String projectName,String studentNames,List<AcctSeed__Time_Card_Line__c> timeCardLines,List<AcctSeed__Project_Task__c> taskRecords,List<Contact_Assignments__c> caRecord,Map<Id,Integer> taskIdTimeCount,Map<Id,String> taskIdTimeMap,List<Contact_Assignments__History> caHistory,List<AcctSeed__Cost_Rates__c> oldCRRecord,Map<Id,String> taskIdTimezone, Set<Date> federalHolidays){
+    public static List<TimeCardDayCommunityDomain.InstructorDayDetails> instructorDayRowFormation(Date st,Date ed,String projectName,String studentNames,List<AcctSeed__Time_Card_Line__c> timeCardLines,List<AcctSeed__Project_Task__c> taskRecords,List<Contact_Assignments__c> caRecord,Map<Id,Integer> taskIdTimeCount,Map<Id,String> taskIdTimeMap,List<Contact_Assignments__History> caHistory,List<AcctSeed__Cost_Rates__c> oldCRRecord,Map<Id,String> taskIdTimezone, Set<Date> federalHolidays, Map<Id,Map<String,List<String>>> proTaskWithAmPMDays){
         
         Map<String,Map<Date,TimeCardDayCommunityDomain.DayEntries>> chargeCodedateEntryMap = new Map<String,Map<Date,TimeCardDayCommunityDomain.DayEntries>>();
         List<TimeCardDayCommunityDomain.InstructorDayDetails> dayDetailsList = new List<TimeCardDayCommunityDomain.InstructorDayDetails>();
@@ -867,7 +869,35 @@ public class TimeCardDayCommunityTranslator {
                         }
                         day.showEditIcon = false;
                         day.showReverseIcon = false;
-                    }          
+                    }    
+                    
+                    
+                    if(task.Project_Task_Type__c == 'Preparation time' && taskIdTimeCount.containsKey(task.Id)){
+                        List<String> dayAMValues = new List<String>();
+                        List<String> dayPMValues = new List<String>();
+                        Map<String,List<String>> dayWithAmPmMap = new Map<String,List<String>>();
+                        
+                        if(proTaskWithAmPMDays.containsKey(task.Id)){
+                          dayWithAmPmMap = proTaskWithAmPMDays.get(task.Id);
+                           if(dayWithAmPmMap.containsKey('AM')){
+                                dayAMValues = dayWithAmPmMap.get('AM');
+                            }
+                            if(dayWithAmPmMap.containsKey('PM')){
+                                dayPMValues = dayWithAmPmMap.get('PM');
+                            }
+                            
+                            day.timeRowCount = taskIdTimeCount.get(task.Id);
+                            
+                            if(String.isNotBlank(day.dayType) && ((dayAMValues != null && dayAMValues.contains(day.dayType)) || (dayPMValues != null && dayPMValues.contains(day.dayType)))){
+                               if(taskIdTimeCount.get(task.Id) != 1 && taskIdTimeMap.containsKey(task.Id)){
+                                    day.timeType = taskIdTimeMap.get(task.Id);
+                                }else if(taskIdTimeCount.get(task.Id) == 1){
+                                    day.timeType  = 'Single';
+                                }
+                            }
+                        }
+                    }
+                    
                     detail.dayEntries.add(day);
                 }
             }
@@ -1165,7 +1195,7 @@ public class TimeCardDayCommunityTranslator {
                         
                             //W-004824 - student hours disable based on CA end date
                             
-                            if(dt > system.today() || (ca.Status__c == 'Ended' && dt > ca.End_Date__c) 
+                            if(dt > system.today() || ((ca.Status__c == 'Ended' || ca.Status__c == 'Transferred') && dt > ca.End_Date__c) 
                                 || (ca.Status__c != 'Ended' && dt < ca.Start_Date__c)){
                                 
                                 entry.isHrsDisabled = true;
@@ -1212,7 +1242,7 @@ public class TimeCardDayCommunityTranslator {
                     
                         //W-004824 - student hours disable based on CA end date
                     
-                         if(dt > system.today() || (ca.Status__c == 'Ended' && dt > ca.End_Date__c)
+                         if(dt > system.today() || ((ca.Status__c == 'Ended' || ca.Status__c == 'Transferred')  && dt > ca.End_Date__c)
                             || (ca.Status__c != 'Ended' && dt < ca.Start_Date__c)){
                             
                             entry.isHrsDisabled = true;
@@ -1590,8 +1620,13 @@ public class TimeCardDayCommunityTranslator {
         TimeCardDayCommunityDomain.InstructorRowDetails weekDetails = new  TimeCardDayCommunityDomain.InstructorRowDetails();
         List<TimeCardDayCommunityDomain.WeekRangeValues> weekDates = new List<TimeCardDayCommunityDomain.WeekRangeValues>();
         
-        String DlsClassNo = studentNamesWithDlsClassNo.split('/')[0];
-        String studentNames = studentNamesWithDlsClassNo.split('/')[1];
+        String DlsClassNo = '';
+        String studentNames = '';
+        
+        if(String.isNotBlank(studentNamesWithDlsClassNo)){
+            DlsClassNo = studentNamesWithDlsClassNo.split('/')[0];
+            studentNames = studentNamesWithDlsClassNo.split('/')[1];
+        }
         
         Date today = system.today();
         Date currst;
@@ -2062,7 +2097,7 @@ public class TimeCardDayCommunityTranslator {
         
         TimeCardDayCommunityDomain.WeekSummaryDetail weekSummary = new TimeCardDayCommunityDomain.WeekSummaryDetail();
         
-        weekSummary.summary = summaryDetailFormation(startDate,endDate,projectName,studentNames,lineDetails,taskRecords,caRecord,taskIdTimeCount,taskIdTimeMap,caHistory,oldCRRecord,taskIdTimezone);
+        weekSummary.summary = summaryDetailFormation(startDate,endDate,projectName,studentNames,lineDetails,taskRecords,caRecord,taskIdTimeCount,taskIdTimeMap,caHistory,oldCRRecord,taskIdTimezone,new Map<Id,Map<String,List<String>>>());
         weekSummary.defaultCostRateRateType = taskRecords[0].AcctSeed__Project__r.Default_Cost_Rate_Rate_Type__c;
 
         
@@ -2253,7 +2288,7 @@ public class TimeCardDayCommunityTranslator {
     }
     
     //Method to form summary information along with entry formation
-    public static List<TimeCardDayCommunityDomain.SummaryDetail> summaryDetailFormation(Date st,Date ed,String projectName,String studentNames,List<AcctSeed__Time_Card_Line__c> timeCardLines,List<AcctSeed__Project_Task__c> taskRecords,List<Contact_Assignments__c> caRecord,Map<Id,Integer> taskIdTimeCount,Map<Id,String> taskIdTimeMap,List<Contact_Assignments__History> caHistory,List<AcctSeed__Cost_Rates__c> oldCRRecord,Map<Id,String> taskIdTimezone){
+    public static List<TimeCardDayCommunityDomain.SummaryDetail> summaryDetailFormation(Date st,Date ed,String projectName,String studentNames,List<AcctSeed__Time_Card_Line__c> timeCardLines,List<AcctSeed__Project_Task__c> taskRecords,List<Contact_Assignments__c> caRecord,Map<Id,Integer> taskIdTimeCount,Map<Id,String> taskIdTimeMap,List<Contact_Assignments__History> caHistory,List<AcctSeed__Cost_Rates__c> oldCRRecord,Map<Id,String> taskIdTimezone,Map<Id,Map<String,List<String>>> proTaskWithAmPMDays){
         
         List<TimeCardDayCommunityDomain.SummaryDetail> summaryDetail = new List<TimeCardDayCommunityDomain.SummaryDetail>();
         
@@ -2518,15 +2553,15 @@ public class TimeCardDayCommunityTranslator {
                         day.chargeCode1 = chargeCode1;
                         day.chargeCode2 = chargeCode2;
                         
+                        
                         if(task.Project_Task_Type__c == 'Preparation time' && taskIdTimeCount.containsKey(task.Id)){
                             day.timeRowCount = taskIdTimeCount.get(task.Id);
                             
                             if(taskIdTimeCount.get(task.Id) != 1 && taskIdTimeMap.containsKey(task.Id)){
                                 day.timeType = taskIdTimeMap.get(task.Id);
                             }else if(taskIdTimeCount.get(task.Id) == 1){
-                                day.timeType = 'Single';
+                                day.timeType  = 'Single';
                             }
-                            
                         }else if(task.Project_Task_Type__c != 'Preparation time'){
                             day.timeRowCount = 1;
                             day.timeType = 'AM';
@@ -2711,14 +2746,29 @@ public class TimeCardDayCommunityTranslator {
                         }
                         
                         if(task.Project_Task_Type__c == 'Preparation time' && taskIdTimeCount.containsKey(task.Id)){
-                            day.timeRowCount = taskIdTimeCount.get(task.Id);
+                            List<String> dayAMValues = new List<String>();
+                            List<String> dayPMValues = new List<String>();
+                            Map<String,List<String>> dayWithAmPmMap = new Map<String,List<String>>();
                             
-                            if(taskIdTimeCount.get(task.Id) != 1 && taskIdTimeMap.containsKey(task.Id)){
-                                day.timeType = taskIdTimeMap.get(task.Id);
-                            }else if(taskIdTimeCount.get(task.Id) == 1){
-                                day.timeType = 'Single';
+                            if(proTaskWithAmPMDays.containsKey(task.Id)){
+                                dayWithAmPmMap = proTaskWithAmPMDays.get(task.Id);
+                                if(dayWithAmPmMap.containsKey('AM')){
+                                    dayAMValues = dayWithAmPmMap.get('AM');
+                                }
+                                if(dayWithAmPmMap.containsKey('PM')){
+                                    dayPMValues = dayWithAmPmMap.get('PM');
+                                }
+                                
+                                day.timeRowCount = taskIdTimeCount.get(task.Id);
+                                
+                                if(String.isNotBlank(day.dayType) && ((dayAMValues != null && dayAMValues.contains(day.dayType)) || (dayPMValues != null && dayPMValues.contains(day.dayType)))){
+                                    if(taskIdTimeCount.get(task.Id) != 1 && taskIdTimeMap.containsKey(task.Id)){
+                                        day.timeType = taskIdTimeMap.get(task.Id);
+                                    }else if(taskIdTimeCount.get(task.Id) == 1){
+                                        day.timeType = 'Single';
+                                    }
+                                }
                             }
-                            
                         }else if(task.Project_Task_Type__c != 'Preparation time'){
                             day.timeRowCount = 1;
                             day.timeType = 'AM';
@@ -2900,12 +2950,29 @@ public class TimeCardDayCommunityTranslator {
                     }
                     
                     if(task.Project_Task_Type__c == 'Preparation time' && taskIdTimeCount.containsKey(task.Id)){
-                        day.timeRowCount = taskIdTimeCount.get(task.Id);
+                        List<String> dayAMValues = new List<String>();
+                        List<String> dayPMValues = new List<String>();
+                        Map<String,List<String>> dayWithAmPmMap = new Map<String,List<String>>();
                         
-                        if(taskIdTimeCount.get(task.Id) != 1 && taskIdTimeMap.containsKey(task.Id)){
-                            day.timeType = taskIdTimeMap.get(task.Id);
-                        }else if(taskIdTimeCount.get(task.Id) == 1){
-                            day.timeType = 'Single';
+                        if(proTaskWithAmPMDays.containsKey(task.Id)){
+                            dayWithAmPmMap = proTaskWithAmPMDays.get(task.Id);
+                            if(dayWithAmPmMap.containsKey('AM')){
+                                dayAMValues = dayWithAmPmMap.get('AM');
+                            }
+                            if(dayWithAmPmMap.containsKey('PM')){
+                                dayPMValues = dayWithAmPmMap.get('PM');
+                            }
+                            
+                            day.timeRowCount = taskIdTimeCount.get(task.Id);
+                            
+                            if(String.isNotBlank(day.dayType) && ((dayAMValues != null && dayAMValues.contains(day.dayType)) || (dayPMValues != null && dayPMValues.contains(day.dayType)))){
+                                if(taskIdTimeCount.get(task.Id) != 1 && taskIdTimeMap.containsKey(task.Id)){
+                                    day.timeType = taskIdTimeMap.get(task.Id);
+                                }else if(taskIdTimeCount.get(task.Id) == 1){
+                                    day.timeType = 'Single';
+                                }
+                            }
+                            
                         }
                         
                     }else if(task.Project_Task_Type__c != 'Preparation time'){
@@ -2919,7 +2986,6 @@ public class TimeCardDayCommunityTranslator {
                     
                     summary.dayEntries.add(day);
                 }
-                
             }
             
             summary.insTotalHrs = String.valueOf(totalHr);

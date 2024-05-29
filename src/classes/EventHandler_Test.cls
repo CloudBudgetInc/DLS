@@ -893,4 +893,173 @@ public class EventHandler_Test {
             
         Test.stopTest();
     }
+    
+    // LCR population when event creation
+    private static testMethod void LCRPopulationTest_1(){
+    
+        Account a = new Account(Name = 'DLI');
+        insert a;
+        
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        List<Contact> stdCon = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Id lTProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Language_Training_Projects').getRecordTypeId();
+        Id usrId = UserInfo.getUserId();
+        
+        Date projSD = Date.newInstance(System.today().year(),System.today().month(),01);
+        Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+        List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
+        
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'LCR Population Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+        insert proj;
+        
+        Test.startTest(); 
+        
+            AcctSeed__Project_Task__c projTask = new AcctSeed__Project_Task__c(Name = 'Test Task-Hindi',AcctSeed__Project__c=proj.Id,Project_Task_Type__c='Language Training', AcctSeed__Labor_GL_Account__c=glAccList[0].Id, Total_Qty_Planned__c = 100);
+            insert projTask;
+            
+            List<Schedule__c> schList = new List<Schedule__c> {
+                new Schedule__c(Name = '15-00687-SH1', Monday__c = true, Tuesday__c = true, Wednesday__c = true, Thursday__c = true, Project__c = proj.Id,Project_Task__c=projTask.Id, Total_Hours__c = 0,End_Date__c=System.Today()+20, Start_Date__c=System.Today(),Status__c= 'Drafted', Schedule_Type__c = 'Regular', Instructor__c = stdCon[1].Id)
+            };
+            insert schList;
+            
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            AcctSeed__Cost_Rates__c lcr = new AcctSeed__Cost_Rates__c(Contact__c = stdCon[1].Id, Rate_Type__c = 'DLI-21 SCA LT',AcctSeed__Hourly_Cost__c = 22,Status__c = 'Approved', Payroll_Item__c = 'R');
+            insert lcr;
+            
+            // Insert Paper Timesheet custom setting
+            List<System_Values__c> sysVal = new List<System_Values__c>{new System_Values__c(Name ='Paper Timesheet Value', Value__c = 'True')};
+            Insert sysVal;
+        
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student'),
+                new Contact_Assignments__c(RecordTypeId = insRTId, Drafted_Labor_Cost_Rate__c = lcr.Id, Project__c = proj.Id, Candidate_Name__c = stdCon[1].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert conAssignRecs;
+            
+            // Event creation
+            ScheduleCmpLightningController.scheduleActivate(schList[0].Id);
+            
+        Test.stopTest();
+        
+        List<Events__c> events = [SELECT Id, Labor_Cost_Rate__c FROM Events__c WHERE Schedule__c = :schList[0].Id];
+        System.assertEquals(lcr.Id, events[0].Labor_Cost_Rate__c);
+    }
+    
+    // LCR population when Pay Rate Modification
+    private static testMethod void LCRPopulationTest_2(){
+    
+        Account a = new Account(Name = 'DLS');
+        insert a;
+        
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        List<Contact> stdCon = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Id lTProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Language_Training_Projects').getRecordTypeId();
+        Id usrId = UserInfo.getUserId();
+        
+        Date projSD = Date.newInstance(System.today().year(),System.today().month(),01);
+        Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+        List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
+        
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'LCR Population Test Project 2',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+        insert proj;
+        
+        AcctSeed__Project_Task__c projTask = new AcctSeed__Project_Task__c(Name = 'Test Task-Hindi',AcctSeed__Project__c=proj.Id,Project_Task_Type__c='Language Training', AcctSeed__Labor_GL_Account__c=glAccList[0].Id, Total_Qty_Planned__c = 100);
+        insert projTask;
+        
+        List<Schedule__c> schList = new List<Schedule__c> {
+            new Schedule__c(Name = '15-00687-SH1', Monday__c = true, Tuesday__c = true, Wednesday__c = true, Thursday__c = true, Project__c = proj.Id,Project_Task__c=projTask.Id, Total_Hours__c = 0,End_Date__c=System.Today()+20, Start_Date__c=System.Today(),Status__c= 'Drafted', Schedule_Type__c = 'Regular', Instructor__c = stdCon[1].Id)
+        };
+        insert schList;
+        
+        Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+        Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+    
+        AcctSeed__Cost_Rates__c lcr = new AcctSeed__Cost_Rates__c(Contact__c = stdCon[1].Id, Rate_Type__c = 'LT without Prep',AcctSeed__Hourly_Cost__c = 22,Status__c = 'Approved', Payroll_Item__c = 'R');
+        insert lcr;
+        
+        Test.startTest();
+        
+            // Insert Paper Timesheet custom setting
+            List<System_Values__c> sysVal = new List<System_Values__c>{new System_Values__c(Name ='Paper Timesheet Value', Value__c = 'True')};
+            Insert sysVal;
+        
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student'),
+                new Contact_Assignments__c(RecordTypeId = insRTId, Drafted_Labor_Cost_Rate__c = lcr.Id, Project__c = proj.Id, Candidate_Name__c = stdCon[1].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert conAssignRecs;
+            
+            // Event creation
+            ScheduleCmpLightningController.scheduleActivate(schList[0].Id);
+            
+            Pay_Rate_Modification_Handler.isFromCRModify = true;
+            AcctSeed__Cost_Rates__c prm_LCR = new AcctSeed__Cost_Rates__c(Prior_Version__c = lcr.Id, Effective_Date__c = System.Today()+10, Contact__c = stdCon[1].Id, Rate_Type__c = 'LT without Prep',AcctSeed__Hourly_Cost__c = 22,Status__c = 'Approved', Payroll_Item__c = 'R');
+            insert prm_LCR;
+            
+        Test.stopTest();
+        
+        Date effDate = System.Today()+10;
+        List<Events__c> events = [SELECT Id, Labor_Cost_Rate__c FROM Events__c WHERE Schedule__c = :schList[0].Id AND Date__c > : effDate];
+        System.assertEquals(prm_LCR.Id, events[0].Labor_Cost_Rate__c);
+    }
+    
+    // LCR population when event creation for testing project
+    private static testMethod void LCRPopulationTest_3(){
+        
+        Account a = new Account(Name = 'DLI');
+        insert a;
+        
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        List<Contact> stdCon = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Id testProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Testing_Projects').getRecordTypeId();
+        Id usrId = UserInfo.getUserId();
+        
+        Date projSD = Date.newInstance(System.today().year(),System.today().month(),01);
+        Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+        List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
+        
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'LCR Population Test Project 3',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, Oral_Exam_Date_Time__c = projED, End_Date__c = projED);
+        insert proj;
+        
+        Test.startTest(); 
+        
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            AcctSeed__Cost_Rates__c lcr = new AcctSeed__Cost_Rates__c(Contact__c = stdCon[1].Id, Rate_Type__c = 'DLI-21 SCA LT',AcctSeed__Hourly_Cost__c = 22,Status__c = 'Approved', Payroll_Item__c = 'R');
+            insert lcr;
+            
+            // Insert Paper Timesheet custom setting
+            List<System_Values__c> sysVal = new List<System_Values__c>{new System_Values__c(Name ='Paper Timesheet Value', Value__c = 'True')};
+            Insert sysVal;
+        
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student'),
+                new Contact_Assignments__c(RecordTypeId = insRTId, Drafted_Labor_Cost_Rate__c = lcr.Id, Project__c = proj.Id, Candidate_Name__c = stdCon[1].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert conAssignRecs;
+                        
+            Events__c eve = new Events__c();
+            eve.Date__c = projED;
+            eve.Instructor__c = stdCon[1].Id;
+            eve.Start_Time__c = '09:00 AM';
+            eve.End_Time__c = '10:00 AM';
+            eve.Id = null;
+            eve.Project__c =  proj.Id;
+            
+            String result = EventTabController.createEventsForTestingProject(JSON.serialize(new List<Events__c>{eve}), '', false, false);
+            
+        Test.stopTest();
+        
+        List<Events__c> events = [SELECT Id, Labor_Cost_Rate__c FROM Events__c WHERE Project__c = :proj.Id];
+        System.assertEquals(lcr.Id, events[0].Labor_Cost_Rate__c);
+    }
 }

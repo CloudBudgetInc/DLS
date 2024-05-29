@@ -43,6 +43,7 @@ public class TimeCardDayCommunityDomain {
         public String projectRTId;
         public Boolean noStudentApproval;
         public Boolean noStudentHrsVerification;
+        public String dliProType;
         
         //For Admin Time Entry Instructor View
         public String name;

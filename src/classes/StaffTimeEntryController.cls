@@ -2,8 +2,8 @@
  * @description       : Controller of component utilized by instructors to log their work hours for administrative tasks.
  * @author            : Dhinesh Kumar
  * @group             : Instructor Community
- * @last modified on  : 01/17/2024
- * @last modified by  : Dhinesh Kumar
+ * @last modified on  : 02/26/2024
+ * @last modified by  : Siva Prasanth
 **/
 public without sharing class StaffTimeEntryController {
     
@@ -271,6 +271,80 @@ public without sharing class StaffTimeEntryController {
         } catch (DmlException e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+    
+     // get Summary Records informations
+    @AuraEnabled
+    public static Decimal getSummaryTimeRecords(String fromDate,String toDate,String conId) {
+        List<TimeCardDayDomain.TimeDaySummary> timeSummaryList = new List<TimeCardDayDomain.TimeDaySummary>();
+        Decimal Hrs = 0;
+        Set<Id> proIds = new Set<Id>();
+        
+        if(String.isNotBlank(fromDate) && String.isNotBlank(toDate) && String.isNotBlank(conId)){
+            Date startDate = Date.valueOf(fromDate);
+            Date endDate = Date.valueOf(toDate);
+            Date monthStart = startDate;
+            Date monthEnd = endDate;
+            
+            Date date1 = monthStart;
+            Date date2 = monthEnd;
+            Date caEndedFilterDate = monthStart.addDays(-14);
+            
+            for(Contact_Assignments__c ca : [SELECT Id, Candidate_Name__c, Project__c, Project__r.Name, Project__r.DLS_Ref__c, Include_Fringe__c, Rate_Card_Rate__c 
+                                             FROM Contact_Assignments__c 
+                                             WHERE RecordType.DeveloperName IN  ('Staff','Instructor') AND Candidate_Name__c = :conId AND
+                                             ((Status__c IN ('Active','On Hold') AND Start_Date__c <= :endDate AND End_Date__c >= :monthStart) OR
+                                              (Status__c = 'Ended' AND End_Date__c >= :monthEnd))]){
+                                                  
+				proIds.add(ca.Project__c);
+			}
+            
+                      
+            List<Date> monthdaysList = new List<Date>();
+            
+            while(monthStart <= monthEnd) {
+                monthdaysList.add(monthStart);
+                monthStart = monthStart.addDays(1);
+            }
+            
+            system.debug(':::::::startDate::::::::'+startDate);
+            system.debug(':::::::endDate::::::::'+endDate);
+            system.debug(':::::::monthStart::::::::'+monthStart);
+            system.debug(':::::::monthEnd::::::::'+monthEnd);
+            
+            List<Contact> conRecList =  ContactService.getContactByName(' WHERE Id = \''+conId+'\'',',Home_Department_Project__r.Name,Supervisor_Name__r.Name,Supervisor_Name__r.ManagerId,Supervisor_Name__r.Manager.Name,RecordType.DeveloperName',new Set<String>{},'');
+            system.debug('::::::conRecList::::'+conRecList);
+            
+            
+            
+            String filterCondition = ' AND Status__c != \'Unposted\' ORDER BY AcctSeed__Date__c ASC';
+            
+            system.debug('::date1:::::::::::::'+date1);
+            system.debug('::date2:::::::::::::'+date2);
+            
+            List<AcctSeed__Time_Card_Line__c> timeCardLineList = new List<AcctSeed__Time_Card_Line__c>();
+            
+            if(conRecList != null && conRecList.size() > 0) {
+                timeCardLineList = TimeCardLineService.getTimeCardLine_dayRecords(filterCondition,proIds,startDate,endDate,conRecList[0].Id);
+            }
+            system.debug(':::::timeCardLineList:::::::'+timeCardLineList);
+            
+            if(timeCardLineList != null && timeCardLineList.size() > 0) {
+                
+                for(AcctSeed__Time_Card_Line__c LineRec : timeCardLineList) {
+
+                    if(LineRec.AcctSeed__Time_Card_Days__r != null && LineRec.AcctSeed__Time_Card_Days__r.size() > 0) {
+                        for(AcctSeed__Time_Card_Day__c td : LineRec.AcctSeed__Time_Card_Days__r) {
+                            
+                            if(td.Total_Hours_Before_Approved__c != null){
+                                hrs += td.Total_Hours_Before_Approved__c;
+                            }
+                        }
+                    }
+                }
+        	}
+       	}
+        return hrs;
     }
 
 }

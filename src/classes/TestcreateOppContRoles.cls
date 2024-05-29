@@ -1276,4 +1276,263 @@ public class TestcreateOppContRoles {
             
         Test.stopTest();
     }
+    
+    // Create Experience record for EI Instructor
+    private static testMethod void createUpdateExp_1(){
+        
+        Contact c = new Contact(LastName = 'EI Test Contact', Email = 'eitestcontact@gmail.com');
+        insert c;
+        
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 1];
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            Contact_Assignments__c eiInsCA = new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[0].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[0].Start_Date__c, End_Date__c = projList[0].End_Date__c, Status__c = 'Active', Assignment_Position__c = 'EI');
+            insert eiInsCA;
+            
+            List<Experience__c> exp = [SELECT Id FROM Experience__c WHERE Contact__c = : c.Id AND RecordType.DeveloperName = 'Professional_Work_Experience' AND Services__c = 'Language Training'];
+            System.assertEquals(1, exp.size());            
+        
+        Test.stopTest();
+    }
+    
+    // Create Experience record for Tester Instructor
+    private static testMethod void createUpdateExp_2(){
+        
+        Contact c = new Contact(LastName = 'Testing Test Contact', Email = 'eitestcontact@gmail.com');
+        insert c;
+        
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 1];
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            Contact_Assignments__c testInsCA = new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[0].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[0].Start_Date__c, End_Date__c = projList[0].End_Date__c, Status__c = 'Active', Assignment_Position__c = 'Tester');
+            insert testInsCA;
+            
+            List<Experience__c> exp = [SELECT Id FROM Experience__c WHERE Contact__c = : c.Id AND RecordType.DeveloperName = 'Professional_Work_Experience' AND Services__c = 'Testing'];
+            System.assertEquals(1, exp.size());            
+        
+        Test.stopTest();
+    }
+    
+    // Create Experience record for Translator Instructor
+    private static testMethod void createUpdateExp_3(){
+        
+        Contact c = new Contact(LastName = 'Translator Test Contact', Email = 'eitestcontact@gmail.com');
+        insert c;
+        
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 1];
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            Contact_Assignments__c transInsCA = new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[0].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[0].Start_Date__c, End_Date__c = projList[0].End_Date__c, Status__c = 'Active', Assignment_Position__c = 'Translator');
+            insert transInsCA;
+            
+            List<Experience__c> exp = [SELECT Id FROM Experience__c WHERE Contact__c = : c.Id AND RecordType.DeveloperName = 'Professional_Work_Experience' AND Services__c = 'Translation'];
+            System.assertEquals(1, exp.size());            
+        
+        Test.stopTest();
+    }
+    
+    // Update Experience record for EI Instructor
+    private static testMethod void createUpdateExp_4(){
+        
+        Contact c = new Contact(LastName = 'EI Test Contact', Email = 'eitestcontact@gmail.com');
+        insert c;
+        
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 1];
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            Contact_Assignments__c eiInsCA = new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[0].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[0].Start_Date__c, End_Date__c = projList[0].End_Date__c, Status__c = 'Draft', Assignment_Position__c = 'Instructor');
+            insert eiInsCA;
+            
+            Experience__c exp = new Experience__c(Contact__c = c.Id, Name_of_Company__c = 'DLS', Start_Date__c = projList[0].Start_Date__c.addDays(-100), End_Date__c = projList[0].End_Date__c.addDays(-100), Services__c = 'Language Training');           
+            insert exp;
+            
+            List<Contact_Assignments__c> insCA = [SELECT Id FROM Contact_Assignments__c WHERE Id = :eiInsCA.Id];
+            insCA[0].Status__c = 'Active';
+            update insCA[0];
+            
+            List<Experience__c> updatedExp = [SELECT Id, End_Date__c FROM Experience__c WHERE Id = : exp.Id];
+            System.assertEquals(null, updatedExp[0].End_Date__c); 
+            
+        Test.stopTest();
+    }
+    
+    // Update Experience record for Instructor for Canceled project
+    private static testMethod void createUpdateExp_5(){
+        
+        Contact c = new Contact(LastName = 'EI Test Contact', Email = 'eitestcontact@gmail.com');
+        insert c;
+        
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 2];
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<Contact_Assignments__c> eiInsCA = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[0].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[0].Start_Date__c, End_Date__c = projList[0].End_Date__c, Status__c = 'Active', Assignment_Position__c = 'Instructor'),
+                new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[1].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[1].Start_Date__c, End_Date__c = projList[1].End_Date__c, Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert eiInsCA;
+            
+            List<Experience__c> exp = [SELECT Id FROM Experience__c WHERE Contact__c = : c.Id AND RecordType.DeveloperName = 'Professional_Work_Experience' AND Services__c = 'Language Training'];
+            System.assertEquals(1, exp.size()); 
+            
+            Map<Id, Contact_Assignments__c> updateCA1 = new Map<Id, Contact_Assignments__c>();
+            Map<Id, Contact_Assignments__c> updateCA2 = new Map<Id, Contact_Assignments__c>();
+            for(Contact_Assignments__c ca : [SELECT Id, Project__c FROM Contact_Assignments__c WHERE Id IN : eiInsCA]){
+                if(ca.Project__c == projList[0].Id){
+                    ca.Status__c = 'Canceled';
+                    updateCA1.put(ca.Id, ca);
+                }
+                if(ca.Project__c == projList[1].Id){
+                    ca.Status__c = 'Ended';
+                    ca.End_Date__c = Date.Today();
+                    updateCA2.put(ca.Id, ca);
+                }
+                
+            }
+            update updateCA2.values();
+            update updateCA1.values();
+            
+            List<Experience__c> updatedExp = [SELECT Id, End_Date__c FROM Experience__c WHERE Id IN : exp];
+            System.assertEquals(Date.Today(), updatedExp[0].End_Date__c); 
+            
+        Test.stopTest();
+    }
+    
+    // Update Experience record for Instructor for Ended project
+    private static testMethod void createUpdateExp_6(){
+        
+        Contact c = new Contact(LastName = 'EI Test Contact', Email = 'eitestcontact@gmail.com');
+        insert c;
+        
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 2];
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<Contact_Assignments__c> eiInsCA = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[0].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[0].Start_Date__c, End_Date__c = projList[0].End_Date__c, Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert eiInsCA;
+            
+            List<Experience__c> exp = [SELECT Id FROM Experience__c WHERE Contact__c = : c.Id AND RecordType.DeveloperName = 'Professional_Work_Experience' AND Services__c = 'Language Training'];
+            System.assertEquals(1, exp.size()); 
+            
+            Map<Id, Contact_Assignments__c> updateCA1 = new Map<Id, Contact_Assignments__c>();
+            for(Contact_Assignments__c ca : [SELECT Id, Project__c FROM Contact_Assignments__c WHERE Id IN : eiInsCA]){
+                if(ca.Project__c == projList[0].Id){
+                    ca.Status__c = 'Ended';
+                    ca.End_Date__c = Date.Today();
+                    updateCA1.put(ca.Id, ca);
+                }
+            }
+            update updateCA1.values();
+            
+            List<Experience__c> updatedExp = [SELECT Id, End_Date__c FROM Experience__c WHERE Id IN : exp];
+            System.assertEquals(Date.Today(), updatedExp[0].End_Date__c); 
+            
+        Test.stopTest();
+    }
+    
+    // Update Experience record for Instructor for Ended project
+    private static testMethod void createUpdateExp_7(){
+        
+        Contact c = new Contact(LastName = 'EI Test Contact', Email = 'eitestcontact@gmail.com');
+        insert c;
+        
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 2];
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<Contact_Assignments__c> eiInsCA = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = projList[0].Id, Candidate_Name__c = c.Id, Start_Date__c = projList[0].Start_Date__c, End_Date__c = projList[0].End_Date__c, Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert eiInsCA;
+            
+            List<Experience__c> exp = [SELECT Id FROM Experience__c WHERE Contact__c = : c.Id AND RecordType.DeveloperName = 'Professional_Work_Experience' AND Services__c = 'Language Training'];
+            System.assertEquals(1, exp.size()); 
+            
+            projList[0].On_Hold_Date__c = Date.Today().addDays(-2);
+            update projList[0];
+        
+            Map<Id, Contact_Assignments__c> updateCA1 = new Map<Id, Contact_Assignments__c>();
+            for(Contact_Assignments__c ca : [SELECT Id, Project__c FROM Contact_Assignments__c WHERE Id IN : eiInsCA]){
+                if(ca.Project__c == projList[0].Id){
+                    ca.Status__c = 'On Hold';
+                    updateCA1.put(ca.Id, ca);
+                }
+            }
+            update updateCA1.values();
+            
+            List<Experience__c> updatedExp = [SELECT Id, End_Date__c FROM Experience__c WHERE Id IN : exp];
+            System.assertEquals(Date.Today().addDays(-2), updatedExp[0].End_Date__c); 
+            
+        Test.stopTest();
+    }
+    
+    // To cover updateContactHiringStage logic
+    private static testMethod void updateContactHiringStage_Test(){
+        
+        List<Account> acc = [SELECT Id FROM Account LIMIT 1];
+        
+        Id canRTId = Schema.SObjectType.Contact.getRecordTypeInfosByDeveloperName().get('Candidate').getRecordTypeId();
+        
+        // TestClassUtil contacts already having contact assignment record. For this logic need new contact
+        Contact newHireCon = new Contact(RecordTypeId = canRTId, LastName = 'Test Hire Contact', Email = 'testhirecontact@gmail.com', AccountId = acc[0].Id);
+        insert newHireCon;
+        
+        Test.startTest();
+        
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 1];
+            
+            Contact_Assignments__c conAssign = new Contact_Assignments__c(RecordTypeId = insRTId, Candidate_Name__c = newHireCon.Id, Project__c = projList[0].Id, Status__c = 'Active', Start_Date__c = Date.Today(), End_Date__c = Date.Today().addMonths(1));
+            insert conAssign;
+            
+            List<Contact> conRec = [SELECT Id, Candidate_Hiring_Stage__c FROM Contact WHERE Id = : newHireCon.Id];
+            System.assertEquals('Hired', conRec[0].Candidate_Hiring_Stage__c);
+            
+        Test.stopTest();
+    }
+    
+    public static testMethod void updateCAAccountFromCA_Test(){
+     
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        List<AcctSeed__Project__c> projRec = [SELECT Id, AcctSeed__Account__c FROM AcctSeed__Project__c LIMIT 1];
+        List<Contact> contacts = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Test.startTest();
+        
+            Date projSD = Date.newInstance(System.today().year(),System.today().month(),01);
+            Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+                        
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = projRec[0].Id, Candidate_Name__c = contacts[0].Id, Start_Date__c = projSD, End_Date__c = projED, Status__c = 'Active', Assignment_Position__c = 'Class Leader')
+            };
+            insert conAssignRecs;                    
+        
+        Test.stopTest();
+        
+        List<Contact_Assignments__c> updateCARec = [SELECT Id, Account__c FROM Contact_Assignments__c WHERE Id = :conAssignRecs[0].Id];
+        System.assertEquals(projRec[0].AcctSeed__Account__c, updateCARec[0].Account__c);
+    }
 }

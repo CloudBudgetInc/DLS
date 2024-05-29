@@ -558,6 +558,8 @@ public with sharing class ScheduleCmpLightningController {
             System.debug('eventDates::::'+eventDates);
             String returnStr ='';
             parentIds = new Set<Id>();
+            Date tempDate;
+            Id oldInsId;
             
             if(schType != 'Substitute') {
                 parentIds.add(sch.Prior_Schedule__c);
@@ -569,7 +571,8 @@ public with sharing class ScheduleCmpLightningController {
                 
                     //Qry prior schedule details to check its is started or not
                     //If not we have to set the status as canceled & need to delete all the events under that schedule
-                    List<Schedule__c> priorSchedule = [SELECT Id,Start_Date__c,End_Date__c,Status__c FROM Schedule__c WHERE Id = :sch.Prior_Schedule__c];
+                    List<Schedule__c> priorSchedule = [SELECT Id,Start_Date__c,End_Date__c,Status__c,Instructor__c FROM Schedule__c WHERE Id = :sch.Prior_Schedule__c];
+                    oldInsId = priorSchedule[0].Instructor__c;
                     
                     if(priorSchedule.size() > 0 && priorSchedule[0].Start_Date__c >= sch.Start_Date__c){
                         schList[0].Status__c = 'Canceled';
@@ -577,7 +580,7 @@ public with sharing class ScheduleCmpLightningController {
                         schList[0].Cancellation_Date__c = system.today();
                     }else {
                         system.debug(':::enddate'+sch.Start_Date__c+'::::'+System.Today());
-                        Date tempDate = sch.Start_Date__c;
+                        tempDate = sch.Start_Date__c;
                         
                         Datetime dt = DateTime.newInstance(tempDate, Time.newInstance(0, 0, 0, 0));
                         // To check the End date is not in a working Day.
@@ -629,9 +632,12 @@ public with sharing class ScheduleCmpLightningController {
             returnStr = 'Schedule has been created succesfully';
             if(schType != 'Extended' && schType != 'Room Change' && sch.Instructor__c != null) {
                 List<Contact> conList = ContactService.getContactByparentId(' WHERE Id ', 'RecordType.DeveloperName', new Set<Id>{sch.Instructor__c});
-                List<Contact_Assignments__c> contactList = ContactAssignmentService.getContactassignmentRec(' WHERE RecordType.DeveloperName = \'Instructor\' AND Candidate_Name__c = \''+sch.Instructor__c+'\' AND (Project__c = \''+parentId +'\' OR Opportunity_Name__c = \''+parentId +'\')','Rate_Card_Rate__r.Status__c');
+                // Added CA status condition on Feb 28 2024 : W-007996 - Tester Schedule Action Issue
+                // The system should automatically generate a new Tester CA for the Tester if they have an existing Tester or Instructor CA on the Project that has ended in the past.
+                List<Contact_Assignments__c> contactList = ContactAssignmentService.getContactassignmentRec(' WHERE RecordType.DeveloperName = \'Instructor\' AND Candidate_Name__c = \''+sch.Instructor__c+'\' AND (Project__c = \''+parentId +'\' OR Opportunity_Name__c = \''+parentId +'\') AND Status__c NOT IN (\'Canceled\', \'Ended\')','Rate_Card_Rate__r.Status__c');
                 List<AcctSeed__Cost_Rates__c> crList = new List<AcctSeed__Cost_Rates__c>();
                 Boolean isCreateNewCA = false;
+                List<Contact_Assignments__c> allConAssigns = new List<Contact_Assignments__c>();
 
                 // To assign "FT Salary & Benefits" Cost Rate for DLS Employees
                 if(conList != null && conList.size() > 0 && conList[0].RecordType.DeveloperName == 'DLS_Employee'){
@@ -700,8 +706,43 @@ public with sharing class ScheduleCmpLightningController {
                     }
                     
                     newInstructor.RecordTypeId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByName().get('Instructor').getRecordTypeId();
-                    insert newInstructor;
+                    allConAssigns.add(newInstructor);
+                    //insert newInstructor;
                 }
+                
+                System.debug(':::schType:::'+schType);
+                System.debug(':::oldInsId:::'+oldInsId);
+                System.debug(':::sch.Prior_Schedule__c:::'+sch.Prior_Schedule__c);
+                // Added on Feb 20 2024
+                // W-007978 : Update to Replace Instructor Action Functionality
+                // If the Contact Assignment of the Replaced Instructor does not have any other schedules, we would like the system to update their CA Status and End Date.
+                if(schType == 'Replace Instructor' && oldInsId != null){
+                    
+                    List<Schedule__c> schRecs = [SELECT Id FROM Schedule__c WHERE Project__c = : sch.Project__c AND Instructor__c = : oldInsId AND Status__c NOT IN ('Canceled', 'Completed') AND Id != : sch.Prior_Schedule__c AND End_Date__c >= TODAY AND Project_Task__r.Project_Task_Type__c != 'Preparation time'];
+                    System.debug(':::schRecs:::'+schRecs);
+                    
+                    if(schRecs == null || schRecs.size() == 0){
+                    
+                        List<Contact_Assignments__c> oldCARec = [SELECT Id, Candidate_Name__c FROM Contact_Assignments__c WHERE Project__c = : sch.Project__c AND Candidate_Name__c = : oldInsId AND Status__c NOT IN ('Canceled', 'Ended') AND End_Date__c >= TODAY];
+                        System.debug(':::oldCARec:::'+oldCARec);
+                         
+                        if(oldCARec.size() > 0 && tempDate != null){
+                            
+                            Contact_Assignments__c oldCA = new Contact_Assignments__c();
+                            oldCA.Id = oldCARec[0].Id;
+                            oldCA.End_Date__c = tempDate.addDays(-1);
+                            // If the Contact Assignment End Date of the Replaced Instructor is in the Past, we would like the system to update their CA Status to Ended.
+                            if(oldCA.End_Date__c < System.Today()){
+                                oldCA.Status__c = 'Ended';
+                            }
+                            allConAssigns.add(oldCA);
+                        } //else {  tempDate = null //priorSchedule[0].Start_Date__c >= sch.Start_Date__c
+                            // We have cancelled the previous schedule for future dates. What will be done with CA?
+                        //}
+                    }
+                }
+                System.debug('allConAssigns:::'+allConAssigns);
+                upsert allConAssigns;
             }
             
             system.debug('result:::'+returnStr);
@@ -833,11 +874,52 @@ public with sharing class ScheduleCmpLightningController {
     - Added by NS on Jan 6 2020
     *****************************************************************************************/
     @AuraEnabled
-    public static Boolean checkContactAssignmentExist(String contactId,String parentId){
+    public static Boolean checkContactAssignmentExist(String contactId,String parentId,String schType,Date cAEndDate){
+        Boolean isActiveCA = false;
         
-        List<Contact_Assignments__c> contactAssignment = ContactAssignmentService.getContactassignmentRec(' WHERE RecordType.DeveloperName = \'Instructor\' AND Candidate_Name__c = \''+contactId+'\' AND (Project__c = \''+parentId +'\' OR Opportunity_Name__c = \''+parentId +'\')','');
+        System.debug(':;contactId::'+contactId);
+        String conJSON = ' WHERE RecordType.DeveloperName = \'Instructor\' AND Candidate_Name__c = \''+contactId+'\' AND (Project__c = \''+parentId +'\' OR Opportunity_Name__c = \''+parentId +'\') ';
         
-        if(contactAssignment.size() > 0){
+        if(schType == 'Replace Instructor' || schType == 'Substitute'){
+            conJSON = conJSON +  ' AND Status__c != null ORDER BY End_Date__c DESC';             
+        }else{
+            conJSON = conJSON +  ' AND Status__c != \'Ended\'';              
+        }
+        
+        //W-008039 - When A Substitute or Replace Instructor Action is triggered and the Instructor populated in the Instructor field of the Action page has an Existing CA in Ended Status and with a Cost Rate record = Active, we would like the system to Extend the existing Ended
+        // CA End Date to = the Instructor's New schedule End Date and update his CA from Ended to Active.
+           
+        List<Contact_Assignments__c> contactAssignment = ContactAssignmentService.getContactassignmentRec(conJSON,'Rate_Card_Rate__r.Status__c');
+        
+        System.debug('schType:::'+schType);
+        System.debug('cAEndDate:::'+cAEndDate); 
+
+        if(schType == 'Replace Instructor' || schType == 'Substitute'){
+            List<Contact_Assignments__c> updateCAs = new List<Contact_Assignments__c>();
+            
+            for(Contact_Assignments__c ca : contactAssignment){
+
+                if(ca.Status__c == 'Ended' && (ca.Rate_Card_Rate__r.Status__c == 'Approved') && updateCAs.size() == 0){
+                    
+                    Contact_Assignments__c updateCA = new Contact_Assignments__c();
+                    updateCA.Id = ca.Id; 
+                    updateCA.Status__c = 'Active';
+                    updateCA.End_Date__c = cAEndDate;
+                    updateCAs.add(updateCA);
+                }else if(ca.Status__c != 'Ended'){
+                    isActiveCA = true;
+                }
+            }
+            
+            if(updateCAs.size() > 0){
+                update updateCAs;
+                isActiveCA = true;
+            }
+        }else{
+            isActiveCA = contactAssignment.size() > 0;
+        }
+
+        if(isActiveCA == true){
             return true;
         }else {
             return false;

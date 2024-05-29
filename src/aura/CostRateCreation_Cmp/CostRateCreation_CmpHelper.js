@@ -907,6 +907,10 @@
                         cmp.set("v.showCRMessageModel",true);
                         cmp.find("showFinalCRMsg").open();
                     }else{
+                        if(result.createCAWithoutCR){
+                            costRateInfo.createCAWithoutCR = result.createCAWithoutCR;
+                            cmp.set("v.costRateInfo",costRateInfo);
+                        }
                         self.assignCRTOCAByEvent(cmp);
                     }
                 }

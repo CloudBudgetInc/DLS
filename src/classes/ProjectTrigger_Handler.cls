@@ -7,7 +7,6 @@ public class ProjectTrigger_Handler {
     
     public Static List<RecordType> rtList = new List<RecordType>();
     public Static List<Opportunity_Project_Mapping__c> oppProMapList = new List<Opportunity_Project_Mapping__c>();
-    
     public Static Boolean loadResource = false;
     /*********
         - We had a logic to update assessment reports when project is ended or cancelled and also implemented a logic 
@@ -21,6 +20,9 @@ public class ProjectTrigger_Handler {
         - To prevent recursive email sending process "isFromProjectTrigger_SendGetFeedback" flag is used
         ******/
     public static Boolean isFromProjectTrigger_SendGetFeedback = False;
+    
+    // To prevent recursive account population in contact assignments
+    public static Boolean accPopFromProjTrig = false;
     
     public static void getProRecordType() {
         rtList = SObjectQueryService.getRecTypeListBySobjTypeAndDevName('','AcctSeed__Project__c',new Set<String>());
@@ -42,7 +44,6 @@ public class ProjectTrigger_Handler {
     //Added by NS on July 25 2019
     public static void updateContactSupervisor(Map<Id,Id> proIdManagerId) {
         
-        
         //Qry the project related student / Instructor related Most recent project
         Set<Id> studentIds = new Set<Id>();
         Set<Id> instructorIds = new Set<Id>();
@@ -58,9 +59,6 @@ public class ProjectTrigger_Handler {
                 studentIds.add(ca.Candidate_Name__c);
             }
         }
-        
-        system.debug('::::::::::instructorIds::::'+instructorIds);
-        system.debug('::::::::::studentIds::::'+studentIds);
         
         for(Contact con : [SELECT Id,Name,Supervisor_Name__c,RecordType.DeveloperName, Account.Name,
                                 (SELECT Id,Candidate_Name__c,Project__c,Start_Date__c,RecordType.DeveloperName FROM Candidate_Assignments__r 
@@ -147,7 +145,6 @@ public class ProjectTrigger_Handler {
                 projIdAndfieldNamefieldValue.get(p.Id).putAll(fieldLabelAndfieldvalue);
             }
         }
-        System.debug('::::projIds::::'+projIds);
         
         if(projIds.size() > 0){
         
@@ -155,7 +152,7 @@ public class ProjectTrigger_Handler {
                         
             Map<Id, AcctSeed__Project__c> projIdAndRec = new Map<Id, AcctSeed__Project__c>([SELECT Id, Name, DLS_Class__c, LastModifiedBy.Name, LastModifiedDate FROM AcctSeed__Project__c WHERE Id IN :projIds]);
             Map<Id, String> locIdAndName = new Map <Id, String>();
-            System.debug('::locIds::'+locIds);
+            
             if(locIds != NULL && locIds.size() > 0){
                 
                 for(MTT_Location__c l : [SELECT Id, Name FROM MTT_Location__c WHERE Id IN : locIds]){
@@ -163,7 +160,6 @@ public class ProjectTrigger_Handler {
                     locIdAndName.put(l.Id, l.Name);
                 }
             }
-            System.debug(':::locIdAndName:::::'+locIdAndName);
             
             try{
                 
@@ -195,8 +191,6 @@ public class ProjectTrigger_Handler {
                                 
                                 oldValue = fieldvalue.split(',')[0];
                                 newValue = fieldvalue.split(',')[1];
-                                system.debug(':::oldValue::::'+oldValue);
-                                system.debug(':::newValue::::'+newValue);
                                 
                                 if(label == 'Training Location'){
                                 
@@ -295,7 +289,6 @@ public class ProjectTrigger_Handler {
         }
         
         if( projTasks.size() > 0 ) {
-            System.debug('projTasks::::'+projTasks);
             update projTasks;
         }
     }
@@ -354,7 +347,6 @@ public class ProjectTrigger_Handler {
                     projIdAndPosSet.add(projIdAndPos);      
                 }
             }
-            System.debug('::::proIdAndToAddresses:::'+proIdAndToAddresses);
             
             if(proIdAndToAddresses != NULL && proIdAndToAddresses.size() > 0){
             
@@ -391,7 +383,6 @@ public class ProjectTrigger_Handler {
                             sendEmailList.add(mail);
                         }
                     }
-                    System.debug('::::sendEmailList::::'+sendEmailList);
             
                     if( sendEmailList != NULL && sendEmailList.size() > 0 ) {
                         Messaging.SendEmailResult[] results = Messaging.sendEmail(sendEmailList);
@@ -625,6 +616,22 @@ public class ProjectTrigger_Handler {
         return templateId;
     }
     
+    public static List<String> getSystemValuesList(String systemValueName){
+        
+        List<String> sysValues = new List<String>();
+        
+        if(String.isNotBlank(systemValueName)){
+        
+            System_Values__c sysVal = System_Values__c.getValues(systemValueName); 
+            if (sysVal != null && sysVal.Value__c != null){
+                for (String st : sysVal.Value__c.split(',')){
+                    sysValues.add(st.trim());
+                }
+            }
+        }
+        return sysValues;
+    }
+    
     public static Messaging.SingleEmailMessage getSingleEmail(String orgWideEmailId, String targetObjId, List<String> toAddresses, List<String> cCAddresses, String emailTemplateId, String whatId, String htmlBody, String subject, Boolean saveAsActivity, Boolean treatTargetObjAsRecipient){
                  
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
@@ -657,5 +664,136 @@ public class ProjectTrigger_Handler {
         mail.setTreatTargetObjectAsRecipient(treatTargetObjAsRecipient);
                                     
         return mail;
+    }
+    
+    /***********
+        - Added on Mar 18 2024 : W-008006 : Default Cost Rate and Project Task Mismatch
+        - To send an email to accounting group and HR users when someone changes the project's default cost rate type value
+        **********/
+    public static void sendEmail_CostRateTypeChange(List<AcctSeed__Project__c> projs){
+        
+        List<Messaging.SingleEmailMessage> sendEmailList = new List<Messaging.SingleEmailMessage>();
+        Map<Id, List<AcctSeed__Project_Task__c>> projIdAndPTList = new Map<Id, List<AcctSeed__Project_Task__c>>();
+        
+        for(AcctSeed__Project_Task__c pt : [SELECT Id, AcctSeed__Project__c FROM AcctSeed__Project_Task__c WHERE AcctSeed__Project__c IN : projs AND Project_Task_Type__c = 'Preparation time']){
+            if(!projIdAndPTList.containsKey(pt.AcctSeed__Project__c)){
+                projIdAndPTList.put(pt.AcctSeed__Project__c, new List<AcctSeed__Project_Task__c>());
+            }  
+            projIdAndPTList.get(pt.AcctSeed__Project__c).add(pt);  
+        }
+        
+        try{
+            String orgWideEmailId = ProjectTrigger_Handler.getOrgWideEmailId('support@dlsdc.com');
+            List<String> toAddresses = ProjectTrigger_Handler.getSystemValuesList('LT With_without Prep Email To Address');
+            
+            String subject = 'Default Cost Rate Alert';
+            String starting_Content = 'Hello '+ ', <br/><br/>';
+            starting_Content += 'Following Project found with Default Cost Rate mismatched with Project Task(s) in the Project. Please, check and fix the issue.<br/>';
+            String ending_Content = 'Thank you,<br/><br/>System Generated Email<br/>';
+            
+            for(AcctSeed__Project__c proj : projs){
+            
+                if(((proj.Default_Cost_Rate_Rate_Type__c == 'LT without Prep' || proj.Default_Cost_Rate_Rate_Type__c == 'LT without Billable Prep') && projIdAndPTList.containsKey(proj.Id) && projIdAndPTList.get(proj.Id).size() > 0) || 
+                    ((proj.Default_Cost_Rate_Rate_Type__c == 'LT with Prep' || proj.Default_Cost_Rate_Rate_Type__c == 'LT with Billable Prep') && (!projIdAndPTList.containsKey(proj.Id) || projIdAndPTList.get(proj.Id).size() == 0))){
+                    
+                    String proj_URL = '<br/><a href="'+ System.Label.Org_Prefix_Start_URL +'/lightning/r/AcctSeed__Project__c/' + proj.Id +'/view" target="_blank">'+ proj.Name +'</a><br/><br/>';
+                    String dynamicContent = '';
+                    dynamicContent += starting_Content;
+                    dynamicContent += proj_URL;
+                    dynamicContent += ending_Content;
+                            
+                    Messaging.SingleEmailMessage mail = ProjectTrigger_Handler.getSingleEmail(orgWideEmailId, '', toAddresses, new List<String>(), '', proj.Id, dynamicContent, subject, true, false);
+                    sendEmailList.add(mail);
+                }        
+            }
+            if(sendEmailList.size() > 0) {
+                Messaging.SendEmailResult[] results = Messaging.sendEmail(sendEmailList);
+            }
+        }catch(Exception e) {
+                            
+            String errorMessage = '';
+            errorMessage += 'ERROR: ' + e.getTypeName() + ':'+e.getMessage() + ':' + e.getLineNumber() + ':' + e.getStackTraceString();
+            
+            ErrorHandler errHandler = new ErrorHandler(); 
+            errHandler.sendExceptionEmail(errorMessage, System.Label.TimeCardDayEmail, 'Error on send Email Cost Rate Type Change');
+        }    
+    }
+    
+    /*************
+        - W-008024 : Update Account on CA (Student, Staff, Instructor), when there is an update in the Project or Opportunity Account.
+        - To update the Instructor/Student/Staff/Client/Partner contact assignment's account when the Project or Opportunity account is changed.
+        - This method is invoked from both the opportunity trigger and the project trigger.
+        ************/
+    public static void updateContactAssignmentAccount(Map<Id, Id> parentIdAndAccId, String isFrom){
+        
+        // Added to fix the "System.QueryException: unexpected token: (" issue 
+        Set<Id> parentIds = new Set<Id>(parentIdAndAccId.keySet());
+        List<Contact_Assignments__c> updateConAssigns = new List<Contact_Assignments__c>();
+        
+        String conAssignQuery = 'SELECT Id, Project__c, Opportunity_Name__c, Account__c FROM Contact_Assignments__c WHERE Status__c IN (\'Planned\', \'Active\') AND RecordType.DeveloperName IN (\'Instructor\', \'Student\', \'Staff\', \'Client_Partner\')';
+        if(isFrom == 'Project'){
+            conAssignQuery += ' AND Project__c IN : parentIds';
+        }else{
+            conAssignQuery += ' AND Opportunity_Name__c IN : parentIds';
+        }
+                        
+        for(Contact_Assignments__c ca : Database.Query(conAssignQuery)){
+            
+            Id parentId = (isFrom == 'Project') ? ca.Project__c : ca.Opportunity_Name__c;
+            
+            if(parentId != null && parentIdAndAccId.containsKey(parentId) && parentIdAndAccId.get(parentId) != ca.Account__c){
+            
+                Contact_Assignments__c updateCA = new Contact_Assignments__c(Id = ca.Id, Account__c = parentIdAndAccId.get(parentId));
+                updateConAssigns.add(updateCA);
+            }         
+        }
+        
+        if(updateConAssigns.size() > 0){
+            update updateConAssigns;
+        }
+    }
+    
+    /****************
+        - W-008024 : Update Account on CA (Student, Staff, Instructor), when there is an update in the Project or Opportunity Account
+        - To update Opportunity's account when the project's account is changed and likewise for the project.
+        - This method is invoked from both the opportunity trigger and the project trigger
+        *****************/
+    public static void updateOpp_ProjectAccount(Map<Id, Id> recIdAndParentId, Map<Id, Id> recIdAndAccId, String isFrom){
+        
+        Map<Id, sObject> updateSobjectRecs = new Map<Id, sObject>();
+        
+        if(isFrom == 'Opportunity'){
+            List<AcctSeed__Project__c> projRecs = [SELECT Id,AcctSeed__Opportunity__c FROM AcctSeed__Project__c WHERE AcctSeed__Opportunity__c IN : recIdAndAccId.keySet()];
+            if(projRecs.size() > 0){
+                Map<Id, Id> oppIdAndProjId = new Map<Id, Id>();
+                for(AcctSeed__Project__c p : projRecs){
+                    oppIdAndProjId.put(p.AcctSeed__Opportunity__c, p.Id);    
+                }
+                for(Id oppId : recIdAndAccId.keySet()){
+                    if(oppIdAndProjId.containsKey(oppId)){
+                        AcctSeed__Project__c projRec = new AcctSeed__Project__c();
+                        sObject updateProjRec = projRec;
+                        updateProjRec.put('Id', oppIdAndProjId.get(oppId));
+                        updateProjRec.put('AcctSeed__Account__c', recIdAndAccId.get(oppId));
+                        updateSobjectRecs.put(oppIdAndProjId.get(oppId), updateProjRec);
+                    }
+                }
+                ProjectTrigger_Handler.accPopFromProjTrig = true;
+            }
+        }else{
+            for(Id recId : recIdAndParentId.keySet()){
+                Opportunity opp = new Opportunity();
+                sObject updateOppRec = opp;
+                updateOppRec.put('Id', recIdAndParentId.get(recId));
+                updateOppRec.put('AccountId', recIdAndAccId.get(recId));
+                updateSobjectRecs.put(recIdAndParentId.get(recId), updateOppRec);
+            }
+            OpportunityTrigger_Handler.accPopFromOppTrig = true;
+        }
+        if(updateSobjectRecs.size() > 0){
+            // Added this map on Apr 25 2024
+            // To fix "System.ListException: Duplicate id in list"
+            update updateSobjectRecs.values();
+        }
     }
 }

@@ -4,9 +4,11 @@
                              'Subject': '',
                              'Description': '',
                              'Priority': '',
-                             'Type': ''}"/>
+                             'Type': '',
+                             'Environment__c':''}"/>
     <aura:attribute name="priorities" type="List" default="[]"/>
     <aura:attribute name="types" type="List" default="[]"/>
+    <aura:attribute name="enviroments" type="List" default="[]"/>
     <aura:attribute name="fileName" type="String" default="No File Selected.." />
     <aura:attribute name="fileUploadDetails" type="Map" default="{}" />
   
@@ -15,35 +17,45 @@
     
     <!-- / PAGE HEADER -->
     <!-- NEW EXPENSE FORM -->
-    <lightning:layout  multipleRows="true">
-        <lightning:layoutItem padding="around-small" size="12" class="inputClass">
-            <lightning:input aura:id="caseform" label="Subject"
-                             name="caseSubject"
-                             value="{!v.newCase.Subject}"
-                             required="true"/> 
-        </lightning:layoutItem>
-        <lightning:layoutItem padding="around-small" size="12" class="inputClass">
-            <lightning:combobox name="casePriority" aura:id="caseform" required="true" label="Priority" value="{!v.newCase.Priority}" placeholder="Select Priority" options="{!v.priorities}"/>
-        </lightning:layoutItem>
-        <lightning:layoutItem padding="around-small" size="12"  class="inputClass">
-            <lightning:combobox name="caseType"  aura:id="caseform"  required="true"  label="Type" value="{!v.newCase.Type}" placeholder="Select Type" options="{!v.types}"/>
-        </lightning:layoutItem>
-        <lightning:layoutItem padding="around-small" size="12" class="inputClass">
-            <lightning:textArea  aura:id="caseform" label="Description"
-                                name="caseDescription"
-                                value="{!v.newCase.Description}"
-                                required="true"/>
-        </lightning:layoutItem>
-        <lightning:layoutItem padding="around-small" size="12" class="inputClass">  
-            <!-- Lightning Input with file type and on file change call the 'handleFilesChange' controller -->
-            <lightning:input aura:id="fileuploader" onchange="{!c.handleFilesChange}" type="file" name="file" label="Upload File" multiple="false"/>
-            <div class="slds-text-body_small slds-text-color_error">{!v.fileName} </div>
-        </lightning:layoutItem>
-        <lightning:layoutItem padding="around-small" size="12" class="inputClass">
-            <center>
-                <lightning:button label="Save" class="slds-m-bottom--large" variant="brand" onclick="{!c.clickCreate}"/>
-                <lightning:button label="Cancel" class="slds-m-bottom--large" variant="brand" onclick="{!c.closeAction}"/>
-            </center>
-        </lightning:layoutItem>
-    </lightning:layout>
+    <div class="slds-scrollable_y" style="height:28rem;">
+        <lightning:layout  multipleRows="true" >
+            <lightning:layoutItem padding="around-small" size="12" class="inputClass">
+                <lightning:input aura:id="caseform" label="Subject"
+                                 name="caseSubject"
+                                 value="{!v.newCase.Subject}"
+                                 required="true"/> 
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="12" class="inputClass">
+                <lightning:combobox name="casePriority" aura:id="caseform" required="true" label="Priority" value="{!v.newCase.Priority}" placeholder="Select Priority" options="{!v.priorities}"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="12"  class="inputClass">
+                <lightning:combobox name="caseType"  aura:id="caseform"  required="true"  label="Type" value="{!v.newCase.Type}" placeholder="Select Type" options="{!v.types}"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="12"  class="inputClass">
+                <lightning:combobox name="caseEnviroment" aura:id="caseform"  required="true" label="Environment" value="{!v.newCase.Environment__c}" placeholder="Select environment" options="{!v.enviroments}"/>
+            </lightning:layoutItem>
+            <aura:if isTrue="{!v.newCase.Environment__c == 'Marketing'}">
+                <lightning:layoutItem padding="around-small" size="12"  class="inputClass">
+                    <lightning:input type="date" name="Due Date" label="Due Date" aura:id="caseform" required="true" value="{!v.newCase.Due_Date__c}"/>
+                </lightning:layoutItem>
+            </aura:if>
+            <lightning:layoutItem padding="around-small" size="12" class="inputClass">
+                <lightning:textArea  aura:id="caseform" label="Description"
+                                    name="caseDescription"
+                                    value="{!v.newCase.Description}"
+                                    required="true"/>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="12" class="inputClass">  
+                <!-- Lightning Input with file type and on file change call the 'handleFilesChange' controller -->
+                <lightning:input aura:id="fileuploader" onchange="{!c.handleFilesChange}" type="file" name="file" label="Upload File" multiple="false"/>
+                <div class="slds-text-body_small slds-text-color_error">{!v.fileName} </div>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small" size="12" class="inputClass">
+                <center>
+                    <lightning:button label="Save" class="slds-m-bottom--large" variant="brand" onclick="{!c.clickCreate}"/>
+                    <lightning:button label="Cancel" class="slds-m-bottom--large" variant="brand" onclick="{!c.closeAction}"/>
+                </center>
+            </lightning:layoutItem>
+        </lightning:layout>
+    </div>
 </aura:component>

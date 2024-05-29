@@ -51,7 +51,7 @@ private class ContactRollupHelperBatch_Schedule_Test{
         
         Id testProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Testing_Projects').getRecordTypeId();
         Id usrId = UserInfo.getUserId();
-        AcctSeed__Project__c projects = new AcctSeed__Project__c(Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10));
+        AcctSeed__Project__c projects = new AcctSeed__Project__c(Name = 'Test Con Rollup Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10));
         insert projects;
         
         Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
@@ -148,7 +148,7 @@ private class ContactRollupHelperBatch_Schedule_Test{
         
         Id testProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Testing_Projects').getRecordTypeId();
         Id usrId = UserInfo.getUserId();
-        AcctSeed__Project__c projects = new AcctSeed__Project__c(Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10));
+        AcctSeed__Project__c projects = new AcctSeed__Project__c(Name = 'Test Con Rollup Project 2',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10));
         insert projects;
         
         Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
@@ -284,6 +284,38 @@ private class ContactRollupHelperBatch_Schedule_Test{
           
             
             // Schedule coverage
+            String CRON_EXP = '0 0 1 * * ?';
+            ContactRollupHelperBatch_Schedule sch = new ContactRollupHelperBatch_Schedule();
+            system.schedule('Rollup Contact fields', CRON_EXP, sch);
+            
+        Test.stopTest();
+    }
+    
+    // To cover Candidate_Hiring_Stage__c value
+    private static testMethod void rollUpTestMethod10(){
+    
+        List<Account> acc = [SELECT Id FROM Account LIMIT 1];
+        
+        Id canRTId = Schema.SObjectType.Contact.getRecordTypeInfosByDeveloperName().get('Candidate').getRecordTypeId();
+        
+        Contact newHireCon = new Contact(RecordTypeId = canRTId, LastName = 'Test Hire Contact', Email = 'testhirecontact@gmail.com', AccountId = acc[0].Id);
+        insert newHireCon;
+                
+        Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+        List<AcctSeed__Project__c> projList = [SELECT Id, Start_Date__c, End_Date__c FROM AcctSeed__Project__c WHERE RecordType.DeveloperName != 'Testing_Projects' LIMIT 1];
+        
+        Contact_Assignments__c conAssign = new Contact_Assignments__c(RecordTypeId = insRTId, Candidate_Name__c = newHireCon.Id, Project__c = projList[0].Id, Status__c = 'Active', Start_Date__c = Date.Today(), End_Date__c = Date.Today().addMonths(1));
+        insert conAssign;
+        
+        Test.startTest();
+            
+            List<Contact> conRec = [SELECT Id, Candidate_Hiring_Stage__c FROM Contact WHERE Id = : newHireCon.Id];
+            System.assertEquals('Hired', conRec[0].Candidate_Hiring_Stage__c);
+            
+            Contact updateHireCon = new Contact(Id = newHireCon.Id, Original_Hire_Date__c = Date.Today().addMonths(-7));
+            update updateHireCon;
+            
             String CRON_EXP = '0 0 1 * * ?';
             ContactRollupHelperBatch_Schedule sch = new ContactRollupHelperBatch_Schedule();
             system.schedule('Rollup Contact fields', CRON_EXP, sch);

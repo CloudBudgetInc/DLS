@@ -144,7 +144,7 @@ function checkForActualClassHrsValidation(dayRecords,attendance,projectData,type
 		resultObj.title = 'Start Time and End Time Entry';
 	}else if(!isValid && type == 'Student Entry Check'){
 		
-		if(projectData && !projectData[0].noStudentApproval){
+        if(projectData && !projectData[0].noStudentApproval && (!(projectData[0].projectRTName == 'DLI_W_LT_Projects' && projectData[0].noStudentHrsVerification && projectData[0].dliProType == 'EI'))){
 			resultObj.message = 'Please record hours for each student listed in the Student Time table. If any students were absent, please enter 0.00 for that student';
 			resultObj.title = 'Warning';
 		}else {

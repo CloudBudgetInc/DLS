@@ -95,7 +95,6 @@ trigger createOpportunityContactRoles on Opportunity (before insert, after inser
         }
         
     } // end for trigger.new
-    System.debug('::::languageIds::::'+languageIds);
     
     if(oppIds != NULL && oppIds.size() > 0){
     
@@ -106,12 +105,10 @@ trigger createOpportunityContactRoles on Opportunity (before insert, after inser
             oppIdAndProjId.put(p.AcctSeed__Opportunity__c, p.Id);
         }    
     }
-    System.debug('::::oppIdAndProjId::::::'+oppIdAndProjId);
     
     if(languageIds != NULL && languageIds.size() > 0){
     
         Map<Id, Language__c> languageRecs = new Map<Id, Language__c>([SELECT Id, Name FROM Language__c WHERE Id IN :languageIds]);
-        System.debug('::::languageRecs::::'+languageRecs);
         
         for(Opportunity opp : oppRecsToUpdate){
         
@@ -207,9 +204,7 @@ trigger createOpportunityContactRoles on Opportunity (before insert, after inser
     }
     */
     if( langSet != null && langSet.size() > 0 ) {
-        List<Overall_Past_Performance__c> overAlllist = OverAllPastPerformanceService.getOverallBylanguage(' WHERE Target_Language__r.Name ', 'Target_Language__r.Name', langSet);
-        system.debug('::langSet::'+langSet);
-        
+        List<Overall_Past_Performance__c> overAlllist = OverAllPastPerformanceService.getOverallBylanguage(' WHERE Target_Language__r.Name ', 'Target_Language__r.Name', langSet);        
         for(Overall_Past_Performance__c ocp : overAlllist) {
             langWithPastperfMap.put(ocp.Target_Language__r.Name,ocp);
         }
@@ -264,7 +259,9 @@ trigger createOpportunityContactRoles on Opportunity (before insert, after inser
     // Planned days off creation - Added by sukanya on Dec 21 2017
     Map<Id,SObject> oppIdRecMap = new Map<Id,SObject>();
     Set<Id> oppIdsToUpdateCAStatus = new Set<Id>();
-        
+    
+    Map<Id, Id> oppIdAndAccId = new Map<Id, Id>();
+    
     if (trigger.isAfter && ( Trigger.isInsert || trigger.isUpdate )) {
         for ( Opportunity opp : trigger.New ) {
             // Commented by NS on June 4 2018 - Contract based CA creation automation is not needed
@@ -315,11 +312,19 @@ trigger createOpportunityContactRoles on Opportunity (before insert, after inser
             if(opp.StageName == 'Closed Lost' && (Trigger.isInsert || Trigger.oldMap.get(opp.Id).StageName != opp.StageName)){
                 oppIdsToUpdateCAStatus.add(opp.Id);
             }
+            
+            // W-008024 : Update Account on CA (Student, Staff, Instructor), when there is an update in the Project or Opportunity Account
+            if(!ProjectTrigger_Handler.accPopFromProjTrig && !ConvertToProject.accPopFromConToProj && opp.AccountId != null && Trigger.isUpdate && opp.AccountId != Trigger.oldMap.get(opp.Id).AccountId){
+                oppIdAndAccId.put(opp.Id, opp.AccountId);    
+            }
         }
         
-        //system.debug('::::::oppIdRecMap::::'+oppIdRecMap);
-        //system.debug(':::::::oppId::::contract:::::::::::'+oppId);
-        //system.debug(':::::::OppIdSetForContact:::::::::::::::'+OppIdSetForContact);
+        if(oppIdAndAccId.size() > 0){
+            OpportunityTrigger_Handler.accPopFromOppTrig = true;
+            ProjectTrigger_Handler.updateContactAssignmentAccount(oppIdAndAccId, 'Opportunity');
+            ProjectTrigger_Handler.updateOpp_ProjectAccount(new Map<Id, Id>(), oppIdAndAccId, 'Opportunity');
+        }
+        
         Map<String,Id> cARecTypeMap = new Map<String,Id>();
         if(ContactAssignmentTriggerHandler.conAssignRecordTypeMap != null && ContactAssignmentTriggerHandler.conAssignRecordTypeMap.size() > 0 ) {
             cARecTypeMap = ContactAssignmentTriggerHandler.conAssignRecordTypeMap;
@@ -331,7 +336,6 @@ trigger createOpportunityContactRoles on Opportunity (before insert, after inser
         for( String s : cARecTypeMap.keyset() ) {
             if(s == 'Client_Partner') conAssignRecordTypeId = cARecTypeMap.get(s);
         }
-        system.debug('::::::::conAssignRecordTypeId:::::;'+conAssignRecordTypeId);
 
         Set<Id> CORContIdSet = new Set<Id>();
         Set<Id> BillingContIdSet = new Set<Id>();

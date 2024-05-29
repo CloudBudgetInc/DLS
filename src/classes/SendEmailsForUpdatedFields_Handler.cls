@@ -40,7 +40,7 @@ public Class SendEmailsForUpdatedFields_Handler {
         
         for (Sobject o : newList) {
         
-        Boolean addSch = false;
+            Boolean addSch = false;
        
             Id oldMapId = o.Id;
             Id modifiedBy = String.ValueOf(o.get('LastModifiedById'));
@@ -147,22 +147,22 @@ public Class SendEmailsForUpdatedFields_Handler {
                         subSchIdSet.add(sch.Id);
                     }
                 }
-
+                                
                 // To query all the parent record information only once.
                 wrapSch = getRecord(idObjFieldWrap);
-                
+                                
                 for(String schType : schMap.keySet()) {
                     if(schType != 'Substitute') {
                         mailWrap.add(getSchTable(schMap.get(schType), parentSchIdRecMap, 'Schedule__c', wrapSch));
                     }     
                 } 
-               
+                
                 if(mailWrap != null && mailWrap.size() > 0) {
                     for(mailWrapper wrp : mailWrap) {
                         mailSend.addAll(sendMailMethod(wrp.idWithMailBodyMap, wrp.subjectMap, 'Schedule Update Notify Mail'));
                     }
                 }  
-
+                
                 if(mailSend != null && mailSend.size() > 0 && !Test.isRunningTest()) {
                     Messaging.sendEmail(mailSend);
                 }
@@ -414,6 +414,8 @@ public Class SendEmailsForUpdatedFields_Handler {
                } else if(schType == 'Extended') {
                    
                    extendedSchIdSubjectMap.put(o.Id, 'The End Date for '+ getValueFromMap(projIdRecMap, sch.Project__c, 'Name')+' has extended');
+                   // Added on Mar 29 2024
+                   SchIdSubjectMap.put(o.Id, 'The End Date for '+ getValueFromMap(projIdRecMap, sch.Project__c, 'Name')+' has extended');
                    
                    emailBody += 'The End Date for the following schedule <a href="'+ System.Label.Org_Prefix_Start_URL + '/' + sch.Id +'">'+sch.Name+'</a> for '+getValueFromMap(projIdRecMap, sch.Project__c, 'Name')+
                                 ' has been extended by '+ getValueFromMap(userMap,sch.LastModifiedById, 'Name')+'.<br/><br/>The updated schedule end date is: '+ObjectToDate(sch.End_Date__c)+'<br/>';
@@ -429,6 +431,9 @@ public Class SendEmailsForUpdatedFields_Handler {
             } else if(schType == 'Substitute') {
                idWithMailBodyMap.put(o.Id, tableStr);
             } else if(schType == 'Extended') {
+                // Added on Mar 29 2024
+                // To send an email to FEO team when Schedule's End Date is extended
+               idWithMailBodyMap.putAll(formTable(tableStr, fieldMap, emailBody, o, oldMap, oldMapId, schType, userMap, ObjIdAndRecordMap, objType));
                extendedSchIdWithMailContentMap.putAll(formTable(tableStr, fieldMap, emailBody, o, oldMap, oldMapId, schType, userMap, ObjIdAndRecordMap, objType));
             }
         }
@@ -461,9 +466,7 @@ public Class SendEmailsForUpdatedFields_Handler {
             } else {
                 sendToAddress.addAll(sendTo);
             }
-            
-            System.debug(':::***:::sendToAddress:::'+sendToAddress);
-            
+                        
             if(sendToAddress != null && sendToAddress.size() > 0) {
                 Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
                 mail.setToAddresses(sendTo);
@@ -484,6 +487,13 @@ public Class SendEmailsForUpdatedFields_Handler {
         String totEveHorStr = '';
         String otherFieldsStr = '';
         String lastModifiedFieldStr = '';
+        
+        /***************
+            - fn == 'LastModifiedBy' condition added on Mar 28 2024 : W-008015 - Total Hours Used Field Update on Project Schedule Generated Inaccurate Email Notification
+            - To prevent sending emails to FEO users when the Total_Events__c, Total_Hours__c, or Total_Hours_Used__c fields are updated, 
+                we have already restricted these conditions. However, emails are still being sent when the LastModifiedBy field is updated, 
+                so we have added this condition as well.
+            ***************/
         
         Map<Id,String> idWithMailContentMap = new Map<Id,String>();
         Set<String> modifiedFldSet = new Set<String>();
@@ -507,7 +517,7 @@ public Class SendEmailsForUpdatedFields_Handler {
                     if(fn == 'Monday__c' || fn == 'Tuesday__c' || fn == 'Wednesday__c' || fn == 'Thursday__c' || fn == 'Friday__c' || fn == 'Saturday__c' || fn == 'Sunday__c') {
                         dayValueMap.put(fn, getTableRow(oldMap, fn, o, oldMapId, fieldMap, userMap, ObjIdAndRecordMap));
                     
-                    } else if(fn == 'LastModifiedDate') {
+                    } else if(fn == 'LastModifiedDate' || fn == 'LastModifiedById') {
                         lastModifiedFieldStr += getTableRow(oldMap, fn, o, oldMapId, fieldMap, userMap, ObjIdAndRecordMap);
                     
                     } else if(fn == 'Total_Events__c' || fn == 'Total_Hours__c' || fn == 'Total_Hours_Used__c' ) { // to avoid sending mail only when rollup is fields are updated 
@@ -519,8 +529,6 @@ public Class SendEmailsForUpdatedFields_Handler {
                 }
             } 
         }
-        
-        System.debug(':::***:::totEveHorStr:::'+totEveHorStr);
         
         if(otherFieldsStr != '') {
             mailContent += lastModifiedFieldStr+otherFieldsStr;
@@ -538,12 +546,10 @@ public Class SendEmailsForUpdatedFields_Handler {
             }
         }
         
-        if(schType != 'Extended') {
+        //if(schType != 'Extended') {
             mailContent += '</tbody></table><br/><p>Thanks,</p><p>DLS</p><br/><p>This is a system generated email, Please do not respond.</p></html>';
-        }
-        
-        System.debug(':::***:::Mail Content:::'+emailBody +mailContent);
-      
+        //}
+              
         if(modifiedFldSet != null && modifiedFldSet.size() > 1 && (otherFieldsStr != '' || schType == 'Extended')) {
             idWithMailContentMap.put(o.Id,emailBody + mailContent );
         }  
@@ -557,7 +563,6 @@ public Class SendEmailsForUpdatedFields_Handler {
         String tableStr = '';
         
         if(oldMap.get(oldMapId).get(fn) != null && o.get(fn) != null) {
-                        
             if(fieldMap.get(fn).getDescribe().getRelationshipName() == 'LastModifiedBy') {
                 tableStr += '<tr><td width="25%">Last Modified By User</td><td width="25%">'+getValueFromMap(userMap,getValueFromMap(oldMap, oldMapId, fn), 'Name')+'</td><td width="25%">'+getValueFromMap(userMap,String.ValueOf(o.get(fn)), 'Name') +'</td></tr>';                       
             } else if(String.ValueOF(fieldMap.get(fn).getDescribe().getType()) == 'Currency') {
@@ -574,6 +579,7 @@ public Class SendEmailsForUpdatedFields_Handler {
         } else {
             
             tableStr += '<tr><td width="25%">'+fieldMap.get(fn).getDescribe().getLabel()+'</td>';
+            
             if(oldMap.get(oldMapId).get(fn) == null) {
                 tableStr += '<td width="25%">'+''+'</td>';
             } else {
@@ -721,7 +727,6 @@ public Class SendEmailsForUpdatedFields_Handler {
                 for(Id schId : eveTotalHrMap.keySet()) {
                     String tableStr = 'TOTAL PLANNED QTY: </b>'+String.valueOf(eveTotalHrMap.get(schId) > 0 ? eveTotalHrMap.get(schId) : 0)+' hrs</p><br/><b>EVENTS:</b><br/>'+schIdTableContentMap.get(schId)+
                                       '</tbody></table><br/><p>Thanks,</p><p>DLS</p><br/><p>This is a system generated email, Please do not respond.</p></html>';
-                    System.debug(':::***::Sub Mail Content:::'+tableStr);
                     schIdTableContentMap.put(schId, tableStr);
                 }
             }
@@ -748,7 +753,7 @@ public Class SendEmailsForUpdatedFields_Handler {
         
         String tableStr = '';
         List<Messaging.SingleEmailMessage> mailSend = new List<Messaging.SingleEmailMessage>();
-        
+                
         for(String schId : extendedSchIdWithMailContentMap.keySet()) {
             
             tableStr = extendedSchIdWithMailContentMap.get(schId);

@@ -7,9 +7,20 @@ public class ContactTrigger_FutureHandler {
     public static Boolean loadResource = false;
     public static Boolean fromContactEmail = false;
     public static Set<Id> contactIdsForZoomUserCreation = new set<Id>();
-    
+
     @future
     public static void updateUserRecords(String userJson ) {
+     
+        List<User> userList = (List<User>) System.JSON.deserialize(userJson, List<User>.class);
+        system.debug('::::userList::::::::'+userList);
+        
+        if(userList != null && userList.size() > 0){
+         update userList;
+        }
+    }
+    // Added by Sivaprasanth on May 08 2024
+    // To avoid the calling future method from batch class
+    public static void updateUserRecs(String userJson ) {
      
         List<User> userList = (List<User>) System.JSON.deserialize(userJson, List<User>.class);
         system.debug('::::userList::::::::'+userList);
@@ -24,6 +35,17 @@ public class ContactTrigger_FutureHandler {
     
     @future
     public static void updateContactRecords(String contactJson) {
+      
+        List<Contact> contactList = (List<Contact>) System.JSON.deserialize(contactJson, List<Contact>.class);
+        system.debug(':::::::contactList:::::::'+contactList);
+        
+        if(contactList != null && contactList.size() > 0) {
+          update contactList;
+        }
+    }
+    // Added by Sivaprasanth on May 08 2024
+    // To avoid the calling future method from batch class
+    public static void updateContactRecs(String contactJson) {
       
         List<Contact> contactList = (List<Contact>) System.JSON.deserialize(contactJson, List<Contact>.class);
         system.debug(':::::::contactList:::::::'+contactList);
@@ -258,8 +280,7 @@ public class ContactTrigger_FutureHandler {
             mails.add(mail);
             System.debug('mails::::'+mails);
             if( mails != null && mails.size() > 0 && !Test.isRunningTest()) {
-                //Messaging.sendEmail(mails);
-                //Commented for testing purpose in sandbox and should be uncommented when we move to production
+                //Messaging.sendEmail(mails); Commented for testing by GRK
             }
         }
     }

@@ -388,7 +388,7 @@ private class TestUpdateContAssignmentStatus{
         Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
         List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED, Default_Cost_Rate_Rate_Type__c = 'LT without Prep');
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test LT and Prep Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED, Default_Cost_Rate_Rate_Type__c = 'LT without Prep');
         insert proj;
         
         Test.startTest();
@@ -417,7 +417,7 @@ private class TestUpdateContAssignmentStatus{
         Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
         List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED, Default_Cost_Rate_Rate_Type__c = 'LT with Prep');
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test LT and Prep Project 2',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED, Default_Cost_Rate_Rate_Type__c = 'LT with Prep');
         insert proj;
         
         Test.startTest();

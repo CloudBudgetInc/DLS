@@ -10,7 +10,6 @@ private class UpdateGoalVSscoreField_Test{
         Test.stopTest();
         
         List<Schedule__c> scheduleRecs = TestClassUtil.createTestSchedule();
-        
     }
     
     private static testMethod void myTest1(){
@@ -784,10 +783,105 @@ private class UpdateGoalVSscoreField_Test{
             arRecSize[0].Status__c = 'Completed';
             arRecSize[0].Date_Completed__c = Date.Today().addDays(1);
             arRecSize[0].Follow_up_Observation__c = Date.Today().addDays(50);
+            arRecSize[0].Annual_Review_Areas_for_Further_Develop__c = 'Other';
+            arRecSize[0].Annual_Review_Strengths__c = 'Other';
             update arRecSize[0];
         
             List<Contact> conRec = [SELECT Id, Name, Observation_Completed_This_Year__c FROM Contact WHERE Id = :con.Id];
             System.assertEquals(true, conRec[0].Observation_Completed_This_Year__c);
+            
+        Test.stopTest();
+    }
+    
+    // To cover Proficiency Objective (L/R/S) fields population
+    private static testMethod void myTest11(){
+    
+        Account a = new Account(Name = 'Test Account for Other');
+        insert a;
+        
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        List<Contact> stdCon = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Id lTProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Language_Training_Projects').getRecordTypeId();
+        Id usrId = UserInfo.getUserId();
+        
+        Date projSD = Date.Today();
+        Date projED = Date.Today().addDays(40);
+        
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 22',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+        insert proj;
+            
+        Test.startTest();
+                            
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student', L_Score_Final__c = '3', R_Score_Final__c = '2', S_Score_Final__c = '1')
+            };
+                
+            insert conAssignRecs;
+            
+            List<Language_Testing__c> langtestList1 = new List<Language_Testing__c> {
+                new Language_Testing__c(Name='Test Lang1', Project__c = proj.Id, Testee__c = stdCon[0].Id, Test_Type__c = 'Initial', 
+                L_Score__c = '1+', R_Score__c = '2+', S_Score__c='3+')
+            };
+            insert langtestList1;
+            
+            Assessment_Report_Helper.createAssessReport(new Set<Id>{proj.Id}, 'ScheduleTrigger', new Map<String, String>(), new Map<Id,Assessment_Report__c>());
+            
+            List<Assessment_Report__c> arRecSize = [SELECT Id, Name FROM Assessment_Report__c WHERE Project__c = :proj.Id];
+            System.assertEquals(1, arRecSize.size());
+            arRecSize[0].Status__c = 'Scheduled';
+            update arRecSize[0];
+            
+            List<Assessment_Report__c> arRec = [SELECT Id, Proficiency_Objective_Listening__c, Proficiency_Objective_Reading__c FROM Assessment_Report__c WHERE Project__c = :proj.Id];
+            System.assertEquals(conAssignRecs[0].L_Score_Final__c, arRec[0].Proficiency_Objective_Listening__c);
+            System.assertEquals(conAssignRecs[0].R_Score_Final__c, arRec[0].Proficiency_Objective_Reading__c);
+            
+        Test.stopTest();
+    }
+    
+    private static testMethod void myTest12(){
+    
+        Account a = new Account(Name = 'Test Account for Other');
+        insert a;
+        
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        List<Contact> stdCon = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Id lTProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Language_Training_Projects').getRecordTypeId();
+        Id usrId = UserInfo.getUserId();
+        
+        Date projSD = Date.Today();
+        Date projED = Date.Today().addDays(40);
+        
+        Test.startTest();
+        
+            AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Transfer Std CA Project 12',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+            insert proj;
+                    
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student')
+            };
+                
+            insert conAssignRecs;
+            
+            Assessment_Report_Helper.createAssessReport(new Set<Id>{proj.Id}, 'ScheduleTrigger', new Map<String, String>(), new Map<Id,Assessment_Report__c>());
+            
+            List<Assessment_Report__c> arRec = [SELECT Id, Name, Project__r.DLS_Ref__c FROM Assessment_Report__c WHERE Project__c = :proj.Id];
+            System.assertEquals(arRec[0].Name.contains(arRec[0].Project__r.DLS_Ref__c), true);
+                    
+            List<Schedule__c> scheduleRecs = [SELECT Id,Project__c, Project__r.DLS_Ref__c FROM Schedule__c WHERE Project__c != null AND Project__r.AcctSeed__Status__c = 'Active' LIMIT 1];
+            
+            arRec[0].Project__c = scheduleRecs[0].Project__c;
+            update arRec[0];
+            
+            List<Assessment_Report__c> arRec_Updated = [SELECT Id, Name FROM Assessment_Report__c WHERE Project__c = :scheduleRecs[0].Project__c];
+            System.assertEquals(arRec_Updated[0].Name.contains(scheduleRecs[0].Project__r.DLS_Ref__c), true);
             
         Test.stopTest();
     }

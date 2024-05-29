@@ -1,0 +1,12 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global">
+    <lightning:layout multipleRows="true">
+        <lightning:layoutItem size="12" padding="around-small">
+            <lightning:button variant="brand" class="sfdc_button btnCss" label="Login as Instructor" onclick="{!c.launchInstructorPage}"/>
+        </lightning:layoutItem>
+        <lightning:layoutItem size="12" padding="around-small">
+            <div class="sfdc">
+                <lightning:button variant="brand" class="sfdc_button btnCss" label="Login as Student" onclick="{!c.launchStudentPage}"/>
+            </div>
+        </lightning:layoutItem>
+    </lightning:layout>
+</aura:component>

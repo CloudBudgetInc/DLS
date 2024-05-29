@@ -18,7 +18,7 @@ global class ContactRollupHelperBatch implements Database.batchable<sObject>,Dat
         String fieldAPINames = 'Id, Name, Email, MobilePhone, Mailingstreet, Mailingcity, Mailingstate, Mailingpostalcode, Mailingcountry, Language_1__c, DLS_Candidate_Rating__c';
             fieldAPINames += ', Highest_Degree__c, Citizenship__c, Country_of_Citizenship__c, City_and_Country_of_Birth__c, Experience_with_DLI_Students__c, Average_Get_Feedback_Rating__c';
             fieldAPINames += ', Other_Relevant_Experience__c, of_Known_Languages__c, of_related_Education__c, of_related_Skills__c, of_related_Work_Experiences__c';
-            fieldAPINames += ', of_Class_Projects_Taught__c, of_Students_Taught__c, of_Tests_Perfomed__c, Candidate_Profile_Complete__c, Evaluate_Candidate_Profile_Rating__c';
+            fieldAPINames += ', of_Class_Projects_Taught__c, of_Students_Taught__c, of_Tests_Perfomed__c, Candidate_Profile_Complete__c, Evaluate_Candidate_Profile_Rating__c, Candidate_Hiring_Stage__c, Original_Hire_Date__c, RecordType.DeveloperName';
                               
         String conQuery = 'SELECT ';
             conQuery += fieldAPINames;
@@ -70,7 +70,9 @@ global class ContactRollupHelperBatch implements Database.batchable<sObject>,Dat
         
         // variables to update Average_Get_Feedback_Rating__c field
         //Map<Id, Decimal> insIdAndAvgRating = new Map<Id, Decimal>(); commented since this has Rollup Helper for new records
-                        
+        
+        Date hireDate = Date.Today().addMonths(-6);
+        
         for(Contact_Assignments__c ca : [
             SELECT Id, Project__r.RecordType.DeveloperName, Candidate_Name__c, Project__c, name 
             FROM Contact_Assignments__c 
@@ -245,6 +247,13 @@ global class ContactRollupHelperBatch implements Database.batchable<sObject>,Dat
                     toUpdateContacts.put(c.Id, c);
                 }
             }*/
+            
+            // Added on Feb 2024
+            // W-007989 : Automation needed for new "Candidate Hiring Stage" field for "Hired" value
+            if(c.RecordType.DeveloperName == 'Candidate' && String.isNotBlank(c.Candidate_Hiring_Stage__c) && c.Candidate_Hiring_Stage__c == 'Hired' && c.Original_Hire_Date__c != null && c.Original_Hire_Date__c < hireDate){
+                c.Candidate_Hiring_Stage__c = null;
+                toUpdateContacts.put(c.Id, c);
+            }
         }
         
         if(toUpdateContacts.size() > 0){

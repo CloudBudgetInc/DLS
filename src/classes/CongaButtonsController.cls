@@ -1,3 +1,10 @@
+/**
+ * @description       : 
+ * @author            : Dhinesh Kumar
+ * @group             : 
+ * @last modified on  : 03/21/2024
+ * @last modified by  : Dhinesh Kumar
+**/
 // Used in Lightning Component - related to Conga Custom Buttons
 // Developed by E.Keerthika on 5th, October 2018
 
@@ -215,15 +222,19 @@ public class CongaButtonsController {
         @AuraEnabled public String congaURL;
         @AuraEnabled public Boolean isErrorMsg;
         @AuraEnabled public String objRecordId;
-        @AuraEnabled public String errorMsg;
+        @AuraEnabled public String errorMsg; 
+        @AuraEnabled public List<String> valErrors;
         @AuraEnabled public List<congaUrlFormationWrapper> congaUrlInfo;
         
         //Added By Dhinesh - 08/03/2022
-	@AuraEnabled public List<Contact_Assignments__c> contactAssignments;
+	    @AuraEnabled public List<Contact_Assignments__c> contactAssignments;
         @AuraEnabled public Map<String, String> conAssignIdWithCongaUrlMap;
         
         //Added By Dhinesh - 18/04/2022
         @AuraEnabled public Assessment_Report__c assessmentReport;
+
+        //Added By Dhinesh - 21/03/2024
+        @AuraEnabled public Boolean showProceedBtn;
     }
     
     public class congaWrapper {

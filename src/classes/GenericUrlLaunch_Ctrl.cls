@@ -2,7 +2,7 @@
  * @description       : 
  * @author            : Dhinesh Kumar
  * @group             : 
- * @last modified on  : 10/09/2023
+ * @last modified on  : 03/21/2024
  * @last modified by  : Dhinesh Kumar
 **/
 public class GenericUrlLaunch_Ctrl {
@@ -158,7 +158,9 @@ public class GenericUrlLaunch_Ctrl {
                         wrap.sessionIdServerURL = CongaButtonsController.getServerUrlSessionId();
                         wrap.congaURL = congaUrl;
                         if(!isNew){
-                            wrap.errorMsg = 'If you would like to resend it, please click "Cancel", and delete the corresponding file from the Box Folder for this report before clicking "Proceed".';
+                            //Modified By Dhinesh - 21/03/2024 - Updated the error message
+                            wrap.errorMsg = 'If you would like to resend it, please click "Cancel", revert the Training Report Status, then delete the corresponding file from the Box Folder for this report before clicking "Proceed"';
+                            wrap.showProceedBtn = true;        
                         } 
                     }else {
                         String folderName = ar[0].Name;
@@ -588,11 +590,12 @@ public class GenericUrlLaunch_Ctrl {
         }        
     }
     
-    @AuraEnabled
+        @AuraEnabled
     public static string validateAndInitiateBoxFolderCreation(Id recordId, String folderName, String boxParentFolderName, String sObjectApiName){
         List<box__FRUP__c> frup = [SELECT Id,Name,box__Record_ID__c,box__Folder_ID__c FROM box__FRUP__c WHERE box__Record_ID__c = :recordId];
         
-        if(frup.size() > 0 || skipFRUPFolderCheckOrAllowBoxFolderCreation){            
+        //Commented since users other than Sys Admin, View All or Modify All cannot update Approved record in LCR
+        /*if(frup.size() > 0 || skipFRUPFolderCheckOrAllowBoxFolderCreation){            
             if(sObjectApiName == 'AcctSeed__Cost_Rates__c'){
                 List<AcctSeed__Cost_Rates__c> costRates = [SELECT Id, Name, Box_Folder_Id__c 
                                                      FROM AcctSeed__Cost_Rates__c WHERE Id = :recordId];
@@ -602,7 +605,8 @@ public class GenericUrlLaunch_Ctrl {
                     update costRates;
                 }
             }
-        }else{
+        }else*/
+        if(frup.size() == 0){
             if(String.isNotBlank(folderName)){
                 folderName = folderName.replace('/','_');
             }
@@ -748,7 +752,7 @@ public class GenericUrlLaunch_Ctrl {
             result.put('congaUrl',congaBaseUrl);
             if(!isNew){
             
-                result.put('errorMsg','If you would like to resend it, please click "Cancel", and delete the corresponding file from the Box Folder for this report before clicking "Proceed".');                
+                result.put('errorMsg','If you would like to resend it, please click "Cancel", revert the Training Report Status, then delete the corresponding file from the Box Folder for this report before clicking "Proceed".');                
             }
         }else if(frup.size() == 0 && !skipFRUPFolderCheckOrAllowBoxFolderCreation){
             

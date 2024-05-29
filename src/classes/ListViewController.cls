@@ -25,9 +25,11 @@ public without sharing class ListViewController {
             
             Set<Id> projectIds = new Set<Id>();
             Map<Id, String> projectIdWithCAStatus = new Map<Id, String>();
+            Map<Id, Contact_Assignments__c> projectIdWithTransferCA = new Map<Id, Contact_Assignments__c>();
+
             
             if(String.isNotBlank(contactId)){
-                String caQryStr = 'SELECT Id,Name,Status__c,Project__c,RecordType.DeveloperName FROM Contact_Assignments__c WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName =  :recordTypeName AND Project__c != null';
+                String caQryStr = 'SELECT Id,Name,Status__c,Project__c,End_Date__c,RecordType.DeveloperName FROM Contact_Assignments__c WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName =  :recordTypeName AND Project__c != null';
                 if(communityName == 'student') {
                     caQryStr += ' AND Project__r.No_Student_Approval__c = false';
                 }
@@ -36,9 +38,22 @@ public without sharing class ListViewController {
                 }
                 caQryStr += ' ORDER BY End_Date__c ASC';
                 for(Contact_Assignments__c ca : Database.query(caQryStr)){
-                    projectIds.add(ca.Project__c);
+                    Boolean isTransferred = false;
+                    
+                    projectIds.add(ca.Project__c); 
+                    if(ca.Status__c == 'Transferred' && communityName == 'student' && ca.End_Date__c > System.Today()){
+                        ca.Status__c = 'Active';
+                        isTransferred = true;
+                    } 
+                    
+                    // get CA Transferred related informations
+                    if(ca.Status__c == 'Transferred' || isTransferred == true){
+                        if(!projectIdWithTransferCA.containsKey(ca.Project__c)){
+                            projectIdWithTransferCA.put(ca.Project__c, ca);
+                        }
+                    }
                     if(!projectIdWithCAStatus.containsKey(ca.Project__c) || (projectIdWithCAStatus.containsKey(ca.Project__c) && projectIdWithCAStatus.get(ca.Project__c) != 'Active')){
-                      projectIdWithCAStatus.put(ca.Project__c, ca.Status__c);
+                        projectIdWithCAStatus.put(ca.Project__c, ca.Status__c);
                     }
                 }                
             }
@@ -49,13 +64,23 @@ public without sharing class ListViewController {
                 projects = [SELECT Id,Name,AcctSeed__Account__r.Name,AcctSeed__Account__r.Parent.Name,DLS_Ref__c,Start_Date__c,End_Date__c, AcctSeed__Status__c,Project_Manager__c,Project_Manager__r.Name,Training_Location__c,Training_Location__r.Name, DLI_Project_Type__c,
                             (SELECT Id,Name,Project__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName FROM Contact_Assignments__r WHERE RecordType.DeveloperName = :contactAssignmentRecordType ORDER BY Start_Date__c ASC) 
                             FROM AcctSeed__Project__c WHERE Id IN : projectIds];
+                
+                for(AcctSeed__Project__c pro :projects ){
+                    if(projectIdWithTransferCA.containsKey(pro.Id)){
+                        Contact_Assignments__c ca = projectIdWithTransferCA.get(pro.Id);
+                        pro.AcctSeed__Status__c = ca.Status__c;
+                        pro.End_Date__c = ca.End_Date__c;
+                    }
+                }
             }
             
             listView.projectRecords = ProjectTranslator.projectRecordsFormation(projects);
             List<PicklistWrap> pickWrap = getPickListValues('AcctSeed__Project__c','AcctSeed__Status__c');
             
             if(pickWrap.size() > 0){
+                
                 for(PicklistWrap pick : pickWrap){
+                    
                     if(!excludeProStatusOptions.contains(pick.label)){
                         PicklistWrap pickListVal = new PicklistWrap();
                         
@@ -64,6 +89,11 @@ public without sharing class ListViewController {
                         pickListValues.add(pickListVal);
                     }
                 }
+                
+                PicklistWrap pickListVal1 = new PicklistWrap();
+                pickListVal1.label = 'Transferred';
+                pickListVal1.value = 'Transferred';
+                pickListValues.add(pickListVal1);
             }
             
             
@@ -195,9 +225,43 @@ public without sharing class ListViewController {
     @AuraEnabled
     public static String getProjectRecord(String projectId){
         try{
+            String contactId = getLoggedUserContactId(); // Get Currently logged user's contact Id
+            String communityName = getCommunityPathPrefix();
+            Map<Id, Contact_Assignments__c> projectIdWithTransferCA = new Map<Id, Contact_Assignments__c>();
+
+            if(String.isNotBlank(contactId) && communityName == 'student'){
+                String caQryStr = 'SELECT Id,Name,Status__c,Project__c,End_Date__c,RecordType.DeveloperName FROM Contact_Assignments__c WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName = \'Student\' AND Project__c != null';
+                caQryStr += ' AND Project__r.No_Student_Approval__c = false';
+                caQryStr += ' ORDER BY End_Date__c ASC';
+                
+                 for(Contact_Assignments__c ca : Database.query(caQryStr)){
+                    Boolean isTransferred = false;
+                    
+                    if(ca.Status__c == 'Transferred' && communityName == 'student' && ca.End_Date__c > System.Today()){
+                        ca.Status__c = 'Active';
+                        isTransferred = true;
+                    } 
+                    
+                    // get CA Transferred related informations
+                    if(ca.Status__c == 'Transferred' || isTransferred == true){
+                        if(!projectIdWithTransferCA.containsKey(ca.Project__c)){
+                            projectIdWithTransferCA.put(ca.Project__c, ca);
+                        }
+                    }
+                 }
+            }
+            
             AcctSeed__Project__c projectRec = [SELECT Id, Name,DLS_Ref__c, Start_Date__c, End_Date__c, AcctSeed__Status__c, DLI_Project_Type__c,
                                                Project_Manager__r.Name, Training_Location__r.Name,AcctSeed__Account__r.Name, AcctSeed__Account__r.Parent.Name
-                                               FROM AcctSeed__Project__c  WHERE Id = :projectId];  
+                                               FROM AcctSeed__Project__c  WHERE Id = :projectId]; 
+            
+            if(projectRec.Id != null){
+                if(projectIdWithTransferCA.containsKey(projectRec.Id)){
+                    Contact_Assignments__c ca = projectIdWithTransferCA.get(projectRec.Id);
+                    projectRec.AcctSeed__Status__c = ca.Status__c;
+                    projectRec.End_Date__c = ca.End_Date__c;
+                }
+            }
             return json.serialize(ProjectTranslator.projectRecordsFormation(new List<AcctSeed__Project__c>{projectRec})[0]);
         }catch (Exception e) {
             

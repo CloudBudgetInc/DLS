@@ -61,10 +61,14 @@
         <members>CAbasedUserCreationOnEveryHour_Schedule</members>
         <members>CAbasedUserCreation_Schedule</members>
         <members>CAbasedUserCreation_Schedule_Test</members>
-        <members>CBAllocationService</members>
+        <members>CBAllocationBatch</members>
+        <members>CBAllocationProcess</members>
+        <members>CBCalculationRuleAllocationService</members>
+        <members>CBCalculationRuleGenerator</members>
+        <members>CBDashboardReportPageController</members>
         <members>CBGoalTriggerService</members>
-        <members>CBNFLibrarySelector</members>
-        <members>CBSourceBudgetLineSelector</members>
+        <members>CBMetricTriggerService</members>
+        <members>CBTestCoverage</members>
         <members>CBTriggerService</members>
         <members>CDtriggertest</members>
         <members>CLINTrigger_Handler</members>
@@ -392,6 +396,10 @@
         <members>Mobile_SupervisorTimeApproval_Ctrl</members>
         <members>Mobile_SupervisorTimeApproval_Ctrl_Test</members>
         <members>MockHttpResponseGenerator</members>
+        <members>MoodleCourseDeletionBatch</members>
+        <members>MoodleCourseDeletionMock</members>
+        <members>MoodleCourseDeletion_Scheduler</members>
+        <members>MoodleCourseDeletion_Scheduler_Test</members>
         <members>MoodleLoginCtrl</members>
         <members>MoodleLoginCtrl_Test</members>
         <members>MyProfilePageController</members>
@@ -919,10 +927,12 @@
         <members>AmortizationEntryTrigger</members>
         <members>AttendanceTrigger</members>
         <members>BillingLineTrigger</members>
+        <members>CBAllocatedAmountsTrigger</members>
         <members>CBDLSBudgetLineTrigger</members>
         <members>CBDLSCubeTrigger</members>
         <members>CBGoalTrigger</members>
         <members>CBMetricTrigger</members>
+        <members>CBNFLItemDLSTrigger</members>
         <members>CDassignmentContactCountUpdate</members>
         <members>CaseTrigger</members>
         <members>ChangeDeploymentStatus</members>
@@ -1141,6 +1151,7 @@
         <members>InstructorTimeDetailCmp</members>
         <members>InstructorTimeEntry</members>
         <members>InstructorTimeSubmitCmp</members>
+        <members>Internal_EventCalendarCmp</members>
         <members>Internal_InstructorTimeEntry</members>
         <members>Internal_LibraryHomePage</members>
         <members>Job_Summary_Report</members>
@@ -1191,6 +1202,7 @@
         <members>RatingCmp</members>
         <members>RefreshMetrics</members>
         <members>RefundCalculationCmp</members>
+        <members>SSOLoginCmp</members>
         <members>ScheduleAddEditCmp</members>
         <members>ScheduleChildComponent</members>
         <members>ScheduleCmp</members>
@@ -1292,10 +1304,12 @@
         <members>AcctSeed__Accounting_Home1</members>
         <members>AcctSeed__Accounting_Home2</members>
         <members>AcctSeed__Accounting_Period__c</members>
+        <members>AcctSeed__Accounting_Seed_Hub</members>
         <members>AcctSeed__Accounting_Settings</members>
         <members>AcctSeed__Accounting_Variable__c</members>
         <members>AcctSeed__Automated_Job_Results__c</members>
         <members>AcctSeed__Automated_Jobs</members>
+        <members>AcctSeed__Bank_Account__c</members>
         <members>AcctSeed__Bank_Deposit__c</members>
         <members>AcctSeed__Bank_Direct_Connect</members>
         <members>AcctSeed__Bank_Direct_Connect2</members>
@@ -1330,6 +1344,8 @@
         <members>AcctSeed__Multi_Ledger_Defaults</members>
         <members>AcctSeed__Payment_Activity__c</members>
         <members>AcctSeed__Payment_Processor__c</members>
+        <members>AcctSeed__Payment_Proposal_Line__c</members>
+        <members>AcctSeed__Payment_Proposal__c</members>
         <members>AcctSeed__Payroll_File_Import</members>
         <members>AcctSeed__Period_Task__c</members>
         <members>AcctSeed__Post_Settings</members>
@@ -1357,6 +1373,8 @@
         <members>Assessment_Report__c</members>
         <members>Audit_Trail_Report</members>
         <members>Bookmark__c</members>
+        <members>CBCalculationRuleTemplate__c</members>
+        <members>CB_Dashboard_Report</members>
         <members>CLIN__c</members>
         <members>CRMC_PP__About_CRMCulture</members>
         <members>CRMC_PP__About_Grid</members>
@@ -1364,6 +1382,7 @@
         <members>CRMC_PP__ActionGrid_Setup</members>
         <members>CRMC_PP__CongaGridUsageReport</members>
         <members>CRMC_PP__Grid_Settings</members>
+        <members>Calculation_Rule_Service</members>
         <members>Candidate_Search</members>
         <members>Category__c</members>
         <members>Community__kav</members>
@@ -1567,6 +1586,7 @@
         <members>cb5__Init_Wizard</members>
         <members>cb5__Logs</members>
         <members>cb5__ModelingRules</members>
+        <members>cb5__Non_Financial_Libraries_Aggregation</members>
         <members>cb5__Reporting</members>
         <members>cb5__Style_Setup</members>
         <members>cb5__Task_Dispatcher</members>
@@ -1591,6 +1611,7 @@
         <members>resumepower__Resume_Power</members>
         <members>rh2__PS_All_Rollups</members>
         <members>rh2__PS_Enable_Real_Time</members>
+        <members>rh2__PS_FilterManagement</members>
         <members>rh2__PS_Getting_Started</members>
         <members>rh2__PS_Health_Check</members>
         <members>rh2__PS_Import_Export</members>
@@ -1695,6 +1716,7 @@
         <members>Assessment_Report_After_Update_Flow</members>
         <members>Assessment_Report_Instructor_Email_Notification</members>
         <members>Assessment_Report_LTS_Email_Notification</members>
+        <members>Auto_Update_Labor_Cost_Rate_to_Inactive</members>
         <members>Auto_Update_UAE_Instructor_Status_as_Ended</members>
         <members>Billing_Line_Process_Builder</members>
         <members>CB_Cube_Department_Assignment</members>
@@ -1715,6 +1737,7 @@
         <members>Est_Resolution_Date_on_Priority</members>
         <members>Event_Approval_Flow</members>
         <members>Event_Trigger_Flow_After</members>
+        <members>Flow_to_Update_Case_Teams_of_Staff_Onboarding_Case_Submission</members>
         <members>Generate_Placements</members>
         <members>HR_Approval_on_Citizenship_Status_Change</members>
         <members>Instructor_CA_Creation_Email_Notification</members>
@@ -1792,6 +1815,8 @@
         <members>assessmentReportForLT</members>
         <members>buttonGroupForAssessmentReports</members>
         <members>careerCommunityHeaderCmp</members>
+        <members>cbCalculationRuleTemplateService</members>
+        <members>cbDashboardReport</members>
         <members>customActivityTimeline</members>
         <members>customActivityTimelineItem</members>
         <members>customActivityTimelineItemChild</members>
@@ -1841,6 +1866,7 @@
         <members>AuthorizationFormDataUse</members>
         <members>Bookmark__c</members>
         <members>BusinessBrand</members>
+        <members>CBCalculationRuleTemplate__c</members>
         <members>CalendarModel</members>
         <members>CalendarView</members>
         <members>Campaign</members>
@@ -1883,6 +1909,7 @@
         <members>FlowOrchestrationStageInstance</members>
         <members>FlowOrchestrationStepInstance</members>
         <members>FlowOrchestrationWorkItem</members>
+        <members>FlowRecord</members>
         <members>FlowTestResult</members>
         <members>Form_Response_Element__c</members>
         <members>Form_Response__c</members>
@@ -1924,7 +1951,6 @@
         <members>Metric__c</members>
         <members>NetworkMemberChunk</members>
         <members>NotifDeliveryUserPref</members>
-        <members>OperatingHours</members>
         <members>Opportunity</members>
         <members>Overall_Past_Performance__c</members>
         <members>PartyConsent</members>
@@ -1977,6 +2003,8 @@
         <members>Trip_Reports__c</members>
         <members>User</members>
         <members>UserAppMenuCustomization</members>
+        <members>UserDefinedLabel</members>
+        <members>UserDefinedLabelAssignment</members>
         <members>UserEmailPreferredPerson</members>
         <members>UserExternalCredential</members>
         <members>UserPrioritizedRecord</members>
@@ -2105,6 +2133,7 @@
         <members>SNA_Instructor1_sf_default_cdn_Iu3c3</members>
         <members>SNA_Staff1_sf_edge_wtcH7</members>
         <members>SNA_Student1_sf_edge_pTqff</members>
+        <members>SNA_flxXw_sf_default_cdn_SSO1</members>
         <members>Salesforce_Icon</members>
         <members>SearchIcon</members>
         <members>SiteSamples</members>

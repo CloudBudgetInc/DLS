@@ -1,9 +1,9 @@
 <!--
   @description       : 
-  @author            : Dhinesh Kumar
+  @author            : Siva Prasanth
   @group             : 
-  @last modified on  : 08/12/2022
-  @last modified by  : Dhinesh Kumar
+  @last modified on  : 16/02/2022
+  @last modified by  : Karthiga
 -->
 <aura:component implements="force:appHostable,forceCommunity:availableForAllPageTypes" controller="ProjectSummaryController">
     <!-- Attributes -->
@@ -45,7 +45,11 @@
                                                                                                              selectedProjectRT : [],
                                                                                                              selectedStatusList : [],
                                                                                                              filterName : null,
-                                                                                                             isDefault : false}"/>
+                                                                                                             isDefault : false,
+                                                                                                             langSortingOrder : 'Asc',
+                                                                                                             langFieldToSort : '',
+                                                                                                             previousSelected : '',
+                                                                                                             previousSorted : ''}"/>
     <aura:attribute name="allFilterId" type="String" default=""/>
     <aura:attribute name="projectRTMap" type="Map" default="{}"/>
     <aura:attribute name="projectSectionList" type="list" default="[]"/>
@@ -252,10 +256,10 @@
                                 </th>
                                 <th  scope="col" class="slds-is-sortable slds-text-title--caps" data-name="Language__r.Name"  onclick="{!c.tableSort}">
                                     <div class="slds-cell-wrap" title="Language">
-                                        <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Language__r.Name') }">
+                                        <aura:if isTrue="{!or(and(v.arrowDirection == 'arrowdown', v.filterObj.fieldToSort == 'Language__r.Name'),and(v.filterObj.langSortingOrder == 'Desc', v.filterObj.langFieldToSort == 'Language__r.Name')) }">
                                             <lightning:icon size="xx-small" iconName="utility:arrowdown" alternativeText="Event" />
-                                        </aura:if>  
-                                        <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Language__r.Name') }">
+                                        </aura:if>   
+                                        <aura:if isTrue="{!or(and(v.arrowDirection != 'arrowdown', v.filterObj.fieldToSort == 'Language__r.Name'),and(v.filterObj.langSortingOrder == 'Asc', v.filterObj.langFieldToSort == 'Language__r.Name')) }">
                                             <lightning:icon size="xx-small" iconName="utility:arrowup" alternativeText="Event" />
                                         </aura:if> 
                                         Language </div>
@@ -407,7 +411,7 @@
                                             <b># of Projects:  </b><br></br><b><center>{!v.counts.noOfProjects}</center></b>
                                         </div>
                                     </td>
-                                    <td colspan="3"></td>
+                                    <td colspan="2"></td>
                                     <td>
                                         <div class="slds-cell-wrap">
                                             <b>Hours/Week: </b><br></br><b><center>{!v.counts.hoursWeek}</center></b>

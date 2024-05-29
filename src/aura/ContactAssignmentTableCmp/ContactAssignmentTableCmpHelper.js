@@ -1,18 +1,17 @@
 ({
     genOfferMethod : function(component, event, helper) {
-     
         var action = component.get("c.congaButton");
         action.setParams({
-            'caId':component.get("v.CAId"),
+            'caId' : component.get("v.CAId"),
             'Template1':'Offer Letter - Staff - Exempt',
             'Template2':'Offer Letter - Staff - Non-Exempt',
             'Conquery':'ICA Agreement Contact Assign Query,Contact Query for Supervisor in Offer Letter'
-            
         });
         
         action.setCallback(this,function(data){
             var state = data.getState();
             if(state === "SUCCESS"){
+                console.log(data.getReturnValue());
                 var result = data.getReturnValue();
                 var seId = (JSON.parse(result.getServerUrlSessionId)).sessionId;
                 var url = (JSON.parse(result.getServerUrlSessionId)).serverUrl;
@@ -20,32 +19,33 @@
                 var conQuery2 = result.getQryMap['Contact Query for Supervisor in Offer Letter'];
                 var OffLetterTemId = result.OffLetterTemId || '';
                 var ConditionFailed = result.ConditionFailed || '';
-                var conId = result.contactAssigns.Id;
-                var caId = result.contactAssigns.Candidate_Name__c; 
+                var caId = result.contactAssigns.Id;
+                var conId = result.contactAssigns.Candidate_Name__c; 
                 var supName = result.contactAssigns.Candidate_Name__r.Supervisor_Name__r?
-                   result.contactAssigns.Candidate_Name__r.Supervisor_Name__r.Name:'';
+                   result.contactAssigns.Candidate_Name__r.Supervisor_Name__r.Name : '';
                 component.set("v.fieldsEmpty",result.fieldsEmpty);
                 component.set("v.ConditionFailed",result.ConditionFailed);
 
                 if(OffLetterTemId != ''){
-                    window.open('https://composer.congamerge.com?sessionId='+seId+'&serverUrl='+url+'&id='+conId+'&DS7=3&templateId='+OffLetterTemId+'&queryId=[Ins]'+conQuery1+'?pv0='+caId+',[Sup]'+conQuery2+'?pv0='+supName,'_blank','toolbar=yes, scrollbars=yes, resizable=yes, top=50, left=300, width=700, height=525' );  
+                    window.open('https://composer.congamerge.com?sessionId='+seId+'&serverUrl='+url+'&id='+conId+'&DS7=3&templateId='+OffLetterTemId+'&queryId=[Ins]'+conQuery1+'?pv0='+caId,"_blank");  
                 }else if(ConditionFailed !=''){
                     component.find('ConditionFailed').openModal(); 
-                }else if(data.getReturnValue().fieldsEmpty.length > 2) {
+                }else if(data.getReturnValue().fieldsEmpty.length > 0) {
                     
                     component.find('fieldsEmpty').openModal();                       
                 }             
             }else {   
+                console.log('error')
                 if(state === "ERROR"){
-              var toastEvent = $A.get("e.force:showToast");
-                toastEvent.setParams({
-                    message :  data.getError()[0].message,
-                    key: 'info_alt',
-                    type: 'error',
-                    mode: 'pester'
-                });
-                toastEvent.fire();  
-            }}
+                    var toastEvent = $A.get("e.force:showToast");
+                    toastEvent.setParams({
+                        message :  data.getError()[0].message,
+                        key: 'info_alt',
+                        type: 'error',
+                        mode: 'pester'
+                    });
+                    toastEvent.fire();  
+                }}
         });
         $A.enqueueAction(action);
         
@@ -62,7 +62,7 @@
             var state = data.getState();
             if(state === "SUCCESS"){
                 var result = data.getReturnValue();
-                window.open(result,'_blank','toolbar=yes, scrollbars=yes, resizable=yes, top=50, left=300, width=700, height=525' );  
+                window.open(result,'_self');   
             }else{
                 if(state === "ERROR"){
                     var toastEvent = $A.get("e.force:showToast");

@@ -193,9 +193,13 @@ public class ProjectSummaryController {
         system.debug('::::::::sortingOrder:::::'+pSInputs.sortingOrder);
         
         if(String.isNotBlank(pSInputs.sortingFieldName) && String.isNotBlank(pSInputs.sortingOrder)){
-            proQry += ' ORDER BY '+pSInputs.sortingFieldName+' '+pSInputs.sortingOrder +' NULLS LAST  LIMIT 5000' ;
+            proQry += ' ORDER BY ';
+            if(String.isNotBlank(pSInputs.langFieldToSort) && String.isNotBlank(pSInputs.langSortingOrder)){
+                 proQry += ' '+pSInputs.langFieldToSort +' '+pSInputs.langSortingOrder+' NULLS LAST,';
+            }
+            proQry += pSInputs.sortingFieldName+' '+pSInputs.sortingOrder +' NULLS LAST  LIMIT 5000' ;
         }
-        
+        //String.isNotBlank(pSInputs.langSortingOrder)
         system.debug(':::::::::proQry:::::;;'+proQry);
         projectRecords = Database.query(proQry);
         
@@ -205,15 +209,15 @@ public class ProjectSummaryController {
         
         for(AcctSeed__Project__c project : projectRecords){
             
-            if(project.Hours_Week__c > 0) {
-                hoursWeek += project.Hours_Week__c;
+            if(project.Scheduled_Hours_Week__c > 0) {
+                hoursWeek += project.Scheduled_Hours_Week__c;
             }
             if(project.Hours_Remaining__c > 0){
                 remainingHours += project.Hours_Remaining__c;
             }       
             projectIds.add(project.Id);
         }
-        
+
         activeCounts = getActiveStudentInstructorCount(projectIds);
         
         projectSummaryFullInfo projectInfo = new projectSummaryFullInfo();
@@ -475,7 +479,7 @@ public class ProjectSummaryController {
         system.debug('type'+type);
         
         for(Contact_Assignments__c  ca:[
-            SELECT Id, Candidate_Name__c, Project__r.Language_Name__c, Candidate_Name__r.FirstName, Candidate_Name__r.LastName, Candidate_Name__r.Email, RecordTypeId, RecordType.DeveloperName, Candidate_Name__r.Account.Name
+            SELECT Id, Candidate_Name__c, Project__r.Language_Name__c,  Candidate_Name__r.FirstName, Candidate_Name__r.LastName, Candidate_Name__r.Email, RecordTypeId, RecordType.DeveloperName, Candidate_Name__r.Account.Name
             FROM Contact_Assignments__c 
             WHERE Project__c IN:projectIdList AND Status__c = 'Active' AND RecordType.DeveloperName = :type]){
                 
@@ -677,5 +681,9 @@ public class ProjectSummaryController {
         //Modified by Dhinesh - 12/8/2022 - W-007549
         @AuraEnabled
         public String selectedSection;
+        @AuraEnabled
+        public String langSortingOrder;
+        @AuraEnabled
+        public String langFieldToSort;
     }
 }

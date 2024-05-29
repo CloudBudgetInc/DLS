@@ -42,6 +42,10 @@
                         component.set("v.rateType",crRecs["rateType"]);
                     }
                     
+                    if(crRecs["exempt_Status"]) {
+                        component.set("v.exempt_Status",crRecs["exempt_Status"]);
+                    }
+                    
                     if(crRecs['IndependentContractorName']){
                         component.set("v.independContractorName",crRecs['IndependentContractorName'])
                     }
@@ -141,13 +145,12 @@
                                 ];
                             } else if(rateType == 'PT Hourly (OH & G&A)' || rateType == 'FT Hourly & Benefits') {
                                 options = [
-                                    {value:"Change of Status Form", label:"Change of Status Form"}
+                                    {value:"Change of Status Form", label:"Change of Status Form"},
+                                    {value:"Offer Letter - Staff - Non-Exempt", label:"Offer Letter - Staff - Non-Exempt"}
                             	];
                             }else if(rateType == 'International Salary') {
                                 options = [{value:"Offer Letter - UAE Template", label:"Offer Letter - UAE Template"},
-                                           {value:"Change of Status Form", label:"Change of Status Form"}
-
-                                          ]; 
+                                           {value:"Change of Status Form", label:"Change of Status Form"}]; 
                             }else{
                                 component.set("v.showMessage",true);
                                 component.set("v.card",{'title' : 'Warning', 'message' : 'Offer Letter Process is not available for '+rateType+' Rate Type.', 'buttonName' : 'Close'});
@@ -179,20 +182,24 @@
         var userHRObjLookup = cmp.get("v.userHRObjLookup");
         var userDlsExecObjLookup = cmp.get("v.userDlsExecObjLookup");
         var signerValMap = cmp.get("v.signerValMap");
+        var signerInfoMap = cmp.get("v.signerMap");
         var userObjLookup = cmp.get("v.userObjLookup");
+        var launchedFrom = cmp.get("v.launchedFrom");
         
         var isValid = true;
         var signer2Staff = '';
         var signer3Staff = '';
         var tempSelectedValue = cmp.get("v.defaultVal");
         var fsiOfferLetters = ['FSI Offer Letter','PT FSI Offer Letter','FSI Letter of Intent','PT FSI Letter of Intent'];
+        var exempt_Status = cmp.get("v.exempt_Status");
 
         
-        
-        if(tempSelectedValue == 'Change of Status Form'){
+        if(tempSelectedValue == 'Change of Status Form' && launchedFrom == "Docusign"){
             
             if(userHRObjLookup.length > 0){
                 signer2Staff = userHRObjLookup[0].Id;
+                signerInfoMap['signer2Staff'] = signer2Staff;
+                cmp.set("v.signerMap",signerInfoMap);
             }else if(signerValMap && signerValMap['signer2Staff'] != null){
                 signer2Staff = signerValMap.signer2Staff;
             }
@@ -202,6 +209,7 @@
             }else if(signerValMap && signerValMap['signer3Staff'] != null){
                 signer3Staff = signerValMap.signer3Staff;
             }
+            
             
             if((!signer2Staff) && (!signer3Staff) && (signerValMap['isValidHRUser'] && signerValMap['isValidDlsExecUser'])){
                 helper.getSignerInfoHelper(cmp,event,helper);
@@ -229,7 +237,7 @@
             }
         }
         
-        if(tempSelectedValue == 'Pay Rate Addendum' || (fsiOfferLetters.includes(tempSelectedValue))){
+        if(tempSelectedValue == 'Pay Rate Addendum' || (fsiOfferLetters.includes(tempSelectedValue) || (tempSelectedValue == 'Offer Letter - Staff - Non-Exempt' && exempt_Status == 'Non-Exempt'))){
             var proInput = cmp.find("selectProject");
             var userInput = cmp.find("userId");
             

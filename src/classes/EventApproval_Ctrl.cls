@@ -3,17 +3,22 @@ public without sharing class EventApproval_Ctrl{
     //Get Events for the approval cmp
     
     @AuraEnabled
-    public static List<EventDomain.EventCalendarInfo> getEventsForApproval(){
-        return getEventsByDatesForApproval(null,null); 
+    public static List<EventDomain.EventCalendarInfo> getEventsForApproval(String contactId){
+        return getEventsByDatesForApproval(null,null,contactId); 
     }
     @AuraEnabled
-    public static List<EventDomain.EventCalendarInfo> getEventsByDatesForApproval(Date stDate,Date endDate){
-    
-        String contactId = EventCalendarController.getLoggedUserContactId();
+    public static List<EventDomain.EventCalendarInfo> getEventsByDatesForApproval(Date stDate,Date endDate,String contactId){
+        String communityName = null;
+        
+        if(String.isNotBlank(contactId)){
+            communityName = 'Internal';
+        }else{
+            contactId = EventCalendarController.getLoggedUserContactId();
+            communityName   = EventCalendarController.getCommunityPathPrefix();
+        }
         
         List<EventDomain.EventCalendarInfo> eventRecords = new List<EventDomain.EventCalendarInfo>();
         
-        String communityName = EventCalendarController.getCommunityPathPrefix();
         
         String eventQryStr = 'SELECT Id,Name,Date__c,Status__c,Start_Time__c,Day_of_Week__c,End_Time__c,Duration__c,Instructor__r.Name,Room__r.Name,Parent_Event__c,Parent_Event__r.Status__c,Project__c';
         eventQryStr += ',Project__r.DLS_Ref__c,Approval_Status__c,Parent_Status_Changed_To__c,Reject_Comment__c,Schedule__r.Project_Task__r.Name,Timezone__c,Schedule__r.Name,Room__c,End_Date_Time__c,Start_Date_Time__c  FROM Events__c';
@@ -33,7 +38,7 @@ public without sharing class EventApproval_Ctrl{
         Set<Id> projectIds = new Set<Id>();
         TimezoneUtilClass utilCls = new TimezoneUtilClass();
 
-        if(communityName == 'instructor' || Test.isRunningTest()){
+        if(communityName == 'instructor' || communityName == 'Internal' || Test.isRunningTest()){
             
             for(Events__c eve : eventList){
                 projectIds.add(eve.Project__c);
@@ -210,15 +215,19 @@ public without sharing class EventApproval_Ctrl{
 
     //Get All pending events for apporoval - Added by Jain S.
     @AuraEnabled
-    public static List<EventDomain.PendingEventsInfo> getPendingEventsForApproval(){
+    public static List<EventDomain.PendingEventsInfo> getPendingEventsForApproval(String contactId){
+        String communityName = null;
         
-        String contactId = EventCalendarController.getLoggedUserContactId();
+        if(String.isNotBlank(contactId)){
+            communityName = 'Internal';
+        }else{
+            contactId = EventCalendarController.getLoggedUserContactId();
+            communityName   = EventCalendarController.getCommunityPathPrefix();
+        }
         
         List<EventDomain.PendingEventsInfo> pendingEventRecords = new List<EventDomain.PendingEventsInfo>();
         TimezoneUtilClass utilCls = new TimezoneUtilClass();
-        
-        String communityName = EventCalendarController.getCommunityPathPrefix();
-        
+                
         String eventQryStr = 'SELECT Id,Name,Date__c,Status__c,Start_Time__c,Day_of_Week__c,End_Time__c,Duration__c,Instructor__r.Name,Room__r.Name,Parent_Event__c,Project__c';
         eventQryStr += ',Project__r.DLS_Ref__c,Approval_Status__c,Parent_Status_Changed_To__c,Reject_Comment__c,Schedule__r.Project_Task__r.Name,Timezone__c,Schedule__r.Name,Room__c';
         eventQryStr += ',Parent_Event__r.Name,Parent_Event__r.Status__c,Parent_Event__r.Start_Time__c,Parent_Event__r.Day_of_Week__c,Parent_Event__r.End_Time__c,Parent_Event__r.Duration__c';
@@ -230,7 +239,7 @@ public without sharing class EventApproval_Ctrl{
         Map<Id,String> proIdStudentNames = new Map<Id,String>();
         Set<Id> projectIds = new Set<Id>();
         
-        if(communityName == 'instructor' || Test.isRunningTest()){
+        if(communityName == 'instructor' || Test.isRunningTest() || communityName == 'Internal'){
             
             for(Events__c eve : eventList){
                 projectIds.add(eve.Project__c);
@@ -297,7 +306,7 @@ public without sharing class EventApproval_Ctrl{
 
 
             
-            if(communityName == 'instructor' || Test.isRunningTest()){
+            if(communityName == 'instructor' || Test.isRunningTest() || communityName == 'Internal'){
                 eventInfo.studentNames = proIdStudentNames.containsKey(eve.Project__c) ? proIdStudentNames.get(eve.Project__c) : '';
             }
             

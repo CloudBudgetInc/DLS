@@ -93,6 +93,9 @@ public class EventHandler {
         Map<Id,String> proIdActiveStudentsNames = new Map<Id,String>();
         Map<Id,Id> newSchIdOldSchId = new Map<Id,Id>();
         
+        //Code to populate LCR lookup in Events W-007994
+        Map<String,Id> ConIdProjIdWithLCRId = new Map<String,Id>();
+        
         for(Schedule__c sch : scheduleRecords){
             scheduleIdRecMap.put(sch.Id,sch);
             projectId.add(sch.Project__c);
@@ -137,9 +140,9 @@ public class EventHandler {
         Set<Id> conIds = new Set<Id>();
 
         //Qty Project related Student CA for Planned days off check
-        for(Contact_Assignments__c ca : [SELECT Id,Name,Candidate_Name__c,RecordType.DeveloperName,Project__c,Project__r.Name,Project__r.Students__c FROM Contact_Assignments__c WHERE Project__c != null AND Project__c IN :projectId AND RecordType.DeveloperName IN ('Student','Staff') AND Status__c = 'Active']){
+        for(Contact_Assignments__c ca : [SELECT Id,Name,Candidate_Name__c,RecordType.DeveloperName,Project__c,Project__r.Name,Project__r.Students__c,Drafted_Labor_Cost_Rate__c,Rate_Card_Rate__c FROM Contact_Assignments__c WHERE Project__c != null AND Project__c IN :projectId AND RecordType.DeveloperName IN ('Student','Staff','Instructor') AND Status__c IN ('Active','Planned')]){
             
-            if(ca.RecordType.DeveloperName == 'Student'){
+            if(ca.RecordType.DeveloperName == 'Student' && ca.Status__c == 'Active'){
                 
                 projectIdStudentId.put(ca.Project__c,ca.Candidate_Name__c);
                 if(!projectIdFlag.containsKey(ca.Project__c)){
@@ -156,13 +159,24 @@ public class EventHandler {
                 if(!proIdName.containsKey(ca.Project__c)) {
                     proIdName.put(ca.Project__c,ca.Project__r.Name);
                 }
-            }else  if(ca.RecordType.DeveloperName == 'Staff'){
+            }else  if(ca.RecordType.DeveloperName == 'Staff' && ca.Status__c == 'Active'){
                 //Qry Project related recent supervisor contact from CA to send conflict information as mail
 
                 if(!proIdSuperviosrContId.containsKey(ca.Project__c)) {
                     proIdSuperviosrContId.put(ca.Project__c,ca.Candidate_Name__c);
                 }
                 conIds.add(ca.Candidate_Name__c);
+            //Code to populate LCR lookup in Events W-007994   
+            } else if(ca.RecordType.DeveloperName == 'Instructor') {
+            
+                String tmp = ca.Candidate_Name__c + '~' + ca.Project__c;
+                if(!ConIdProjIdWithLCRId.containskey(tmp)) {
+                    if(ca.Rate_Card_Rate__c != null) {
+                        ConIdProjIdWithLCRId.put(tmp,ca.Rate_Card_Rate__c);
+                    } else if(ca.Drafted_Labor_Cost_Rate__c != null) {
+                        ConIdProjIdWithLCRId.put(tmp,ca.Drafted_Labor_Cost_Rate__c);
+                    }
+                }
             }
 
         }
@@ -172,7 +186,8 @@ public class EventHandler {
         system.debug('::::::::::proIdActiveStudentsNames::::'+proIdActiveStudentsNames);
         system.debug('::::::::::proIdName::::'+proIdName);
         system.debug('::::::::proIdSuperviosrContId::::'+proIdSuperviosrContId); 
-        
+        system.debug('::::::::ConIdProjIdWithLCRId::::'+ConIdProjIdWithLCRId); 
+
         // Qry student specific Planned days off records
         //Qry Project Specific && DLI W LT related Planned Days off records 
         for(Planned_Days_Off__c off : [SELECT Id,Name,Project__c,Contact__c,Status__c,RecordType.DeveloperName,Project__r.RecordType.DeveloperName,Date__c 
@@ -278,7 +293,16 @@ public class EventHandler {
                 }
                 
                 Boolean biweek = true;
-                
+                Id costRateId;
+                //Code to populate LCR lookup in Events W-007994
+                if(schRec.Instructor__c != null && schRec.Project__c != null) {   
+                    String Str = schRec.Instructor__c + '~' + schRec.Project__c;
+                    
+                    if(ConIdProjIdWithLCRId.containskey(Str) &&  ConIdProjIdWithLCRId.get(Str) != null) {
+                        costRateId = ConIdProjIdWithLCRId.get(Str);
+                    }
+                }
+                System.debug('costRateId::::'+costRateId);
                 while(stDate <= endDate) {                    
                     DateTime stDateTime = DateTime.newInstance(stDate, Time.newInstance(0, 0, 0, 0));                    
                     Integer weekno = Integer.valueOf(stDateTime.Format('w')); 
@@ -329,7 +353,8 @@ public class EventHandler {
                                     eve.Project__c = schRec.Project__c;
                                     eve.Instructor__c = schRec.Instructor__c;
                                     eve.Room__c = schRec.Room__c;
-                                    
+                                    eve.Labor_Cost_Rate__c = costRateId; //Code to populate LCR lookup in Events W-007994
+                                    System.debug('costRateId:::'+costRateId);
                                     if(!schIdEventRecords.containsKey(schId)) {
                                         schIdEventRecords.put(schId,new List<Events__c>{eve});
                                     } else {
@@ -1047,8 +1072,8 @@ public class EventHandler {
         }
     }
     //Bulk Handling
-    //Method to Create Substitute Schedules related event records on  schedules creation
-    // Events are created with "Draft" status, when shedule is activated event status changed from "Draft" to "Scheduled"
+    //Method to Create Substitute Schedules related event records on schedules creation
+    //Events are created with "Draft" status, when shedule is activated event status changed from "Draft" to "Scheduled"
     public void createSubstitueScheduleEvts(Map<Id,Set<Date>> schWithEvtDate){
         
         // Get Schedule record
@@ -1087,6 +1112,11 @@ public class EventHandler {
         Date minimumStart;
         Date maxEndDate;
         
+        //Qry Project related recent supervisor contact from CA to send conflict information as mail
+        Set<Id> conIds = new Set<Id>();
+        //Code to populate LCR lookup in Events W-007994
+        Map<String,Id> ConIdProjIdWithLCRId = new Map<String,Id>();
+        
         for(Schedule__c sch : scheduleRecords){
             scheduleIdRecMap.put(sch.Id,sch);
             projectId.add(sch.Project__c);
@@ -1122,24 +1152,39 @@ public class EventHandler {
         system.debug('::::::::::scheduleIdRecMap::::'+scheduleIdRecMap);
         
         //Qty Project related Student CA for Planned days off check
-        for(Contact_Assignments__c ca : [SELECT Id,Name,Candidate_Name__c,Project__c,Project__r.Name,Project__r.Students__c FROM Contact_Assignments__c WHERE Project__c IN :projectId AND RecordType.DeveloperName = 'Student' AND Status__c = 'Active']){
-
-            projectIdStudentId.put(ca.Project__c,ca.Candidate_Name__c);
-            if(!projectIdFlag.containsKey(ca.Project__c)){
-                projectIdFlag.put(ca.Project__c,true);
-            }else {
-                projectIdFlag.put(ca.Project__c,false);
-                projectIdStudentId.remove(ca.Project__c);
+        for(Contact_Assignments__c ca : [SELECT Id,Name,Candidate_Name__c,Drafted_Labor_Cost_Rate__c,Rate_Card_Rate__c,Project__c,Project__r.Name,Project__r.Students__c,RecordType.DeveloperName FROM Contact_Assignments__c WHERE Project__c IN :projectId AND (RecordType.DeveloperName IN ('Student','Staff','Instructor')) AND Status__c IN ('Active','Planned')]){
+            if(ca.RecordType.DeveloperName == 'Student' && ca.Status__c == 'Active') {
+                projectIdStudentId.put(ca.Project__c,ca.Candidate_Name__c);
+                if(!projectIdFlag.containsKey(ca.Project__c)){
+                    projectIdFlag.put(ca.Project__c,true);
+                }else {
+                    projectIdFlag.put(ca.Project__c,false);
+                    projectIdStudentId.remove(ca.Project__c);
+                }
+                
+                if(!proIdActiveStudentsNames.containsKey(ca.Project__c)) {
+                    proIdActiveStudentsNames.put(ca.Project__c,ca.Project__r.Students__c);
+                }
+                
+                if(!proIdName.containsKey(ca.Project__c)) {
+                    proIdName.put(ca.Project__c,ca.Project__r.Name);
+                }
+            } else if(ca.RecordType.DeveloperName == 'Staff' && ca.Status__c == 'Active'){
+                if(!proIdSuperviosrContId.containsKey(ca.Project__c)) {
+                    proIdSuperviosrContId.put(ca.Project__c,ca.Candidate_Name__c);
+                }
+                    
+                conIds.add(ca.Candidate_Name__c);
+            } else if(ca.RecordType.DeveloperName == 'Instructor'){
+                String tmp = ca.Candidate_Name__c + '~' + ca.Project__c;
+                if(!ConIdProjIdWithLCRId.containskey(tmp)) {
+                    if(ca.Rate_Card_Rate__c != null) {
+                        ConIdProjIdWithLCRId.put(tmp,ca.Rate_Card_Rate__c);
+                    } else if(ca.Drafted_Labor_Cost_Rate__c != null) {
+                        ConIdProjIdWithLCRId.put(tmp,ca.Drafted_Labor_Cost_Rate__c);
+                    }
+                }
             }
-            
-            if(!proIdActiveStudentsNames.containsKey(ca.Project__c)) {
-                proIdActiveStudentsNames.put(ca.Project__c,ca.Project__r.Students__c);
-            }
-            
-            if(!proIdName.containsKey(ca.Project__c)) {
-                proIdName.put(ca.Project__c,ca.Project__r.Name);
-            }
-
         }
         
         system.debug('::::::::::projectIdFlag::::'+projectIdFlag);
@@ -1169,7 +1214,7 @@ public class EventHandler {
         system.debug('::::::::plannedOffDates::::'+plannedOffDates);
         
         //Qry Project related recent supervisor contact from CA to send conflict information as mail
-        Set<Id> conIds = new Set<Id>();
+        /*Set<Id> conIds = new Set<Id>();
         for(Contact_Assignments__c ca : [SELECT Id,Name,Candidate_Name__c,Candidate_Name__r.Name,Project__c,Project__r.Name FROM Contact_Assignments__c WHERE Project__c != null AND Project__c IN :projectId AND Status__c = 'Active' AND RecordType.DeveloperName = 'Staff']){
             if(!proIdSuperviosrContId.containsKey(ca.Project__c)) {
                 proIdSuperviosrContId.put(ca.Project__c,ca.Candidate_Name__c);
@@ -1179,7 +1224,7 @@ public class EventHandler {
             
         }
         system.debug('::::::::proIdSuperviosrContId::::'+proIdSuperviosrContId);
-        
+        */
         /*if(conIds.size() > 0){
             for(Contact con : [SELECT Id,Name,Email FROM Contact WHERE Id IN :conIds]){
                 conIdRecMap.put(con.Id,con);
@@ -1222,6 +1267,15 @@ public class EventHandler {
                     sequenceNo = (Integer) schIdLastEveSeqNum.get(schId);
                 }
                 System.debug('::schWithEvtDate'+schWithEvtDate);
+                Id costRateId;
+                //Code to populate LCR lookup in Events W-007994
+                if(schRec.Instructor__c != null && schRec.Project__c != null) {   
+                    String Str = schRec.Instructor__c + '~' + schRec.Project__c;
+                    
+                    if(ConIdProjIdWithLCRId.containskey(Str) &&  ConIdProjIdWithLCRId.get(Str) != null) {
+                        costRateId = ConIdProjIdWithLCRId.get(Str);
+                    }
+                }
                 if(schWithEvtDate.containsKey(schId)){
                     for(Date stDate : schWithEvtDate.get(schId)) {
                         system.debug(':::::::stDate:::::'+stDate);
@@ -1266,6 +1320,7 @@ public class EventHandler {
                                            eve.Project_Task__c = schRec.Project_Task__c;
                                            eve.Instructor__c = schRec.Instructor__c;
                                            eve.Room__c = schRec.Room__c;
+                                           eve.Labor_Cost_Rate__c = costRateId; //Code to populate LCR lookup in Events W-007994
                                            
                                            if(!schIdEventRecords.containsKey(schId)) {
                                                schIdEventRecords.put(schId,new List<Events__c>{eve});
@@ -2339,5 +2394,26 @@ public class EventHandler {
                 update updateOppRecs.values();
             }
         }
-    }   
+    }  
+    
+    /*************
+        - May 21 2024 - W-008056 : Request to Update Lesson Plan Date When Related Event Date isChanged
+        - To update the lesson plan's date when the event's date is changed
+        ****************/
+    public static void updateLessonPlanDate(Map<Id, Date> eveIdAndDate){
+        
+        List<Lesson_Plan__c> updateLPs = new List<Lesson_Plan__c>();
+        
+        for(Lesson_Plan__c lp : [SELECT Id, Event__c, Date__c FROM Lesson_Plan__c WHERE Event__c IN : eveIdAndDate.keySet() AND Status__c != 'Completed']){
+        
+            if(eveIdAndDate.containskey(lp.Event__c) && lp.Date__c != eveIdAndDate.get(lp.Event__c)){
+            
+                updateLPs.add(new Lesson_Plan__c(Id = lp.Id, Date__c = eveIdAndDate.get(lp.Event__c)));
+            }
+        }
+        
+        if(updateLPs.size() > 0){
+            update updateLPs;
+        }
+    }
 }

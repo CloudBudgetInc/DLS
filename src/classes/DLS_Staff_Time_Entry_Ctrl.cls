@@ -209,15 +209,19 @@ global without sharing class DLS_Staff_Time_Entry_Ctrl {
                                                     
          system.debug('::::::ptmValues::::::'+ptmValues);
          
-         //Added By Dhinesh - 21/03/2023 - W-007729 - Timekeeping Fields to Indicate if the Time was entered On Time or Late
-        TimeEntryUtil.TimeEnteredCountWrap timeEnteredCount = TimeEntryUtil.getTimeEnteredCountByContactId(conRecList[0].Id);
-         
+       
          TimeCardDayDomain.EmployeeDetails emyDetails = new TimeCardDayDomain.EmployeeDetails();
          emyDetails = TimeCardDayTranslator.employeeDetailsMethod(projectTaskList,projectList,conRecList,timeCardLineList,timezoneValue,lockingDate,accTimesnapshot,daysList,holidayDateSet,previousWeektimeCardLines,documentList,relatedConAssign,new List<Contact_Assignments__c>{},ptmValues);
-         emyDetails.timeEnteredLate = timeEnteredCount.timeEnteredLate;
-         emyDetails.timeEnteredOnTime = timeEnteredCount.timeEnteredOnTime;
-         emyDetails.timeSubmittedOnTime = timeEnteredCount.timeSubmittedOnTime;
-         emyDetails.timeSubmittedLate = timeEnteredCount.timeSubmittedLate;
+         
+         if(conRecList.size() > 0){
+             //Added By Dhinesh - 21/03/2023 - W-007729 - Timekeeping Fields to Indicate if the Time was entered On Time or Late
+             TimeEntryUtil.TimeEnteredCountWrap timeEnteredCount = TimeEntryUtil.getTimeEnteredCountByContactId(conRecList[0].Id);
+             emyDetails.timeEnteredLate = timeEnteredCount.timeEnteredLate;
+             emyDetails.timeEnteredOnTime = timeEnteredCount.timeEnteredOnTime;
+             emyDetails.timeSubmittedOnTime = timeEnteredCount.timeSubmittedOnTime;
+             emyDetails.timeSubmittedLate = timeEnteredCount.timeSubmittedLate;
+             
+         }
          
          system.debug('::::::::emyDetails:::::::'+emyDetails);
          

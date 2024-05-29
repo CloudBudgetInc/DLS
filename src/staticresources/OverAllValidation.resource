@@ -98,10 +98,11 @@ function checkForActualClassHrsValidation(dayRecords,attendance,projectData,type
     if(type == 'Actual Entry Check' && projectData[0].projectRTName != 'EFL_Projects') {
         for(var i = 0;i < dayRecords.length;i++){
             var entries = dayRecords[i].dayEntries;
-            for(var j = 0;j < entries.length;j++){
-                if((entries[j].isNew && entries[j].dayHours) || (entries[j].isUpdated && entries[j].dayHours)){
-                    if(dayRecords[i].taskType != 'Preparation time' && ((dayRecords[i].taskType == 'fringe' && dayRecords[i].taskName == 'Fringe-PTO') || (dayRecords[i].taskType == 'fringe' && dayRecords[i].taskName == 'Fringe-Holiday'))){
-                        if(!entries[j].startTime1 || !entries[j].endTime1){
+            for(var j = 0;j < entries.length;j++){                
+                if((entries[j].isNew && entries[j].dayHours) || (entries[j].isUpdated && entries[j].dayHours)){  
+                    let isFringeTaskWithoutTime = (dayRecords[i].taskType == 'fringe' && (dayRecords[i].taskName == 'Fringe-PTO' || dayRecords[i].taskName == 'Fringe-Holiday'));               
+                    if((dayRecords[i].taskType != 'Preparation time')){
+                        if((!isFringeTaskWithoutTime) && (!entries[j].startTime1 || !entries[j].endTime1)){
                             isValid = false;
                         }
                     }else if(dayRecords[i].taskType == 'Preparation time' && (dayRecords[i].timeType == 'AM' || dayRecords[i].timeType == 'Single')){
@@ -140,7 +141,7 @@ function checkForActualClassHrsValidation(dayRecords,attendance,projectData,type
             for(var j = 0;j < entry.length;j++){
                 var hrsExist = (entry[j].hours === 0 || entry[j].hours) ? true : false;
                 if(dayMap[entry[j].dateVal] && !hrsExist && !entry[j].isHrsDisabled){
-                    isValid = false;
+                    isValid = false;				  
                 }
             }
         }
@@ -155,8 +156,8 @@ function checkForActualClassHrsValidation(dayRecords,attendance,projectData,type
         resultObj.title = 'Start Time and End Time Entry';
         resultObj.isValidInput = false;
     }else if(!isValid && type == 'Student Entry Check'){
-        
-        if(projectData && !projectData[0].noStudentApproval){
+
+        if(projectData && !projectData[0].noStudentApproval && (!(projectData[0].projectRTName == 'DLI_W_LT_Projects' && projectData[0].noStudentHrsVerification && projectData[0].dliProType == 'EI'))){
             resultObj.message = 'Please record hours for each student listed in the Student Time table. If any students were absent, please enter 0.00 for that student';
             resultObj.title = 'Warning';
             resultObj.isValidInput = false;

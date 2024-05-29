@@ -648,10 +648,11 @@ public class UserManagementUtil{
             for(Contact_Assignments__c ca : filteredCAs){
             
                 // SLP Course Creation and Course Creation
+                // Modified on Mar 21 2024 - Modified Start Date condition from 19 days to 30 days for SLP projects  : W-008013 - Update to SLP Moodle Course Creation (Only)
                 if(!updateProjs.containsKey(ca.Project__c) && ((ca.Project__r.RecordType.DeveloperName == 'DODA_Projects' && 
                     String.isNotBlank(ca.Project__r.Project_Type__c) &&  projectTypes.contains(ca.Project__r.Project_Type__c) && 
                     (ca.Project__r.Program_Iteration__c != NULL || ca.Project__r.Project_Type__c == 'IND') &&  
-                    ca.Project__r.Start_Date__c <= Date.Today().addDays(19) &&
+                    ca.Project__r.Start_Date__c <= Date.Today().addDays(30) &&
                     ca.Project__r.Moodle_Course_Id__c == NULL && projIdAndMatReqs.containsKey(ca.Project__c)) 
                     || 
                     (ca.Project__r.RecordType.DeveloperName != 'DODA_Projects' && 

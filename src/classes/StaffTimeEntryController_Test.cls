@@ -13,8 +13,8 @@ public with sharing class StaffTimeEntryController_Test {
 
         List<Project_Task_Master__c> projmaster = new List<Project_Task_Master__c>{
             
-            new Project_Task_Master__c(Name = 'Test 1',Billable__c = false,Display_In_Time_Card__c = true,Project_Type__c = 'Internal Cost Jobs',Unit__c = 'Hrs',Project_Task_Type__c = 'Fringe',Sort_Order__c = 4,Payroll_Item__c = 'S', Project_Task_Record_Type__c = 'Cost',Project_Record_Type__c = 'Testing_Projects'),
-            new Project_Task_Master__c(Name = 'Test 3',Billable__c = true,Display_In_Time_Card__c = true,Project_Type__c = 'DLS-Site Language Training; Client Site Language Training; FBI WO',Unit__c = 'Hrs',Project_Task_Type__c = 'ADMINISTRATIVE',Sort_Order__c = 3,Payroll_Item__c = 'JUR', Project_Task_Record_Type__c = 'Cost', Project_Record_Type__c = 'Testing_Projects')
+            new Project_Task_Master__c(Name = 'Test 1',Billable__c = false,Display_In_Time_Card__c = true,Project_Type__c = 'Internal Cost Jobs',Unit__c = 'Hrs',Project_Task_Type__c = 'Fringe',Internal_Staff_Entry_Sort_Order__c=1,Sort_Order__c = 4,Payroll_Item__c = 'S', Project_Task_Record_Type__c = 'Cost',Project_Record_Type__c = 'Testing_Projects'),
+            new Project_Task_Master__c(Name = 'Test 3',Billable__c = true,Display_In_Time_Card__c = true,Project_Type__c = 'DLS-Site Language Training; Client Site Language Training; FBI WO',Unit__c = 'Hrs',Project_Task_Type__c = 'ADMINISTRATIVE',Internal_Staff_Entry_Sort_Order__c=3,Sort_Order__c = 3,Payroll_Item__c = 'JUR', Project_Task_Record_Type__c = 'Cost', Project_Record_Type__c = 'Testing_Projects')
         };
         insert projmaster; 
     }
@@ -394,5 +394,77 @@ public with sharing class StaffTimeEntryController_Test {
         
         Test.stopTest();
     }
+     // To cover getSummaryTimeRecords Method
+    private static testMethod void getSummaryTimeRecords(){
+        Date myDate1 = System.today();
+        Date weekStart1 = myDate1.toStartofWeek()+1;
+        Date WeekEnd1 = myDate1.toStartofWeek()+7;
+        
+        Id p = [SELECT Id FROM Profile WHERE Name='Instructor Community'].Id;
+        
+        List<Contact> conList = [SELECT Id FROM Contact WHERE Email != NULL AND RecordType.DeveloperName = 'Candidate' AND LastName='Test Contact1' LIMIT 1];
+        
+        Test.startTest();
+        
+        User user = new User(alias = 'test123', email='test123@noemail.com',
+                emailencodingkey='UTF-8', lastname='Testing', languagelocalekey='en_US',
+                localesidkey='en_US', profileid = p, country='United States',IsActive =true,
+                ContactId = conList[0].Id,
+                timezonesidkey='America/Los_Angeles', username='tester@noemail.com');
+       
+        insert user;
+        
+        MTT_Location__c loc = [SELECT Id, Name FROM MTT_Location__c LIMIT 1];
+                
+        List<AcctSeed__Time_Card__c> timeCard = [SELECT Id, AcctSeed__Employee__c,Intructor__c,AcctSeed__Time_Card_Period__c, Intructor__r.RecordType.DeveloperName FROM AcctSeed__Time_Card__c LIMIT 1];
+        timeCard[0].Intructor__c = conList[0].Id;
+        update timeCard;
+                
+        List<Contact_Assignments__c> conAss = [SELECT Id, Name, Candidate_Name__c, Project__c FROM Contact_Assignments__c WHERE RecordType.DeveloperName = 'Student' AND Status__c = 'Active' LIMIT 1];
+        conAss[0].Candidate_Name__c = conList[0].Id;
+        conAss[0].Assignment_Position__c = 'Class Leader';
+        update conAss[0]; 
+        
+        List<AcctSeed__Project__c> proj = [SELECT Id, DLS_Class__c FROM AcctSeed__Project__c WHERE Id = :conAss[0].Project__c];
+        proj[0].Training_Location__c = loc.Id;
+        update proj[0];
+        
+        List<AcctSeed__Project_Task__c> task = [SELECT Id, AcctSeed__Project__c,AcctSeed__Project__r.AcctSeed__Opportunity__c, AcctSeed__Project__r.RecordType.DeveloperName, AcctSeed__Labor_GL_Account__c FROM AcctSeed__Project_Task__c WHERE Project_Task_Type__c != 'Preparation time' AND AcctSeed__Project__c = :proj[0].Id LIMIT 1];
+        
+        
+        AcctSeed__Time_Card_Line__c timeCardLine = new AcctSeed__Time_Card_Line__c();
+        timeCardLine.AcctSeed__Project_Task__c = task[0].Id;
+        timeCardLine.AcctSeed__Project__c = task[0].AcctSeed__Project__c;
+        timeCardLine.AcctSeed__Billable__c = TRUE;
+        timeCardLine.Payroll_Item__c = 'ADM';
+        timeCardLine.Contact_Assignment__c = conAss[0].Id;
+        timeCardLine.AcctSeed__Time_Card__c = timeCard[0].Id;
+        timeCardLine.Location__c = loc.Id;
+        insert timeCardLine;
+       
+        AcctSeed__Time_Card_Day__c day = new AcctSeed__Time_Card_Day__c(AcctSeed__Time_Card_Line__c = timeCardLine.Id,Total_Hours_Before_Approved__c = 2.00,AcctSeed__Hours__c = 2,AcctSeed__Date__c = System.Today(), Status__c = 'Submitted');
+        insert day;
+        
+        List<TimeCardDayCommunityDomain.DayEntries> dayEntries = new List<TimeCardDayCommunityDomain.DayEntries>();
+        TimeCardDayCommunityDomain.DayEntries de = new TimeCardDayCommunityDomain.DayEntries();
+        de.dayId = day.Id;
+        de.lineId = timeCardLine.Id;
+        
+        dayEntries.add(de);
+        
+        System.runAs(user) {    
+        
+            try{
+               Decimal hours = StaffTimeEntryController.getSummaryTimeRecords(''+System.Today(),''+WeekEnd1,conList[0].Id);
+                System.assertEquals(hours, 4);
+            }catch(Exception e){
+            
+                System.debug('EXception===='+e.getMessage());
+            }
+        }
+        Test.stopTest();
+    }
+                        
+    
 
 }

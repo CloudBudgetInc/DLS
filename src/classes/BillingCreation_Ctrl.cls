@@ -56,20 +56,20 @@ public class BillingCreation_Ctrl {
                                                                   '11005 - AR - Deferred Revenue' => '11005-Prepayment' ,
                                                                   '11002 - Unbilled Accounts Receivable' => '11002-Billed at End'};
                 
-        Map<String,String> mRVendorGlAccountMap = new Map<String,String>{'12101 - Inventory- LT Materials VA' => 'Stock',
-                                                                         '40540 - Learning Mngmt System Revenue' => 'D2L',
-                                                                         '40520 - In-house Materials Revenue' => 'In-House' ,
-                                                                         '25501 - Sales Tax Payable - New' => 'SalesTax',
-                                                                         '22050 - Accrued Expenses' => 'GSAFees',
-                                                                         '12853 - RE - Language Materials' => 'External Material'};
-                        
+        Map<String,Set<String>> mRVendorGlAccountMap = new Map<String,Set<String>>{'12101 - Inventory- LT Materials VA' => new Set<String>{'Stock'},
+                                                                                   '40540 - Learning Mngmt System Revenue' =>  new Set<String>{'D2L','Mango Languages'},
+                                                                                   '40520 - In-house Materials Revenue' =>  new Set<String>{'In-House'} ,
+                                                                                    '25501 - Sales Tax Payable - New' =>  new Set<String>{'SalesTax'},
+                                                                                    '22050 - Accrued Expenses' =>  new Set<String>{'GSAFees'},
+                                                                                    '12853 - RE - Language Materials' =>  new Set<String>{'External Material'}};
+                                                                                              
         Map<String,Id> billingTypeRelGLAccountMap = new Map<String,Id>();
         Map<String,Id> matReqVendarRelGLAccountMap = new Map<String,Id>();
         Map<String,Id> qbClassficationRelGlVarMap = new Map<String,Id>();
         Map<Id,Id> billingContactMap = new Map<Id,Id>();
         Map<String,String> accountCodeMap = new Map<String,String>();
         
-        List<String> pTvendarNameList = new List<String>{'D2L','In-House','SalesTax','ExternalMaterial'};
+        List<String> pTvendarNameList = new List<String>{'D2L','In-House','SalesTax','ExternalMaterial','Mango Languages'};
             
         Set<Id> projectIds = new Set<Id>(); 
         Set<String> timeCardStatus = new Set<String>{'Approved', 'Admin Approved'}; 
@@ -97,7 +97,7 @@ public class BillingCreation_Ctrl {
         String timeCardDayQuery = 'SELECT Id,GL_Variable_2__c, QB_Classification__c,AcctSeed__Time_Card_Line__r.AcctSeed__Project__c,AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__c,Total_Hours_Before_Approved__c,AcctSeed__Hours__c FROM AcctSeed__Time_Card_Day__c';
         timeCardDayQuery = timeCardDayQuery + ' WHERE AcctSeed__Hours__c > 0 AND AcctSeed__Time_Card_Line__r.AcctSeed__Project_Task__r.Billable__c = true AND AcctSeed__Time_Card_Line__r.AcctSeed__Billable__c = true AND Status__c IN: timeCardStatus';
         timeCardDayQuery = timeCardDayQuery + ' AND (( (AcctSeed__Time_Card_Line__r.Payroll_Item__c IN :testingPayRollItems) AND AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.RecordType.DeveloperName = \'Testing_Projects\' AND AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.Test_Type__c != \'In-house Non-Billable\')';
-        timeCardDayQuery = timeCardDayQuery + ' OR (AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.RecordType.DeveloperName = \'DLI_W_LT_Projects\' AND AcctSeed__Time_Card_Line__r.Payroll_Item__c IN :dliPayRollItems)';
+        timeCardDayQuery = timeCardDayQuery + ' OR (AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.RecordType.DeveloperName IN (\'DLI_W_LT_Projects\',\'MTT_Projects\') AND AcctSeed__Time_Card_Line__r.Payroll_Item__c IN :dliPayRollItems)';
         timeCardDayQuery = timeCardDayQuery +' OR (AcctSeed__Time_Card_Line__r.Payroll_Item__c IN :otherPayRollItems AND ( AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.RecordType.DeveloperName != \'Testing_Projects\' OR AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.RecordType.DeveloperName != \'DLI_W_LT_Projects\')) )';
         
         String matReqQuery = 'SELECT Id,Name,DLS_Total__c,Vendor_Name__c,Project__r.QB_Classification__c,Vendor_Name__r.Name,Materials_Name__r.Name,project_Task__r.AcctSeed__Project__r.RecordTypeId,Materials_Name__r.RecordType.DeveloperName,Qty__c,DLS_Sales_Tax_Formula__c,Item_Price_Formula__c,Project_Task__r.AcctSeed__Project__r.Name,Project_Task__r.AcctSeed__Project__c,Project_Task__r.AcctSeed__Project__r.AcctSeed__Account__c,Project_Task__c,Project_Task__r.AcctSeed__Project__r.AcctSeed__Account__r.Name,Project_Task__r.AcctSeed__Project__r.AcctSeed__Account__r.AcctSeed__Billing_Contact__c,Project_Task__r.Name,Project_Task__r.AcctSeed__Project__r.RecordType.DeveloperName,Project_Task__r.CLIN__c,Project_Task__r.AcctSeed__GL_Account_Variable_2__c,Project_Task__r.AcctSeed__GL_Account_Variable_2__r.Name,Project_Task__r.AcctSeed__GL_Account_Variable_1__c,Project_Task__r.CLIN__r.Name,Project_Task__r.Revenue_GL_Account__c,Project_Task__r.Product__c,Project_Task__r.AcctSeed__Project__r.QB_Classification__c,GSA_Fee_Formula__c FROM Materials_Request__c WHERE RecordType.DeveloperName = \'Project_Materials_Request\' AND Project_Task__r.Billable__c = true AND Project_Task__r.RecordType.DeveloperName = \'Material_Budget\' AND Request_Status__c = \'Delivered\' AND Vendor_Total__c > 0 ';       
@@ -221,8 +221,13 @@ public class BillingCreation_Ctrl {
             }
             
             //Material Request Vendar Name related GL Account Map   
-            if(mRVendorGlAccountMap.containsKey(gcA.Name)){
-                matReqVendarRelGLAccountMap.put(mRVendorGlAccountMap.get(gcA.Name),gcA.Id);
+            if(mRVendorGlAccountMap.containsKey(gcA.Name)){ 
+                Set<String> vendorNames = mRVendorGlAccountMap.get(gcA.Name);
+                for(String vendor : vendorNames){
+                    if(!matReqVendarRelGLAccountMap.containsKey(vendor)){
+                        matReqVendarRelGLAccountMap.put(vendor,gcA.Id);
+                    }
+                }
             }
         }
         

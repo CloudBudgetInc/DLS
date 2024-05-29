@@ -8,7 +8,7 @@ public without sharing class CommunityCATabView_Controller {
         String studentTablabel = 'Student';
         String instructorTabLabel = 'Instructor';
         String staffTabLabel = 'Supervisor/LTS';    
-        List<string> defaultStatusSet = new List<String>{ 'All', 'Active','Planned','Ended', 'On Hold' };
+        List<string> defaultStatusSet = new List<String>{ 'All', 'Active','Planned','Ended', 'On Hold','Transferred'};
             List<String> statusList = new List<String>();
         
         List<Contact_Assignments__c> CAList = [SELECT 
@@ -17,6 +17,16 @@ public without sharing class CommunityCATabView_Controller {
                                                WHERE Project__c = :projectId and RecordType.DeveloperName IN ('Student','Instructor','Staff') ORDER BY candidate_name__r.firstname ASC];
         
         List<AcctSeed__Project__c> project = [SELECT Id, RecordType.DeveloperName FROM AcctSeed__Project__c WHERE Id = :projectId];
+        
+        // Show Active Status to Student until Enddate completes for Transferred Student
+        if(CAList.size() > 0){
+            for(Contact_Assignments__c ca : CAList){ 
+                if(ca.Status__c == 'Transferred' && ca.RecordType.DeveloperName == 'Student' && ca.End_Date__c > System.Today()){
+                    ca.Status__c = 'Active'; 
+                }
+            }
+        }
+        
         
         /*List<CAListWrapper> CAListWrapper = new List<CAListWrapper>();
         
@@ -106,6 +116,15 @@ public without sharing class CommunityCATabView_Controller {
                        Id, End_Date__c, Start_Date__c, Record_Type_Developer_Name__c, Assignment_Position__c, Status__c, candidate_name__r.name,candidate_name__r.firstname,candidate_name__r.lastname, RecordType.DeveloperName  
                        FROM Contact_Assignments__c 
                        WHERE Project__c = :projectId and RecordType.DeveloperName IN ('Student','Instructor','Staff') and Status__c != null ORDER BY candidate_name__r.firstname ASC];        
+        }
+        
+        // Show Active Status to Student until Enddate completes
+        if(CAList.size() > 0){
+            for(Contact_Assignments__c ca : CAList){ 
+                if(ca.Status__c == 'Transferred' && ca.RecordType.DeveloperName == 'Student' && ca.End_Date__c > System.Today()){
+                   ca.Status__c = 'Active'; 
+                }
+            }
         }
         
         String community = TimeActivityController.getCommunityPathPrefix();

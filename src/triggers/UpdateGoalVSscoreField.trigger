@@ -37,10 +37,13 @@ trigger UpdateGoalVSscoreField on Assessment_Report__c (Before insert,Before upd
         List<Assessment_Report__c> annualReports = new List<Assessment_Report__c>();
         Set<Id> annualReportInsIds = new Set<Id>();
         
+        Map<Id, Id> newProjIdAndOldProjId = new Map<Id, Id>();
+        List<Assessment_Report__c> transferredReports = new List<Assessment_Report__c>();
+        
         for(Assessment_Report__c ar: Trigger.new){
             
             //Added By Dhinesh - 14/10/2021 - To Update the Name for Observation and Annual Report if the Review Date changes
-            if(Trigger.isUpdate && (ar.RecordTypeId == annualReviewRTId || ar.RecordTypeId == observationRecordTypeId || ar.RecordTypeId == dliObservationRecordTypeId ) 
+            if(Trigger.isUpdate && ar.Status__c != 'Canceled' && ar.Status__c != 'Completed' && (ar.RecordTypeId == annualReviewRTId || ar.RecordTypeId == observationRecordTypeId || ar.RecordTypeId == dliObservationRecordTypeId ) 
                 && ar.Report_Date__c != Trigger.oldMap.get(ar.Id).Report_Date__c){
                 String str = ar.RecordTypeId == annualReviewRTId ? ' - ' : '-';    
                 ar.Name = ar.Name.substring(0, ar.Name.lastIndexOfIgnoreCase(str)) + str +('0' + ar.Report_Date__c.month()).right(2)+'/'+ar.Report_Date__c.year();
@@ -125,6 +128,17 @@ trigger UpdateGoalVSscoreField on Assessment_Report__c (Before insert,Before upd
                     annualReportInsIds.add(ar.Instructor__c);           
                 }
             }
+            
+            // W-007991 : Update to Transfer Button Functionality on Student CA
+            if(Trigger.isUpdate && ar.Project__c != Trigger.oldMap.get(ar.Id).Project__c && ar.Status__c != 'Canceled' && ar.Status__c != 'Completed'){
+                
+                transferredReports.add(ar);
+                newProjIdAndOldProjId.put(ar.Project__c, Trigger.oldMap.get(ar.Id).Project__c);
+            }
+        }
+        
+        if(transferredReports.size() > 0){
+            AssessmentReportTriggerHandler.updateTransferredTRName(transferredReports, newProjIdAndOldProjId);
         }
         
         if(arListToUpdateName.size() > 0){
@@ -143,8 +157,9 @@ trigger UpdateGoalVSscoreField on Assessment_Report__c (Before insert,Before upd
                     projIdStdIdAndLTRec.put(projIdAndStdId, lt);
                 }        
             }
-            
-            for(Contact_Assignments__c  ca : [SELECT Id, Project__c, Candidate_Name__c, L_Score_Final__c, R_Score_Final__c, S_Score_Final__c FROM Contact_Assignments__c WHERE Project__c IN: projIdsToUpdateARs AND Candidate_Name__c IN : stdIdsToUpdateARs AND RecordType.DeveloperName = 'Student' AND Status__c = 'Active' ORDER BY CreatedDate DESC]){
+            // Ended Status condition added on Feb 29 2024 : W-008001 - Final Progress Report Missing Goals (Proficiency Objectives fields = NA)
+            //  If the Student CA is updated to Ended before the Final report is updated to Scheduled, then the system will correctly pull the goals from the Ended Student CA.
+            for(Contact_Assignments__c  ca : [SELECT Id, Project__c, Candidate_Name__c, L_Score_Final__c, R_Score_Final__c, S_Score_Final__c FROM Contact_Assignments__c WHERE Project__c IN: projIdsToUpdateARs AND Candidate_Name__c IN : stdIdsToUpdateARs AND RecordType.DeveloperName = 'Student' AND Status__c IN ('Active', 'Ended') ORDER BY CreatedDate DESC]){
                 String projIdAndStdId = ca.Project__c+'-'+ca.Candidate_Name__c;
                 if(!projIdStdIdAndCARec.containsKey(projIdAndStdId)){
                     projIdStdIdAndCARec.put(projIdAndStdId, ca);
@@ -543,8 +558,12 @@ trigger UpdateGoalVSscoreField on Assessment_Report__c (Before insert,Before upd
         List<Assessment_Report__c> completedReports = new List<Assessment_Report__c>();
         
         for(Assessment_Report__c ar: Trigger.new){
-        
-            if((((ar.RecordTypeId == observationRecordTypeId || ar.RecordTypeId == dliObservationRecordTypeId) && ar.Date_Completed__c >= thisYR) || (ar.RecordTypeId == annualReviewRTId && ar.Report_Date__c >= thisYR)) && ((Trigger.isUpdate && ar.Status__c != Trigger.oldMap.get(ar.Id).Status__c) || Trigger.isInsert) && ar.Status__c == 'Completed' && ar.Instructor__c != null) {
+            
+            // Added Annual Review fields condition on Feb 06 2024 - W-007981 : Changes to Observation Report and Annual Review Contact Checkbox
+            // (For only "Observation Report") Update Contact's "Annual Review Completed This Year" to "True" if the "Annual Review Strengths" and "Annual Review Areas for Further Develop" fields are completed 
+            if(((((ar.RecordTypeId == observationRecordTypeId && String.isNotBlank(ar.Annual_Review_Areas_for_Further_Develop__c) && String.isNotBlank(ar.Annual_Review_Strengths__c)) || 
+                ar.RecordTypeId == dliObservationRecordTypeId) && ar.Date_Completed__c >= thisYR) || (ar.RecordTypeId == annualReviewRTId && ar.Report_Date__c >= thisYR)) && 
+                ((Trigger.isUpdate && ar.Status__c != Trigger.oldMap.get(ar.Id).Status__c) || Trigger.isInsert) && ar.Status__c == 'Completed' && ar.Instructor__c != null) {
                 
                 completedReports.add(ar);
                 insIds.add(ar.Instructor__c);

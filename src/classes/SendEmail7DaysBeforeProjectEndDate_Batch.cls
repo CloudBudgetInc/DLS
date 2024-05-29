@@ -2,6 +2,10 @@
     - W-007961 : Automatically Send an Email 7 days before Project End Date
     - To send an email to the Students and the Instructors 7 days before the Project End Date.
     - This scheduler runs on daily basis
+    - Cron Expression Info:
+        SendEmail7DaysBeforeProjectEndDate_Batch  sch2 = new SendEmail7DaysBeforeProjectEndDate_Batch(); 
+        String sch = '0 30 10 * * ?'; 
+        system.schedule('Send Email 7 Days Before Project End Date @ 10.30 AM EST', sch, sch2);
     *******************/
 
 public class SendEmail7DaysBeforeProjectEndDate_Batch implements Database.Batchable<SObject>, Schedulable, Database.Stateful{
@@ -16,7 +20,7 @@ public class SendEmail7DaysBeforeProjectEndDate_Batch implements Database.Batcha
     public Database.QueryLocator start(Database.BatchableContext context){  
     
         Date endDate = Date.Today().addDays(7);
-        String projectQryStr = 'SELECT Id, Name, Account_Name__c, Project_Type__c, Project_Manager__c FROM AcctSeed__Project__c WHERE End_Date__c = : endDate AND Acctseed__Status__c = \'Active\' AND Project_Record_Type_Name__c != \'Testing_Projects\' AND QB_Classification__c != \'OF0UAE\' AND Id = \'a48RT00000002Q1YAI\'';
+        String projectQryStr = 'SELECT Id, Name, Account_Name__c, Project_Type__c, Project_Manager__c FROM AcctSeed__Project__c WHERE End_Date__c = : endDate AND Acctseed__Status__c = \'Active\' AND Project_Record_Type_Name__c NOT IN (\'Testing_Projects\', \'Translation_Projects\', \'Interpretation_Projects\') AND QB_Classification__c != \'OF0UAE\'';
         return Database.getQueryLocator(projectQryStr);    
     }
     
@@ -30,7 +34,7 @@ public class SendEmail7DaysBeforeProjectEndDate_Batch implements Database.Batcha
                 
                 if(!pro.Account_Name__c.contains('PVT') && !pro.Account_Name__c.contains('DLI') && !pro.Account_Name__c.contains('FAS') && !pro.Account_Name__c.contains('FCS') && 
                     (!pro.Account_Name__c.contains('DODA') || (pro.Account_Name__c.contains('DODA') && !projectTypes.contains(pro.Project_Type__c))) && 
-                    !pro.Account_Name__c.contains('AFSAT') && !pro.Name.contains('UAE')){
+                    !pro.Account_Name__c.contains('AFSAT') && !pro.Name.contains('UAE') && pro.Account_Name__c != 'Booz Allen Hamilton (BAH)'){
                     
                     projRecs.add(pro);        
                 }
@@ -70,10 +74,7 @@ public class SendEmail7DaysBeforeProjectEndDate_Batch implements Database.Batcha
                             Messaging.SingleEmailMessage mail = ProjectTrigger_Handler.getSingleEmail(orgWideEmailId, projIdAndTargetObjId.get(proj.Id), projIdAndStdInsEmails.get(proj.Id), cCAddresses, emailTemplateId, proj.Id, '', '', true, false);
                             sendEmailList.add(mail);
                         }
-                    }
-                     
-                    System.debug(':sendEmailList:::'+sendEmailList);
-                    System.debug(':sendEmailList:::'+sendEmailList.size());
+                    }                     
                     if(!sendEmailList.isEmpty()){
                         Messaging.SendEmailResult[] results = Messaging.sendEmail(sendEmailList);
                     }

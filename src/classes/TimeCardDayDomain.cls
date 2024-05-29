@@ -539,6 +539,30 @@ global class TimeCardDayDomain {
         public String tclName;
     }
     
+    /************************
+        - Created by Siva Prasanth on April 25 2024
+        - For Audit Trail Report Page
+        - To display time card day history records
+        - W-008032 : Timekeeping Audit Trail Reports
+    ******************/
+    public class TCDTrailReport{
+        @AuraEnabled
+        public List<TCDHistoryReport> tcsHistoryReports;
+        @AuraEnabled
+        public List<PicklistFormation> getTimeCardTypes;
+        @AuraEnabled
+        public List<PicklistFormation> tcdFieldWithLabels;
+        @AuraEnabled
+        public List<PicklistFormation> tclFieldWithLabels;
+    }
+    
+    public class PicklistFormation{
+        @AuraEnabled
+        public String label;
+        @AuraEnabled
+        public String value;
+    }
+    
     /***********************************************************************************
     - Created by NS on OCT 18 2019
     - For Admin Time Entry instructor view component

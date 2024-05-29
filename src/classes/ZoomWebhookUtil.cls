@@ -1,10 +1,3 @@
-/**
- * @description       : 
- * @author            : Dhinesh Kumar
- * @group             : 
- * @last modified on  : 01/10/2024
- * @last modified by  : Dhinesh Kumar
-**/
 @RestResource(urlMapping='/zoomwebhook')
 global class ZoomWebhookUtil {
     
@@ -41,8 +34,9 @@ global class ZoomWebhookUtil {
             }
             insert new Sync_Log__c(Error_Message__c=JSON.serialize(params));
             Map<String, Object> flowParams = new Map<String, Object>();
-            if(params.event.contains('user')){
+            if(params.event.contains('user') && (params.event != 'user.updated' || String.isNotBlank(String.valueOf(params.payload.objects.type)))){
                 flowParams.put('ZoomUser',params.payload.objects);
+                flowParams.put('ZoomEvent',params.event);
                 flowParams.put('SyncLog',new Sync_Log__c(Error_Message__c=RestContext.request.requestBody.toString()));
                 flowParams.put('ZoomUserStatus',(params.event == 'user.deactivated' || params.event == 'user.deleted' || params.event == 'user.disassociated' ? 'In-Active' : 'Active'));
                 Flow.Interview.Zoom_User_Sync zoomUserflow = new Flow.Interview.Zoom_User_Sync(flowParams);

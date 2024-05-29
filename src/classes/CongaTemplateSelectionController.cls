@@ -14,11 +14,12 @@ public Class CongaTemplateSelectionController{
         if( cr != null && cr.size() > 0 ) {
             Id ctId;
             String str='';
+            String caRT = 'Instructor';
             System.debug('cr::::'+cr[0].Gen_Email_Doc_Conga_Workflow_Template__c );
 
             if(cr[0].Gen_Email_Doc_Conga_Workflow_Template__c != null) {
             
-                ctId = cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.substringBetween('&templateId=','&queryId') != 'null' ? cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.substringBetween('&templateId=','&queryId') : null;
+                ctId = cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.substringBetween('&templateId=','&queryId') != null ? cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.substringBetween('&templateId=','&queryId') : ((cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.contains('&templateId=') == true) ? cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.substring(cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.lastIndexOf('=') + 1) : null);
                 //ctId = cr[0].Gen_Email_Doc_Conga_Workflow_Template__c.substringBetween('&templateId=','&queryId');
                 if( ctId != null) {
                     System.debug('ctId::::'+ctId);
@@ -32,11 +33,15 @@ public Class CongaTemplateSelectionController{
                 }
             } 
             
+            if((cr[0].Rate_Type__c == 'PT Hourly (OH & G&A)' || cr[0].Rate_Type__c == 'FT Hourly & Benefits') && cr[0].Exempt_Status__c == 'Non-Exempt'){
+                caRT = 'Staff';   
+            }
+               
             Map<Id,String> getProjectWithCAIdMap = new Map<Id,String>();
             Map<Id,String> getProjectOPPWithCAIdMap = new Map<Id,String>();
             //Get LCR relateds projects from Contact Assignments
                 
-            for(Contact_Assignments__c ca : [SELECT Id,Project__c,Opportunity_Name__c,Project__r.Name,Opportunity_Name__r.Name FROM Contact_Assignments__c WHERE RecordType.DeveloperName = 'Instructor'
+            for(Contact_Assignments__c ca : [SELECT Id,Project__c,Opportunity_Name__c,Project__r.Name,Opportunity_Name__r.Name FROM Contact_Assignments__c WHERE RecordType.DeveloperName = :caRT
                                              AND ((Project__c != NULL AND Status__c IN ('Active','Planned')) OR (Opportunity_Name__c != NULL AND Project__c = NULL AND Status__c IN ('Proposed','Awarded'))) 
                                              AND (Rate_Card_Rate__c = :cr[0].Id OR Drafted_Labor_Cost_Rate__c = :cr[0].Id)]){
                 Boolean isOpp = false;
@@ -63,6 +68,7 @@ public Class CongaTemplateSelectionController{
                 /**'congaUrl' => cr[0].Gen_Email_Doc_Conga_Workflow_Template__c,**/
                 'IndependentContractorName' => cr[0].Contact__r.Independent_Contractor_Name__c,
                 'rateType' =>  cr[0].Rate_Type__c,
+                'exempt_Status' => cr[0].Exempt_Status__c,
                 'getProjectWithCAIdMap' => JSON.serialize(getProjectWithCAIdMap),
                 'getProjectOPPWithCAIdMap' => JSON.serialize(getProjectOPPWithCAIdMap)
             };
@@ -81,9 +87,9 @@ public Class CongaTemplateSelectionController{
     @objName = object Name of the record launched from
     *****************************************************/
     @AuraEnabled
-    public static CongaButtonsController.generateWrapper genSendDocuSign(String recId, String crId, String fieldCTName, String selectedCTName, String launchedFrom, String objName , String cAProId, String signer1, String signer2Staff, String signer3Staff) {
+    public static CongaButtonsController.generateWrapper genSendDocuSign(String recId, String crId, String fieldCTName, String selectedCTName, String launchedFrom, String objName , String cAProId, String signer1, String signer2Staff, String signer3Staff,String docDownloadFormat) {
         
-        try {
+    //  try {
                 
             CongaButtonsController.generateWrapper wrap = new CongaButtonsController.generateWrapper();
             wrap.isErrorMsg = FALSE;
@@ -105,6 +111,8 @@ public Class CongaTemplateSelectionController{
                 }
                 wrap.isErrorMsg =  (returnCongaURL == 'Please fill the Contact\'s Supervisor Name' || returnCongaURL == 'This process cannot be initiated from this record because the Gen & Email Doc Conga Workflow Template field is blank. Please create a new Labor Cost Rate record to initiate this process');               
             }
+            
+       
             System.debug('wrap:::::'+wrap);
             wrap.sessionIdServerURL = CongaButtonsController.getServerUrlSessionId();
             System.debug('fieldCTName::::'+fieldCTName);
@@ -115,8 +123,42 @@ public Class CongaTemplateSelectionController{
             
             //Added By HL to set the Document Name
             String tmpName = '';
+            List<String> fieldsEmpty = new List<String>();
+   			Set<String> staffRateTypePM = new Set<String>{'PT Hourly (OH & G&A)', 'FT Hourly & Benefits', 'FT Salary & Benefits','International Salary'}; // To allow Pay Rate Modification Process
+
             if(cr.size() > 0 && cr != NULL){
-            
+                // populate folderId in OFN in conga process
+                List<box__FRUP__c> frup = [SELECT Id,Name,box__Record_ID__c,box__Folder_ID__c FROM box__FRUP__c WHERE box__Record_ID__c = :cr[0].Id ORDER BY CreatedDate DESC LIMIT 1];
+
+                
+                //Validations for Non-Extempt RateTypes
+                if(selectedCTName == 'Offer Letter - Staff - Non-Exempt' && (cr[0].Rate_Type__c == 'PT Hourly (OH & G&A)' || cr[0].Rate_Type__c == 'FT Hourly & Benefits') && cr[0].Exempt_Status__c == 'Non-Exempt' && cAProId != null){
+                    String val = null;
+                    List<Contact_Assignments__c> ca = [SELECT Id,Candidate_Name__r.Supervisor_Name__r.Name,Candidate_Name__r.EE_Pay_Status__c,Candidate_Name__r.Department__c,Candidate_Name__r.Supervisor_Name__c,
+                                                       Rate_Card_Rate__r.Annual_Salary_Cost__c,Rate_Card_Rate__r.Exempt_Status__c ,Rate_Card_Rate__r.AcctSeed__Hourly_Cost__c,Rate_Card_Rate__c,Assignment_Position__c FROM Contact_Assignments__c WHERE Id = :cAProId];
+                    
+                    if(ca.size() > 0){
+                        if(ca[0].Rate_Card_Rate__r.AcctSeed__Hourly_Cost__c == null){
+                            val = 'Rate Card: Rate - '+Schema.AcctSeed__Cost_Rates__c.fields.AcctSeed__Hourly_Cost__c.getDescribe().getLabel(); 
+                            fieldsEmpty.add(val);
+                        }
+                        if(ca[0].Assignment_Position__c == null){
+                            val =  Schema.Contact_Assignments__c.fields.Assignment_Position__c.getDescribe().getLabel();
+                            fieldsEmpty.add(val);
+                        }
+                        if(ca[0].Candidate_Name__r.EE_Pay_Status__c == null){
+                            val = 'Candidate Name - '+Schema.Contact.fields.EE_Pay_Status__c.getDescribe().getLabel(); 
+                            fieldsEmpty.add(val);
+                        }
+                        if(ca[0].Candidate_Name__r.Supervisor_Name__c == null){
+                            val = 'Candidate Name - '+Schema.Contact.fields.Supervisor_Name__c.getDescribe().getLabel(); 
+                            fieldsEmpty.add(val);
+                        }
+                    }
+                }
+                wrap.valErrors = fieldsEmpty;
+
+                
                 // Template Name set when we chose a different Conga Template 
                 if(cr[0].Contact__c != null) {
                     tmpName = selectedCTName + ' - ' + cr[0].Contact__r.Name;
@@ -128,8 +170,8 @@ public Class CongaTemplateSelectionController{
                         tmpName += '-'+tempDate[1]+''+tempDate[2]+''+tempDate[0];
                     }
                 }
-                if(cr[0].Name != null) {
-                    tmpName += '--' + cr[0].Name;
+                if(frup.size() > 0 && frup[0].box__Folder_ID__c != null) {
+                    tmpName += '--' + frup[0].box__Folder_ID__c;
                 }
                 System.debug('tmpName :::'+tmpName);
             }
@@ -145,6 +187,8 @@ public Class CongaTemplateSelectionController{
                 
                 // To exclude appending the other params if we have any error message
                 if(!wrap.isErrorMsg){
+                    
+                    
                     
                     if(wrap.congaUrl.contains('&templateId=')) { 
 
@@ -183,12 +227,18 @@ public Class CongaTemplateSelectionController{
                                     wrap.congaURL = spiltCongaUrl[0]+'&queryId=[CA]'+CongaTranslator.getCongaQuery('Contact Assignment Query - Pay Rate Addendum')+'?pv0='+cAProId+','+spiltCongaUrl[1];
                                 }
                             }
+                        }else if(selectedCTName == 'Offer Letter - Staff - Non-Exempt' && (cr[0].Rate_Type__c == 'PT Hourly (OH & G&A)' || cr[0].Rate_Type__c == 'FT Hourly & Benefits') && cr[0].Exempt_Status__c == 'Non-Exempt' && cAProId != null){
+                            if(!(wrap.congaURL.contains('&OFN=') && wrap.congaUrl.contains('&queryId='))){
+                                wrap.congaURL +='&queryId=[Ins]'+CongaTranslator.getCongaQuery('ICA Agreement Contact Assign Query')+ '?pv0=' + cAProId + '&OFN='+tmpName; 
+                            }
                         }
-                        
                         // If launchedFrom Generate Form button
                         if(launchedFrom != 'Docusign') { 
-                        
+                            
                             wrap.congaUrl = wrap.congaUrl.replace('&DS7=0','');
+                            if(String.isNotBlank(docDownloadFormat)){
+                                wrap.congaURL =  wrap.congaURL + '&FP0='+docDownloadFormat;
+                            }
                             wrap.congaURL = wrap.congaUrl + '&DS7=3&AC0=1&AC2=1&AC1=Generate+Offer+Letter'; // To skip the Conga Template selection screen and log activities
                             if( cr.size() > 0 ) {
                                 wrap.congaURL += '&LGParentId=' + cr[0].Contact__c;
@@ -207,6 +257,7 @@ public Class CongaTemplateSelectionController{
                         }
                     }
                 }
+                System.debug('congaURL:::'+wrap.congaURL);
                 return wrap;
             } else {
                 
@@ -339,9 +390,17 @@ public Class CongaTemplateSelectionController{
                         } else if(selectedCTName == 'Offer Letter - Staff - Exempt') {
                             congaTempId = congaTempNameWithIdMap.containskey('Offer Letter - Staff - Exempt') ? congaTempNameWithIdMap.get('Offer Letter - Staff - Exempt') : null;
                             congaUrl = '&id='+ cr[0].Contact__c +'&templateId='+congaTempId+'&queryId=[Con]'+CongaTranslator.getCongaQuery('Offer Letter - Contact Query')+ '?pv0=' + cr[0].Id + '&OFN='+tmpName; 
-                        }else if(selectedCTName == 'Change of Status Form') {
+                        } else if(selectedCTName == 'Offer Letter - Staff - Non-Exempt') {
+                            congaTempId = congaTempNameWithIdMap.containskey('Offer Letter - Staff - Non-Exempt') ? congaTempNameWithIdMap.get('Offer Letter - Staff - Non-Exempt') : null;
+                            congaUrl = '&id='+ cr[0].Contact__c +'&templateId='+congaTempId+'&queryId=[Ins]'+CongaTranslator.getCongaQuery('ICA Agreement Contact Assign Query')+ '?pv0=' + cAProId + '&OFN='+tmpName; 
+                        } else if(selectedCTName == 'Change of Status Form') {
                             congaTempId = congaTempNameWithIdMap.containskey('Change of Status Form') ? congaTempNameWithIdMap.get('Change of Status Form') : null;
-                            congaUrl = '&id='+ cr[0].Id +'&templateId='+congaTempId+'&queryId=[Con]'+CongaTranslator.getCongaQuery('Offer Letter - Contact Query')+'?pv0='+ cr[0].Contact__c+',[PriorCR]' + CongaTranslator.getCongaQuery('Prior Cost Rate Query') + '?pv0=' + cr[0].Prior_Version__c + '&OFN='+tmpName; 
+                            congaUrl = '&id='+ cr[0].Id +'&templateId='+congaTempId+'&queryId=[Con]'+CongaTranslator.getCongaQuery('Offer Letter - Contact Query')+'?pv0='+ cr[0].Contact__c+',[PriorCR]' + CongaTranslator.getCongaQuery('Prior Cost Rate Query') + '?pv0=' + cr[0].Prior_Version__c;
+                           
+                            if(cr[0].Change_in_Reporting_New_Manager__c == true && cr[0].New_Supervisor_Id__c != null){
+                              congaUrl = congaUrl +',[Sup]'+CongaTranslator.getCongaQuery('Offer Letter - Contact Query')+'?pv0='+ cr[0].New_Supervisor_Id__c;
+                            }
+                            congaUrl = congaUrl + '&OFN='+tmpName; 
                         }else if( selectedCTName == 'Offer Letters - Tester') {
                             congaTempId = congaTempNameWithIdMap.containskey('Offer Letters - Tester') ? congaTempNameWithIdMap.get('Offer Letters - Tester') : null;
                             congaUrl = '&id='+ cr[0].Id + '&DS7=0&templateId='+congaTempId+'&queryId=[Con]'+CongaTranslator.getCongaQuery('Offer Letter - Contact Query')+'?pv0='+cr[0].Contact__c+'&OFN='+tmpName;
@@ -364,8 +423,7 @@ public Class CongaTemplateSelectionController{
                     // To remove the old field Value when a new COnga Template is selected.
                     String docusign = wrap.congaURL.subStringAfter('&CSVisible=1');//('&qmode=DocuSign');
                     System.debug('docusign:::::'+docusign);
-                    System.debug('congaUrl::::'+congaUrl);
-                    System.debug('congaTempNameWithIdMap::'+congaTempNameWithIdMap.get('Offer Letter - Staff - Exempt'));
+                    System.debug('congaUrl::::'+congaUrl); 
                     
                     // If launchedFrom Gen & Send Docusign button
                     if(launchedFrom == 'Docusign') {
@@ -377,6 +435,10 @@ public Class CongaTemplateSelectionController{
                         }
                     } else { // If launchedFrom Generate Form button
                         congaUrl = congaUrl.replace('&DS7=0','');
+                        
+                        if(String.isNotBlank(docDownloadFormat)){
+                            congaUrl = congaUrl + '&FP0='+docDownloadFormat;
+                        }
                         if(selectedCTName == 'Pay Rate Addendum') {
                             wrap.congaURL = congaUrl + '&DS7=3&AC0=1&AC2=1&&AC1=Pay+Rate+Addendum&LGParentId='+cr[0].Contact__c;
                         } else {
@@ -389,9 +451,9 @@ public Class CongaTemplateSelectionController{
                 }
                 return wrap;
             }
-        } catch(Exception e) {
-            throw new AuraHandledException(e.getMessage());
-        }
+     /* }catch(Exception e) {
+         throw new AuraHandledException(e.getMessage());
+      } */
     }
     // To get lookup records
     @AuraEnabled(cacheable=true)
@@ -415,12 +477,12 @@ public Class CongaTemplateSelectionController{
                 
                 if( crList[0].Contact__r.DLS_User__c != null){
                     currentUser = crList[0].Contact__r.DLS_User__c;
-                }else if(crList[0].Contact__r.RecordTypeId != null && crList[0].Contact__r.RecordType.Name == 'Candidate' ){
+                }else if(crList[0].Contact__r.RecordTypeId != null && crList[0].Contact__r.RecordType.Name == 'Candidate' ){ 
                     contactId = crList[0].Contact__c;
                 }
             }
             
-            String userQryJSON = 'SELECT Id,Name,ContactId FROM User WHERE (Name IN (\'Natalia Stepanov\',\'Jim Bellas\') ';
+            String userQryJSON = 'SELECT Id,Name,ContactId FROM User WHERE (Name IN (\'Jim Bellas\') ';
             if(contactId != null){
                 userQryJSON += 'OR ContactId = \''+contactId+'\'';
             }
@@ -440,7 +502,7 @@ public Class CongaTemplateSelectionController{
             
         signerInfo = new Map<String,String> {
             'SupervisorSigner1' => signer1,
-            'StaffSigner2' => staffSigner2,
+            'StaffSigner2' => null,
             'StaffSigner3' => staffSigner3,
             'CurrentUser' => currentUser,
             'StaffName' => staffName

@@ -199,6 +199,7 @@
         action.setCallback(this, function(response){
             var state = response.getState();
             if(state == 'SUCCESS'){
+                var studentTimeEntryRow = [];
                 var result = response.getReturnValue();
                 console.log(':::::result::::',result);
                 cmp.set("v.eventDetails",result.eventInfo);
@@ -206,11 +207,12 @@
                 cmp.set("v.noteDetails",JSON.parse(result.notes));
                 cmp.set("v.ShowApproveReject",false);
                 if(result.studentTimeEntry){
-                    cmp.set("v.studentTimeEntryRow",JSON.parse(result.studentTimeEntry));
+                    studentTimeEntryRow = JSON.parse(result.studentTimeEntry);
                 }
                 if(result.projectRTName == 'DLI_W_LT_Projects' || result.projectRTName == 'DODA_Projects' || (result.projectRTName == 'Language_Training_Projects' && result.showSendReminderBtn)){
                     cmp.set("v.showSendEmailBtn",true);
                 }
+                cmp.set("v.studentTimeEntryRow",studentTimeEntryRow);
                 cmp.set("v.weekDetails",JSON.parse(result.weekDetails));
                 cmp.set("v.projectRTName",result.projectRTName);
                 cmp.set("v.showSendEmailBtn",result.showSendReminderBtn);

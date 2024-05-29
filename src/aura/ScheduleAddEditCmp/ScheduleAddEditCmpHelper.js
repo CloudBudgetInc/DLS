@@ -34,8 +34,10 @@
 						var scheduleType = cmp.get("v.scheduleType");
 						if(scheduleType != 'Regular' && !cmp.get("v.scheduleId")) {
 							console.log('::::::::::::enter::::');
-							result.schDetail = JSON.parse(JSON.stringify(result.exisitngSchedules[cmp.get("v.priorScheduleId")]));
-							
+                            result.schDetail = JSON.parse(JSON.stringify(result.exisitngSchedules[cmp.get("v.priorScheduleId")]));
+                            result.schDetail.roomId = null;
+                            result.schDetail.roomName = ''; 
+                            
 							if(scheduleType != 'Extend End Date'){
 								result.schDetail.priorScheduleId = result.schDetail.scheduleId;
 								result.schDetail.scheduleId = '';
@@ -178,7 +180,7 @@
 			}else {
 				var currentUsrProfileName = cmp.get("v.currentUsrProfileName");
 				var currentDate = new Date();
-				var formattedDate = currentDate.toISOString().split('T')[0];
+                var formattedDate = currentDate.toISOString().split('T')[0];
                 
                 if(cmp.get("v.scheduleType") != 'Extend End Date'){//W-007970 - Issue with Extend End Date Schedule Action Button
                     
@@ -190,13 +192,13 @@
                         isValid = false;
                     }
                 }
+                
+            }
             
-        }
-        
-        var oldEndDate = new Date(cmp.get("v.oldEndDate")).getTime();
-        
-        if(!eInput.get("v.value") || eInput.get("v.value")){
-            //Normal types
+			var oldEndDate = new Date(cmp.get("v.oldEndDate")).getTime();
+			
+			if(!eInput.get("v.value") || eInput.get("v.value")){
+				//Normal types
 				if(eInput.get("v.value") && sVal > new Date(eInput.get("v.value")).getTime()) {
 					eInput.set("v.errors", [{message:"End Date must be greater than the start date "}]);
 					isValid = false;
@@ -719,7 +721,6 @@
 		var scheduleRec = cmp.get("v.scheduleRec");
 		var instructor = cmp.get("v.instructorSelected");
 		var room = cmp.get("v.roomSelected");
-		//console.log(':::::::scheduleRec::::',JSON.stringify(scheduleRec));
 		
 		if(instructor.length > 0){
 			scheduleRec.instructorId = instructor[0].Id;
@@ -739,7 +740,8 @@
 		
 		var dateList = [];
 		dateList = this.extractSelectedSubstituteDate(cmp);
-		console.log('::::::::::dateList::::',dateList);
+        console.log('::::::::::dateList::::',dateList);
+
 		
 		var action = cmp.get("c.createScheduleForOtherTypes");
 		action.setParams({
@@ -1008,10 +1010,16 @@
         console.log('::::::::instructor::::',instructor);
         console.log('',scheduleRec);
         var instructorId = '';
+        var schEndDate = null;
+        
         if(instructor.length > 0){
 			instructorId = instructor[0].Id;
         }else if(scheduleRec.instructorId){
             instructorId = scheduleRec.instructorId;
+        }
+        
+        if(scheduleRec.endDate){
+            schEndDate = scheduleRec.endDate;
         }
         
         var schType = cmp.get("v.scheduleType");
@@ -1021,7 +1029,9 @@
             var action = cmp.get("c.checkContactAssignmentExist");
             action.setParams({
                 "contactId" : instructorId,
-                "parentId" : cmp.get("v.parentId")
+                "parentId" : cmp.get("v.parentId"),
+                "schType" : schType,
+                "cAEndDate" : schEndDate
             });
             action.setCallback(this, function(response){
                 var state = response.getState();
@@ -1040,7 +1050,7 @@
                         this.scheduleCreationForOtherTypes(cmp);
                     }
                 }else {
-                    console.log('::::checkForCRCreation::error:::',response.getError()[0].message);
+                    console.log('::::checkForCRCreation::error:::',response.getError());
                 }
             });
         	$A.enqueueAction(action);

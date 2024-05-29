@@ -9,7 +9,7 @@ Private Class CongaTemplateSelectionController_Test{
         List<APXTConga4__Conga_Merge_Query__c> cqList = TestClassUtil.createCongaQuery();
         Test.stopTest(); 
         
-    } 
+    }  
      
     // Gen & Send DocuSign
     private static testMethod void testMethod1() {
@@ -22,7 +22,7 @@ Private Class CongaTemplateSelectionController_Test{
             Map<String,String> tempMap = CongaTemplateSelectionController.getCostRateRecord(costRateList[0].Id);
             Test.stopTest();
             System.debug('tempMap =========='+tempMap );
-            System.assertEquals(tempMap.size(), 5);
+            System.assertEquals(tempMap.size(), 6);
         }
     }
     
@@ -34,7 +34,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - Instructors LT' ,'Offer Letter - Instructors LT', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - Instructors LT' ,'Offer Letter - Instructors LT', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -46,7 +46,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Addendum' ,'Offer Letter - Instructors LT', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Addendum' ,'Offer Letter - Instructors LT', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -58,7 +58,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letter - DLI-W new and LT', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letter - DLI-W new and LT', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -70,7 +70,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Addendum' ,'Offer Letter - DLI-W new and LT', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Addendum' ,'Offer Letter - DLI-W new and LT', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','','WORD');
             Test.stopTest();
         }
     }
@@ -90,7 +90,7 @@ Private Class CongaTemplateSelectionController_Test{
             caList[0].Drafted_Labor_Cost_Rate__c = costRateList[0].Id;
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Pay Rate Addendum', 'Gen_Form', 'AcctSeed__Cost_Rates__c',caList[0].Id,signer1,'','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Pay Rate Addendum', 'Gen_Form', 'AcctSeed__Cost_Rates__c',caList[0].Id,signer1,'','','PDF');
             Test.stopTest();
         }
     }
@@ -102,7 +102,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Offer Letter - DLI-W New Contract - SCA', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Offer Letter - DLI-W New Contract - SCA', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     } 
@@ -115,7 +115,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 && contAssignList.size() > 0 ) { 
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'MTT ICA', 'Docusign', 'Contact_Assignments__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'MTT ICA', 'Docusign', 'Contact_Assignments__c','','','','','');
             Test.stopTest();
         }
     }
@@ -128,7 +128,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 && contAssignList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Pay Rate Modification', 'Docusign', 'Contact_Assignments__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Pay Rate Modification', 'Docusign', 'Contact_Assignments__c','','','','','');
             Test.stopTest();
         }
     }
@@ -140,7 +140,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 && contAssignList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'ICA DLI-W 2017', 'Docusign', 'Contact_Assignments__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'ICA DLI-W 2017', 'Docusign', 'Contact_Assignments__c','','','','','');
             Test.stopTest();
         }
     }
@@ -152,7 +152,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 && contAssignList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Translation and Interpretation ICA', 'Docusign', 'Contact_Assignments__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Translation and Interpretation ICA', 'Docusign', 'Contact_Assignments__c','','','','','');
             Test.stopTest();
         }
     }
@@ -164,7 +164,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 && contAssignList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Translation and Interpretation Addendum to ICA', 'Docusign', 'Contact_Assignments__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(contAssignList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Translation and Interpretation Addendum to ICA', 'Docusign', 'Contact_Assignments__c','','','','','');
             Test.stopTest();
         }
     }
@@ -178,7 +178,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Offer Letter - DLI-W new and LT', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Offer Letter - DLI-W new and LT', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -192,7 +192,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Offer Letter - DLI-W new and LT', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Offer Letter - DLI-W new and LT', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -212,7 +212,7 @@ Private Class CongaTemplateSelectionController_Test{
                 Test.startTest();
                 update conLst;
                 update costRateList;
-                wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Modification', 'Pay Rate Modification', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+                wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Modification', 'Pay Rate Modification', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
                 Test.stopTest();
             }
         }
@@ -233,7 +233,7 @@ Private Class CongaTemplateSelectionController_Test{
                 Test.startTest();
                 update conLst;
                 update costRateList; 
-                wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Modification', 'Pay Rate Modification', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','');
+                wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Pay Rate Modification', 'Pay Rate Modification', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','','');
                 Test.stopTest();
             }
         }
@@ -248,7 +248,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Pay Rate Addendum', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT', 'Pay Rate Addendum', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -259,7 +259,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letters - Tester', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letters - Tester', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -270,7 +270,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Change of Status Form', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Change of Status Form', 'Docusign', 'AcctSeed__Cost_Rates__c',costRateList[0].Id,costRateList[0].Id,costRateList[0].Id,costRateList[0].Id,'');
             Test.stopTest();
         }
     }
@@ -281,7 +281,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letter - Staff - Exempt', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letter - Staff - Exempt', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }    
@@ -292,7 +292,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letter - UAE Template', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id, costRateList[0].Id, 'Offer Letter - DLI-W new and LT' ,'Offer Letter - UAE Template', 'Docusign', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     }
@@ -312,7 +312,7 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'FSI Letter of Intent', 'FSI Offer Letter', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'FSI Letter of Intent', 'FSI Offer Letter', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','','');
             Test.stopTest();
         }
     } 
@@ -323,10 +323,23 @@ Private Class CongaTemplateSelectionController_Test{
         if( costRateList.size() > 0 ) {
             System.debug('costRateList[0]:::::'+costRateList[0]);
             Test.startTest();
-            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'FSI Offer Letter', 'FSI Letter of Intent', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','');
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'FSI Offer Letter', 'FSI Letter of Intent', 'Gen_Form', 'AcctSeed__Cost_Rates__c','','','','','PDF');
+            Test.stopTest();
+        } 
+    } 
+    private static testMethod void testMethod25() {
+        List<AcctSeed__Cost_Rates__c> costRateList = [SELECT Id, Name, Gen_Email_Doc_Conga_Workflow_Template__c, Rate_Type__c FROM AcctSeed__Cost_Rates__c WHERE Gen_Email_Doc_Conga_Workflow_Template__c != null LIMIT 1];
+        List<Contact_Assignments__c> caList = [SELECT Id,Project__c FROM Contact_Assignments__c LIMIT 1];
+
+        CongaButtonsController.generateWrapper wrap = new CongaButtonsController.generateWrapper(); 
+        if( costRateList.size() > 0 && caList.size() > 0) {
+            costRateList[0].Rate_Type__c = 'PT Hourly (OH & G&A)'; 
+            costRateList[0].Exempt_Status__c = 'Non-Exempt';
+            update costRateList;
+            System.debug('costRateList[0]:::::'+costRateList[0]);
+            Test.startTest();
+            wrap = CongaTemplateSelectionController.genSendDocuSign(costRateList[0].Id,costRateList[0].Id, 'Offer Letter - Staff - Non-Exempt', 'Offer Letter - Staff - Non-Exempt', 'Gen_Form', 'AcctSeed__Cost_Rates__c',caList[0].Id,'','','','WORD');
             Test.stopTest();
         }
     } 
-    
-    
 }

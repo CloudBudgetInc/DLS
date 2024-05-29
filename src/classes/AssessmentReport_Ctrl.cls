@@ -71,11 +71,20 @@ public without sharing class AssessmentReport_Ctrl {
         String filterStr = '';
         List<String> filterSet = new List<String>();
         if(String.isNotBlank(contactId) && communityType != 'client'){            
-            if(communityType == 'instructor' && (reportType == 'Test Reports' || reportType == 'All')){
+            /*Modified By Dhinesh - 14-03-2024 - W-008002 - Exclude Tester field for other than the test record type
+             * if(communityType == 'instructor' && (reportType == 'Test Reports' || reportType == 'All')){
                filterStr = '(Instructor__c = \''+ contactId +'\' OR Tester__c = \''+contactId+'\') ';
+            }*/
+            
+            if(communityType == 'instructor' && (reportType == 'Test Reports' || reportType == 'All')){
+                if(reportType == 'Test Reports') {
+                    filterStr = '(Instructor__c = \''+ contactId +'\' OR Tester__c = \''+contactId+'\') ';
+                }else{
+                    filterStr = '((RecordType.DeveloperName = \'Test_Report\' AND (Instructor__c = \''+ contactId +'\' OR Tester__c = \''+contactId+'\')) OR  (RecordType.DeveloperName != \'Test_Report\' AND Instructor__c = \''+ contactId +'\'))';
+                }
             }else{
                filterStr = (communityType == 'instructor' ? 'Instructor__c' : 'Student__c') + ' = \''+contactId+'\' ';
-            }
+            }                        
         }        
         
         filterSet.add(String.isNotBlank(status) && status != 'All' ? 'Status__c = \''+status+'\' ' : 'Status__c IN (\''+String.join(allStatus, '\',\'')+'\')');

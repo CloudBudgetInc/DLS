@@ -335,7 +335,7 @@ public class EventTranslator {
     - For Instructor & Student Community Calendar view
     ***********************************************************************/
     
-    public static List<EventDomain.EventCalendarInfo> eventCalendarInfo(List<Events__c> eventList,List<Holiday> holidays,Map<Id,String> proIdStudentNames,List<Planned_Days_Off__c> planedLeaves,Date startDate,Date endDate,Set<Id> childEventRelParentIds){
+    public static List<EventDomain.EventCalendarInfo> eventCalendarInfo(List<Events__c> eventList,List<Holiday> holidays,Map<Id,String> proIdStudentNames,List<Planned_Days_Off__c> planedLeaves,Date startDate,Date endDate,Set<Id> childEventRelParentIds, Map<Id,Date> transferedCAWithDatesMap){
         List<EventDomain.EventCalendarInfo> eventCalendarInfoList = new List<EventDomain.EventCalendarInfo>();
         String communityName = EventCalendarController.getCommunityPathPrefix();
         TimezoneUtilClass utilCls = new TimezoneUtilClass();        
@@ -363,6 +363,7 @@ public class EventTranslator {
             eventInfo.eventName = event.Name;
             eventInfo.color = event.Id;
             eventInfo.duration = String.valueOf(event.Duration__c);
+            Boolean showEvents = true;
             
             /* Current User TimeZone DateTime Convertion */
             eventInfo.endDateTime = utilCls.getUserTimeZoneDateTime(event.End_Date_Time__c);
@@ -448,8 +449,19 @@ public class EventTranslator {
             instructorName += (event.Instructor__r.LastName != null ? ' '+ event.Instructor__r.LastName.subString(0,1) +'.' : '');
             eventInfo.instructorName = instructorName;
             eventInfo.showLessonPlan = communityName == 'instructor' ? eventIdWithShowLessonPlanMap.keySet().contains(event.Id) : (eventIdWithShowLessonPlanMap.get(event.Id) != null ? eventIdWithShowLessonPlanMap.get(event.Id) : false);
+                
+            if(communityName == 'student' || communityName == ''){//W-007991 - Update to Transfer Button Functionality on Student CA
+                if(transferedCAWithDatesMap.size() > 0 && transferedCAWithDatesMap.containsKey(event.Project__c)){
+                    Date transferedDate = transferedCAWithDatesMap.get(event.Project__c);
+                    if(event.Date__c != null && transferedDate != null && (event.Date__c > transferedDate)){
+                        showEvents = false;   
+                    }
+                }
+            } 
             
-            eventCalendarInfoList.add(eventInfo);
+            if(showEvents == true){
+                eventCalendarInfoList.add(eventInfo);
+            }
         }
         
         if(holidays.size() > 0){

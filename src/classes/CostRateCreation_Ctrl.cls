@@ -104,7 +104,7 @@ public class CostRateCreation_Ctrl {
                     Boolean isValidCR = false;
                     
                     if(!dliPSgrpCDSet.contains(c.Rate_Type__c)){
-                        // if project default cost rate is LT with Prep / LT without Prep, get the LT with / LT without  Prep costrate name related CR
+                        // if project default cost rate is LT with Prep / LT without Prep, get the LT with  / LT without  Prep costrate name related CR
                         if(isActualLT == true){
                             if((c.Cost_Rate_Name__c).contains(c.Rate_Type__c)){
                                 isValidCR = true;
@@ -392,6 +392,7 @@ public class CostRateCreation_Ctrl {
         ContactAssignmentDomain.CostRateDetails  costDetails = new ContactAssignmentDomain.CostRateDetails();
         
         Set<String> crRateTypeSet = new Set<String>{'Non-SCA MTT (1099)','Non-SCA Testing','FSI'};
+        Set<String> ftPTRateTypeSet = new Set<String>{'FT Salary & Benefits','PT Hourly (OH & G&A)','FT Hourly & Benefits'};
         Set<String> crStatus = new Set<String>{'Approved','Draft','Submitted for Approval'};
         Set<Id> defaultCRRelCRs = new Set<Id>();
         
@@ -402,20 +403,34 @@ public class CostRateCreation_Ctrl {
         
         
         for(AcctSeed__Cost_Rates__c cr : CostRateService.getCostrateRec(' WHERE Contact__c = \''+ contactId + '\'','Contact__r.RecordType.DeveloperName')) {
-            
+            Boolean allcostRate = true;
             if(crStatus.contains(cr.Status__c) && cr.Rate_Type__c == defaultCR ) { 
                 defaultCRRelCRs.add(cr.Id);
             }
-            allCR.add(cr);
+            
+            if(ftPTRateTypeSet.contains(defaultCR)){
+                if(cr.Rate_Type__c != defaultCR){
+                    allcostRate = false;
+                }
+            }
+            
+            if(allcostRate == true){
+                allCR.add(cr);
+            }
             
             contactRT = cr.Contact__r.RecordType.DeveloperName;
         }
+        
+        if(allCR.size() == 0){
+            costDetails.createCAWithoutCR = true;
+        }
+           
 
         System.debug('allCR'+allCR.size());
         if( allCR != null && allCR.size() > 0 ) {  
             
             // When the Selected Contact has CR regardless of the Status and Rate Type
-            if( crRateTypeSet.contains(defaultCR) ) {
+            if( crRateTypeSet.contains(defaultCR)  || ftPTRateTypeSet.contains(defaultCR)) {
                 
                 if ( defaultCR == 'Non-SCA Testing' ) {
                     
@@ -446,8 +461,8 @@ public class CostRateCreation_Ctrl {
                             costDetails.isAlreadyCRExist = true;
                             break;
                         } else {
+
                             if( cr.Rate_Type__c == defaultCR ) {
-                                
                                 if(defaultCRRelCRs.contains(cr.Id)) {
                                     costDetails.rateCardRate = cr.Id;
                                     costDetails.costRateMessage = 'The following Cost Rate will be assigned <a href="/'+cr.Id+'">'+cr.Cost_Rate_Name__c+'</a>.  Please contact HR to change this Contact\'s Pay Rate for this assignment.';
@@ -479,7 +494,10 @@ public class CostRateCreation_Ctrl {
                                     }
                                 }
                                 
-                            } else {
+                            }else if(ftPTRateTypeSet.contains(defaultCR)){
+                                costDetails.createCAWithoutCR = true;
+                                break;
+                            }else{
                                 System.debug('inside Loop');
                                 if (defaultCR == 'Non-SCA MTT (1099)') {
                                     if(isOppInsCA == true) {

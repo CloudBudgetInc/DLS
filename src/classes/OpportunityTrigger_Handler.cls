@@ -12,6 +12,8 @@ public with Sharing class OpportunityTrigger_Handler {
     public Static List<Program_Iteration__c> piList = new List<Program_Iteration__c>();
     
     public Static Boolean loadResource = false;
+    // To prevent recursive account population in contact assignments
+    public static Boolean accPopFromOppTrig = false;
     
     public Map<String, Integer> getHighestNoForDLSClass(Boolean queryCdRtRec, Boolean queryOtherRtRec, Boolean queryTestRtRec, Boolean queryTransRtRec, Boolean queryInterPreRtRec) {
         Integer year = Date.Today().Year();
@@ -226,8 +228,13 @@ public with Sharing class OpportunityTrigger_Handler {
          
         if(proIdStatusMap != null && proIdStatusMap.size() > 0){
             
+            /***********
+                - W-008028 : Manage Project Status Button Action Reverts Withdrawn Student CA's back to Updated Project Status
+                - Canceled & Withdrawn status condition added on Apr 22 2024
+                - To prevent updating the status of Canceled and Withdrawn CAs when updating the project's status via the Manage Project Status button.
+                *************/
             for(Contact_Assignments__c conAssign : [SELECT Id,Name,Project__c,Status__c,RecordType.DeveloperName,Rate_Card_Rate__c,Rate_Card_Rate__r.Status__c,Candidate_Name__c FROM Contact_Assignments__c 
-                                                        WHERE Project__c IN : proIdStatusMap.keySet() AND Status__c NOT IN ('Ended','Transferred') ORDER BY LastModifiedDate DESC]){
+                                                        WHERE Project__c IN : proIdStatusMap.keySet() AND Status__c NOT IN ('Ended','Transferred', 'Canceled', 'Withdrawn') ORDER BY LastModifiedDate DESC]){
                                                       
                 if(proIdStatusMap.containsKey(conAssign.Project__c) && proIdStatusMap.get(conAssign.Project__c) != conAssign.Status__c){
                     

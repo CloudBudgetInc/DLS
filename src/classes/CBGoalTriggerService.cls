@@ -58,6 +58,5 @@ public with sharing class CBGoalTriggerService {
 			metricsToUpdate.addAll(metrics);
 		}
 		update metricsToUpdate;
-		update [SELECT Id FROM cb5__CBNonFinancialItem__c WHERE cb5__NonFinancialLibrary__c =: go]
 	}
 }

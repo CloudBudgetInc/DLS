@@ -243,7 +243,7 @@ public without sharing class InstructorTimeEntry_Controller {
                     }
                 }
                 
-                projectRecords = [SELECT Id,Name,DLS_Class__c,RecordType.DeveloperName,RecordTypeId,No_Student_Approval__c,No_Student_Hours_Verification__c,
+                projectRecords = [SELECT Id,Name,DLS_Class__c,RecordType.DeveloperName,RecordTypeId,No_Student_Approval__c,No_Student_Hours_Verification__c,DLI_Project_Type__c,
                                                         (SELECT Id,Candidate_Name__r.FirstName,Candidate_Name__r.LastName,Assignment_Position__c 
                                                             FROM Contact_Assignments__r WHERE Id IN :contactAssignmentsIds) 
                                                 FROM AcctSeed__Project__c WHERE Id IN :projectId];
@@ -342,9 +342,11 @@ public without sharing class InstructorTimeEntry_Controller {
         Map<Id,Integer> taskIdTimeCount = new Map<Id,Integer>();
         Map<Id,String> taskIdTimeMap = new Map<Id,String>();
         Map<Id,String> taskIdTimezone = new Map<Id,String>();
+        Map<Id,Map<String,List<String>>> proTaskWithAmPMDays = new Map<Id,Map<String,List<String>>>();
+
       
         //Apply schedule based filter condition to get the PT  on the Instructor Time Entry Page
-        for(Schedule__c sch : [SELECT Id,Name,Project_Task__c,Project_Task__r.Project_Task_Type__c,Start_Date__c,End_Date__c,Start_Time__c,End_Time__c,Timezone__c FROM Schedule__c 
+        for(Schedule__c sch : [SELECT Id,Name,Project_Task__c,Project_Task__r.Project_Task_Type__c,Start_Date__c,End_Date__c,Start_Time__c,End_Time__c,Timezone__c,Monday__c,Tuesday__c,Wednesday__c,Thursday__c,Friday__c,Saturday__c,Sunday__c FROM Schedule__c 
                                     WHERE Project__c = :projectId AND Instructor__c = :contactId AND Status__c IN ('Active','Completed') 
                                     AND (Start_Date__c <= :endDt AND End_Date__c >= :startDt)]){
             
@@ -365,18 +367,64 @@ public without sharing class InstructorTimeEntry_Controller {
                     taskIdTimeCount.put(sch.Project_Task__c,taskIdTimeCount.get(sch.Project_Task__c) + 1);
                 }
                 
-                if(!taskIdTimeMap.containsKey(sch.Project_Task__c)){
+               // W-008003 -- Urgent: Instructor Timesheet Error Message Is Requesting AM Prep Time Entry But Project Does not have AM Prep Time
+
+                              
+                if(sch.Start_Time__c != null && sch.End_Time__c != null) {
+                    String timeType = null;
+                    List<String> schWithDays = new List<String>();
                     
-                    if(sch.Start_Time__c != null && sch.End_Time__c != null) {
+                    if(sch.Start_Time__c.split(' ')[1] == 'PM' && sch.End_Time__c.split(' ')[1] == 'PM'){
+                        timeType = 'PM'; 
+                    }else {
+                        timeType = 'AM'; 
+                    }
                     
-                        if(sch.Start_Time__c.split(' ')[1] == 'PM' && sch.End_Time__c.split(' ')[1] == 'PM'){
-                            taskIdTimeMap.put(sch.Project_Task__c,'PM');
-                        }else {
-                            taskIdTimeMap.put(sch.Project_Task__c,'AM');
+                    if(sch.Monday__c == true){
+                        schWithDays.add('Monday');
+                    }
+                    if(sch.Tuesday__c == true){
+                        schWithDays.add('Tuesday');
+                    }
+                    if(sch.Wednesday__c == true){
+                        schWithDays.add('Wednesday');
+                    }
+                    if(sch.Thursday__c == true){
+                        schWithDays.add('Thursday');
+                    }
+                    if(sch.Friday__c == true){
+                        schWithDays.add('Friday');
+                    }
+                    if(sch.Saturday__c == true){
+                        schWithDays.add('Saturday');
+                    }
+                    if(sch.Sunday__c == true){
+                        schWithDays.add('Sunday'); 
+                    }
+                    
+                    if(!proTaskWithAmPMDays.containsKey(sch.Project_Task__c)){
+                        proTaskWithAmPMDays.put(sch.Project_Task__c,new Map<String,List<String>>{timeType =>schWithDays});
+                    }else{
+                        Map<String,List<String>> dayWithAmPmMap = proTaskWithAmPMDays.get(sch.Project_Task__c);
+                        
+                        if(!dayWithAmPmMap.containsKey(timeType)){
+                            dayWithAmPmMap.put(timeType,schWithDays);
+                        }else{
+                            dayWithAmPmMap.get(timeType).addAll(schWithDays);
+                        }
+                        proTaskWithAmPMDays.put(sch.Project_Task__c,dayWithAmPmMap);
+                    }
+                     
+                    
+                    if(!taskIdTimeMap.containsKey(sch.Project_Task__c)){
+                        taskIdTimeMap.put(sch.Project_Task__c,timeType);
+                    }else{
+                        String timesType = taskIdTimeMap.get(sch.Project_Task__c);
+                        
+                        if(timesType != timeType){
+                            taskIdTimeMap.put(sch.Project_Task__c,'Both'); 
                         }
                     }
-                }else {
-                    taskIdTimeMap.put(sch.Project_Task__c,'Both');
                 }
             }
         }
@@ -639,7 +687,7 @@ public without sharing class InstructorTimeEntry_Controller {
         
         system.debug(':::::DLI-W:::LT:::::::holidayDates::::'+holidayDates);
         
-        TimeCardDayCommunityDomain.InstructorRowDetails weekDetails = TimeCardDayCommunityTranslator.instructorTimeEntryRowWrapperFormation(startDt,endDt,projectName,studentNames,contactId,timeCardLineList,accTimesnapshot,taskRecords,caRecord,taskIdTimeCount,taskIdTimeMap,caHistory,oldCRRecord,studentCAs,studentIdAttendanceList,alreadyCaseSubmitted,daysOffRecords,holidayDates,taskIdTimezone);
+        TimeCardDayCommunityDomain.InstructorRowDetails weekDetails = TimeCardDayCommunityTranslator.instructorTimeEntryRowWrapperFormation(startDt,endDt,projectName,studentNames,contactId,timeCardLineList,accTimesnapshot,taskRecords,caRecord,taskIdTimeCount,taskIdTimeMap,caHistory,oldCRRecord,studentCAs,studentIdAttendanceList,alreadyCaseSubmitted,daysOffRecords,holidayDates,taskIdTimezone,proTaskWithAmPMDays);
         
         return JSON.serialize(weekDetails);
     }

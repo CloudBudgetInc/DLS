@@ -452,15 +452,13 @@ public without sharing class ContactAssignmentLightningCtrl {
     @AuraEnabled  
     public static ContactAssignmentDomain.GenOfferLetterWrapper congaButton(String Template1,String Template2,String caId,String Conquery) {
         
-        String queryName =Conquery;
+        String queryName = Conquery;
         String temp;
         List<String> fieldsEmpty = new List<String>();
-        List<Contact_Assignments__c> ca = [SELECT Id,Candidate_Name__r.Department__c ,Candidate_Name__r.Original_Hire_Date__c,
-                                          Candidate_Name__r.Supervisor_Name__r.Name,Quantity_Unit__c,Candidate_Name__r.Supervisor_Name__c,
-                                          Rate_Card_Rate__r.Annual_Salary_Cost__c,
-                                          Rate_Card_Rate__r.Exempt_Status__c ,Rate_Card_Rate__r.AcctSeed__Hourly_Cost__c,Candidate_Name__r.DOL_Status__c,
-                                          Rate_Card_Rate__c,Rate_Card_Rate__r.Semi_Monthly_Salary_Cost__c,
-                                          Candidate_Name__r.First_Performance_Review_Date__c,Assignment_Position__c FROM Contact_Assignments__c WHERE Id=:caId];
+        List<Contact_Assignments__c> ca = [SELECT Id,Candidate_Name__r.Supervisor_Name__r.Name,Candidate_Name__r.EE_Pay_Status__c,Candidate_Name__r.Department__c,Candidate_Name__r.Supervisor_Name__c,
+                                                   Rate_Card_Rate__r.Annual_Salary_Cost__c,Rate_Card_Rate__r.Exempt_Status__c ,Rate_Card_Rate__r.AcctSeed__Hourly_Cost__c,
+                                                   Candidate_Name__r.DOL_Status__c,Rate_Card_Rate__c,Rate_Card_Rate__r.Semi_Monthly_Salary_Cost__c,
+                                                   Candidate_Name__r.First_Performance_Review_Date__c,Assignment_Position__c FROM Contact_Assignments__c WHERE Id=:caId];
         
         ContactAssignmentDomain.GenOfferLetterWrapper  GenOfferWrap = new  ContactAssignmentDomain.GenOfferLetterWrapper();
         GenOfferWrap.contactAssigns = ca[0];
@@ -470,16 +468,8 @@ public without sharing class ContactAssignmentLightningCtrl {
                 temp =  Schema.Contact_Assignments__c.fields.Assignment_Position__c.getDescribe().getLabel();
                 fieldsEmpty.add(temp);
             }
-            if(ca[0].Quantity_Unit__c == null){
-                temp =  Schema.Contact_Assignments__c.fields.Quantity_Unit__c.getDescribe().getLabel();
-                fieldsEmpty.add(temp);
-            }
-            if(ca[0].Candidate_Name__r.Department__c == null){
-                temp = 'Candidate Name - '+Schema.Contact.fields.Department__c.getDescribe().getLabel(); 
-                fieldsEmpty.add(temp);
-            }
-            if(ca[0].Candidate_Name__r.Original_Hire_Date__c == null){
-                temp = 'Candidate Name - '+Schema.Contact.fields.Original_Hire_Date__c.getDescribe().getLabel(); 
+            if(ca[0].Candidate_Name__r.EE_Pay_Status__c == null){
+                temp = 'Candidate Name - '+Schema.Contact.fields.EE_Pay_Status__c.getDescribe().getLabel(); 
                 fieldsEmpty.add(temp);
             }
             if(ca[0].Candidate_Name__r.Supervisor_Name__c == null){
@@ -496,15 +486,13 @@ public without sharing class ContactAssignmentLightningCtrl {
                         temp = 'Rate Card: Rate - '+Schema.AcctSeed__Cost_Rates__c.fields.Annual_Salary_Cost__c.getDescribe().getLabel(); 
                         fieldsEmpty.add(temp);
                     }
-                    if(ca[0].Candidate_Name__r.First_Performance_Review_Date__c == null){
+                    if(ca[0].Candidate_Name__r.First_Performance_Review_Date__c == null){ 
                         temp = 'Candidate Name - '+Schema.Contact.fields.First_Performance_Review_Date__c.getDescribe().getLabel(); 
                         fieldsEmpty.add(temp);
                     }
-                    if(ca[0].Assignment_Position__c != null && ca[0].Candidate_Name__r.Department__c != null && 
-                       ca[0].Candidate_Name__r.Original_Hire_Date__c != null && ca[0].Candidate_Name__r.Supervisor_Name__r.Name != null && 
-                       ca[0].Rate_Card_Rate__r.Semi_Monthly_Salary_Cost__c != null && ca[0].Rate_Card_Rate__r.Annual_Salary_Cost__c != null && 
-                       ca[0].Candidate_Name__r.First_Performance_Review_Date__c != null)
-                    {
+                    if(ca[0].Assignment_Position__c != null  && ca[0].Candidate_Name__r.EE_Pay_Status__c != null && ca[0].Candidate_Name__r.Supervisor_Name__r.Name != null && 
+                       ca[0].Rate_Card_Rate__r.Semi_Monthly_Salary_Cost__c != null && 
+                       ca[0].Candidate_Name__r.First_Performance_Review_Date__c != null){
                         APXTConga4__Conga_Template__c tem = [SELECT Id,Name,APXTConga4__Name__c FROM APXTConga4__Conga_Template__c WHERE APXTConga4__Name__c = :Template1 LIMIT 1];
                         GenOfferWrap.OffLetterTemId = tem.Id;
                     }
@@ -513,15 +501,8 @@ public without sharing class ContactAssignmentLightningCtrl {
                         temp = 'Rate Card: Rate - '+Schema.AcctSeed__Cost_Rates__c.fields.AcctSeed__Hourly_Cost__c.getDescribe().getLabel(); 
                         fieldsEmpty.add(temp);
                     }
-                    if(ca[0].Rate_Card_Rate__r.Annual_Salary_Cost__c == null){
-                        temp = 'Rate Card: Rate - '+Schema.AcctSeed__Cost_Rates__c.fields.Annual_Salary_Cost__c.getDescribe().getLabel(); 
-                        fieldsEmpty.add(temp);
-                    }
-                    if(ca[0].Candidate_Name__r.DOL_Status__c == null){
-                        temp = 'Candidate Name - '+Schema.Contact.fields.DOL_Status__c.getDescribe().getLabel(); 
-                        fieldsEmpty.add(temp);
-                    }
-                    if(ca[0].Assignment_Position__c != null && ca[0].Candidate_Name__r.Department__c != null && ca[0].Candidate_Name__r.Original_Hire_Date__c != null && ca[0].Candidate_Name__r.Supervisor_Name__r.Name != null && ca[0].Rate_Card_Rate__r.Annual_Salary_Cost__c != null && ca[0].Rate_Card_Rate__r.AcctSeed__Hourly_Cost__c != null && ca[0].Candidate_Name__r.DOL_Status__c != null){
+                   
+                    if(ca[0].Candidate_Name__r.EE_Pay_Status__c != null  && ca[0].Assignment_Position__c != null && ca[0].Candidate_Name__r.Supervisor_Name__r.Name != null && ca[0].Rate_Card_Rate__r.AcctSeed__Hourly_Cost__c != null /*&& ca[0].Candidate_Name__r.DOL_Status__c != null*/){
                         APXTConga4__Conga_Template__c tem = [SELECT Id,Name,APXTConga4__Name__c FROM APXTConga4__Conga_Template__c WHERE APXTConga4__Name__c = :Template2 LIMIT 1];
                         GenOfferWrap.OffLetterTemId = tem.Id;
                         system.debug(':OffLetterTemId'+GenOfferWrap.OffLetterTemId);
@@ -1525,72 +1506,136 @@ public without sharing class ContactAssignmentLightningCtrl {
         List<Assessment_Report__c> trainingReports = new List<Assessment_Report__c>();
         List<Language_Testing__c> langTesting = new List<Language_Testing__c>();
         
-        if(newCAProjectId != null){
-          proRecs = [SELECT Id,End_Date__c FROM AcctSeed__Project__c WHERE Id = :newCAProjectId];    
-        }
-        
-        /* Make selected Student Contact Assignment as Leader*/
-        if(cAStudentCL != null){
-            List<Contact_Assignments__c> conAssignment = [SELECT Id,Assignment_Position__c FROM Contact_Assignments__c WHERE Id = :cAStudentCL AND RecordType.DeveloperName='Student'];
-            if(conAssignment.size() > 0){
-                conAssignment[0].Assignment_Position__c = 'Class Leader'; 
-                update conAssignment;
+        Savepoint sp = Database.setSavepoint();
+        try{
+            if(newCAProjectId != null){
+              proRecs = [SELECT Id,Name,End_Date__c,AcctSeed__Opportunity__c FROM AcctSeed__Project__c WHERE Id = :newCAProjectId];    
             }
-        }
-        
-        if(caId != null){
-             List<Contact_Assignments__c> conAssignment = [SELECT Id,Project__c,Candidate_Name__c,Assignment_Position__c,RecordTypeId,R_Score_Final__c,S_Score_Final__c,W_Score_Goal__c,L_Score_Final__c FROM Contact_Assignments__c WHERE Id = :caId AND RecordType.DeveloperName='Student'];
-        
-            if(conAssignment.size() > 0 && proRecs.size() > 0){
-                conAssignment[0].End_Date__c = oldCAEndDt;
-                conAssignment[0].Status__c = 'Transferred';
-                if( conAssignment[0].Assignment_Position__c == 'Class Leader'){
-                    conAssignment[0].Assignment_Position__c = 'Student';
-                }
-                studentCAList.add(conAssignment[0]);
-                
-                Contact_Assignments__c newStudentCA = new Contact_Assignments__c();
-                newStudentCA.R_Score_Final__c = conAssignment[0].R_Score_Final__c;
-                newStudentCA.S_Score_Final__c = conAssignment[0].S_Score_Final__c;
-                newStudentCA.W_Score_Goal__c = conAssignment[0].W_Score_Goal__c;
-                newStudentCA.L_Score_Final__c = conAssignment[0].L_Score_Final__c;
-                newStudentCA.Assignment_Position__c = 'Student';
-                newStudentCA.Project__c = proRecs[0].Id;
-                newStudentCA.Start_Date__c = newCAStartDt;
-                newStudentCA.Candidate_Name__c = conAssignment[0].Candidate_Name__c;
-                newStudentCA.End_Date__c = proRecs[0].End_Date__c;        
-                newStudentCA.Status__c = 'Active';
-                newStudentCA.RecordTypeId = conAssignment[0].RecordTypeId;
-                studentCAList.add(newStudentCA);
-                
-                if(studentCAList.size() > 0){
-                    upsert studentCAList;
-                }
-                
-                // to update the Training report records.
-                trainingReports = [SELECT Id,Project__c FROM Assessment_Report__c WHERE Project__c = :conAssignment[0].Project__c AND Student__c = :conAssignment[0].Candidate_Name__c AND Status__c IN ('Draft','Scheduled') AND (Report_Date__c >= :newCAStartDt AND Report_Date__c <= :newStudentCA.End_Date__c)];
-                
-                if(trainingReports.size() > 0){
-                    for(Assessment_Report__c ap : trainingReports){
-                        ap.Project__c = proRecs[0].Id;
-                    } 
-                    update trainingReports;
-                }
-                
-                // to update the Language Testing records.
-                langTesting = [SELECT Id,Testee__c,Project__c,Contact_Assignment__c FROM Language_Testing__c WHERE Project__c = :conAssignment[0].Project__c AND Testee__c = :conAssignment[0].Candidate_Name__c AND Contact_Assignment__c = :conAssignment[0].Id];
-
-                if(langTesting.size() > 0){
-                    for(Language_Testing__c lt : langTesting){
-                        lt.Project__c = proRecs[0].Id;
-                        lt.Contact_Assignment__c = studentCAList[1].Id;
-                    } 
-                    update langTesting;
+            
+            /* Make selected Student Contact Assignment as Leader*/
+            if(cAStudentCL != null){
+                List<Contact_Assignments__c> conAssignment = [SELECT Id,Assignment_Position__c FROM Contact_Assignments__c WHERE Id = :cAStudentCL AND RecordType.DeveloperName='Student'];
+                if(conAssignment.size() > 0){
+                    conAssignment[0].Assignment_Position__c = 'Class Leader'; 
+                    update conAssignment;
                 }
             }
             
+            if(caId != null){
+                 List<Contact_Assignments__c> conAssignment = [SELECT Id,Project__r.Name,Candidate_Name__r.Name,Assignment_Position__c,RecordTypeId,R_Score_Final__c,S_Score_Final__c,W_Score_Goal__c,L_Score_Final__c,Agreed_DLS_Policies_And_Procedures__c,DLS_Policies_and_Procedures_Agreed_Date__c,Policies_and_Procedure_Box_Share_URL__c FROM Contact_Assignments__c WHERE Id = :caId AND RecordType.DeveloperName='Student'];
+            
+                if(conAssignment.size() > 0 && proRecs.size() > 0){
+                
+                    List<Schedule__c> newProjSchedule = [SELECT Id, Instructor__c FROM Schedule__c WHERE Project__c = : proRecs[0].Id AND Status__c = 'Active' AND Instructor__c != null ORDER BY CreatedDate ASC LIMIT 1];
+                    
+                    conAssignment[0].End_Date__c = oldCAEndDt;
+                    conAssignment[0].Status__c = 'Transferred';
+                    if( conAssignment[0].Assignment_Position__c == 'Class Leader'){
+                        conAssignment[0].Assignment_Position__c = 'Student';
+                    }
+                    studentCAList.add(conAssignment[0]);
+                    
+                    Contact_Assignments__c newStudentCA = new Contact_Assignments__c();
+                    newStudentCA.R_Score_Final__c = conAssignment[0].R_Score_Final__c;
+                    newStudentCA.S_Score_Final__c = conAssignment[0].S_Score_Final__c;
+                    newStudentCA.W_Score_Goal__c = conAssignment[0].W_Score_Goal__c;
+                    newStudentCA.L_Score_Final__c = conAssignment[0].L_Score_Final__c;
+                    // To not create tasks for the newly transferred Contact Assignment when the it is signed already
+                    newStudentCA.Policies_and_Procedure_Box_Share_URL__c = conAssignment[0].Policies_and_Procedure_Box_Share_URL__c;
+                    newStudentCA.DLS_Policies_and_Procedures_Agreed_Date__c = conAssignment[0].DLS_Policies_and_Procedures_Agreed_Date__c;
+                    newStudentCA.Agreed_DLS_Policies_And_Procedures__c = conAssignment[0].Agreed_DLS_Policies_And_Procedures__c;
+                    
+                    newStudentCA.Assignment_Position__c = 'Student';
+                    newStudentCA.Project__c = proRecs[0].Id;
+                    newStudentCA.Start_Date__c = newCAStartDt;
+                    newStudentCA.Candidate_Name__c = conAssignment[0].Candidate_Name__c;
+                    newStudentCA.End_Date__c = proRecs[0].End_Date__c;   
+                    
+                    newStudentCA.Status__c = 'Active';
+                    newStudentCA.RecordTypeId = conAssignment[0].RecordTypeId;
+                    newStudentCA.Opportunity_Name__c = proRecs[0].AcctSeed__Opportunity__c;   
+                    studentCAList.add(newStudentCA);
+                    
+                    if(studentCAList.size() > 0){
+                        upsert studentCAList;
+                        
+                        // W-007991 : Update to Transfer Button Functionality on Student CA
+                        // To send an email notification to the LMS Administrator when the student contact assignment is transferred from one project to another using the Transfer Button on the Student CA.
+                        List<Messaging.SingleEmailMessage> sendEmailList = new List<Messaging.SingleEmailMessage>();
+                        
+                        String orgWideEmailId = ProjectTrigger_Handler.getOrgWideEmailId('support@dlsdc.com');
+                        List<String> toAddresses = ProjectTrigger_Handler.getSystemValuesList('Student CA Transfer Email');
+                        List<String> toUsers = ProjectTrigger_Handler.getSystemValuesList('Student CA Transfer Email User Name');
+                        String toUserNames = String.join(toUsers,', ');
+                        
+                        String conStr = '<a href="'+ System.Label.Org_Prefix_Start_URL + '/' + conAssignment[0].Candidate_Name__c + '" target="_blank">' + conAssignment[0].Candidate_Name__r.Name +'</a><br/>';
+                        String old_ProjStr = '<a href="'+ System.Label.Org_Prefix_Start_URL + '/' + conAssignment[0].Project__c + '" target="_blank">' + conAssignment[0].Project__r.Name +'</a><br/>';
+                        String new_ProjStr = '<a href="'+ System.Label.Org_Prefix_Start_URL + '/' + proRecs[0].Id + '" target="_blank">' + proRecs[0].Name +'</a><br/>';
+                        String newCAStartDate = String.valueOf(newStudentCA.Start_Date__c);
+                        String newCAStartDateStr = newCAStartDate.split('-')[1]+'/'+newCAStartDate.split('-')[2]+'/'+newCAStartDate.split('-')[0];
+                                            
+                        String subject = 'Student Transferred to New Project';
+                        String htmlBody = '';
+                        htmlBody += 'Dear '+ toUserNames + ', <br/><br/>';
+                        htmlBody += 'The following Student has transferred to a new Project.<br/><br/>';
+                        htmlBody += '<table border="1" style="border-collapse: collapse"><tr><th width="25%" style="text-align: center; vertical-align: middle;">Student Name</th><th width="25%" style="text-align: center; vertical-align: middle;">Old Project Name</th><th width="25%" style="text-align: center; vertical-align: middle;">New Project Name</th><th width="25%" style="text-align: center; vertical-align: middle;">New Contact Assignment Start Date</th></tr>';
+                        htmlBody += '<tr><td style="text-align: center; vertical-align: middle;">' + conStr + '</td><td style="text-align: center; vertical-align: middle;">' + old_ProjStr + '</td><td style="text-align: center; vertical-align: middle;">' + new_ProjStr + '</td><td style="text-align: center; vertical-align: middle;">' + newCAStartDateStr + '</td></tr></table><br/>';                            
+                        htmlBody += 'Please ensure the Student has all necessary Materials.<br/><br/>Thank you,<br/>DLS System Generated Email<br/>';
+                        
+                        Messaging.SingleEmailMessage mail = ProjectTrigger_Handler.getSingleEmail(orgWideEmailId, '', toAddresses, new List<String>(), '', '', htmlBody, subject, true, false);
+                        sendEmailList.add(mail);
+                        
+                        if(sendEmailList.size() > 0 && !Test.isRunningTest()) {
+                            Messaging.SendEmailResult[] results = Messaging.sendEmail(sendEmailList);
+                        }
+                    }
+                    
+                    // to update the Training report records.
+                    trainingReports = [SELECT Id,Project__c,Report_Date__c FROM Assessment_Report__c WHERE Project__c = :conAssignment[0].Project__c AND Student__c = :conAssignment[0].Candidate_Name__c AND Status__c IN ('Draft','Scheduled')];
+                    Map<Id, Assessment_Report__c> updateARs = new Map<Id, Assessment_Report__c>();
+                    
+                    if(trainingReports.size() > 0){
+                    
+                        for(Assessment_Report__c ap : trainingReports){
+                            
+                            Assessment_Report__c updateAR = new Assessment_Report__c();
+                            updateAR.Id = ap.Id;
+                            
+                            // To update the instructor and the project of newly transferred training reports if their report dates fall under the contact assignment start and end dates.
+                            if(ap.Report_Date__c >= newCAStartDt && ap.Report_Date__c <= newStudentCA.End_Date__c){
+                                updateAR.Project__c = proRecs[0].Id;
+                                updateAR.Instructor__c = newProjSchedule.size() > 0 ? newProjSchedule[0].Instructor__c : ap.Instructor__c;
+                                updateARs.put(updateAR.Id, updateAR);
+                            }
+                            
+                            // To cancel training reports when transferring from one project to another if their report dates exceed the end date of the contact assignment.
+                            if(ap.Report_Date__c > newStudentCA.End_Date__c && ap.Report_Date__c.month() != newStudentCA.End_Date__c.month()){
+                                updateAR.Status__c = 'Canceled';
+                                updateARs.put(updateAR.Id, updateAR);
+                            }
+                            
+                        } 
+                        update updateARs.values();
+                    }
+                    
+                    // to update the Language Testing records.
+                    langTesting = [SELECT Id,Testee__c,Project__c,Contact_Assignment__c FROM Language_Testing__c WHERE Project__c = :conAssignment[0].Project__c AND Testee__c = :conAssignment[0].Candidate_Name__c AND Contact_Assignment__c = :conAssignment[0].Id];
+    
+                    if(langTesting.size() > 0){
+                        for(Language_Testing__c lt : langTesting){
+                            lt.Project__c = proRecs[0].Id;
+                            lt.Contact_Assignment__c = studentCAList[1].Id;
+                        } 
+                        update langTesting;
+                    }
+                }
+            }
+        }catch(Exception e) {
+            Database.rollback(sp);
+            throw new AuraHandledException(e.getMessage());
         }
     }
+    
     @AuraEnabled
     public static String getStudentCAsForClassLeader(String currentCAProjectId,String oldCAPosition){ 
         List<Contact_Assignments__c> studentCANameList = new List<Contact_Assignments__c>();

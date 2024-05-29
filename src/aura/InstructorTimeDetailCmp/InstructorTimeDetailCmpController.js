@@ -67,9 +67,10 @@
                 }else{
                     cmp.find("endTimeValidationModel").open();
                 }
+                cmp.set("v.endTime", '');
                 cmp.set("v.endTimeValidationMsg",'You have selected an End Time that is in the future. Users are not allowed to enter time for a future date or time. <br/>Please correct your entry or wait until the end of the day to enter your time.');
             }else {
-                $A.util.removeClass(endCmp,"slds-has-error"); 
+                $A.util.removeClass(endCmp,"slds-has-error");
             }     
         }
         helper.fireInputChangeToParent(cmp, event);

@@ -4,6 +4,10 @@
     - If the Contact Assignment is created less than 3 business days before the Start Date of the Contact Assignment, 
         create a User for the Contact immediately if one does not exist already 
     - This scheduler runs every one hour basis
+    
+    - "Booz Allen Hamilton (BAH)" condition Added on May 10 2024 (Old condition : (NOT Project__r.Name LIKE '%Bah%'))
+    - W-008038 : Urgent: System Failed to Activate New Student DLS Online User Account Upon CA Creation on Active Project
+    - To fix "System Failed to Activate New Student DLS Online User Account Upon CA Creation on Active Project" issue 
     ******************/
     
 public class CAbasedUserCreationOnEveryHour_Schedule implements Schedulable{
@@ -50,7 +54,7 @@ public class CAbasedUserCreationOnEveryHour_Schedule implements Schedulable{
                                                 AND (NOT Candidate_Name__r.Name LIKE '%Student%')
                                                 AND Start_Date__c != NULL AND Paper_Timesheet__c = FALSE   
                                                 AND Assignment_Position__c IN : caPositionSet AND Project__r.QB_Classification__c != 'OF0MTT0PS' 
-                                                AND (NOT Project__r.Name LIKE '%Bah%') AND Project__r.AcctSeed__Status__c IN ('Order','Active') 
+                                                AND Project__r.Account_Name__c != 'Booz Allen Hamilton (BAH)' AND Project__r.AcctSeed__Status__c IN ('Order','Active') 
                                                 AND Project__r.Name NOT IN ('ELIZABETH HUML','MARA BOROUGHS','LEANN TAGWERKER','TRAVIS CUNNINGHAM','DLI Hausa-2018-Pena/Falanga','DLI Somali-2018-Deborah/Mickayla/Katie/Collin','Danielle Ward 2019')
         ]){
         

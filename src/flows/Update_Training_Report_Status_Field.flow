@@ -139,27 +139,6 @@
             </value>
         </filters>
         <filters>
-            <field>Account_Name__c</field>
-            <operator>Contains</operator>
-            <value>
-                <stringValue>DLI</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>Account_Name__c</field>
-            <operator>Contains</operator>
-            <value>
-                <stringValue>DODA</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>Account_Name__c</field>
-            <operator>Contains</operator>
-            <value>
-                <stringValue>FCS</stringValue>
-            </value>
-        </filters>
-        <filters>
             <field>Status__c</field>
             <operator>EqualTo</operator>
             <value>
@@ -171,34 +150,6 @@
             <operator>EqualTo</operator>
             <value>
                 <stringValue>DLI_W_Progress</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>RecordType_Name__c</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>Language_Training_Progress</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>RecordType_Name__c</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>Test_Report</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>RecordType_Name__c</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>APMO_Progress</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>RecordType_Name__c</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>DEA_Progress</stringValue>
             </value>
         </filters>
         <filters>
@@ -226,7 +177,63 @@
             <field>Account_Name__c</field>
             <operator>Contains</operator>
             <value>
+                <stringValue>DLI</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Project_RecordType_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI_W_LT_Projects</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>RecordType_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Language_Training_Progress</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Account_Name__c</field>
+            <operator>Contains</operator>
+            <value>
+                <stringValue>DODA</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Account_Name__c</field>
+            <operator>Contains</operator>
+            <value>
+                <stringValue>FCS</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>RecordType_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Test_Report</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Account_Name__c</field>
+            <operator>Contains</operator>
+            <value>
                 <stringValue>PGLS</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>RecordType_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>APMO_Progress</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>RecordType_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DEA_Progress</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>false</getFirstRecordOnly>
@@ -258,7 +265,7 @@
         </schedule>
         <triggerType>Scheduled</triggerType>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
     <subflows>
         <name>Error_Handling_in_Query_Training_Report_Records</name>
         <label>Error Handling in Query Training Report Records</label>

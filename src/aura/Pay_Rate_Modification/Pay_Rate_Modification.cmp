@@ -159,6 +159,7 @@
                     </aura:if>
                 </aura:if>
             </p>
+            
             <aura:set attribute="footer">
                 <aura:if isTrue="{!v.payRateInfo.showFTPTPickListPage}">
                     <lightning:button variant="brand" label="Next" onclick="{!c.displayInputs}"/>

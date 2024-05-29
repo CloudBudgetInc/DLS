@@ -3,6 +3,7 @@
     - To update Status__c = "Inactive" in AcctSeed__Cost_Rates__c (Prior Version) if it have Expiration_Date__c is less than or equal to Today 
     - To update its related Contact_Assignments__c Status__c field as "Ended" if its End_Date__c matches with Expiration_Date__c 
     - And finally send an email notification to Admin people (Chris, April and Natalia) and email contains information about updated AcctSeed__Cost_Rates__c and Contact_Assignments__c 
+    - To update LCR's related Events 
 ******************/
 
 global class LCRStatusUpdationBatch implements Database.batchable<Sobject>,Database.Stateful {
@@ -66,6 +67,15 @@ global class LCRStatusUpdationBatch implements Database.batchable<Sobject>,Datab
         Set<Id> newLCRIds = new Set<Id>();
         Set<Id> allCRIds = new Set<Id>();
         
+        //To update the Event's LCR 
+        List<Events__c> evntsToUpdate = new List<Events__c>();
+        
+        // When a PRM is triggered for Labor Cost Rates where Contact Record type = DLS Employee, we would like the
+        // system to update the Supervisor and Home Department values on the user Contact record on the day of the Labor Cost Rate Effective date.
+        Set<Id> crIdForConUpdate = new Set<Id>();
+        Set<String> staffRelatedRTType = new Set<String>{'FT Hourly & Benefits', 'PT Hourly (OH & G&A)', 'FT Salary & Benefits','International Salary'};
+        List<Contact> updateStaffRelCons = new List<Contact>();
+
         // To update Prior Version Cost Rate status as "Inactive"
         if(costRates.size() > 0){
                         
@@ -90,7 +100,11 @@ global class LCRStatusUpdationBatch implements Database.batchable<Sobject>,Datab
                 wrap.newStatus = oldLCR.Status__c;
                 wrap.rateType = c.Rate_Type__c;
                 priorLCRIdAndCRTableWrap.put(c.Prior_Version__c, wrap);
-                //CRTableWrapList.add(wrap);                
+                //CRTableWrapList.add(wrap);    
+                
+                if(staffRelatedRTType.contains(c.Rate_Type__c)){
+                    crIdForConUpdate.add(c.Id);
+                }
             }
             
             if( priorLCRIdAndExpDate.keySet().size() > 0 ) {
@@ -218,12 +232,38 @@ global class LCRStatusUpdationBatch implements Database.batchable<Sobject>,Datab
                 }
             }
             
+            //To update the Event's LCR 
+            if( priorLCRIdAndExpDate.size() > 0 ) {
+                for(Events__c ev : [SELECT Id,Name,Date__c,Labor_Cost_Rate__c,Instructor__c FROM Events__c WHERE Labor_Cost_Rate__c IN : priorLCRIdAndExpDate.keyset() AND Status__c IN ('Draft','Scheduled') AND Date__c >: priorLCRIdAndExpDate.values()]) {
+                    if(priorLCRIdAndExpDate.containskey(ev.Labor_Cost_Rate__c) && priorLCRIdAndExpDate.get(ev.Labor_Cost_Rate__c) != null && ev.Date__c > priorLCRIdAndExpDate.get(ev.Labor_Cost_Rate__c)) {
+                        System.debug('before :: ev.Labor_Cost_Rate__c:::'+ev.Labor_Cost_Rate__c);
+                        ev.Labor_Cost_Rate__c =  priorLCRIdAndnewCRRec.get(ev.Labor_Cost_Rate__c).Id;
+                        System.debug('after :: ev.Labor_Cost_Rate__c:::'+ev.Labor_Cost_Rate__c);
+                        evntsToUpdate.add(ev);
+                    }
+                }
+            }
+            
+            if(crIdForConUpdate.size() > 0){
+                // W-008034 - Request to Update Staff PRM Logic
+                //  When a PRM is triggered for Labor Cost Rates where Contact Record type = DLS Employee, we would like the system to update the Supervisor and Home Department values on the user Contact record on the day of the Labor Cost Rate Effective date.
+                updateStaffRelCons = Cost_Rate_Trigger_Handler.updateConWithDeptAndSups(newLCRIds);
+            }
+            
+            
             try{
                 if(updatePriorVersion.size() > 0){
                     update updatePriorVersion;
                 }
                 if(updateConAssigns.size() > 0){
                     update updateConAssigns;
+                }
+                if(updateStaffRelCons.size() > 0){
+                    update updateStaffRelCons;
+                }
+                if(evntsToUpdate.size() > 0) {
+                    System.debug('evntsToUpdate::::'+evntsToUpdate.size());
+                    update evntsToUpdate;
                 }
             }catch(Exception e){
             

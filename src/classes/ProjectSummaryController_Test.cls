@@ -169,7 +169,7 @@ private class ProjectSummaryController_Test{
         List<AcctSeed__Project__c> proj = [SELECT Id, DLS_Class__c, AcctSeed__Status__c, RecordTypeId,RecordType.Name FROM AcctSeed__Project__c WHERE Id = :conAss[0].Project__c];
         proj[0].Training_Location__c = loc.Id;
         proj[0].AcctSeed__Account__c = accounts[0].Id;
-        proj[0].Hours_Week__c = 8;
+        proj[0].Scheduled_Hours_Week__c = 8;
         update proj[0];
                 
         ProjectSummaryController.ProjectSummaryInputDetails  pSInputs = new ProjectSummaryController.ProjectSummaryInputDetails();

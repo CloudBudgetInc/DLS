@@ -200,6 +200,7 @@
         obj.Request_Status__c = 'Requested by LTS';
         obj.Due_Date__c = orderObj.dueDate;
         obj.Reimbursements__c = orderObj.isReimbursement;//W-007578 Added by Dinesh on 30.09.2022
+        obj.No_LMS_Welcome_Email__c = orderObj.noLmsWelcomeEmail;//W-008040 Added by NS on 7.5.2024
         
         if(MutlipleMaterial){
             if(cmp.get("v.qtyEntered")){

@@ -84,7 +84,7 @@ private class EventCalendarController_Test{
         System.debug('event ========='+event );
         
         System.runAs(user){
-            EventCalendarController.getEventRecordList(String.valueOf(year1), String.valueOf(Year2), status);
+            EventCalendarController.getEventRecordList(String.valueOf(year1), String.valueOf(Year2), status, conList[0].Id);
         }
         
         Test.stopTest();
@@ -162,7 +162,7 @@ private class EventCalendarController_Test{
         System.debug('event ========='+event );
         
         System.runAs(user){
-            EventCalendarController.getEventRecordList(String.valueOf(year1), String.valueOf(Year2), status);
+            EventCalendarController.getEventRecordList(String.valueOf(year1), String.valueOf(Year2), status, conList[0].Id);
         }
         
         Test.stopTest();
@@ -235,7 +235,7 @@ private class EventCalendarController_Test{
         AcctSeed__Time_Card_Day__c day = new AcctSeed__Time_Card_Day__c(AcctSeed__Time_Card_Line__c = timeCardLine.Id,Total_Hours_Before_Approved__c = 2.00,AcctSeed__Hours__c = 2,AcctSeed__Date__c = System.Today(), Status__c = 'Submitted');
         insert day;
         
-        Events__c event = new Events__c(Name = '15-00687-SH1-EV1',Schedule__c = schList[0].Id,SequenceNo__c = 1,Instructor__c = conList[0].Id,Date__c = Date.Today(),Project__c = timeCardLine.AcctSeed__Project__c,Status__c = 'Scheduled');
+        Events__c event = new Events__c(Name = '15-00687-SH1-EV1',Schedule__c = schList[0].Id,SequenceNo__c = 1,Instructor__c = conList[0].Id,Date__c = Date.Today() - 10,Project__c = timeCardLine.AcctSeed__Project__c,Status__c = 'Scheduled');
         insert event;
         System.debug('event ========='+event );
         
@@ -245,9 +245,9 @@ private class EventCalendarController_Test{
         update pdo[0];
         
         System.runAs(user){
-            EventCalendarController.getEventRecordList(String.valueOf(year1), '', status); 
-            EventCalendarController.getEventRecordList('', String.valueOf(Year2), status);
-            EventCalendarController.getEventRecordList('', '', status);
+            EventCalendarController.getEventRecordList(String.valueOf(year1), '', status, conList[0].Id); 
+            EventCalendarController.getEventRecordList('', String.valueOf(Year2), status, conList[0].Id);
+            EventCalendarController.getEventRecordList('', '', status, conList[0].Id);
         }
         Test.stopTest();
     }
@@ -484,6 +484,8 @@ private class EventCalendarController_Test{
         
         newEvt.Approval_Status__c = 'Submitted for Approval';
         newEvt.Parent_Event__c = events[0].Id;
+        newEvt.Start_Time__c = ''+System.now();
+        newEvt.End_Time__c = ''+System.now();
         newEvt.Status__c = 'Draft';
         newEvt.Approver_Name__c = conList[0].Id;
         newEvt.Parent_Status_Changed_To__c = 'Late Cancellation';
@@ -538,7 +540,7 @@ private class EventCalendarController_Test{
          evts[1].Status__c = 'Scheduled';
          evts[1].Start_Time__c = '8:00 AM';
          evts[1].End_Time__c = '10:00 AM';
-         evts[1].Date__c = System.Today();
+         evts[1].Date__c = System.Today().addDays(3);
          evts[1].Project__c = projects[0].Id;
 
         
@@ -591,8 +593,7 @@ private class EventCalendarController_Test{
         insert user;
         
         System.runAs(user){ 
-        
-            EventCalendarController.getEventsForApproval();
+            EventCalendarController.getEventsForApproval(conList[0].Id);
         }
         Test.stopTest();
      }
@@ -642,6 +643,224 @@ private class EventCalendarController_Test{
         System.runAs(user){ 
         
             EventCalendarController.getDetailsForRequestEvent();
+        }
+        Test.stopTest();
+     }
+     
+     // To cover getPendingEventsForApproval() method in EventCalendarController
+     private static testMethod void getPendingEventsForApproval_Test1(){
+     
+        Account a = new Account();
+        a.Name = 'Softsquare ELT';
+        insert a;
+        
+        Id p = [SELECT Id FROM Profile WHERE Name='Student Community'].Id;
+        System.debug('p=========='+p);
+        
+        Test.startTest();
+        
+        List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE Email != NULL AND RecordType.DeveloperName = 'Student'];
+        conList[0].AccountId = a.Id;
+        update conList[0];
+        
+        User user = new User(alias = 'test123', email='test123@noemail.com',
+                             emailencodingkey='UTF-8', lastname='Testing', languagelocalekey='en_US',
+                             localesidkey='en_US', profileid = p, country='United States',IsActive =true,
+                             ContactId = conList[0].Id,
+                             timezonesidkey='America/Los_Angeles', username='tester@noemail.com');
+       
+        insert user;
+        
+        List<Contact_Assignments__c> conAss = [SELECT Id, Name, Candidate_Name__c, Project__c FROM Contact_Assignments__c WHERE Status__c = 'Active' AND RecordType.DeveloperName = 'Student' LIMIT 1];
+        conAss[0].Candidate_Name__c = conList[0].Id;
+        update conAss[0];
+        
+        List<AcctSeed__Project__c> projects = [SELECT Id, AcctSeed__Account__c FROM AcctSeed__Project__c WHERE Id = :conAss[0].Project__c];
+        projects[0].AcctSeed__Account__c = a.Id;
+        update projects[0];
+        
+        List<AcctSeed__Project_Task__c> task = [SELECT Id, AcctSeed__Project__c,AcctSeed__Project__r.AcctSeed__Opportunity__c, AcctSeed__Project__r.RecordType.DeveloperName, AcctSeed__Labor_GL_Account__c FROM AcctSeed__Project_Task__c WHERE Project_Task_Type__c != 'Preparation time' AND AcctSeed__Project__c = :projects[0].Id LIMIT 1];
+    
+        List<Schedule__c> schList = [SELECT Id, Project__c,Status__c, Start_Date__c, End_Date__c FROM Schedule__c LIMIT 1];
+        schList[0].Status__c = 'Active';
+        schList[0].Project__c = task[0].AcctSeed__Project__c;
+        schList[0].Project_Task__c = task[0].Id;
+        update schList;
+        
+        List<Events__c> events = [SELECT Id FROM Events__c LIMIT 1];
+        events[0].Instructor__c = conList[0].Id;
+        events[0].Status__c = 'Draft';
+        events[0].Approval_Status__c = 'LTS Approved';
+        update events[0];
+        
+        System.runAs(user){ 
+        
+            EventApproval_Ctrl.getPendingEventsForApproval(conList[0].Id);
+        }
+        Test.stopTest();
+     }
+     
+     // To cover getPendingEventsForApproval() method in EventCalendarController
+     private static testMethod void getPendingEventsForApproval_Test2(){
+     
+        Account a = new Account();
+        a.Name = 'Softsquare ELT';
+        insert a;
+        
+        Id p = [SELECT Id FROM Profile WHERE Name='Student Community'].Id;
+        System.debug('p=========='+p);
+        
+        Test.startTest();
+        
+        List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE Email != NULL AND RecordType.DeveloperName = 'Student'];
+        conList[0].AccountId = a.Id;
+        update conList[0];
+        
+        User user = new User(alias = 'test123', email='test123@noemail.com',
+                             emailencodingkey='UTF-8', lastname='Testing', languagelocalekey='en_US',
+                             localesidkey='en_US', profileid = p, country='United States',IsActive =true,
+                             ContactId = conList[0].Id,
+                             timezonesidkey='America/Los_Angeles', username='tester@noemail.com');
+       
+        insert user;
+        
+        List<Contact_Assignments__c> conAss = [SELECT Id, Name, Candidate_Name__c, Project__c FROM Contact_Assignments__c WHERE Status__c = 'Active' AND RecordType.DeveloperName = 'Student' LIMIT 1];
+        conAss[0].Candidate_Name__c = conList[0].Id;
+        update conAss[0];
+        
+        List<AcctSeed__Project__c> projects = [SELECT Id, AcctSeed__Account__c FROM AcctSeed__Project__c WHERE Id = :conAss[0].Project__c];
+        projects[0].AcctSeed__Account__c = a.Id;
+        update projects[0];
+        
+        List<AcctSeed__Project_Task__c> task = [SELECT Id, AcctSeed__Project__c,AcctSeed__Project__r.AcctSeed__Opportunity__c, AcctSeed__Project__r.RecordType.DeveloperName, AcctSeed__Labor_GL_Account__c FROM AcctSeed__Project_Task__c WHERE Project_Task_Type__c != 'Preparation time' AND AcctSeed__Project__c = :projects[0].Id LIMIT 1];
+    
+        List<Schedule__c> schList = [SELECT Id, Project__c,Status__c, Start_Date__c, End_Date__c FROM Schedule__c LIMIT 1];
+        schList[0].Status__c = 'Active';
+        schList[0].Project__c = task[0].AcctSeed__Project__c;
+        schList[0].Project_Task__c = task[0].Id;
+        update schList;
+        
+        List<Events__c> events = [SELECT Id FROM Events__c LIMIT 2];
+        events[0].Instructor__c = conList[0].Id;
+        events[0].Status__c = 'Draft';
+        events[0].Approval_Status__c = 'LTS Approved';
+        events[0].Parent_Event__c = events[1].Id;
+        update events[0];
+        
+        System.runAs(user){ 
+        
+            EventApproval_Ctrl.getPendingEventsForApproval(conList[0].Id);
+        }
+        Test.stopTest();
+     }
+     
+     // To cover getEventsByDatesForApproval() method in EventCalendarController
+     private static testMethod void getEventsByDatesForApproval_Test1(){
+     
+        Account a = new Account();
+        a.Name = 'Softsquare ELT';
+        insert a;
+        
+        Id p = [SELECT Id FROM Profile WHERE Name='Student Community'].Id;
+        System.debug('p=========='+p);
+        
+        Test.startTest();
+        
+        List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE Email != NULL AND RecordType.DeveloperName = 'Student'];
+        conList[0].AccountId = a.Id;
+        update conList[0];
+        
+        User user = new User(alias = 'test123', email='test123@noemail.com',
+                             emailencodingkey='UTF-8', lastname='Testing', languagelocalekey='en_US',
+                             localesidkey='en_US', profileid = p, country='United States',IsActive =true,
+                             ContactId = conList[0].Id,
+                             timezonesidkey='America/Los_Angeles', username='tester@noemail.com');
+       
+        insert user;
+        
+        List<Contact_Assignments__c> conAss = [SELECT Id, Name, Candidate_Name__c, Project__c FROM Contact_Assignments__c WHERE Status__c = 'Active' AND RecordType.DeveloperName = 'Student' LIMIT 1];
+        conAss[0].Candidate_Name__c = conList[0].Id;
+        update conAss[0];
+        
+        List<AcctSeed__Project__c> projects = [SELECT Id, AcctSeed__Account__c FROM AcctSeed__Project__c WHERE Id = :conAss[0].Project__c];
+        projects[0].AcctSeed__Account__c = a.Id;
+        update projects[0];
+        
+        List<AcctSeed__Project_Task__c> task = [SELECT Id, AcctSeed__Project__c,AcctSeed__Project__r.AcctSeed__Opportunity__c, AcctSeed__Project__r.RecordType.DeveloperName, AcctSeed__Labor_GL_Account__c FROM AcctSeed__Project_Task__c WHERE Project_Task_Type__c != 'Preparation time' AND AcctSeed__Project__c = :projects[0].Id LIMIT 1];
+    
+        List<Schedule__c> schList = [SELECT Id, Project__c,Status__c, Start_Date__c, End_Date__c FROM Schedule__c LIMIT 1];
+        schList[0].Status__c = 'Active';
+        schList[0].Project__c = task[0].AcctSeed__Project__c;
+        schList[0].Project_Task__c = task[0].Id;
+        update schList;
+        
+        List<Events__c> events = [SELECT Id, Date__c FROM Events__c LIMIT 2];
+        events[0].Instructor__c = conList[0].Id;
+        events[0].Status__c = 'Draft';
+        events[0].Approval_Status__c = 'LTS Approved';
+        events[0].Parent_Event__c = events[1].Id;
+        events[0].Approver_Name__c = conList[0].Id;
+        update events[0];
+        
+        System.runAs(user){ 
+        
+            EventApproval_Ctrl.getEventsByDatesForApproval(events[0].Date__c, events[0].Date__c, conList[0].Id);
+        }
+        Test.stopTest();
+     }
+     
+     // getParentEventDetail - This code isn't used anywhere, so it has been temporarily covered in a test class instead of removing it entirely.
+     // To cover getParentEventDetail() method in EventCalendarController
+     private static testMethod void getParentEventDetail_Test(){
+     
+        Account a = new Account();
+        a.Name = 'Softsquare ELT';
+        insert a;
+        
+        Id p = [SELECT Id FROM Profile WHERE Name='Student Community'].Id;
+        System.debug('p=========='+p);
+        
+        Test.startTest();
+        
+        List<Contact> conList = [SELECT Id, AccountId FROM Contact WHERE Email != NULL AND RecordType.DeveloperName = 'Student'];
+        conList[0].AccountId = a.Id;
+        update conList[0];
+        
+        User user = new User(alias = 'test123', email='test123@noemail.com',
+                             emailencodingkey='UTF-8', lastname='Testing', languagelocalekey='en_US',
+                             localesidkey='en_US', profileid = p, country='United States',IsActive =true,
+                             ContactId = conList[0].Id,
+                             timezonesidkey='America/Los_Angeles', username='tester@noemail.com');
+       
+        insert user;
+        
+        List<Contact_Assignments__c> conAss = [SELECT Id, Name, Candidate_Name__c, Project__c FROM Contact_Assignments__c WHERE Status__c = 'Active' AND RecordType.DeveloperName = 'Student' LIMIT 1];
+        conAss[0].Candidate_Name__c = conList[0].Id;
+        update conAss[0];
+        
+        List<AcctSeed__Project__c> projects = [SELECT Id, AcctSeed__Account__c FROM AcctSeed__Project__c WHERE Id = :conAss[0].Project__c];
+        projects[0].AcctSeed__Account__c = a.Id;
+        update projects[0];
+        
+        List<AcctSeed__Project_Task__c> task = [SELECT Id, AcctSeed__Project__c,AcctSeed__Project__r.AcctSeed__Opportunity__c, AcctSeed__Project__r.RecordType.DeveloperName, AcctSeed__Labor_GL_Account__c FROM AcctSeed__Project_Task__c WHERE Project_Task_Type__c != 'Preparation time' AND AcctSeed__Project__c = :projects[0].Id LIMIT 1];
+    
+        List<Schedule__c> schList = [SELECT Id, Project__c,Status__c, Start_Date__c, End_Date__c FROM Schedule__c LIMIT 1];
+        schList[0].Status__c = 'Active';
+        schList[0].Project__c = task[0].AcctSeed__Project__c;
+        schList[0].Project_Task__c = task[0].Id;
+        update schList;
+        
+        List<Events__c> events = [SELECT Id, Date__c FROM Events__c LIMIT 2];
+        events[0].Instructor__c = conList[0].Id;
+        events[0].Status__c = 'Draft';
+        events[0].Approval_Status__c = 'LTS Approved';
+        events[0].Parent_Event__c = events[1].Id;
+        events[0].Approver_Name__c = conList[0].Id;
+        update events[0];
+        
+        System.runAs(user){ 
+        
+            EventApproval_Ctrl.getParentEventDetail(events[0].Id, task[0].AcctSeed__Project__c, '');
         }
         Test.stopTest();
      }

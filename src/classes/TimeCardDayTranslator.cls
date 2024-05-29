@@ -3073,84 +3073,166 @@ global class TimeCardDayTranslator {
         - W-002110 : Timekeeping Audit Trail Reports
     ***************/
     
-    public static List<TimeCardDayDomain.TCDHistoryReport> getTCDHistoryRecs(List<AcctSeed__Time_Card_Day__History> tcdHistoryRecs,  Map<String, String> fieldAPINameAndLabel, Map<String, User> userIdAndRec){
+    public static List<TimeCardDayDomain.TCDHistoryReport> getTCDHistoryRecs(List<AcctSeed__Time_Card_Day__History> tcdHistoryRecs,  Map<String, String> fieldAPINameAndLabel, Map<String, User> userIdAndRec, String selectedField){
     
         List<TimeCardDayDomain.TCDHistoryReport> reportList = new List<TimeCardDayDomain.TCDHistoryReport>();
         
         for(AcctSeed__Time_Card_Day__History h : tcdHistoryRecs){
-        
-            TimeCardDayDomain.TCDHistoryReport report = new TimeCardDayDomain.TCDHistoryReport();
             
-            String fieldAPIName = h.Field;
-            String fieldLabel = (fieldAPINameAndLabel.containsKey(fieldAPIName.toLowerCase())) ? fieldAPINameAndLabel.get(fieldAPIName.toLowerCase()) : '';
-            
-            String oldValue = '';
-            String newValue = '';
-            if(fieldAPIName == 'Approved_Date__c' || fieldAPIName == 'AcctSeed__Date__c' || fieldAPIName == 'Submitted_Date__c'){
-            
-                if(String.valueOf(h.OldValue) != NULL && String.valueOf(h.OldValue) != ''){
+            if((String.isNotBlank(selectedField) && (selectedField ==  h.Field)) || String.isBlank(selectedField)){
+                TimeCardDayDomain.TCDHistoryReport report = new TimeCardDayDomain.TCDHistoryReport();
                 
-                    String oldDateStr = String.valueOf(h.OldValue).split(' ')[0];
-                    oldValue = oldDateStr.split('-')[1]+'/'+oldDateStr.split('-')[2]+'/'+oldDateStr.split('-')[0];
-                }else{
-                    oldValue = String.valueOf(h.OldValue);
-                }
+                String fieldAPIName = h.Field;
+                String fieldLabel = (fieldAPINameAndLabel.containsKey(fieldAPIName.toLowerCase())) ? fieldAPINameAndLabel.get(fieldAPIName.toLowerCase()) : '';
                 
-                if(String.valueOf(h.NewValue) != NULL && String.valueOf(h.NewValue) != ''){
-                
-                    String newDateStr = String.valueOf(h.NewValue).split(' ')[0];
-                    newValue = newDateStr.split('-')[1]+'/'+newDateStr.split('-')[2]+'/'+newDateStr.split('-')[0];
-                }else{
-                    newValue = String.valueOf(h.NewValue);
-                }
-                
-            }else if(fieldAPIName == 'Approved_by__c'){
-            
-                if(String.valueOf(h.OldValue) != NULL && String.valueOf(h.OldValue) != ''){
-                
-                    String oldUserId = String.valueOf(h.OldValue);
+                String oldValue = '';
+                String newValue = '';
+                if(fieldAPIName == 'Approved_Date__c' || fieldAPIName == 'AcctSeed__Date__c' || fieldAPIName == 'Submitted_Date__c'){
                     
-                    if(oldUserId.contains('005')){
-                        oldValue = (userIdAndRec != NULL && userIdAndRec.size() > 0 && userIdAndRec.containsKey(oldUserId)) ? userIdAndRec.get(oldUserId).Name : '';
+                    if(String.valueOf(h.OldValue) != NULL && String.valueOf(h.OldValue) != ''){
+                        
+                        String oldDateStr = String.valueOf(h.OldValue).split(' ')[0];
+                        oldValue = oldDateStr.split('-')[1]+'/'+oldDateStr.split('-')[2]+'/'+oldDateStr.split('-')[0];
                     }else{
                         oldValue = String.valueOf(h.OldValue);
                     }
-                }else{
-                    oldValue = String.valueOf(h.OldValue);
-                }
-                
-                if(String.valueOf(h.NewValue) != NULL && String.valueOf(h.NewValue) != ''){
-                
-                    String newUserId = String.valueOf(h.NewValue);
                     
-                    if(newUserId.contains('005')){
-                        newValue = (userIdAndRec != NULL && userIdAndRec.size() > 0 && userIdAndRec.containsKey(newUserId)) ? userIdAndRec.get(newUserId).Name : '';
+                    if(String.valueOf(h.NewValue) != NULL && String.valueOf(h.NewValue) != ''){
+                        
+                        String newDateStr = String.valueOf(h.NewValue).split(' ')[0];
+                        newValue = newDateStr.split('-')[1]+'/'+newDateStr.split('-')[2]+'/'+newDateStr.split('-')[0];
                     }else{
                         newValue = String.valueOf(h.NewValue);
                     }
+                    
+                }else if(fieldAPIName == 'Approved_by__c'){
+                    
+                    if(String.valueOf(h.OldValue) != NULL && String.valueOf(h.OldValue) != ''){
+                        
+                        String oldUserId = String.valueOf(h.OldValue);
+                        
+                        if(oldUserId.contains('005')){
+                            oldValue = (userIdAndRec != NULL && userIdAndRec.size() > 0 && userIdAndRec.containsKey(oldUserId)) ? userIdAndRec.get(oldUserId).Name : '';
+                        }else{
+                            oldValue = String.valueOf(h.OldValue);
+                        }
+                    }else{
+                        oldValue = String.valueOf(h.OldValue);
+                    }
+                    
+                    if(String.valueOf(h.NewValue) != NULL && String.valueOf(h.NewValue) != ''){
+                        
+                        String newUserId = String.valueOf(h.NewValue);
+                        
+                        if(newUserId.contains('005')){
+                            newValue = (userIdAndRec != NULL && userIdAndRec.size() > 0 && userIdAndRec.containsKey(newUserId)) ? userIdAndRec.get(newUserId).Name : '';
+                        }else{
+                            newValue = String.valueOf(h.NewValue);
+                        }
+                    }else{
+                        newValue = String.valueOf(h.NewValue);
+                    }        
                 }else{
+                    
+                    oldValue = String.valueOf(h.OldValue);
                     newValue = String.valueOf(h.NewValue);
-                }        
-            }else{
-                
-                oldValue = String.valueOf(h.OldValue);
-                newValue = String.valueOf(h.NewValue);
+                }
+                report.dateAndTime = h.CreatedDate.format('MM/dd/yyyy HH:mm:ss a');
+                report.createdDate = h.CreatedDate;
+                report.byUser = h.CreatedBy.Name;
+                report.fieldEdited = fieldLabel;
+                report.oldValue = oldValue;
+                report.newValue = newValue;
+                report.contactName = String.valueOf(h.Parent.Instructor_Name__c);
+                report.project = h.Parent.AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.Name;
+                report.projectTask = h.Parent.Project_Task_Name__c;
+                report.tclName = h.Parent.AcctSeed__Time_Card_Line__r.Name;
+                reportList.add(report);
             }
-            report.dateAndTime = h.CreatedDate.format('MM/dd/yyyy HH:mm:ss a');
-            report.createdDate = h.CreatedDate;
-            report.byUser = h.CreatedBy.Name;
-            report.fieldEdited = fieldLabel;
-            report.oldValue = oldValue;
-            report.newValue = newValue;
-            report.contactName = String.valueOf(h.Parent.Instructor_Name__c);
-            report.project = h.Parent.AcctSeed__Time_Card_Line__r.AcctSeed__Project__r.Name;
-            report.projectTask = h.Parent.Project_Task_Name__c;
-            report.tclName = h.Parent.AcctSeed__Time_Card_Line__r.Name;
-            reportList.add(report);
         }
         return reportList;
     }
     
+    /***************
+        - Created by Siva Prasanth K.T on April 26 2024
+        - For Audit Trail Report information formation
+        - W-008032 : Timekeeping Audit Trail Reports
+    ***************/
+    public static List<TimeCardDayDomain.TCDHistoryReport> getTCLHistoryRecs(List<AcctSeed__Time_Card_Line__History> tclHistoryRecs,  Map<String, String> fieldAPINameAndLabel, Map<String, User> userIdAndRec,String selectedField){
+        List<TimeCardDayDomain.TCDHistoryReport> reportList = new List<TimeCardDayDomain.TCDHistoryReport>();
+        
+        for(AcctSeed__Time_Card_Line__History h : tclHistoryRecs){
+            if((String.isNotBlank(selectedField) && (selectedField ==  h.Field)) || String.isBlank(selectedField)){
+                
+                TimeCardDayDomain.TCDHistoryReport report = new TimeCardDayDomain.TCDHistoryReport();
+                
+                String fieldAPIName = h.Field;
+                String fieldLabel = (fieldAPINameAndLabel.containsKey(fieldAPIName.toLowerCase())) ? fieldAPINameAndLabel.get(fieldAPIName.toLowerCase()) : '';
+                
+                String oldValue = '';
+                String newValue = '';
+                
+                if(fieldAPIName == 'ApprovedTime__c'){
+                    
+                    if(String.valueOf(h.OldValue) != NULL && String.valueOf(h.OldValue) != ''){
+                        String oldDateStr = String.valueOf(h.OldValue).split(' ')[0];
+                        oldValue = oldDateStr.split('-')[1]+'/'+oldDateStr.split('-')[2]+'/'+oldDateStr.split('-')[0];
+                    }else{
+                        oldValue = String.valueOf(h.OldValue);
+                    }
+                    
+                    if(String.valueOf(h.NewValue) != NULL && String.valueOf(h.NewValue) != ''){
+                        String newDateStr = String.valueOf(h.NewValue).split(' ')[0];
+                        newValue = newDateStr.split('-')[1]+'/'+newDateStr.split('-')[2]+'/'+newDateStr.split('-')[0];
+                    }else{
+                        newValue = String.valueOf(h.NewValue);
+                    }
+                    
+                }else if(fieldAPIName == 'Approved_by__c'){
+                    
+                    if(String.valueOf(h.OldValue) != NULL && String.valueOf(h.OldValue) != ''){
+                        String oldUserId = String.valueOf(h.OldValue);
+                        
+                        if(oldUserId.contains('005')){
+                            oldValue = (userIdAndRec != NULL && userIdAndRec.size() > 0 && userIdAndRec.containsKey(oldUserId)) ? userIdAndRec.get(oldUserId).Name : '';
+                        }else{
+                            oldValue = String.valueOf(h.OldValue);
+                        }
+                    }else{
+                        oldValue = String.valueOf(h.OldValue);
+                    }
+                    
+                    if(String.valueOf(h.NewValue) != NULL && String.valueOf(h.NewValue) != ''){
+                        String newUserId = String.valueOf(h.NewValue);
+                        
+                        if(newUserId.contains('005')){
+                            newValue = (userIdAndRec != NULL && userIdAndRec.size() > 0 && userIdAndRec.containsKey(newUserId)) ? userIdAndRec.get(newUserId).Name : '';
+                        }else{
+                            newValue = String.valueOf(h.NewValue);
+                        }
+                    }else{
+                        newValue = String.valueOf(h.NewValue);
+                    }        
+                }else{
+                    
+                    oldValue = String.valueOf(h.OldValue);
+                    newValue = String.valueOf(h.NewValue);
+                }
+                report.dateAndTime = h.CreatedDate.format('MM/dd/yyyy HH:mm:ss a');
+                report.createdDate = h.CreatedDate;
+                report.byUser = h.CreatedBy.Name;
+                report.fieldEdited = fieldLabel;
+                report.oldValue = oldValue;
+                report.newValue = newValue;
+                report.contactName = String.valueOf(h.parent.AcctSeed__Time_Card__r.Intructor__r.Name);
+                report.project = h.Parent.AcctSeed__Project__r.Name;
+                report.projectTask = h.Parent.AcctSeed__Project_Task__r.Name;
+                report.tclName = h.Parent.Name;
+                reportList.add(report);
+            }
+        }
+        return reportList;
+    }
     
     //The follwoing methods used for Admin Time Entry Instructor component usage
     
@@ -3491,7 +3573,7 @@ global class TimeCardDayTranslator {
             detail.chargeCode1 = task.AcctSeed__Project__r.DLS_Class__c+' / <b>'+task.Name+'</b> / ';
             //detail.chargeCode2 = studentNames+' / '+task.AcctSeed__Project__r.Training_Location__r.Name;
             detail.totalHours = '0.00';
-			detail.taskName = task.Name; //Added By Dhinesh - 17/10/2023
+            detail.taskName = task.Name; //Added By Dhinesh - 17/10/2023
             detail.dayEntries = new List<TimeCardDayCommunityDomain.DayEntries>();
             
             if(task.Project_Task_Type__c == 'Language Training') {

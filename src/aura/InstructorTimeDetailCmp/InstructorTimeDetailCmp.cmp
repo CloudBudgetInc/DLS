@@ -212,9 +212,10 @@
         </c:sldsModal>
     </aura:if>
     
+    <!--W-007959 - Modified By Dhinesh on 16/02/2024 - Request to Prevent Instructors from Entering Time ahead of Schedule in DLS Online -->
     <!-- end time validation msg block -->
     <aura:if isTrue="{!v.endTimeValidationModel}">
-        <c:sldsModal aura:id="endTimeValidationModel" header="Warning" displayCloseImage="false" modelWidth="53rem">          
+        <c:sldsModal aura:id="endTimeValidationModel" header="Error" displayCloseImage="false" modelWidth="53rem">          
             <aura:set attribute="content">
                 <p style="padding-left: 1rem;font-size: medium;">
                 	<aura:unescapedHtml value="{!v.endTimeValidationMsg}"/>

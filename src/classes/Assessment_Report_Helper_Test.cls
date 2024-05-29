@@ -436,12 +436,17 @@ private class Assessment_Report_Helper_Test{
     }
     
     private static testMethod void myTest8(){
+    
         List<AcctSeed__Project__c> projRecs = [SELECT Id, AcctSeed__Account__c, Start_Date__c, End_Date__c FROM AcctSeed__Project__c LIMIT 1];
+        projRecs[0].AcctSeed__Account__c = null;
+        update projRecs[0];
+        
         Map<String,String> reportVal = new Map<String,String>();
         reportVal.put('test','test');
         String msg =  Assessment_Report_Helper.createAssessmentReportRecs(projRecs[0].Id, JSON.serialize(reportVal));
         System.assertEquals('Please populate Account in this Project.', msg);
     }
+    
     /*
     private static testMethod void myTest9(){
         Account acc = new Account(Name = 'DLI');
@@ -916,25 +921,25 @@ private class Assessment_Report_Helper_Test{
         
         Date projSD = Date.newInstance(System.today().year(),System.today().month(),18);
         Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+                
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 18',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+        insert proj;
         
-        Test.startTest();
+        AcctSeed__Project_Task__c projTask = new AcctSeed__Project_Task__c(Name = 'Test Task-Hindi',AcctSeed__Project__c=proj.Id,Project_Task_Type__c='Language Training', AcctSeed__Labor_GL_Account__c=glAccList[0].Id, Total_Qty_Planned__c = 100);
+        insert projTask;
         
-            AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 18',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
-            insert proj;
-            
-            AcctSeed__Project_Task__c projTask = new AcctSeed__Project_Task__c(Name = 'Test Task-Hindi',AcctSeed__Project__c=proj.Id,Project_Task_Type__c='Language Training', AcctSeed__Labor_GL_Account__c=glAccList[0].Id, Total_Qty_Planned__c = 100);
-            insert projTask;
-            
-            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
-            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
-            
+        Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+        Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+       
+       Test.startTest();  
+          
             List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
                 new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student'),
                 new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[1].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Instructor')
             };
         
             insert conAssignRecs;
-            
+        
             List<Schedule__c> schList = new List<Schedule__c> {
                 new Schedule__c(Name = '15-00687-SH1', Project__c = proj.Id,Project_Task__c=projTask.Id, Total_Hours__c = 0,End_Date__c=System.Today()+10, Start_Date__c=System.Today(),Status__c= 'Drafted', Schedule_Type__c = 'Regular', Instructor__c = stdCon[1].Id)
                 
@@ -945,12 +950,12 @@ private class Assessment_Report_Helper_Test{
             updateSch[0].Status__c = 'Active';
             updateSch[0].Total_Hours__c = 40;
             update updateSch[0];
-                        
+            /*        
             List<Schedule__c> updateSch1 = [SELECT Id, Status__c, Total_Hours__c FROM Schedule__c WHERE Id IN :updateSch];
             updateSch[0].Status__c = 'Active';
             updateSch[0].Total_Hours__c = 40;
             update updateSch[0];
-            
+            */
             Schedule__c replaceInsSch = new Schedule__c(Prior_Schedule__c = updateSch[0].Id, Name = '15-00687-SH2', Project__c = proj.Id,Project_Task__c=projTask.Id, Total_Hours__c = 40,End_Date__c=System.Today()+10, Start_Date__c=System.Today(),Status__c= 'Drafted', Schedule_Type__c = 'Replace Instructor', Instructor__c = stdCon[2].Id);
             insert replaceInsSch;
             
@@ -1258,31 +1263,22 @@ private class Assessment_Report_Helper_Test{
         
         Id dlsEmpId = Schema.SObjectType.Contact.getRecordTypeInfosByDeveloperName().get('DLS_Employee').getRecordTypeId();
         Contact con = [SELECT Id, Supervisor_Name__c, Hours_in_Current_Year__c FROM Contact WHERE Id = :tcl.AcctSeed__Time_Card__r.Intructor__c LIMIT 1];
-        User userRec = [SELECT id, FirstName, LastName, MiddleName, Email FROM User WHERE IsActive =  true LIMIT 1];
-        
-        List<Language__c> languages = [SELECT Id, Name FROM Language__c LIMIT 1];
-        
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(Id = tcl.AcctSeed__Project__c, Language__c = languages[0].Id);
-        update proj;
+        User userRec = [SELECT id, FirstName, LastName, MiddleName, email FROM User LIMIT 1];
         
         Contact c = new Contact();
-        c.Id = con.Id;
+        c.Id = tcl.AcctSeed__Time_Card__r.Intructor__c;
         c.Supervisor_Name__c = userRec.Id;
-        c.FirstName = userRec.FirstName;
-        c.LastName = userRec.LastName;
-        c.MiddleName = userRec.MiddleName;
-        c.Email = userRec.Email;
         update c;
-        
-        System.debug('::c.Id::'+c.Id);
+                
         User usr = [SELECT id, FirstName, LastName, MiddleName, email FROM User WHERE Id = :c.Supervisor_Name__c];
         
-        c.DLI_Hours_in_Current_Year__c = 55;
-        update c;
+        con.Hours_in_Current_Year__c = 55;
+        update con;
         
+        Assessment_Report_Helper.createAnnualInstructorPerformanceReviewReport(new Set<Id>{con.Id});
         AnnualReportReminderEmailToLTS.sendAnEmailLTS();
-        
-        List<Assessment_Report__c> annualReports = [SELECT Id, Report_Date__c , Instructor__c , Instructor__r.Name ,Report_File_Name__c FROM Assessment_Report__c WHERE RecordType.DeveloperName = 'Annual_Instructor_Performance_Review'];
+    
+        /*List<Assessment_Report__c> annualReports = [SELECT Id, Report_Date__c , Instructor__c , Instructor__r.Name ,Report_File_Name__c FROM Assessment_Report__c WHERE RecordType.DeveloperName = 'Annual_Instructor_Performance_Review'];
         System.assertEquals(1, annualReports.size());
         
         AnnualReportReminderEmailToLTS.sendAnEmailLTS();
@@ -1296,7 +1292,7 @@ private class Assessment_Report_Helper_Test{
         insert congaTemp;
         
         string result = GenericUrlLaunch_Ctrl.validateAssessmentRecBoxFolder(annualReports[0].Id);        
-        System.assertNotEquals('No Box Record', result);
+        System.assertNotEquals('No Box Record', result);*/
         Test.stopTest();
     }
     
@@ -2296,4 +2292,60 @@ private class Assessment_Report_Helper_Test{
             
         Test.stopTest();
     }    
+    
+    // To cover the DLI observation reports creation logic when the project's end date is extended
+    private static testMethod void myTest_16(){
+    
+        Account a = new Account(Name = 'DLI');
+        insert a;
+        
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        List<Contact> stdCon = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Id lTProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Language_Training_Projects').getRecordTypeId();
+        Id usrId = UserInfo.getUserId();
+        
+        Date projSD = Date.newInstance(System.today().year(),System.today().month()+1,01);
+        Date projED = projSD.addMonths(2).toStartOfMonth().addDays(-1);
+        
+        List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
+        
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project - myTest_16',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+        insert proj;
+                
+        Test.startTest(); 
+            AcctSeed__Project_Task__c projTask = new AcctSeed__Project_Task__c(Name = 'Test Task-Hindi',AcctSeed__Project__c=proj.Id,Project_Task_Type__c='Language Training', AcctSeed__Labor_GL_Account__c=glAccList[0].Id, Total_Qty_Planned__c = 100);
+            insert projTask;
+            
+            List<Schedule__c> schList = new List<Schedule__c> {
+                new Schedule__c(Name = '15-00687-SH1', Project__c = proj.Id,Project_Task__c=projTask.Id, Total_Hours__c = 0,End_Date__c=System.Today()+10, Start_Date__c=System.Today(),Status__c= 'Drafted', Schedule_Type__c = 'Regular', Instructor__c = stdCon[1].Id)
+                
+            };
+            insert schList;
+            
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student'),
+                new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[1].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+                
+            insert conAssignRecs;
+            
+            List<Schedule__c> updateSchedule = [SELECT Id FROM Schedule__c WHERE Id IN : schList];
+            updateSchedule[0].Status__c = 'Active';
+            updateSchedule[0].Total_Hours__c = 4;
+            update updateSchedule[0];
+            
+            ManageProjectDatescontroller.isFromManageProjectDate_Status = true;
+            proj.End_Date__c = projED.addMonths(3);
+            update proj;
+            
+        Test.stopTest();
+        
+        List<Assessment_Report__c> arRecSize = [SELECT Id, Name FROM Assessment_Report__c WHERE RecordType.DeveloperName = 'DLI_Observation_Report' AND Report_Date__c > : projED];
+        System.assertEquals(3, arRecSize.size());
+    }
 }

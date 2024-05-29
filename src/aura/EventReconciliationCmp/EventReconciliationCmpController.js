@@ -161,6 +161,8 @@
             cmp.set("v.dayDetails",[]);
             cmp.set("v.dayEntriesRecords",[]);
             cmp.set("v.seletedProjectName",'');
+            cmp.set("v.studentTimeEntryRow",[]);
+
             // To close detail model
             if(Array.isArray(cmp.find("displayDetailModal"))) {
                 cmp.find("displayDetailModal")[0].close();

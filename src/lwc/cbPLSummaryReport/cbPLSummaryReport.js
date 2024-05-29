@@ -31,10 +31,10 @@ import {
 	getBYFirstPeriodId,
 	getPriorPeriodId,
 	getPriorYearPeriodId
-} from "./cbDashboardReportUtils";
+} from "./cbPLSummaryReportUtils";
 
 
-export default class CBDashboardReport extends LightningElement {
+export default class CBPLSummaryReport extends LightningElement {
 
 	@track selectedPeriodId;
 	@track selectedType = 'actual';

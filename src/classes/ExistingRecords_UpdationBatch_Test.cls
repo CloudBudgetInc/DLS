@@ -33,7 +33,7 @@ private class ExistingRecords_UpdationBatch_Test{
         
         List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Create Exp Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
         insert proj;
         
         AcctSeed__Project_Task__c projTask = new AcctSeed__Project_Task__c(AcctSeed__Labor_GL_Account__c = glAccList[0].Id, Name = 'Test Task-Hindi',AcctSeed__Project__c=proj.Id,Project_Task_Type__c='Language Training', Total_Qty_Planned__c = 100);
@@ -197,7 +197,7 @@ private class ExistingRecords_UpdationBatch_Test{
         Id testProjRTId = Schema.SObjectType.AcctSeed__Project__c .getRecordTypeInfosByDeveloperName().get('Testing_Projects').getRecordTypeId();
         Id usrId = UserInfo.getUserId();
         
-        AcctSeed__Project__c projRec = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Oral_Exam_Date_Time__c = Date.Today().addDays(-30));
+        AcctSeed__Project__c projRec = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Create Exp Test Project 5',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Oral_Exam_Date_Time__c = Date.Today().addDays(-30));
         insert projRec;
         
         Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
@@ -350,8 +350,8 @@ private class ExistingRecords_UpdationBatch_Test{
         Id usrId = UserInfo.getUserId();
                                 
         List<AcctSeed__Project__c> insertProjs = new List<AcctSeed__Project__c>{
-            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Oral_Exam_Date_Time__c = Date.Today().addDays(-2)),
-            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 2',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Oral_Exam_Date_Time__c = Date.Today().addDays(-3))
+            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Create Exp Test Project 9',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Oral_Exam_Date_Time__c = Date.Today().addDays(-2)),
+            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Create Exp Test Project 9a',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Oral_Exam_Date_Time__c = Date.Today().addDays(-3))
         };
         insert insertProjs;
         
@@ -390,8 +390,8 @@ private class ExistingRecords_UpdationBatch_Test{
         Id usrId = UserInfo.getUserId();
                                 
         List<AcctSeed__Project__c> insertProjs = new List<AcctSeed__Project__c>{
-            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id),
-            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 2',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id)
+            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Create Exp Test Project 10',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id),
+            new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Create Exp Test Project 10a',AcctSeed__Status__c = 'Active',RecordTypeId = testProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id)
         };
         insert insertProjs;
         

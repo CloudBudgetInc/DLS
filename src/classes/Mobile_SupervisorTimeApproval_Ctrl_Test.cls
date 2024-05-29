@@ -26,7 +26,7 @@ private class Mobile_SupervisorTimeApproval_Ctrl_Test {
             }
             update tcdList;
             
-            List<User> userList = [SELECT Id, Name FROM User LIMIT 1]; // WHERE Email = 'testing@gmail.com'
+            List<User> userList = [SELECT Id, Name FROM User WHERE IsActive = True LIMIT 1]; // WHERE Email = 'testing@gmail.com'
             
             if(userList.size() > 0) {
                 System.runAs(userList[0]) {
@@ -63,7 +63,7 @@ private class Mobile_SupervisorTimeApproval_Ctrl_Test {
             }
             update tcdList;
 
-            List<User> userList = [SELECT Id, Name FROM User LIMIT 1];
+            List<User> userList = [SELECT Id, Name FROM User WHERE IsActive = True LIMIT 1];
            
             if(userList.size() > 0) {
                 System.runAs(userList[0]) {

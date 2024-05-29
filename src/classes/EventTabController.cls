@@ -275,6 +275,9 @@ global without sharing class EventTabController {
             List<Events__c> newEventList = (List<Events__c>) System.JSON.deserialize(eventJSON, List<Events__c>.class);
             isUpdateTestingProjectDates = isUpdateTestingProDates;
             
+            //Code to populate LCR lookup in Events W-007994
+            Map<String,Id> ConIdProjIdWithLCRId = new Map<String,Id>();
+            
             if(newEventList.size() > 0){
                 
                 List<Events__c> existingEvents = new List<Events__c>();
@@ -303,13 +306,25 @@ global without sharing class EventTabController {
                 
                 Integer sequenceNo = 0;
                 
-                if(existingEvents.size() > 0){
+                if(existingEvents.size() > 0) {
                     sequenceNo = (Integer) existingEvents[0].SequenceNo__c;
                 }
                 
                 if(newEventList.size() == 1){
                     newEventList[0].SequenceNo__c = (sequenceNo + 1);
                     newEventList[0].Name = dlsClassNo+'-EV'+(sequenceNo + 1);
+                    
+                    //Code to populate LCR lookup in Events W-007994
+                    if(newEventList[0].Project__c != null && newEventList[0].Instructor__c != null) {
+                        for(Contact_Assignments__c ca : [SELECT Id,Name,Candidate_Name__c,RecordType.DeveloperName,Project__c,Project__r.Name,Project__r.Students__c,Drafted_Labor_Cost_Rate__c,Rate_Card_Rate__c FROM Contact_Assignments__c WHERE Project__c =: newEventList[0].Project__c AND Candidate_Name__c =: newEventList[0].Instructor__c AND RecordType.DeveloperName = 'Instructor' AND Status__c IN ('Active','Planned')]){
+                            
+                            if(ca.Rate_Card_Rate__c != null) {
+                                newEventList[0].Labor_Cost_Rate__c = ca.Rate_Card_Rate__c;
+                            } else if(ca.Drafted_Labor_Cost_Rate__c != null) {
+                                newEventList[0].Labor_Cost_Rate__c = ca.Drafted_Labor_Cost_Rate__c;
+                            }
+                        }
+                    }
                 }
                 
                
@@ -322,6 +337,7 @@ global without sharing class EventTabController {
                     insert newInstructor;
                 }
                 
+                system.debug('newEventList::::'+newEventList);
                 insert newEventList;
                                 
             }
@@ -334,7 +350,7 @@ global without sharing class EventTabController {
     
     @AuraEnabled
     public static Boolean checkContactAssignmentExist(String contactId,String parentId){
-        return ScheduleCmpLightningController.checkContactAssignmentExist(contactId,parentId);
+        return ScheduleCmpLightningController.checkContactAssignmentExist(contactId,parentId,null,null); 
     }
     
     public static String formatOralExamDateTime(DateTime oralExamDate){

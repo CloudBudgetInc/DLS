@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <assignments>
+        <name>Assign_InActive_Status_to_LCR</name>
+        <label>Assign InActive Status to LCR</label>
+        <locationX>264</locationX>
+        <locationY>468</locationY>
+        <assignmentItems>
+            <assignToReference>Labor_Cost_Rate_Rec.Id</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Iterate_LCR_Rec.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>Labor_Cost_Rate_Rec.Status__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Inactive</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>Update_Labor_Cost_Rate_Records</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Labor_Cost_Rate_Rec</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Iterate_LCR_Rec</targetReference>
+        </connector>
+    </assignments>
+    <description>W-008051 : Automatically Change Labor Cost Rate to Inactive after 1 Year of not Teaching
+Automatically update the Labor Cost Rate to Inactive if the Contact&apos;s Last End Date field is greater than 365 days ago.</description>
+    <formulas>
+        <name>Contact_Last_End_Date</name>
+        <dataType>Date</dataType>
+        <expression>{!$Flow.CurrentDate}-365</expression>
+    </formulas>
+    <interviewLabel>Auto Update Labor Cost Rate to Inactive {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Auto Update Labor Cost Rate to Inactive</label>
+    <loops>
+        <name>Iterate_LCR_Rec</name>
+        <label>Iterate LCR Rec</label>
+        <locationX>176</locationX>
+        <locationY>360</locationY>
+        <collectionReference>Get_LCR_Records</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Assign_InActive_Status_to_LCR</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Update_Labor_Cost_Rates</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_LCR_Records</name>
+        <label>Get LCR Records</label>
+        <locationX>176</locationX>
+        <locationY>252</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Iterate_LCR_Rec</targetReference>
+        </connector>
+        <filters>
+            <field>Contact_Last_End_Date__c</field>
+            <operator>LessThanOrEqualTo</operator>
+            <value>
+                <elementReference>Contact_Last_End_Date</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Approved</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Non-SCA LT</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>PT Hourly (OH &amp; G&amp;A)</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>FT Hourly &amp; Benefits</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>International Salary</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>FT Salary &amp; Benefits</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Non-SCA MTT (1099)</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Non-SCA LT-S</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-21 SCA LT</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-21 SCA LT +5</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-21 SCA MTT</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-21 SCA MTT +5</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-21 SCA CD</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-21 SCA CD (1099)</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-21 SCA CD +5</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>LT with Prep</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>LT-S</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>DLI-W LT</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>LT without Prep</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Rate_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>FSI</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>AcctSeed__Cost_Rates__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Update_Labor_Cost_Rates</name>
+        <label>Update Labor Cost Rates</label>
+        <locationX>176</locationX>
+        <locationY>660</locationY>
+        <inputReference>Update_Labor_Cost_Rate_Records</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_LCR_Records</targetReference>
+        </connector>
+        <schedule>
+            <frequency>Daily</frequency>
+            <startDate>2024-05-27</startDate>
+            <startTime>03:30:00.000Z</startTime>
+        </schedule>
+        <triggerType>Scheduled</triggerType>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>Labor_Cost_Rate_Rec</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>AcctSeed__Cost_Rates__c</objectType>
+    </variables>
+    <variables>
+        <name>Update_Labor_Cost_Rate_Records</name>
+        <dataType>SObject</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>AcctSeed__Cost_Rates__c</objectType>
+    </variables>
+</Flow>

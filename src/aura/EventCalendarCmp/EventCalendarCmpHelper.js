@@ -2,7 +2,6 @@
     getCommunityName : function(cmp,event, helper){
         var self = this;
         cmp.set("v.showSpinner",true);
-        
         const server = cmp.find('server');
         const action = cmp.get('c.getCommunityPathPrefix');
         server.callServer(
@@ -10,10 +9,13 @@
             {},
             false,
             $A.getCallback(function(response) {
-                cmp.set("v.communityName", response);
+                if(response){
+                    cmp.set("v.communityName", response);
+                }
+                
                 if(response == 'student'){
                     self.getRequestEventDetails(cmp, event);
-                }else if(response == 'client'){
+                } else if(response == 'client'){
                     let selectedEventTypes = cmp.get('v.selectedEventTypes');
                     selectedEventTypes.preparation = false;
                     selectedEventTypes.testing = false;
@@ -35,16 +37,19 @@
 
     // Get All Event records in the initial load
     getEventRecords : function(cmp, event, helper) {
-        
         cmp.set("v.showSpinner",true);
         var self = this;
         
-        var status = cmp.get("v.selectedStatus");
+        var status = JSON.parse(JSON.stringify(cmp.get("v.selectedStatus")));
         var param = {};
         param.year1 = cmp.get("v.year1");
         param.year2 = cmp.get("v.year2");
-        status.push("Submitted for Reschedule");
+        
+        if(!status.includes("Submitted for Reschedule")){
+            status.push("Submitted for Reschedule");
+        }
         param.statusValues = status;
+        param.contactId = cmp.get("v.recordId");
         const server = cmp.find('server');
         const action = cmp.get('c.getEventRecordList');
         server.callServer(
@@ -56,7 +61,6 @@
                 var eventRecords = response;
                 
                 for(var i = 0;i < eventRecords.length;i++){
-                     
                     var startTime = self.get24HourFormat(eventRecords[i].startTime); 
                     /*console.log(moment(self.dateFormatFunction(eventRecords[i].eventDate)+' '+startTime[0]+':'+startTime[1]).tz(eventRecords[i].timezone));
                     var eventDtTime = moment(self.dateFormatFunction(eventRecords[i].eventDate)+' '+startTime[0]+':'+startTime[1]);
@@ -351,7 +355,7 @@
                 revertFunc();
             }
         });
-        this.changeButtonStyle(component);
+       // this.changeButtonStyle(component);
         // objeName[keyName] = value;
         var colourDiv = component.find('Colours');
         $A.util.removeClass(colourDiv, 'slds-hidden');
@@ -361,6 +365,14 @@
     openInfoWindow : function(jsEvent, component) {
         component.set("v.showInfoWindow", true);
         var device = $A.get("$Browser.formFactor");
+        var communityName = component.get("v.communityName");
+        console.log('popUpHeight:',$('#infoWindow').height());
+        console.log('popupWidth',$('#infoWindow').width());
+        console.log('windowInnerHeight:',window.innerHeight);
+        console.log('windowInnerWidth',window.innerWidth);
+        console.log('scrollY',window.scrollY);
+        console.log('pageY',jsEvent.pageY);
+        console.log('pagex',jsEvent.pageX);
         
         if(device != 'PHONE') {
             let popUpHeight = $('#infoWindow').height();
@@ -376,24 +388,34 @@
             let topSpace = pageY - scrollY;
             let bottomSpace = windowInnerHeight - topSpace;
             let rightSpace = windowInnerWidth - pageX;
+            
+            console.log('topSpace',topSpace);
+            console.log('bottomSpace',bottomSpace);
+            console.log('rightSpace',rightSpace);
 
             if(rightSpace < popupWidth) {
                 left = pageX - popupWidth;
             }
 
             if(bottomSpace > popUpHeight) {
+                console.log(1);
                 top = jsEvent.pageY;    
             } else if(topSpace > popUpHeight) {
+                console.log(2);
                 top = pageY - popUpHeight;
             } else {
-               
+                console.log(3);
                 let scrollNum = scrollY + (popUpHeight - bottomSpace);
                 window.scrollTo(0, scrollNum);
             }
-            
+            if(communityName == 'Internal'){
+                left = ((windowInnerWidth /2) - 100);
+                top = (windowInnerHeight /2);
+            }
+            console.log({ left: left+'px', top: top+'px'});      
             $('#infoWindow').css({ left: left+'px', top: top+'px'}).show();
         } else {
-            
+            console.log(4);
             component.set("v.showBackDrop", true);
             $('#infoWindow').css({ top: '50%', left: '50%',transform: 'translate(-50%, -50%)',position: 'fixed', zIndex: '9999' }).show();
         }
@@ -458,7 +480,7 @@
         const action = cmp.get('c.getEventsForApproval');
         server.callServer(
             action,
-            {},
+            {'contactId' : cmp.get("v.recordId")},
             false,
             $A.getCallback(function(response) {
                 

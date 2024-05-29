@@ -13,7 +13,7 @@ public without sharing Class ContactAssignmentTriggerHandler {
     
     // Added by GRK to create or Update DLS Expereince records based on Contact Assignments
     public Static Map<String, String> insPosExpService = new Map<String, String>{'Instructor' => 'Language Training' ,'Substitute Instructor' => 'Language Training', 'EI' => 'Language Training', 'Tester' => 'Testing', 'Translator' => 'Translation'}; 
-
+    public Static Map<Id,Contact> contactMapToUpdate = new Map<Id,Contact>();
     
     public void updateProjManager(Set<Id> projIdSet , Set<Id> contIdSet) {
     
@@ -79,9 +79,11 @@ public without sharing Class ContactAssignmentTriggerHandler {
         
         if(projMapToUpdate != null && projMapToUpdate.size() > 0){
             for(Id proId : projMapToUpdate.keySet()){
-                projMapToUpdate.get(proId).Instructors__c = null;
-                projMapToUpdate.get(proId).Students__c = null;
-                projMapToUpdate.get(proId).Staffs__c  = null;
+                if(projIdSet != null && projIdSet.contains(proId)){
+                    projMapToUpdate.get(proId).Instructors__c = null;
+                    projMapToUpdate.get(proId).Students__c = null;
+                    projMapToUpdate.get(proId).Staffs__c  = null;
+                }
             }
         }else{
             // Modified on July 14 2023 : W-007842 - Rollup Helper Issue on "All Active Instructors" Calculation on Projects
@@ -384,7 +386,7 @@ public without sharing Class ContactAssignmentTriggerHandler {
         List<Contact_Assignments__c> insertCAList = new List<Contact_Assignments__c>();
         Map<Id,Set<Id>> oppIdWithConIdMap = new Map<Id,Set<Id>>();
         
-        for(Opportunity op : [SELECT Id,Name,supervisor__c,supervisor__r.Name,Start_Date__c,End_Date__c,(SELECT Id,Name,Candidate_Name__c,RecordTypeId,RecordType.DeveloperName FROM All_Instructors__r WHERE RecordType.DeveloperName = 'Staff') FROM Opportunity WHERE Id IN: oppIdSet]) {
+        for(Opportunity op : [SELECT Id,Name,supervisor__c,supervisor__r.Name,Start_Date__c,End_Date__c,AccountId,(SELECT Id,Name,Candidate_Name__c,RecordTypeId,RecordType.DeveloperName FROM All_Instructors__r WHERE RecordType.DeveloperName = 'Staff') FROM Opportunity WHERE Id IN: oppIdSet]) {
             userNames.add(op.supervisor__r.Name);
             oppList.add(op);
             for (Contact_Assignments__c ca : op.All_Instructors__r) {
@@ -409,6 +411,7 @@ public without sharing Class ContactAssignmentTriggerHandler {
                 cA.Assignment_Position__c = 'Project Manager';
                 cA.RecordTypeId = castaffRtId;
                 cA.Opportunity_Name__c = o.Id;
+                cA.Account__c = o.AccountId;
                 insertCAList.add(cA);
             }
         } 
@@ -940,25 +943,50 @@ public without sharing Class ContactAssignmentTriggerHandler {
         List<Assessment_Report__c> updateAR = new List<Assessment_Report__c>();
         Map<Id, Date> stdIdAndDate = new Map<Id, Date>();    // To cancel the remaining Assessment Report of this Contact
         Map<Id, String> stdIdAndStatus = new Map<Id, String>();
+        // "Withdrawn and On Hold" statuses added on Feb 29 2024 : W-008000 - Request to Cancel Training Reports When Student CA Status = On Hold, or Withdrawn
+        Set<String> statusSet = new Set<String>{'Canceled','Ended','Withdrawn','On Hold'};
+        Set<String> observationRTs = new Set<String>{'DLI_Observation_Report', 'Observation_Report'};
+        Set<Id> conAssignIds = new Set<Id>();
+        Map<Id,String> projIdAndActiveStdNames = new Map<Id,String>();
         
-        for(Contact_Assignments__c ca : newCAs) {
-            if(ca.RecordTypeId == studRTId && ca.Project__c != null && ca.Status__c != oldCAs.get(ca.Id).Status__c && (ca.Status__c == 'Canceled' || ca.Status__c == 'Ended')){
+        for(Contact_Assignments__c ca : newCAs){
+            if(ca.RecordTypeId == studRTId && ca.Project__c != null && ca.Status__c != oldCAs.get(ca.Id).Status__c && statusSet.contains(ca.Status__c)){
                 projIds.add(ca.Project__c);
                 stdIdAndDate.put(ca.Candidate_Name__c, ca.End_Date__c);
                 stdIdAndStatus.put(ca.Candidate_Name__c, ca.Status__c);
+                conAssignIds.add(ca.Id);
             }
         }
-        
         if(projIds.size() > 0){
-            for(Assessment_Report__c ar: [SELECT Id, Student__c, Report_Date__c FROM Assessment_Report__c WHERE Project__c IN : projIds AND Student__c IN : stdIdAndDate.keySet() AND Status__c IN ('Draft','Scheduled')]){
-                // For cancelled status update don't look at report date just cancel all the reports
-                if(stdIdAndStatus.containsKey(ar.Student__c) && stdIdAndStatus.get(ar.Student__c) != 'Canceled'){
-                    if(stdIdAndDate.containsKey(ar.Student__c) && ar.Report_Date__c > stdIdAndDate.get(ar.Student__c)){
+        
+            for(Contact_Assignments__c ca : [SELECT Id, Project__c, Candidate_Name__r.Name FROM Contact_Assignments__c WHERE Id NOT IN : conAssignIds AND Project__c IN : projIds AND RecordType.DeveloperName = 'Student' AND Status__c = 'Active' ORDER By CreatedDate ASC]){
+            
+                if(!projIdAndActiveStdNames.containskey(ca.Project__c)){
+                    projIdAndActiveStdNames.put(ca.Project__c, ca.Candidate_Name__r.Name);
+                }else{
+                    String temp = projIdAndActiveStdNames.get(ca.Project__c);
+                    temp = temp + ', ' + ca.Candidate_Name__r.Name;
+                    projIdAndActiveStdNames.put(ca.Project__c, temp);
+                }
+            }
+                    
+            for(Assessment_Report__c ar: [SELECT Id, Student__c, Report_Date__c, Project__c, RecordType.DeveloperName FROM Assessment_Report__c WHERE Project__c IN : projIds AND ((Student__c IN : stdIdAndDate.keySet() AND Status__c IN ('Draft','Scheduled')) OR Recordtype.DeveloperName IN : observationRTs)]){
+                
+                if(stdIdAndStatus.containsKey(ar.Student__c) && !observationRTs.contains(ar.RecordType.DeveloperName)){
+                    
+                    // The system will automatically cancel all Training Reports in Draft and Scheduled Status that have a due date later than the Ended, Withdrawn or On Hold Student CA End Date
+                    if(stdIdAndStatus.get(ar.Student__c) != 'Canceled' && stdIdAndDate.containsKey(ar.Student__c) && ar.Report_Date__c > stdIdAndDate.get(ar.Student__c)){
+                        ar.Status__c = 'Canceled';
+                        updateAR.add(ar);
+                    }else if(stdIdAndStatus.get(ar.Student__c) == 'Canceled'){
+                        // When canceling a student contact assignment, cancel all reports regardless of the report date. 
                         ar.Status__c = 'Canceled';
                         updateAR.add(ar);
                     }
-                }else{
-                    ar.Status__c = 'Canceled';
+                }
+                // To remove names of students who have ended, cancelled, withdrawn, or on hold from the Observation Report Student Name(s) field.
+                if(observationRTs.contains(ar.RecordType.DeveloperName) && projIdAndActiveStdNames.containsKey(ar.Project__c)){
+                    ar.Student_Name_s__c = projIdAndActiveStdNames.get(ar.Project__c);
                     updateAR.add(ar);
                 }
             }
@@ -1330,5 +1358,17 @@ public without sharing Class ContactAssignmentTriggerHandler {
                 update expToUpdate;
             }
         }        
+    }
+    
+    /********
+        // W-007989 : Automation needed for new "Candidate Hiring Stage" field for "Hired" value
+        // Auto-update the "Candidate Hiring Stage" to "Hired" when their first-ever Contact Assignment is created
+            *********/
+    public static void updateContactHiringStage(Set<Id> hiredConIds){
+                
+        for(Contact c : [SELECT Id FROM Contact WHERE Id IN : hiredConIds AND Candidate_Hiring_Stage__c != 'Hired' AND RecordType.DeveloperName = 'Candidate']){
+            c.Candidate_Hiring_Stage__c = 'Hired';
+            contactMapToUpdate.put(c.Id, c);          
+        }
     }
 }

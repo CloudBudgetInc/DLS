@@ -210,7 +210,7 @@ trigger updateEvent on Schedule__c(after insert, after update, before insert, be
             }
             
             //Modified by Dhinesh - W-006636 - Room population for opportunity related schedules
-            if(trigger.isInsert && sch.Opportunity__c != null){
+            if(trigger.isInsert && sch.Opportunity__c != null && sch.Project__c == null){
                 
                 if(nonDLSSiteProIds.contains(sch.Opportunity__c) && sch.Room__c == null){
                     sch.Room__c = keyRoomId.containsKey('Client-Site') ? keyRoomId.get('Client-Site') : null;

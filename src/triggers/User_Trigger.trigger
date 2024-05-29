@@ -97,7 +97,11 @@ trigger User_Trigger on User (before insert,before update,after update, after in
     
    //Call future method to avoid Mixed DML Error
     if(conSupervisorUpdate.size() > 0) {
-        ContactTrigger_FutureHandler.updateContactRecords(JSON.serialize(conSupervisorUpdate));
+        if(System.isBatch()){
+            ContactTrigger_FutureHandler.updateContactRecs(JSON.serialize(conSupervisorUpdate));
+        }else{
+            ContactTrigger_FutureHandler.updateContactRecords(JSON.serialize(conSupervisorUpdate));
+        }
     }
     //End of my added code - NS
 

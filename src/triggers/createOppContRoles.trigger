@@ -90,15 +90,20 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
     Set<Id> oppIdsToDeleteOCR = new Set<Id>();
     Set<Id> conIdsToDeleteOCR = new Set<Id>();
     
-    
-    //#W-007701 - User Story - Auto-Populate Account field on Contact Assignment
+    /* //#W-007701 - User Story - Auto-Populate Account field on Contact Assignment
     Map<Id,Id> conIdWithAccIdMap = new Map<Id,Id>();
-    Set<Id> contactIds = new Set<Id>();
+    Set<Id> contactIds = new Set<Id>(); */
     
     // Added on July 27 2023 - W-007850 - Request to Exclude Translators from EOT Getfeedback Email Notification on Translation Projects
     // EOT get feedback email will not send for testing and translation projects and other project's instructors with "Tester" position
     Set<String> projRTsToExcludeEOTGetFeedbackEmail = new Set<String>{'Testing_Projects', 'Translation_Projects'};
-            
+    
+    Set<Id> projIdsForAccPop = new Set<Id>();
+    Set<Id> oppIdsForAccPop = new Set<Id>();
+    //Map<Id, Id> projIdAndAccId = new Map<Id, Id>();
+    //Map<Id, Id> oppIdAndAccId = new Map<Id, Id>();
+    Map<Id, Id> parentIdAndAccId = new Map<Id, Id>();
+    
     if(Trigger.isDelete) {      
     
         for (Contact_Assignments__c ca : trigger.old) {            
@@ -166,6 +171,7 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
         List<Contact_Assignments__c> endedOnHoldCanceledCAs = new List<Contact_Assignments__c>();
         Set<Id> conIdsToUpdateDLSExp = new Set<Id>();
         Set<String> positionsForUpdate = new Set<String>();
+        Set<Id> hiredConIds = new Set<Id>();
             
         for (Contact_Assignments__c ca : trigger.new) {
             
@@ -175,12 +181,23 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
                 if(Trigger.isUpdate && ca.Project__c != null && Trigger.oldMap.get(ca.Id).Project__c != ca.Project__c) {   
                     proId.add(ca.Project__c);
                 }
-                
+                /*
                 //#W-007701 - User Story - Auto-Populate Account field on Contact Assignment
                 if(ca.Candidate_Name__c != null && ((Trigger.isInsert && String.isBlank(ca.Account__c)) || (Trigger.isUpdate && Trigger.oldMap.get(ca.Id).Candidate_Name__c != ca.Candidate_Name__c))){
                     contactIds.add(ca.Candidate_Name__c);
                 }
-                
+                */
+                System.debug('CA::OpportunityTrigger_Handler.accPopFromOppTrig:::'+OpportunityTrigger_Handler.accPopFromOppTrig);
+                System.debug('CA::ProjectTrigger_Handler.accPopFromProjTrig:::'+ProjectTrigger_Handler.accPopFromProjTrig);
+                System.debug('CA::ConvertToProject.accPopFromConToProj:::'+ConvertToProject.accPopFromConToProj);
+                if(!OpportunityTrigger_Handler.accPopFromOppTrig && !ProjectTrigger_Handler.accPopFromProjTrig && !ConvertToProject.accPopFromConToProj && Trigger.isInsert && (ca.Opportunity_Name__c != null || ca.Project__c != null)){
+                    
+                    if(ca.Project__c != null){
+                        projIdsForAccPop.add(ca.Project__c);
+                    }else{
+                        oppIdsForAccPop.add(ca.Opportunity_Name__c);
+                    }
+                }
                 // Added by Shalini on June 20 2017 to update location of CA from Training location of Opp or Project for the first time
                 if(Trigger.isInsert) {
                     if(ca.Opportunity_Name__c != null ) {
@@ -403,9 +420,14 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
                     positionsForUpdate.add(ca.Assignment_Position__c);
                     endedOnHoldCanceledCAs.add(ca);                    
                 }
+                
+                // W-007989 : Automation needed for new "Candidate Hiring Stage" field for "Hired" value
+                // Auto-update the "Candidate Hiring Stage" to "Hired" when their first-ever Contact Assignment is created
+                if(Trigger.isInsert && ca.RecordTypeId == instructorRTId && ca.Candidate_Name__c != null && ca.Project__c != null && (ca.Status__c == 'Planned' || ca.Status__c == 'Active')){
+                    hiredConIds.add(ca.Candidate_Name__c);    
+                }
             }
         } // end for trigger.new
-        
         
         if(endedInsIds.size() > 0) {
             
@@ -446,6 +468,10 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
             
             ContactAssignmentTriggerHandler.updateDLSExperience(conIdsToUpdateDLSExp,positionsForUpdate,endedOnHoldCanceledCAs);
         }
+        
+        if(hiredConIds.size() > 0){
+            ContactAssignmentTriggerHandler.updateContactHiringStage(hiredConIds);
+        }
     }
         
     //Added By Dhinesh - W-006595 - create task for ca based on Agreed_DLS_Policies_And_Procedures__c
@@ -457,7 +483,6 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
         List<Task> tasksToDelete = new List<Task>();  
         List<Task> tasksToCreate = new List<Task>();        
         
-        System.debug(':::caToCheckAndCreateTasks::'+caToCheckAndCreateTasks);
         for(Task task : [SELECT Id, WhatId FROM Task WHERE WhatId IN :caIds AND Subject = 'Student Policies & Procedures']){
             
             if(caToDeleteTasks.contains(task.WhatId))
@@ -568,7 +593,6 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
         }
     //end
     
-    System.debug('::oppIdSet::::'+oppIdSet);
     if (oppIdSet != null && oppIdSet.size() > 0) {
         createContactRoles_Util.createContactRoles(oppIdSet, false);    
     }
@@ -633,7 +657,7 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
                 
                 if(con.Opportunity_Name__c != null && con.Candidate_Name__c != null && (Trigger.isInsert || (Trigger.isUpdate && (Trigger.oldMap.get(con.Id).Status__c != con.Status__c || Trigger.oldMap.get(con.Id).Candidate_Name__c != con.Candidate_Name__c)))) {
                     oppId.add(con.Opportunity_Name__c);
-                    conassignIdSet.add(con.Id);    
+                    conassignIdSet.add(con.Id); 
                 } 
                 
                 //To update the Oral Exam Date & Time field for the Testing Opportunities.
@@ -715,7 +739,6 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
             }
         }
     }
-    System.debug('::filteredCAIds:::'+filteredCAIds);
     
     // To update the Assessment Report LT Coordinator when a new LT Coordinator Staff Contact Assignment is added
     if(ProjLTCoordId != null && ProjLTCoordId.size() > 0) {
@@ -733,20 +756,15 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
         for(AcctSeed__Project__c p : [SELECT Id, Project_Manager__c FROM AcctSeed__Project__c WHERE Id IN : projIds AND RecordType.DeveloperName != 'CD_Projects']){
             projIdAndProjManagerId.put(p.Id, p.Project_Manager__c);
         }
-        System.debug('::projIdAndProjManagerId:::'+projIdAndProjManagerId);
         
         if(projIdAndProjManagerId.size() > 0){
             ProjectTrigger_Handler.updateContactSupervisor(projIdAndProjManagerId);
         }
     }
-    System.debug('approvalRequest========='+approvalRequest);
     if(approvalRequest.size() > 0) {
         List<Approval.ProcessResult> result = Approval.process(approvalRequest);
-        System.debug('result==========='+result);
     }
     
-    System.debug(':::conassignIdSet::::'+conassignIdSet+':::::conassignIdSet::SIZE::'+conassignIdSet.size());
-         
     if( conassignIdSet != null && conassignIdSet.size() > 0 ) {
         ContactAssignmentTriggerHandler.updateTextFields(proIdSet,conassignIdSet,oppId);
     } 
@@ -861,8 +879,8 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
                     oppOrProWithLocation.put(p.Id,p.Training_Location__c);
                 }
             }
-        }
-        
+        }        
+        /*
         //#W-007701 - User Story - Auto-Populate Account field on Contact Assignment
         if((Trigger.isUpdate || Trigger.isInsert) && contactIds.size() > 0) {
             for(Contact con : [SELECT Id,Name,AccountId FROM Contact WHERE Id IN :contactIds AND AccountId != null]) {
@@ -871,8 +889,20 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
                 }
             }
         }
-
-                
+        */
+        if(projIdsForAccPop.size() > 0 || oppIdsForAccPop.size() > 0){ 
+            if(projIdsForAccPop.size() > 0){
+                for(AcctSeed__Project__c p : [SELECT Id, AcctSeed__Account__c FROM AcctSeed__Project__c WHERE Id IN : projIdsForAccPop]){
+                    parentIdAndAccId.put(p.Id, p.AcctSeed__Account__c);
+                }    
+            }    
+            if(oppIdsForAccPop.size() > 0){
+                for(Opportunity o : [SELECT Id, AccountId FROM Opportunity WHERE Id IN : oppIdsForAccPop]){
+                    parentIdAndAccId.put(o.Id, o.AccountId);
+                }
+            }        
+        }
+          
         for (Contact_Assignments__c ca : trigger.new) {
             
             //to update location of CA from Training location of Opp or Project for the first time
@@ -919,6 +949,9 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
                     ca.Time_Approval_Preference__c = conRec.get(ca.Candidate_Name__c).Time_Approval_Preference__c;
                 }
             }
+            /*
+            - Commented on Apr 18 2024 : W-008024 - Student Contact Page Account Field Update Did Not Update on CA
+            - Account population in contact assignment logic changed from Contact Assignment insertion/updation into Project/Opportunity insertion/updation
             //#W-007701 - User Story - Auto-Populate Account field on Contact Assignment
             //Added By Siva Prasanth KT
             if(ca.Candidate_Name__c != null && ((Trigger.isInsert && String.isBlank(ca.Account__c)) || (Trigger.isUpdate && Trigger.oldMap.get(ca.Id).Candidate_Name__c != ca.Candidate_Name__c))){
@@ -929,14 +962,19 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
                     }
                 }
             }
+            */
+            // W-008024 - Student Contact Page Account Field Update Did Not Update on CA
+            // Update the account of contact assignments from their project/opportunity
+            if(!OpportunityTrigger_Handler.accPopFromOppTrig && !ProjectTrigger_Handler.accPopFromProjTrig && !ConvertToProject.accPopFromConToProj && Trigger.isInsert && (ca.Opportunity_Name__c != null || ca.Project__c != null)){
+                
+                Id parentId = ca.Project__c != null ? ca.Project__c : ca.Opportunity_Name__c;
+                if(parentId != null && parentIdAndAccId.containsKey(parentId) && parentIdAndAccId.get(parentId) != ca.Account__c){
+                    ca.Account__c = parentIdAndAccId.get(parentId);
+                } 
+            }
         }        
     }
-    
-     // To update the Project Records only once when the contact Assignment is updated or Added by GRK on March 16, 2018
-    if(ContactAssignmentTriggerHandler.projMapToUpdate != null && ContactAssignmentTriggerHandler.projMapToUpdate.size() > 0 ) {
-        Update ContactAssignmentTriggerHandler.projMapToUpdate.Values();
-    }
-    
+        
     // Added By HL
     if(Trigger.isAfter){
         if(Trigger.isInsert){
@@ -950,11 +988,25 @@ trigger createOppContRoles on Contact_Assignments__c (after insert, after update
             // To revoke the shared Cost Rate Records
             ContactAssignmentTriggerHandler.revokeSharingRecords(Trigger.new, Trigger.oldMap);  
             
-            System.debug('::::ProjectTrigger_Handler.isFromProjectTrigger_StatusUpdate::::::'+ProjectTrigger_Handler.isFromProjectTrigger_StatusUpdate);
             if(!ProjectTrigger_Handler.isFromProjectTrigger_StatusUpdate){
                 // To cancel the Assessment Report when a student is cancelled 
                 ContactAssignmentTriggerHandler.CancelAReport(Trigger.new, Trigger.oldMap);
             }
-        }        
+        }     
+        
+        // Added on Feb 19 2024   
+        // Static variables updation at last
+        if(!Trigger.isDelete){
+        
+            if(ContactAssignmentTriggerHandler.contactMapToUpdate.size() > 0){
+                update ContactAssignmentTriggerHandler.contactMapToUpdate.values();
+            }    
+        }
     }    
+    
+    System.debug('::projMapToUpdate:**:'+ContactAssignmentTriggerHandler.projMapToUpdate);
+     // To update the Project Records only once when the contact Assignment is updated or Added by GRK on March 16, 2018
+    if(ContactAssignmentTriggerHandler.projMapToUpdate != null && ContactAssignmentTriggerHandler.projMapToUpdate.size() > 0 ) {
+        Update ContactAssignmentTriggerHandler.projMapToUpdate.Values();
+    }
 }

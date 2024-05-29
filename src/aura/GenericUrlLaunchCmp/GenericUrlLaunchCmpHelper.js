@@ -23,8 +23,8 @@
                             cmp.set('v.isShowClose', false);
                             helper.setCongaUrl(cmp, returnValue);
                             cmp.set("v.ca", returnValue.contactAssignments);
-                        }else if(returnValue.errorMsg.includes('pending')){
-                            
+                        }else if(returnValue.errorMsg && returnValue.showProceedBtn){
+                            helper.setCongaUrl(cmp, returnValue); 
                             cmp.set('v.isShowProceed', true);
                         }
                     }

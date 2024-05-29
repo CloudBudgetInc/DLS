@@ -150,6 +150,9 @@ public with Sharing class ConvertToProject{
     Public List<LTInnerClass> lTList_actual = new List<LTInnerClass>();
     public static Boolean isFromConvertToProject = False;
     
+    // To prevent recursive account population in contact assignments
+    public static Boolean accPopFromConToProj = false;
+    
     public Class ScheduleUpdateInnerClass {
         public Schedule__c schRec {get; set;}  
         public String productNameAsProjectTask {get; set;}
@@ -363,7 +366,7 @@ public with Sharing class ConvertToProject{
                                                           FROM OpportunityLineItem 
                                                           WHERE OpportunityId = :oppId ORDER BY CreatedDate];
                     
-                    opp = SObjectQueryService.SObjectQuery('Opportunity',new Set<Id>{oppId},',Account.Name, RecordType.DeveloperName,Location__r.RecordType.DeveloperName, Location__r.Name');
+                    opp = SObjectQueryService.SObjectQuery('Opportunity',new Set<Id>{oppId},',Account.Name, RecordType.DeveloperName,Location__r.RecordType.DeveloperName, Location__r.Name, Program_Iteration__r.Project_Type__c');
                      
                     // Added by Siva Prasanth on 12/03/2020
                     // W-004986 - Create PVT Student Child Account on Convert to Project for Testing Projects
@@ -536,7 +539,8 @@ public with Sharing class ConvertToProject{
                                     String goal_SLRW = sgoal+'/'+lgoal+'/'+rgoal+'/'+wgoal; // Values from CA
                                     String score_SLRW = '0/0/0/-';  // Static values
                                     
-                                    if(programTypesToCreateInitialLTs.contains(newProject.Program_type__c)){
+                                    // Added on May 15 2024 : W-008048 - JMAS Projects - No Longer Need Initial and Final assessments/reports/scores : To prevent the auto creation of Initial language testing record for DODA project with JMAS project type
+                                    if(programTypesToCreateInitialLTs.contains(newProject.Program_type__c) && (opp[0].RecordType.DeveloperName != 'ODNI_CLP_Opportunities' || (opp[0].RecordType.DeveloperName == 'ODNI_CLP_Opportunities' && opp[0].Project_Type__c != 'JMAS' && (opp[0].Program_Iteration__c == null  || (opp[0].Program_Iteration__c != null && opp[0].Program_Iteration__r.Project_Type__c != 'JMAS'))))){
                                       
                                         lTList.add(new LTInnerClass(initial_LT,'Language Testing', True, cA.Candidate_Name__c, cA.Candidate_Name__r.Name, goal_SLRW, score_SLRW));
                                     }
@@ -1310,10 +1314,13 @@ public with Sharing class ConvertToProject{
                                 oppQBJobTypeUp.AccountId = childPVTAccId;
                                 newProject.AcctSeed__Account__c = childPVTAccId;
                             }
+                            // Added here to prevent opportunity trigger invocation
+                            accPopFromConToProj = true;
                             update oppQBJobTypeUp;
                         }                        
-                                                
+                        // Added here to prevent project trigger invocation                 
                         isFromConvertToProject = True;
+                        accPopFromConToProj = true;
                         // Moved after Opportunity update is for Default Cost Rate Population
                         Insert newProject;
                         newProjectId = newProject.Id;
@@ -1396,6 +1403,7 @@ public with Sharing class ConvertToProject{
                                 if(iA.instructorCA.Status__c == 'Awarded') { // To update the ins Status to Planned if it is Awarded
                                     iA.instructorCA.Status__c = 'Planned';
                                 }
+                                iA.instructorCA.Account__c = newProject.AcctSeed__Account__c;
                                 //instructorListToUpdate.add(iA.instructorCA);     
                                 contactAssignmentListToUpdate.add(iA.instructorCA);
                             }
@@ -1404,6 +1412,7 @@ public with Sharing class ConvertToProject{
                             for(StudentAssignInnerClass sA : studentCAList) {
                                 sA.studentCA.Assignment_Position__c = (stdCAPositionStaticMap != null && stdCAPositionStaticMap.size() > 0 && stdCAPositionStaticMap.containsKey(sA.position))? stdCAPositionStaticMap.get(sA.position):null;
                                 sA.studentCA.Project__c = newProjectId;
+                                sA.studentCA.Account__c = newProject.AcctSeed__Account__c;
                                 
                                 contactAssignmentListToUpdateStudent.add(sA.studentCA);
                             }                                               
@@ -1453,7 +1462,8 @@ public with Sharing class ConvertToProject{
                                 upsert matReqsUpd;
                             }
                             
-                            if(programTypesToCreateInitialLTs.contains(newProject.Program_type__c) && !programTypesToCreateInitialLTs.contains(opp[0].Program_type__c)){
+                            // Added on May 15 2024 : W-008048 - JMAS Projects - No Longer Need Initial and Final assessments/reports/scores : To prevent the auto creation of Initial language testing record for DODA project with JMAS project type
+                            if(programTypesToCreateInitialLTs.contains(newProject.Program_type__c) && !programTypesToCreateInitialLTs.contains(opp[0].Program_type__c) && opp[0].Project_Type__c != 'JMAS'){
                                 
                                 lTList.addAll(lTList_Temp);
                             }else if(!programTypesToCreateInitialLTs.contains(newProject.Program_type__c) && lTList_Temp.size() > 0){
@@ -1640,6 +1650,7 @@ public with Sharing class ConvertToProject{
                                 cA.End_Date__c = newProject.End_Date__c;
                             
                             cA.Project__c = newProjectId;
+                            cA.Account__c = newProject.AcctSeed__Account__c;
                             
                             if(cA.RecordTypeId == staffRecTypeId && cA.Opportunity_Product_Id__c != null) { 
                                 
@@ -1717,7 +1728,13 @@ public with Sharing class ConvertToProject{
                         // Work Item : W-004142 - Turn off Notifications for Project Conversion for Ended Opportunties
                         //Added year condition, because some of the old opportunity does not have ended stage name
                         Date lastYear = Date.newInstance((system.today().year() - 1),01,01);
-                        if(String.isNotBlank(oppRec.StageName) && oppRec.StageName != 'Ended' && ((opp[0].RecordType.DeveloperName != 'Testing_Opportunities' && oppRec.Start_Date__c != NULL && oppRec.Start_Date__c >= lastYear) || opp[0].RecordType.DeveloperName == 'Testing_Opportunities')){
+                        
+                        //W-008064 Turn off new project notification for testing projects older than 2020
+                        //Added by NS on May 24 2024
+                        Date yearValue = Date.newInstance(2020,01,01);
+                        
+                        if(String.isNotBlank(oppRec.StageName) && oppRec.StageName != 'Ended' && ((opp[0].RecordType.DeveloperName != 'Testing_Opportunities' && oppRec.Start_Date__c != NULL && oppRec.Start_Date__c >= lastYear) 
+                            || (opp[0].RecordType.DeveloperName == 'Testing_Opportunities' && oppRec.Start_Date__c >= yearValue))){
                         
                             try {
                                 for(Contact_Assignments__c conAss : [SELECT Id,Name,Project__c,Candidate_Name__c,Candidate_Name__r.Email FROM Contact_Assignments__c WHERE RecordType.DeveloperName = 'Staff' AND Project__c = :newProjectId AND Status__c IN ('Active','Planned')]){  

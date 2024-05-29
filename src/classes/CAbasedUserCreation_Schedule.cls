@@ -4,6 +4,10 @@
     - If the Contact Assignment is created more than 3 business days before the Start Date of the Contact Assignment, 
         wait until 3 business days before the Start Date to automatically create a User account for the Contact if one does not exist already
     - This scheduler runs daily basis
+    
+    - "Booz Allen Hamilton (BAH)" condition Added on May 10 2024 (Old condition : (NOT Project__r.Name LIKE '%Bah%'))
+    - W-008038 : Urgent: System Failed to Activate New Student DLS Online User Account Upon CA Creation on Active Project
+    - To fix "System Failed to Activate New Student DLS Online User Account Upon CA Creation on Active Project" issue 
     ******************/
     
 public class CAbasedUserCreation_Schedule implements Schedulable{
@@ -54,7 +58,7 @@ public class CAbasedUserCreation_Schedule implements Schedulable{
                     AND Start_Date__c != NULL AND ((Project__r.RecordType.DeveloperName != 'DLI_W_LT_Projects' AND Start_Date__c > TODAY) 
                     OR (Project__r.RecordType.DeveloperName = 'DLI_W_LT_Projects' AND Start_Date__c <= TODAY)) AND Paper_Timesheet__c = FALSE
                     AND Assignment_Position__c IN : caPositionSet
-                    AND Project__r.QB_Classification__c != 'OF0MTT0PS' AND (NOT Project__r.Name LIKE '%Bah%') AND Project__r.AcctSeed__Status__c IN ('Order','Active') 
+                    AND Project__r.QB_Classification__c != 'OF0MTT0PS' AND Project__r.Account_Name__c != 'Booz Allen Hamilton (BAH)' AND Project__r.AcctSeed__Status__c IN ('Order','Active') 
                     AND Project__r.Name NOT IN ('ELIZABETH HUML','MARA BOROUGHS','LEANN TAGWERKER','TRAVIS CUNNINGHAM','DLI Hausa-2018-Pena/Falanga','DLI Somali-2018-Deborah/Mickayla/Katie/Collin','Danielle Ward 2019')
             ]){
                
@@ -224,7 +228,6 @@ public class CAbasedUserCreation_Schedule implements Schedulable{
             
                 UserManagementUtil.updateMoodleRelatedFields(filteredCAs, filteredProjIds,filteredConIds);
             }
-            
         }
     }
 }

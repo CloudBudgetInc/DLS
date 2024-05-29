@@ -187,10 +187,9 @@ public class ZoomUserLicenseValidation_Scheduler_Test {
         ca[0].Assignment_Position__c = 'Examiner';
         ca[0].Project__c = pro.Id;
         update ca[0];
-        
+                    
         Test.startTest();  
-            String result = EventListViewController.moveEventToOnline(JSON.serialize(eveObj));                    
-            
+            String result = EventListViewController.moveEventToOnline(JSON.serialize(eveObj));       
             ZoomUserLicenseValidation_Scheduler sc = new ZoomUserLicenseValidation_Scheduler();
             sc.execute(null);        
         Test.stopTest(); 

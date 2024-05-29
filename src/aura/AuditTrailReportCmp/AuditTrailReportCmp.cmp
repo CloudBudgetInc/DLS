@@ -3,7 +3,9 @@
     <!-- Attributes to display the table -->
     <aura:attribute name="tcdHistoryRecs" type="List" default="[]"/>
     <aura:attribute name="showTable" type="Boolean" default="false"/>
-    <aura:attribute name="spinner" type="Boolean" default="fasle"/>
+    <aura:attribute name="spinner" type="Boolean" default="false"/>
+    <aura:attribute name="initialize" type="Boolean" default="true"/>
+
     
     <!--- Attribute to filter the records -->
     <aura:attribute name="filterObj" type="Map" default="{}"/>
@@ -11,6 +13,15 @@
     <!-- Attributes to download the Audit Trail Report records as csv file -->
     <aura:attribute name="tabelHeader" type="List" default=""/>
     <aura:attribute name="tcdHistoryRecsToDownload" type="List" default="[]"/>
+    
+    <aura:attribute name="timeCardTypeValue" type="String" default="Time Card Day"/>
+    <aura:attribute name="timecardType" type="List" default="[]"/>
+    <aura:attribute name="tcdFields" type="List" default="[]"/>
+    <aura:attribute name="tcdFieldWithLabels" type="List" default="[]"/>
+    <aura:attribute name="tclFieldWithLabels" type="List" default="[]"/>
+    <aura:attribute name="selectedTCDLField" type="String" default=''/>
+
+
     
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
     
@@ -47,7 +58,11 @@
                                 iconName="standard:record" objectName="AcctSeed__Project__c" fieldName="Name" condition="" label="Project" 
                                 isMultiEntry="false" isRequired="false"/>
             </lightning:layoutItem>
-            <lightning:layoutItem size="3" padding="around-small">
+             <lightning:layoutItem size="3" padding="around-small"> 
+                <lightning:combobox name="Type" label="Type" placeholder="Select Type" options="{!v.timecardType}" value="{!v.timeCardTypeValue}" onchange="{!c.tcFieldTypeSelection}"></lightning:combobox>
+            </lightning:layoutItem>
+                    <lightning:layoutItem size="3" padding="around-small">
+                <lightning:combobox name="Field Edited" label="Field Edited" placeholder="Select Field Edited" options="{!v.tcdFields}" value="{!v.selectedTCDLField}"></lightning:combobox>
             </lightning:layoutItem>
             <lightning:layoutItem size="3" padding="around-small">
                 <ui:inputDate aura:id="fromdate" label="From Date" class="field" value="{!v.filterObj.fromDateVal}" displayDatePicker="true" /> 
@@ -56,11 +71,8 @@
                 <ui:inputDate aura:id="todate" label="To Date" class="field" value="{!v.filterObj.toDateVal}" displayDatePicker="true" /> 
             </lightning:layoutItem>
             <!-- Filters End -->
-            <lightning:layoutItem size="3" padding="around-small">
+            <lightning:layoutItem size="2" padding="around-small">
                 <lightning:button aura:id="applyBtnId" variant="brand" class="btn" label="Apply" onclick="{!c.applyBtnClick}"/>
-            </lightning:layoutItem>
-            <!-- Button to download csv file -->
-            <lightning:layoutItem size="3" padding="around-small">
             </lightning:layoutItem>
         </lightning:layout>
         <div>

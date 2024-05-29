@@ -60,18 +60,7 @@
     tableSort : function(cmp ,event,helper) {
         var target = event.currentTarget;
         var name = target.getAttribute("data-name"); 
-        var filterObj =  cmp.get("v.filterObj");
-        
-        filterObj.fieldToSort = name;
-        var currentDir = cmp.get("v.arrowDirection");
-        if (currentDir == 'arrowdown') {
-            cmp.set("v.arrowDirection", 'arrowup');
-            filterObj.sortingOrder = 'Asc';
-        } else {
-            cmp.set("v.arrowDirection", 'arrowdown');
-            filterObj.sortingOrder = 'Desc';
-        }
-        cmp.set("v.filterObj",filterObj);
+        helper.tableSortHelper(cmp,name);
     },
     manageFilter : function(cmp ,event ,helper) {
         var filterObj = cmp.get("v.filterObj");
@@ -300,11 +289,12 @@
                 var datenow = Date(Date.now(), "DD-MMM-YYYY");
                 datenow = datenow.substring(0, 15);
                 
+                    
                 if(type == 'Instructor') {
                     tableHeader = [{
-                                       api:'firstname',
-                                       text:'First Name'
-                                   },
+                                    api:'firstname',
+                                    text:'First Name'
+                              	   },
                                    {
                                        api:'lastName',
                                        text:'Last Name'
@@ -324,10 +314,10 @@
                     filename = 'Active Instructor info -'+datenow;
                 }else {
                     tableHeader = [{
-                     				  api:'firstname',
-                       				  text:'First Name'
-                  				   },
-                                   {
+                     			     api:'firstname',
+                    			     text:'First Name'
+                  				  },
+                 	              {
                                        api:'lastName',
                                        text:'Last Name'
                                    },
@@ -507,13 +497,13 @@
         var filterObj = cmp.get("v.filterObj");
         
         
-        if(filterObj['selectedStatusList'] != multiPicklistFilter['selectedStatusList'] 
-           ||  filterObj['selectedAssignmentList'] != multiPicklistFilter['selectedAssignmentList']
-          || filterObj['selectedProjectRT'] != multiPicklistFilter['selectedProjectRT']){
+        if(JSON.stringify(filterObj['selectedStatusList']) != JSON.stringify(multiPicklistFilter['selectedStatusList'])
+           ||  JSON.stringify(filterObj['selectedAssignmentList']) != JSON.stringify(multiPicklistFilter['selectedAssignmentList'])
+           || JSON.stringify(filterObj['selectedProjectRT']) != JSON.stringify(multiPicklistFilter['selectedProjectRT'])){
             
-            filterObj['selectedStatusList'] = multiPicklistFilter['selectedStatusList'];
-            filterObj['selectedAssignmentList'] = multiPicklistFilter['selectedAssignmentList'];
-            filterObj['selectedProjectRT'] = multiPicklistFilter['selectedProjectRT'];
+            filterObj['selectedStatusList'] = JSON.parse(JSON.stringify(multiPicklistFilter['selectedStatusList']));
+            filterObj['selectedAssignmentList'] = JSON.parse(JSON.stringify(multiPicklistFilter['selectedAssignmentList']));
+            filterObj['selectedProjectRT'] = JSON.parse(JSON.stringify(multiPicklistFilter['selectedProjectRT']));
             
             cmp.set("v.filterObj",filterObj);
         }

@@ -15,15 +15,20 @@
             
             console.log(':::state:::'+state);
             if(state == "SUCCESS") {
-                var returnValue = response.getReturnValue();
+                 var returnValue = response.getReturnValue();
                 console.log('returnValue',JSON.parse(returnValue));
-                cmp.set("v.signerMap",JSON.parse(returnValue));
                 var signerInfoMap = cmp.get("v.signerMap");
+                var signvalueMap = JSON.parse(returnValue);
+                 if(signerInfoMap['StaffSigner2']){
+                     signvalueMap.StaffSigner2 = signerInfoMap['StaffSigner2'];
+                }
+                signerInfoMap = signvalueMap;
+                cmp.set("v.signerMap",signvalueMap);
                 var signerValMap = cmp.get("v.signerValMap");
                 var signer2Staff = '';
                 var signer3Staff = '';
                 
-                if(signerInfoMap['StaffName'] && signerInfoMap['CurrentUser']){
+               if(signerInfoMap['StaffName'] && signerInfoMap['CurrentUser']){
                     
                     if(!signerInfoMap['SupervisorSigner1']){
                         var str = cmp.get("v.card");
@@ -33,8 +38,8 @@
                         cmp.set("v.card", str);
                         cmp.set("v.showMessage", true);
                     }else {
-                        if(signerInfoMap['StaffSigner2'] && (signerInfoMap['CurrentUser'] == signerInfoMap['StaffSigner2'] 
-                           || signerInfoMap['SupervisorSigner1'] == signerInfoMap['StaffSigner2'])){
+                        if((signerInfoMap['StaffSigner2'] && (signerInfoMap['CurrentUser'] == signerInfoMap['StaffSigner2'] 
+                           || signerInfoMap['SupervisorSigner1'] == signerInfoMap['StaffSigner2']) || !signerInfoMap['StaffSigner2'] )){
                             
                             signerValMap.valHRMsg = "Please select HR User for "+signerInfoMap['StaffName'];
                             signerValMap.isValidHRUser = false;
@@ -42,6 +47,8 @@
                             signer2Staff = signerInfoMap['StaffSigner2'];
                             signerValMap.signer2Staff = signer2Staff;
                         }
+                        
+                        
                         
                         if(signerInfoMap['StaffSigner3'] && (signerInfoMap['CurrentUser'] == signerInfoMap['StaffSigner3']
                            || signerInfoMap['SupervisorSigner1'] == signerInfoMap['StaffSigner3'])){
@@ -84,10 +91,12 @@
         });
         $A.enqueueAction(action);
     },
-    launchConga : function(cmp, event, helper,signer2Staff,signer3Staff) { 
+    launchConga : function(cmp, event, helper,signer2Staff,signer3Staff) {
         var offerLetter = ['MTT ICA','ICA DLI-W 2017','Translation and Interpretation Addendum to ICA','Translation and Interpretation ICA'];
         var userObjLookup = cmp.get("v.userObjLookup");
         var ltsSigner1 = '';
+        
+        cmp.set("v.fieldsEmpty",[]);
         
         if(userObjLookup.length > 0){
             ltsSigner1 = userObjLookup[0].Id;
@@ -108,7 +117,7 @@
             var sObjectName1 = cmp.get("v.sObjectName");
             var crId = cmp.get("v.costRateId");
             var cAProId = cmp.get("v.selectedCAId");
-              var projectId = cmp.get("v.selectedCAId");
+            var projectId = cmp.get("v.selectedCAId");
             action.setParams({
                 recId : cmp.get("v.recordId"),
                 crId : crId,
@@ -119,7 +128,8 @@
                 cAProId : cAProId,
                 signer1 : ltsSigner1,
                 signer2Staff : signer2Staff,
-                signer3Staff : signer3Staff
+                signer3Staff : signer3Staff,            
+                docDownloadFormat : cmp.get("v.docDownloadFormat")
             });
             
             action.setCallback(this, function(response) {
@@ -129,13 +139,26 @@
                     var returnValue = response.getReturnValue();
                     console.log('::::LCR'+JSON.stringify(returnValue));
                     cmp.set("v.showSpinner",false);
+                    
 
                     var serverUrlSessionId = JSON.parse(returnValue.sessionIdServerURL);
                     var url = "https://composer.congamerge.com?sessionId="+serverUrlSessionId["sessionId"]+
                         "&serverUrl="+serverUrlSessionId["serverUrl"];
                     
                     console.log(':::***:::returnValue.congaURL:::***:::',returnValue.congaURL);
-                    if(returnValue.congaURL.indexOf("&queryId=") != -1) {
+                    
+                      
+
+                if(returnValue.valErrors && (returnValue.valErrors).length > 0){
+                    var str = cmp.get("v.card");
+                    str.title = "Error";
+                    str.message = "Please populate values for the following fields:";
+                    str.buttonName = "Okay";
+                    cmp.set("v.card", str);
+                    cmp.set("v.fieldsEmpty",returnValue.valErrors);
+                    cmp.set("v.showMessage", true);
+                    
+                }else if(returnValue.congaURL.indexOf("&queryId=") != -1) {
                         console.log(':::***:::url:::***:::',url+returnValue.congaURL);
                         var urlEvent = $A.get("e.force:navigateToURL");
                         urlEvent.setParams({

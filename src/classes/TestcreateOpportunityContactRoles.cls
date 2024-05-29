@@ -573,4 +573,41 @@ public class TestcreateOpportunityContactRoles {
         
         Test.stopTest();
     }
+    
+    public static testMethod void updateCAAccountFromOpp_Test() {
+    
+        Account acc = new Account(Name = 'Opp Test Account');
+        insert acc;
+        
+        List<Account> accList = [SELECT Id FROM Account LIMIT 1];
+        
+        Id newClassRTId = Schema.SObjectType.Opportunity.getRecordTypeInfosByDeveloperName().get('New_Classes_Opportunities').getRecordTypeId();
+        
+        Test.startTest();
+        
+            Date projSD = Date.newInstance(System.today().year(),System.today().month(),01);
+            Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+                
+            List<Contact> contacts = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+            
+            Opportunity opp = new Opportunity(Name = 'Test CA Account Pop Opp 1', Supervisor__c = userInfo.getUserId(), StageName = 'Inquiry', Start_Date__c = System.Today(), End_Date__c = System.Today().addDays(90), AccountId = accList[0].Id, RecordTypeId = newClassRTId, CloseDate = System.Today().addDays(20));
+            insert opp;
+                
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Candidate_Name__c = contacts[0].Id, Start_Date__c = projSD, End_Date__c = projED, Status__c = 'Active', Assignment_Position__c = 'Student'),
+                new Contact_Assignments__c(RecordTypeId = insRTId, Candidate_Name__c = contacts[1].Id, Start_Date__c = projSD, End_Date__c = projED, Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert conAssignRecs;  
+            
+            Opportunity updateOpp = new Opportunity(Id = opp.Id, AccountId = acc.Id);
+            update updateOpp;
+            
+            List<Opportunity> updatedOpp = [SELECT Id, AccountId FROM Opportunity WHERE Id = :opp.Id];
+            System.assertEquals(acc.Id, updatedOpp[0].AccountId);
+        
+        Test.stopTest();
+    }
 }

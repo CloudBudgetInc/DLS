@@ -669,14 +669,22 @@ Public class TestClassUtil {
             oppList = oppStaticList;
         }   
         
+        List<Account> getAccList = new List<Account>();
+        if(!createdObjNameSet.Contains('Account')){
+            getAccList = createTestAccounts();
+            createdObjNameSet.add('Account');
+        }else{
+            getAccList = accountStaticList;
+        }
+        
         List<AcctSeed__Project__c> projList = new List<AcctSeed__Project__c>();    
         if(OppList != null && OppList.size () > 0) { 
          
         projList = new List<AcctSeed__Project__c> {
-            new AcctSeed__Project__c(Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = projRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10)),
-            new AcctSeed__Project__c(Name = 'Test Project 2',AcctSeed__Status__c = 'Inquiry',RecordTypeId = projRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10)),
-            new AcctSeed__Project__c(Name = 'Test Project 3',AcctSeed__Status__c = 'Active',RecordTypeId = adminproRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10)),
-            new AcctSeed__Project__c(Name = 'Test Project 4',AcctSeed__Status__c = 'Inquiry',RecordTypeId = adminproRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10))
+            new AcctSeed__Project__c(Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = projRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10), AcctSeed__Account__c = getAccList[0].Id),
+            new AcctSeed__Project__c(Name = 'Test Project 2',AcctSeed__Status__c = 'Inquiry',RecordTypeId = projRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10), AcctSeed__Account__c = getAccList[1].Id),
+            new AcctSeed__Project__c(Name = 'Test Project 3',AcctSeed__Status__c = 'Active',RecordTypeId = adminproRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10), AcctSeed__Account__c = getAccList[0].Id),
+            new AcctSeed__Project__c(Name = 'Test Project 4',AcctSeed__Status__c = 'Inquiry',RecordTypeId = adminproRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = OppList[0].Id, Start_Date__c = System.today(), End_Date__c = System.today().addDays(10), AcctSeed__Account__c = getAccList[1].Id)
         };
         
         }
@@ -1920,7 +1928,9 @@ Public class TestClassUtil {
                                                     new System_Values__c(Name ='Moodle Last Access Days_Student', Value__c = '730'),
                                                     new System_Values__c(Name ='User Creation Exception Mails', Value__c = 'sukanyan@softsquare.biz'),
                                                     new System_Values__c(Name ='Schedule Update Notify Mail', Value__c = 'sukanyan@softsquare.biz'),
-                                                    new System_Values__c(Name ='Cancel Orientation for New Hire', Value__c = 'sukanyan@softsquare.biz')
+                                                    new System_Values__c(Name ='Cancel Orientation for New Hire', Value__c = 'sukanyan@softsquare.biz'),
+                                                    new System_Values__c(Name ='Student CA Transfer Email', Value__c = 'sukanyan@softsquare.biz'),
+                                                    new System_Values__c(Name ='Student CA Transfer Email User Name', Value__c = 'Sukanya')
                                               };
        List<OrgWideEmailAddress> orgAddress = [SELECT Id,Address FROM OrgWideEmailAddress WHERE Address LIKE '%timesheets%'];
        

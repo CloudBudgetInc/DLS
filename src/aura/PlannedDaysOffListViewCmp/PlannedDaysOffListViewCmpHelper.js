@@ -215,7 +215,11 @@
         }
         plannedDaysOff.forEach(function(plannedOffDay) {
             if(plannedDaysOff.length == 1){
-                plannedOffDay['Id'] = plannedOffdayRecord.Id;
+                if(plannedOffDay.requestOffRT && plannedOffDay.requestOffRT == 'Request'){
+                    plannedOffDay['Id'] = plannedOffDay.Id;
+                }else{
+                    plannedOffDay['Id'] = plannedOffdayRecord.Id;
+                }
                 plannedOffDay['From_Date__c'] = plannedOffDay.Date__c;
                 plannedOffDay['Date__c'] = null;
             }

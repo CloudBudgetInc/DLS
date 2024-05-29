@@ -301,7 +301,7 @@
         
         proSummaryInputs['projectStatus'] = filterObj.selectedStatusList;
         proSummaryInputs['cARTId'] = filterObj.selectedContactAsssign;
-        proSummaryInputs['projectRTNames'] = filterObj.selectedProjectRT;
+        proSummaryInputs['projectRTNames'] = filterObj.selectedProjectRT; 
         proSummaryInputs['cAPosition'] = filterObj.SelectedPosition;
         proSummaryInputs['cAStatus'] = filterObj.selectedAssignmentList;
         proSummaryInputs['accountId'] = (filterObj.SelectedAccount).length > 0 ? filterObj.SelectedAccount : [];
@@ -310,6 +310,9 @@
         proSummaryInputs['sortingFieldName'] = filterObj.fieldToSort;
         proSummaryInputs['sortingOrder'] = filterObj.sortingOrder;
         proSummaryInputs['selectedSection'] = filterObj.selectedSection;
+        proSummaryInputs['langSortingOrder'] = filterObj.langSortingOrder;
+        proSummaryInputs['langFieldToSort'] = filterObj.langFieldToSort;
+
         cmp.set("v.showSpinner",true);
         //console.log(JSON.stringify(proSummaryInputs));
         
@@ -322,7 +325,7 @@
             $A.getCallback(function(response) {
                 var projectSummary = response;
                 var counts =  cmp.get("v.counts");
-                //console.log('final response is',response);
+                console.log('final response is',response);
                 cmp.set("v.ProjectSummaryList",projectSummary.projectSummaryList);
                 counts.noOfProjects = projectSummary.noOfProjects;
                 counts.remainingHours = projectSummary.remainingHours;
@@ -330,8 +333,8 @@
                 counts.activeInstructors = projectSummary.activeInstructors;
                 counts.activeStudents = projectSummary.activeStudents;
                 cmp.set("v.counts",counts);
-                setTimeout(function(){ 
-                    cmp.set("v.showSpinner",false);
+                setTimeout(function(){  
+                    cmp.set("v.showSpinner",false); 
                 }, 500);
             }),
             $A.getCallback(function(errors) { 
@@ -481,5 +484,56 @@
         }else{
             cmp.set("v.showSpinner",false);
         }
-    }
+    },
+    tableSortHelper : function(cmp,name) {
+        var filterObj =  cmp.get("v.filterObj");
+        
+        if(!name){
+            name = filterObj.fieldToSort;
+        } 
+        var previousName = filterObj.fieldToSort;
+        var previousSorted = filterObj.sortingOrder;
+        filterObj.fieldToSort = name;
+
+        if((!filterObj.previousSelected) || name != filterObj.previousSelected ){
+            let isValid = true;
+            if(filterObj.previousSelected == 'Language__r.Name'){
+                if(name == 'Instructors__c'){
+                    isValid = false;
+                }
+            }
+            if(isValid){
+                filterObj.previousSelected = (name == 'Language__r.Name') ? '' : previousName;  
+                filterObj.previousSorted = (name == 'Language__r.Name') ? '' : previousSorted;
+            }
+        }    
+        
+        if(filterObj.previousSelected  == 'Language__r.Name' &&  previousName == 'Instructors__c' ){
+            if(filterObj.previousSorted == 'Desc'){
+                currentDir == 'arrowdown';
+            }else{
+                currentDir == 'arrowup';
+            }
+        }
+        
+        var currentDir = cmp.get("v.arrowDirection");
+        
+        if (currentDir == 'arrowdown') {
+            cmp.set("v.arrowDirection", 'arrowup');
+            filterObj.sortingOrder = 'Asc';
+        } else {
+            cmp.set("v.arrowDirection", 'arrowdown');
+            filterObj.sortingOrder = 'Desc';
+        }
+        filterObj.langSortingOrder = '';
+
+        if(name != 'Language__r.Name'){
+            if(name == 'Instructors__c' && (filterObj.previousSelected == 'Language__r.Name')){
+                filterObj.langFieldToSort = 'Language__r.Name';
+                filterObj.langSortingOrder = filterObj.previousSorted;
+            }
+        }
+        cmp.set("v.filterObj",filterObj);
+        
+    },
 })

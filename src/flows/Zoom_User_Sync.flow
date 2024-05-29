@@ -3,7 +3,7 @@
     <assignments>
         <name>ContactNotFoundSyncLogAssignment</name>
         <label>ContactNotFoundSyncLogAssignment</label>
-        <locationX>578</locationX>
+        <locationX>1106</locationX>
         <locationY>350</locationY>
         <assignmentItems>
             <assignToReference>SyncLog.Status__c</assignToReference>
@@ -33,8 +33,8 @@
     <assignments>
         <name>ErrorSyncLogAssignment</name>
         <label>ErrorSyncLogAssignment</label>
-        <locationX>314</locationX>
-        <locationY>458</locationY>
+        <locationX>842</locationX>
+        <locationY>566</locationY>
         <assignmentItems>
             <assignToReference>SyncLog.Contact__c</assignToReference>
             <operator>Assign</operator>
@@ -63,15 +63,76 @@
                 <stringValue>Zoom User Update</stringValue>
             </value>
         </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>ErrorSyncLogAssignmentUserUpdate</name>
+        <label>ErrorSyncLogAssignment</label>
+        <locationX>314</locationX>
+        <locationY>566</locationY>
+        <assignmentItems>
+            <assignToReference>SyncLog.Contact__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Instructor_Contact.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>SyncLog.Status__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Failed</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>SyncLog.Error_Message__c</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>SyncLog.Action__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Zoom User Update</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>SuccessSyncLogAssignment</name>
+        <label>SuccessSyncLogAssignment</label>
+        <locationX>578</locationX>
+        <locationY>566</locationY>
+        <assignmentItems>
+            <assignToReference>SyncLog.Contact__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Instructor_Contact.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>SyncLog.Status__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Success</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>SyncLog.Action__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Zoom User Update</stringValue>
+            </value>
+        </assignmentItems>
         <connector>
             <targetReference>Create_Sync_Log</targetReference>
         </connector>
     </assignments>
     <assignments>
-        <name>SuccessSyncLogAssignment</name>
+        <name>SuccessSyncLogAssignmentUserUpdate</name>
         <label>SuccessSyncLogAssignment</label>
         <locationX>50</locationX>
-        <locationY>458</locationY>
+        <locationY>566</locationY>
         <assignmentItems>
             <assignToReference>SyncLog.Contact__c</assignToReference>
             <operator>Assign</operator>
@@ -100,7 +161,7 @@
     <decisions>
         <name>Contact_Check</name>
         <label>Contact Check</label>
-        <locationX>314</locationX>
+        <locationX>710</locationX>
         <locationY>242</locationY>
         <defaultConnector>
             <targetReference>ContactNotFoundSyncLogAssignment</targetReference>
@@ -117,9 +178,34 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Update_Instructor</targetReference>
+                <targetReference>Zoom_User_Event</targetReference>
             </connector>
             <label>IsContactAvailable</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Zoom_User_Event</name>
+        <label>Zoom User Event</label>
+        <locationX>314</locationX>
+        <locationY>350</locationY>
+        <defaultConnector>
+            <targetReference>Update_Instructor_without_Licence_Field</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>User_Update</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>ZoomEvent</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>user.updated</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Instructor</targetReference>
+            </connector>
+            <label>User Update</label>
         </rules>
     </decisions>
     <formulas>
@@ -156,14 +242,14 @@
     <recordCreates>
         <name>Create_Sync_Log</name>
         <label>Create Sync Log</label>
-        <locationX>314</locationX>
-        <locationY>740</locationY>
+        <locationX>710</locationX>
+        <locationY>974</locationY>
         <inputReference>SyncLog</inputReference>
     </recordCreates>
     <recordLookups>
         <name>Instructor_Contact</name>
         <label>Instructor Contact</label>
-        <locationX>314</locationX>
+        <locationX>710</locationX>
         <locationY>134</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -188,12 +274,12 @@
         <name>Update_Instructor</name>
         <label>Update Instructor</label>
         <locationX>50</locationX>
-        <locationY>350</locationY>
+        <locationY>458</locationY>
         <connector>
-            <targetReference>SuccessSyncLogAssignment</targetReference>
+            <targetReference>SuccessSyncLogAssignmentUserUpdate</targetReference>
         </connector>
         <faultConnector>
-            <targetReference>ErrorSyncLogAssignment</targetReference>
+            <targetReference>ErrorSyncLogAssignmentUserUpdate</targetReference>
         </faultConnector>
         <filters>
             <field>Id</field>
@@ -222,8 +308,40 @@
         </inputAssignments>
         <object>Contact</object>
     </recordUpdates>
+    <recordUpdates>
+        <name>Update_Instructor_without_Licence_Field</name>
+        <label>Update Instructor without Licence Field</label>
+        <locationX>578</locationX>
+        <locationY>458</locationY>
+        <connector>
+            <targetReference>SuccessSyncLogAssignment</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>ErrorSyncLogAssignment</targetReference>
+        </faultConnector>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Instructor_Contact.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Zoom_Id__c</field>
+            <value>
+                <elementReference>ZoomUserId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Zoom_User_Status__c</field>
+            <value>
+                <elementReference>ZoomUserStatus</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Contact</object>
+    </recordUpdates>
     <start>
-        <locationX>188</locationX>
+        <locationX>584</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Instructor_Contact</targetReference>
@@ -237,6 +355,13 @@
         <isInput>true</isInput>
         <isOutput>false</isOutput>
         <objectType>Sync_Log__c</objectType>
+    </variables>
+    <variables>
+        <name>ZoomEvent</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
     </variables>
     <variables>
         <name>ZoomUser</name>

@@ -1,15 +1,21 @@
 ({
     scriptsLoaded : function(component, event, helper) {
         var device = $A.get("$Browser.formFactor");
+        var recordId = component.get("v.recordId");
+        var communityName = component.get("v.communityName");
         var displayDevice = 'Pc';
         
         if (device == 'PHONE') {
             displayDevice = 'Mobile';
         } 
+        if(communityName == 'Internal'){
+            let selectedStatus = ['Scheduled','Completed'];
+            component.set("v.selectedStatus",selectedStatus);
+        }
         component.set("v.displayDevice",displayDevice);
         component.set("v.initialLoad", true);
         component.set("v.showSpinner", false);
-        helper.getCommunityName(component, event, helper);        
+        helper.getCommunityName(component, event, helper);  
     },
 	
     closeModal : function(component, event, helper) {

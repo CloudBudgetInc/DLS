@@ -65,9 +65,9 @@
             $A.getCallback(function (response) {
                 component.set("v.loading", false);               
                 if(response){
+                    //console.log(response)
+                    var allExpenses = JSON.parse(response.replaceAll(/""/g, '"'));
                     console.log(response)
-                    var allExpenses = JSON.parse(response.replace(/\\/g, ""));
-                    
                     var approvedExpenses = [],
                         transactionIds = [],
                         creditCardDetails = component.get('v.creditCardIdWithVendorNameMap');

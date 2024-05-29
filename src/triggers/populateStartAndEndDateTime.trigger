@@ -3,7 +3,10 @@ trigger populateStartAndEndDateTime on Events__c (before insert, before update,b
     if (trigger.isBefore && (trigger.isInsert || trigger.isUpdate)) {      
         TimezoneUtilClass utilCls = new TimezoneUtilClass();
         for (Events__c evtRec : trigger.new) {  
-            if (evtRec.Timezone__c != NULL && evtRec.Timezone__c != '' && evtRec.Date__c != NULL) {           
+            if (evtRec.Timezone__c != NULL && evtRec.Timezone__c != '' && evtRec.Date__c != NULL && (Trigger.isInsert || 
+                (Trigger.isUpdate && (evtRec.Start_Time__c != Trigger.oldMap.get(evtRec.Id).Start_Time__c || evtRec.End_Time__c != Trigger.oldMap.get(evtRec.Id).End_Time__c || 
+                evtRec.Timezone__c != Trigger.oldMap.get(evtRec.Id).Timezone__c || evtRec.Date__c != Trigger.oldMap.get(evtRec.Id).Date__c)))) {    
+                       
                 evtRec.Start_Date_Time__c = (evtRec.Start_Time__c != NULL && evtRec.Start_Time__c != '') ? utilCls.getDateTimeInGMT(evtRec.Timezone__c, evtRec.Date__c, evtRec.Start_Time__c, false) : evtRec.Start_Date_Time__c;
                 evtRec.End_Date_Time__c = (evtRec.End_Time__c != NULL && evtRec.End_Time__c != '') ? utilCls.getDateTimeInGMT(evtRec.Timezone__c, evtRec.Date__c, evtRec.End_Time__c, true) : evtRec.End_Date_Time__c;
             }
@@ -291,12 +294,24 @@ trigger populateStartAndEndDateTime on Events__c (before insert, before update,b
     //Added By Dhinesh - 22/02/2022 - Lesson Plan
     Set<Id> eventIdsToCreateLessonPlan = new Set<Id>();
     if(Trigger.isAfter && (Trigger.isInsert || Trigger.isUpdate)){
+        
+        Map<Id, Date> eveIdAndDate = new Map<Id, Date>();
+        
         for(Events__c eve : trigger.new){
             
-			//Modified by Dhinesh - 17/2/2023 - W-007719 - Fix Lesson Plans created without Instructors            
+            //Modified by Dhinesh - 17/2/2023 - W-007719 - Fix Lesson Plans created without Instructors            
             if(eve.Status__c == 'Scheduled' && eve.Instructor__c != null && (Trigger.isInsert || (Trigger.oldMap.get(eve.Id).Status__c != eve.Status__c || Trigger.oldMap.get(eve.Id).Instructor__c != eve.Instructor__c))){
                 eventIdsToCreateLessonPlan.add(eve.Id);
             }
+            
+            // May 21 2024 - W-008056 : Request to Update Lesson Plan Date When Related Event Date isChanged
+            if(Trigger.isUpdate && eve.Status__c == 'Scheduled' && eve.Instructor__c != null && eve.Date__c != Trigger.oldMap.get(eve.Id).Date__c){
+                eveIdAndDate.put(eve.Id, eve.Date__c);        
+            }
+        }
+        
+        if(eveIdAndDate.size() > 0){
+            EventHandler.updateLessonPlanDate(eveIdAndDate);
         }
     }
     

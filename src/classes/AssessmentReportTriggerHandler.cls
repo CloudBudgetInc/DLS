@@ -99,7 +99,7 @@ public class AssessmentReportTriggerHandler{
                         }else if(assRepRTName == 'Language_Training_Progress' && assRep.Language_Training_Status__c == 'Monthly'){
                             
                             assRep.Name = stdCA.Project__r.DLS_Ref__c + ' ' + stdName + ' Monthly Student Report_' + reportDateStr;
-                        }else{
+                        }else{ // DLI_W_Progress, DLI_W_Progress_2022
                             // Added DLS Class No on Dec 01 2023 : W-007937 - Training Report Auto-Creation & Rollup Helper Issue on DODA (ILP) Projects
                             // To prevent duplicate report name formation 
                             assRep.Name = stdName + (assRep.Report_Type__c == 'DLI'? ' DLI' : '') + ' Monthly Student Report_' + reportDateStr;
@@ -177,6 +177,29 @@ public class AssessmentReportTriggerHandler{
             if(!updateContacts.isEmpty()){
                 update updateContacts.values();
             }             
+        }
+    }
+    
+    /**********
+        - W-007991 : Update to Transfer Button Functionality on Student CA
+        - To update training report's name formation when transferring student contact assignment and their related training reports from one project to another
+       ************/
+    public static void updateTransferredTRName(List<Assessment_Report__c> transferredReports, Map<Id, Id> newProjIdAndOldProjId){
+        
+        Map<Id, AcctSeed__Project__c> projMap = new Map<Id, AcctSeed__Project__c>([SELECT Id, DLS_Ref__c, TO__c FROM AcctSeed__Project__c WHERE Id IN : newProjIdAndOldProjId.keySet() OR Id IN : newProjIdAndOldProjId.values()]);     
+                    
+        for(Assessment_Report__c ar : transferredReports){
+            
+            if(newProjIdAndOldProjId.containsKey(ar.Project__c) && projMap.containsKey(newProjIdAndOldProjId.get(ar.Project__c))){
+                String oldProjClassNo = projMap.get(newProjIdAndOldProjId.get(ar.Project__c)).DLS_Ref__c;
+                String newProjClssNo = projMap.get(ar.Project__c).DLS_Ref__c;
+                
+                String oldProjTo = projMap.get(newProjIdAndOldProjId.get(ar.Project__c)).TO__c;
+                String newProjTo = projMap.get(ar.Project__c).TO__c;
+                
+                ar.Name = ar.Name.contains(oldProjClassNo) ? ar.Name.replace(oldProjClassNo, newProjClssNo) : ar.Name;
+                ar.Name = (newProjTo != null && oldProjTo != null && ar.Name.contains(oldProjTo)) ? ar.Name.replace(oldProjTo, newProjTo) : ar.Name;
+            }
         }
     }
 }

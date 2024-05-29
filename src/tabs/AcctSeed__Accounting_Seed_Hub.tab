@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Tab used to authorize the accounting seed hub</description>
+    <label>Accounting Seed Hub</label>
+    <lwcComponent>AcctSeed__accountingSeedHub</lwcComponent>
+    <motif>Custom19: Wrench</motif>
+</CustomTab>

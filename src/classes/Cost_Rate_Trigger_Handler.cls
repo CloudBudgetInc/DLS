@@ -344,6 +344,9 @@ public class Cost_Rate_Trigger_Handler {
                         } else if((ac.Rate_Type__c == 'FT Salary & Benefits' || ac.Rate_Type__c == 'FT Hourly & Benefits' || ac.Rate_Type__c == 'PT Hourly (OH & G&A)') && ac.Exempt_Status__c == 'Exempt') {
                             congaTempId = congaTempNameWithIdMap.containskey('Offer Letter - Staff - Exempt') ? congaTempNameWithIdMap.get('Offer Letter - Staff - Exempt') : null;
                             ac.Gen_Email_Doc_Conga_Workflow_Template__c = '&templateId='+congaTempId+'&queryId=[Con]'+CongaTranslator.getCongaQuery('Offer Letter - Contact Query')+'?pv0='+ac.Contact__c;     
+                        }else if((ac.Rate_Type__c == 'FT Hourly & Benefits' || ac.Rate_Type__c == 'PT Hourly (OH & G&A)') && ac.Exempt_Status__c == 'Non-Exempt') {
+                            congaTempId = congaTempNameWithIdMap.containskey('Offer Letter - Staff - Non-Exempt') ? congaTempNameWithIdMap.get('Offer Letter - Staff - Non-Exempt') : null;
+                            ac.Gen_Email_Doc_Conga_Workflow_Template__c = '&id='+ ac.Contact__c +'&templateId='+congaTempId; 
                         }else if(ac.Rate_Type__c == 'International Salary') {
                             congaTempId = congaTempNameWithIdMap.containskey('Offer Letter - UAE Template') ? congaTempNameWithIdMap.get('Offer Letter - UAE Template') : null;
                             ac.Gen_Email_Doc_Conga_Workflow_Template__c = '&templateId='+congaTempId+'&queryId=[Con]'+CongaTranslator.getCongaQuery('Offer Letter - Contact Query')+'?pv0='+ac.Contact__c;     
@@ -545,6 +548,21 @@ public class Cost_Rate_Trigger_Handler {
                     ac.Cost_Rate_Name__c = getCRName(ac);
                     //system.debug(':Cost_Rate_Trigger::Cost_Rate_Name__c:::ac:'+ac);
                 }
+                
+                //Developed method to calculate Fully Loaded Rate when changes occur in Rate field
+                //W-008029
+                if(oldMap.get(ac.Id).AcctSeed__Hourly_Cost__c != ac.AcctSeed__Hourly_Cost__c && ac.Rate_Type__c != 'FT Salary & Benefits' && ac.Rate_Type__c != 'FT Hourly & Benefits') {
+                    Decimal oldVal = getCRNameFullyLoadedRate(oldMap.get(ac.Id));
+                    Decimal newVal = getCRNameFullyLoadedRate(ac);
+                    System.debug('oldVal::::'+String.ValueOf(oldVal));
+                    System.debug('newVal::::'+String.ValueOf(newVal));
+                    System.debug(':::ac.Cost_Rate_Name__c::::'+ac.Cost_Rate_Name__c);
+                    if(ac.Cost_Rate_Name__c.contains(String.ValueOf(oldVal))) {
+                        String tmp = ac.Cost_Rate_Name__c.replace(String.ValueOf(oldVal),String.ValueOf(newVal));
+                        ac.Cost_Rate_Name__c = tmp;
+                        System.debug(':::tmp::::'+tmp);
+                    }
+                }
             }  
             
             if( approvedCRIds != null && approvedCRIds.size() > 0 ) {
@@ -584,7 +602,6 @@ public class Cost_Rate_Trigger_Handler {
         Decimal fullyLoadedRate = 0.00;
         String refValue;
         integer count = 0;
-        
         if(ac.Rate_Type__c == 'Non-SCA Testing') {
             if(ac.Per_Test_Cost__c != NULL ){
                 fullyLoadedRate = ac.Per_Test_Cost__c;
@@ -611,7 +628,6 @@ public class Cost_Rate_Trigger_Handler {
             if(ac.AcctSeed__Hourly_Cost__c != null)
                 fullyLoadedRate += ac.AcctSeed__Hourly_Cost__c;
         }
-        
         
         if(countMap != Null && ac.Rate_Type__c != null && ac.Contact__c != null) {
             String rateType = ac.Rate_Type__c;
@@ -657,6 +673,41 @@ public class Cost_Rate_Trigger_Handler {
             refValue = ac.Rate_Type__c +'-'+appendZeroleft(countMap.get(ac.Rate_Type__c)).right(2)+'-$'+fullyLoadedRate;
         }
         return refValue;       
+    }
+    
+    //Developed method to calculate Fully Loaded Rate when changes occur in Rate field
+    //W-008029
+    public static Decimal getCRNameFullyLoadedRate(AcctSeed__Cost_Rates__c ac) {
+    
+        Decimal fullyLoadedRate = 0.00;
+        if(ac.Rate_Type__c == 'Non-SCA Testing') {
+            if(ac.Per_Test_Cost__c != NULL ){
+                fullyLoadedRate = ac.Per_Test_Cost__c;
+            }else if(ac.AcctSeed__Hourly_Cost__c != NULL){
+                fullyLoadedRate = ac.AcctSeed__Hourly_Cost__c;
+            }
+        //} else if (ac.Rate_Type__c == 'Non-SCA Translation (Per Word)') {
+        } else if (ac.Rate_Type__c == 'Non-SCA Translation W/O Editing (Per Word)' || ac.Rate_Type__c == 'Non-SCA Translation Editing Only (Per Word)' || ac.Rate_Type__c == 'Non-SCA Translation + Editing (Per Word)') {
+            fullyLoadedRate = ac.Per_Word_Cost__c;
+        } else if (ac.Rate_Type__c == 'Non-SCA Translation (Per Hour)') {
+            fullyLoadedRate = ac.AcctSeed__Hourly_Cost__c;
+        } else if(ac.Rate_Type__c == 'Non-SCA Translation (FFP)') {
+            fullyLoadedRate = ac.Per_FFP_Cost__c;
+        } else {
+            if(ac.H_W_Rate__c != null)
+                fullyLoadedRate = ac.H_W_Rate__c;
+            
+            if(ac.HOL_Rate__c != null)
+                fullyLoadedRate += ac.HOL_Rate__c;
+            
+            if(ac.VAC_Rate__c != null)
+                fullyLoadedRate += ac.VAC_Rate__c;
+            
+            if(ac.AcctSeed__Hourly_Cost__c != null)
+                fullyLoadedRate += ac.AcctSeed__Hourly_Cost__c;
+        }
+        System.debug('fullyLoadedRate::::'+fullyLoadedRate);
+        return fullyLoadedRate;
     }
     
     // To defaultly populate the Department__c field for the Contact on First CR creation
@@ -895,18 +946,39 @@ public class Cost_Rate_Trigger_Handler {
         set<Id> oldLCRIds  = new set<Id>();
         set<Id> excludeCASet = new set<Id>();
         set<Id> excludeOldCAByProjectIdSet = new set<Id>();
+        Set<Id> crIdForConUpdate = new Set<Id>();
+        
+        Set<String> staffRelatedRTType = new Set<String>{'FT Hourly & Benefits', 'PT Hourly (OH & G&A)', 'FT Salary & Benefits','International Salary'};
+
+        //To update the Event's LCR 
+        Map<Id, Date> priorLCRIdAndnewEffectiveDate = new Map<Id, Date>();
+        List<Events__c> evntsToUpdate = new List<Events__c>();
+        List<Contact> updateStaffRelCons = new List<Contact>();
+
         
         for(AcctSeed__Cost_Rates__c cr : nonSCALTCDCR) {
             
-            if(cr.Prior_Version__c != null){
+            if(cr.Prior_Version__c != null) {
                 
                 if(!conIdwithPriorLCRMap.containsKey(cr.Contact__c+'-'+cr.Prior_Version__c)){
                     conIdwithPriorLCRMap.put(cr.Contact__c+'-'+cr.Prior_Version__c,cr.Effective_Date__c);
                     priorCRIdAndnewCRRec.put(cr.Prior_Version__c, cr);
+                    priorLCRIdAndnewEffectiveDate.put(cr.Prior_Version__c,cr.Effective_Date__c);
                 }  
                 newLCRIds.add(cr.Id);
                 oldLCRIds.add(cr.Prior_Version__c);
+                
+                if(staffRelatedRTType.contains(cr.Rate_Type__c)){
+                    crIdForConUpdate.add(cr.Id);
+                }
             }
+        }
+        
+        
+        if(crIdForConUpdate.size() > 0){
+            // W-008034 - Request to Update Staff PRM Logic
+            //  When a PRM is triggered for Labor Cost Rates where Contact Record type = DLS Employee, we would like the system to update the Supervisor and Home Department values on the user Contact record on the day of the Labor Cost Rate Effective date.
+            updateStaffRelCons = updateConWithDeptAndSups(newLCRIds);
         }
         
         // to exclude new Contact Assignment Created record in Insertion if new LCR have already Contact Assignment record and exclude old CA related Projects in new CA Created.
@@ -915,6 +987,7 @@ public class Cost_Rate_Trigger_Handler {
         
         //if(costRateListToExcludenewCA.size() > 0){
         if(newLCRIds != null && newLCRIds.size() > 0) {
+                    
             for(Contact_Assignments__c ca : [Select Id,Project__c FROM Contact_Assignments__c WHERE (Rate_Card_Rate__c IN :newLCRIds OR  Drafted_Labor_Cost_Rate__c IN :newLCRIds)]){
                 excludeCASet.add(ca.Id);
                 
@@ -945,7 +1018,7 @@ public class Cost_Rate_Trigger_Handler {
                 
                 String costRateId = '';
                 Date newCREffectiveDate = null;
-                if(caRecord.Rate_Card_Rate__c != null || caRecord.Drafted_Labor_Cost_Rate__c != null){
+                if(caRecord.Rate_Card_Rate__c != null || caRecord.Drafted_Labor_Cost_Rate__c != null) {
                     costRateId = (caRecord.Rate_Card_Rate__c != null ? caRecord.Rate_Card_Rate__c : (caRecord.Drafted_Labor_Cost_Rate__c != null ? caRecord.Drafted_Labor_Cost_Rate__c : ''));
                     newCREffectiveDate = conIdwithPriorLCRMap.get(caRecord.Candidate_Name__c+'-'+costRateId) != null ? conIdwithPriorLCRMap.get(caRecord.Candidate_Name__c+'-'+costRateId) : null; // optimized the effective date variable
                 
@@ -964,14 +1037,13 @@ public class Cost_Rate_Trigger_Handler {
                                 newCA.Status__c = 'Planned';
                             }
                             
-                            if(priorCRIdAndnewCRRec.containsKey(costRateId)){
+                            if(priorCRIdAndnewCRRec.containsKey(costRateId)) {
                                 
                                 if(priorCRIdAndnewCRRec.get(costRateId).Status__c == 'Approved'){
                                     newCA.Rate_Card_Rate__c = priorCRIdAndnewCRRec.get(costRateId).Id;
                                 }else if(priorCRIdAndnewCRRec.get(costRateId).Status__c == 'Draft' || priorCRIdAndnewCRRec.get(costRateId).Status__c == 'Submitted for Approval') {
                                     newCA.Drafted_Labor_Cost_Rate__c  = priorCRIdAndnewCRRec.get(costRateId).Id;
                                 }
-                                
                             }
                             insertCAwithLCR.add(newCA);
                             caRecord.End_Date__c = (newCREffectiveDate).addDays(-1);
@@ -986,7 +1058,7 @@ public class Cost_Rate_Trigger_Handler {
                                     caRecord.Drafted_Labor_Cost_Rate__c  = priorCRIdAndnewCRRec.get(costRateId).Id;
                                 }
                             }
-                        }else if(newCREffectiveDate <=  System.today()){
+                        } else if(newCREffectiveDate <=  System.today()){
                             caRecord.Status__c = 'Ended';
                         }
                         system.debug(' caRecord.Status__c'+caRecord.Status__c);
@@ -1016,9 +1088,66 @@ public class Cost_Rate_Trigger_Handler {
         if(insertCAwithLCR.size() > 0) {
             insert insertCAwithLCR;
         }
-        if(updateCAwithEndDate.size() > 0){
+        
+        if(updateCAwithEndDate.size() > 0) {
             update updateCAwithEndDate;
         }
         
+        if(updateStaffRelCons.size() > 0){
+            update updateStaffRelCons;
+        }
+        
+        // To update the events when Pay Rate Modification is done for a Contact
+        if(priorLCRIdAndnewEffectiveDate.size() > 0) {
+            for(Events__c ev : [SELECT Id,Name,Date__c,Labor_Cost_Rate__c,Instructor__c FROM Events__c WHERE Labor_Cost_Rate__c IN : priorLCRIdAndnewEffectiveDate.keyset() AND Status__c IN ('Draft','Scheduled') AND Date__c >=: priorLCRIdAndnewEffectiveDate.values()]) {
+                if(priorLCRIdAndnewEffectiveDate.containskey(ev.Labor_Cost_Rate__c) && priorLCRIdAndnewEffectiveDate.get(ev.Labor_Cost_Rate__c) != null && ev.Date__c >= priorLCRIdAndnewEffectiveDate.get(ev.Labor_Cost_Rate__c)) {
+                    System.debug('before :: ev.Labor_Cost_Rate__c:::'+ev.Labor_Cost_Rate__c);
+                    ev.Labor_Cost_Rate__c =  priorCRIdAndnewCRRec.get(ev.Labor_Cost_Rate__c).Id;
+                    System.debug('after :: ev.Labor_Cost_Rate__c:::'+ev.Labor_Cost_Rate__c);
+                    evntsToUpdate.add(ev);
+                }
+            }
+            
+            if( evntsToUpdate.size() > 0 ) {
+                System.debug('evntsToUpdate::size::'+evntsToUpdate.size());
+                System.debug('evntsToUpdate::::'+evntsToUpdate);
+                update evntsToUpdate;
+            }
+        }
+    }
+    public static List<Contact> updateConWithDeptAndSups(Set<Id> lcrIds){
+        // W-008034 - Request to Update Staff PRM Logic
+        //  When a PRM is triggered for Labor Cost Rates where Contact Record type = DLS Employee, we would like the system to update the Supervisor and Home Department values on the user Contact record on the day of the Labor Cost Rate Effective date.
+        List<Contact> updateStaffRelCons = new List<Contact>(); 
+        
+        for(AcctSeed__Cost_Rates__c lcr : [SELECT Id,Contact__c,New_Contact_Job_Title__c,Rate_Type__c,New_Supervisor_Id__c,Contact__r.Home_Dept__c,Contact__r.Supervisor_Name__c,New_Department_Name__c,Effective_Date__c FROM AcctSeed__Cost_Rates__c WHERE Contact__r.RecordType.DeveloperName = 'DLS_Employee' AND Id IN :lcrIds AND Effective_Date__c <= :System.today()]){
+            Contact con = new Contact();    
+            con.Id = lcr.Contact__c;
+            
+            if(lcr.New_Contact_Job_Title__c != null){
+                con.Title = lcr.New_Contact_Job_Title__c;
+            }
+            
+            if(lcr.Effective_Date__c != null){
+                con.EE_Pay_Status_Eff_Date__c = lcr.Effective_Date__c;
+            }
+            
+            if(lcr.New_Department_Name__c != null){
+                con.Home_Dept__c = lcr.New_Department_Name__c;
+            }
+            if(lcr.New_Supervisor_Id__c != null){
+                con.Supervisor_Name__c = lcr.New_Supervisor_Id__c;
+            }
+            
+            if(lcr.Rate_Type__c == 'FT Salary & Benefits'){
+                con.EE_Pay_Status__c = 'Salary';
+            }else if(lcr.Rate_Type__c == 'FT Hourly & Benefits'){
+                con.EE_Pay_Status__c = 'Hourly - FT';
+            }else if(lcr.Rate_Type__c == 'PT Hourly (OH & G&A)'){
+                con.EE_Pay_Status__c = 'Hourly - PT';
+            }
+            updateStaffRelCons.add(con);
+        }
+        return updateStaffRelCons;
     }
 }

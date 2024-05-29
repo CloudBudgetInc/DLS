@@ -94,7 +94,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
             }
         }
     }
-    system.debug('::::::proRTName_RateType::::::::'+proRTName_RateType);
     
     // start of Trigger is Before
     if (trigger.isBefore) {
@@ -171,11 +170,9 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
            if(projRecordTypeIdSet != null && projRecordTypeIdSet.size() > 0 ) {
                 if(projRecordTypeIdSet.Contains(pr.RecordTypeId) && pr.AcctSeed__Account__c != null && (Trigger.isInsert || (Trigger.isUpdate && Trigger.oldMap.get(pr.Id).AcctSeed__Account__c != pr.AcctSeed__Account__c && Trigger.oldMap.get(pr.Id).AcctSeed__Account__c == null) )) {
                     if(pr.Delivery_Account__c == null){
-                        System.debug('Inside Delivery Account');
                         pr.Delivery_Account__c = pr.AcctSeed__Account__c;                       
                     }
                     if(pr.End_User_Account__c == null) {
-                        System.debug('Inside End User Account');
                         pr.End_User_Account__c = pr.AcctSeed__Account__c;                        
                     }                    
                 }
@@ -184,7 +181,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
             // To Defaultly set the Admin Project's Account to DLS
             if(pr.RecordTypeId == adminProjRtId ) {
                 System_Values__c sysValueDLS = System_Values__c.getValues('DLS Account');
-                System.debug('::::sysValueDLS:::'+sysValueDLS);
                 if(sysValueDLS != null && sysValueDLS.Value__c != null && pr.AcctSeed__Account__c != sysValueDLS.Value__c) {
                     pr.AcctSeed__Account__c = sysValueDLS.Value__c;
                 }
@@ -193,7 +189,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
             if(trigger.isInsert) {
                   
                 if(pr.DLS_Class__c == null) {
-                    System.debug(':::RECORD TYPE::::'+pr.RecordTypeId+':TestProRecTypeId::'+TestProRecTypeId);
                     //if(!proRTIds.contains(pr.RecordTypeId)) {
                         if(pr.RecordTypeId != mttRecTypeId) {
                             if(pr.RecordTypeId != cdRecTypeId && !proRTIds.contains(pr.RecordTypeId)) {
@@ -205,7 +200,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                             } else if(pr.RecordTypeId == TestProRecTypeId) {
                                 testCount = testCount + 1;
                                 dlsClassCount = testCount;
-                                System.debug('::testCount:::'+testCount+'dlsClassCount::::'+dlsClassCount);
                             } else if(pr.RecordTypeId == transRecTypeId) {
                                 transCount = transCount + 1;
                                 dlsClassCount = transCount;
@@ -216,23 +210,17 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                                                    
                             Integer Year = Date.Today().Year();
                             String str1 = String.valueof(Year).substring(2,4);
-                            system.debug(':::::::::::::'+str1 );
-                            system.debug(':::::::::::::'+dlsClassCount);
                             integer n= dlsClassCount,i;
                             for(i=0;n!=0;i++){
-                               system.debug(':::::'+n);        
                                n=n/10;
-                               system.debug(':::::'+n);
                             }
                             String sizeList;
-                            system.debug(':::n:::'+i);
                             if(i <=5 && i >= 1) {
                                 if(i == 1 && pr.RecordTypeId != cdRecTypeId && !proRTIds.contains(pr.RecordTypeId)) sizeList = '0000'+String.ValueOf(dlsClassCount);
                                 if((i == 2 && pr.RecordTypeId != cdRecTypeId && !proRTIds.contains(pr.RecordTypeId)) || (i == 1 && (pr.RecordTypeId == cdRecTypeId || pr.RecordTypeId == TestProRecTypeId || pr.RecordTypeId == transRecTypeId || pr.RecordTypeId == interPreRecTypeId))) sizeList = '000'+String.ValueOf(dlsClassCount);
                                 if((i == 3 && pr.RecordTypeId != cdRecTypeId && !proRTIds.contains(pr.RecordTypeId)) || (i == 2 && (pr.RecordTypeId == cdRecTypeId || pr.RecordTypeId == TestProRecTypeId || pr.RecordTypeId == transRecTypeId || pr.RecordTypeId == interPreRecTypeId))) sizeList = '00'+String.ValueOf(dlsClassCount);
                                 if((i == 4 && pr.RecordTypeId != cdRecTypeId && !proRTIds.contains(pr.RecordTypeId)) || (i == 3 && (pr.RecordTypeId == cdRecTypeId || pr.RecordTypeId == TestProRecTypeId || pr.RecordTypeId == transRecTypeId || pr.RecordTypeId == interPreRecTypeId))) sizeList = '0'+String.ValueOf(dlsClassCount);
                             }
-                            system.debug(':::sizeList :::'+sizeList );
                             
                             String refValue = str1 + sizeList;
                             
@@ -285,10 +273,7 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
             }
             
             // Default Cost Rate Rate Type value population based on Record Type
-            // Moved the logic from process builder to trigger by NS on April 23 2018
-            System.debug('pr.Default_Cost_Rate_Rate_Type__c::'+pr.Default_Cost_Rate_Rate_Type__c);
-            System.debug('rtId_RTName:::::'+rtId_RTName);
-            
+            // Moved the logic from process builder to trigger by NS on April 23 2018            
             if( Trigger.isInsert || (Trigger.isUpdate && (Trigger.oldMap.get(pr.Id).RecordTypeId != pr.RecordTypeId || Trigger.oldMap.get(pr.Id).DLI_PRoject_Type__c != pr.DLI_Project_Type__c))) {
                 // To update the Rate Type in Project when the DLI Project Type is updated W-006039
                 if(pr.AcctSeed__Opportunity__c == null || (pr.AcctSeed__Opportunity__c != null && Trigger.isUpdate && Trigger.oldMap.get(pr.Id).DLI_PRoject_Type__c != pr.DLI_Project_Type__c && pr.DLI_Project_Type__c != 'Partner School')) {
@@ -310,7 +295,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                             } else */if(pr.Opportunity_Award_Date__c >= date.newinstance(2020, 10, 01)) {
                                 pr.Default_Cost_Rate_Rate_Type__c = 'DLI-21 SCA LT';
                             }
-                            System.debug('Inside DCRRType if'+pr.Default_Cost_Rate_Rate_Type__c);
                         } else if(Trigger.isInsert) {
                            /* if(pr.Opportunity_Award_Date__c <= date.newinstance(2018, 09, 30)) {
                                 pr.Default_Cost_Rate_Rate_Type__c = proRTName_RateType.get(rtId_RTName.get(pr.RecordTypeId));
@@ -321,7 +305,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                                     pr.Default_Cost_Rate_Rate_Type__c = 'DLI-21 SCA MTT';
                                 }
                             }
-                            System.debug('Inside DCRRType Else if'+pr.Default_Cost_Rate_Rate_Type__c);
                         }
                     }
                 // To update the Rate Type in Project when the DLI Project Type is updated W-006039
@@ -417,9 +400,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                 }
             }
         }
-        
-        //system.debug('duplicateEndedId:::before:::'+sendFeedbackFormHelper.duplicateEndedId);         
-            
     }
     // end of Trigger is Before
     
@@ -455,6 +435,12 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
         Map<Id, Id> oppIdAndProjId = new Map<Id, Id>();
         List<AcctSeed__Project__c> projsToSendLowHoursBalEmail = new List<AcctSeed__Project__c>();
         Map<Id, Id> projIdAndPIId = new Map<Id, Id>();
+        Set<String> excludeProjRTs = new Set<String>{'Testing_Projects', 'Translation_Projects', 'Interpretation_Projects'};
+        
+        Set<String> costRateTypes = new Set<String>{'LT with Prep', 'LT with Billable Prep', 'LT without Prep', 'LT without Billable Prep'};
+        List<AcctSeed__Project__c> projs_CRTChange = new List<AcctSeed__Project__c>();
+        Map<Id, Id> projIdAndAccId = new Map<Id, Id>();
+        Map<Id, Id> projIdAndParId = new Map<Id, Id>();
         
         if(trigger.isDelete) {
             for(AcctSeed__Project__c pro : trigger.old) {
@@ -576,15 +562,21 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                     // To send low hours balance email to students and instructors
                     // W-007886 : Exclude UAE Instructors from "Low Hours Remaining for DLS Class #" Email Notification
                     // W-007948 : Exclude Testing Projects from Low Hours Balance Email
+                    // PGLS Account Excluded on Mar 07 2024 : W-007863 : The system should Exclude Projects with Accounts = PGLS LLC from the Low Balance Hours Email notification
                     if((pro.Scheduled_Hours_Week__c != Trigger.oldMap.get(pro.Id).Scheduled_Hours_Week__c || pro.Hours_Remaining__c != Trigger.oldMap.get(pro.Id).Hours_Remaining__c) && pro.Hours_Remaining__c <= pro.Scheduled_Hours_Week__c && 
                         !pro.Account_Name__c.contains('PVT') && !pro.Account_Name__c.contains('DLI') && !pro.Account_Name__c.contains('AFSAT') && pro.QB_Classification__c != 'OF0UAE' && !pro.Name.contains('UAE') && 
-                        pro.Project_Record_Type_Name__c != 'Testing_Projects'){
+                        !excludeProjRTs.contains(pro.Project_Record_Type_Name__c) && !pro.Account_Name__c.contains('PGLS') && pro.Account_Name__c != 'Booz Allen Hamilton (BAH)'){
                         
                         projsToSendLowHoursBalEmail.add(pro);
                         if(pro.Account_Name__c.contains('DODA') && pro.Program_Iteration__c != null){
                             projIdAndPIId.put(pro.Id, pro.Program_Iteration__c);
                         }
                     }
+                    
+                    // Added on Mar 18 2024 : W-008006 : Default Cost Rate and Project Task Mismatch
+                    if(pro.Default_Cost_Rate_Rate_Type__c != Trigger.oldMap.get(pro.Id).Default_Cost_Rate_Rate_Type__c && costRateTypes.contains(pro.Default_Cost_Rate_Rate_Type__c)){
+                        projs_CRTChange.add(pro);        
+                    }                    
                 }
                 
                 // Added by E. Keerthika on 29th, November 2018 to update the project status field in opportunity when the status of the project is changed
@@ -653,6 +645,22 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                 
                 if(Trigger.isInsert && ConvertToProject.isFromConvertToProject && pro.AcctSeed__Opportunity__c != null){
                     oppIdAndProjId.put(pro.AcctSeed__Opportunity__c, pro.Id);
+                }            
+                
+                // W-008024 : Update Account on CA (Student, Staff, Instructor), when there is an update in the Project or Opportunity Account
+                if(!OpportunityTrigger_Handler.accPopFromOppTrig && !ConvertToProject.accPopFromConToProj && pro.AcctSeed__Account__c != null && Trigger.isUpdate && pro.AcctSeed__Account__c != Trigger.oldMap.get(pro.Id).AcctSeed__Account__c){
+                    projIdAndAccId.put(pro.Id, pro.AcctSeed__Account__c);
+                    if(pro.AcctSeed__Opportunity__c != null){
+                        projIdAndParId.put(pro.Id, pro.AcctSeed__Opportunity__c);
+                    }
+                }    
+            }
+            
+            if(projIdAndAccId.size() > 0){
+                ProjectTrigger_Handler.accPopFromProjTrig = true;
+                ProjectTrigger_Handler.updateContactAssignmentAccount(projIdAndAccId, 'Project');
+                if(projIdAndParId.size() > 0){
+                    ProjectTrigger_Handler.updateOpp_ProjectAccount(projIdAndParId, projIdAndAccId, 'Project');
                 }
             }
             
@@ -664,7 +672,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                 Assessment_Report_Helper.updateAssessmentReports_DueDate(Trigger.new, Trigger.oldMap);
             }
             
-            System.debug('::projIdsToCancelARs:::'+projIdsToCancelARs);
             if(!projIdsToCancelARs.isEmpty()){
                 Assessment_Report_Helper.updateARToCancelled(projIdsToCancelARs);
             }
@@ -685,13 +692,13 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
             // Added by GRK to update Type of Training for Training Reports when a Project's Program Type is updated
             /*if(programTypeUpdateProjIds.size() > 0 ) {
                 Assessment_Report_Helper.updateAssessReportTypeOfTraining(programTypeUpdateProjIds);
-            }*/            
+            }*/        
+            
+            if(projs_CRTChange.size() > 0){
+                ProjectTrigger_Handler.sendEmail_CostRateTypeChange(projs_CRTChange);
+            }    
         }
-        system.debug('::::::::proIdRecMap::::'+proIdRecMap);
-        system.debug('::::::::proIdStatusMap::::'+proIdStatusMap);
-        system.debug(':::::::proIdManagerId::::'+proIdManagerId);
-        
-        System.debug(':::projIdAndNoStdApproval::::'+projIdAndNoStdApproval);
+            
         if(projIdAndNoStdApproval.size() > 0){
             
             List<Contact_Assignments__c> updateConAssigns = new List<Contact_Assignments__c>();
@@ -709,7 +716,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                     updateConAssigns.add(c);
                 }
             }
-            System.debug(':::updateConAssigns::::'+updateConAssigns+'updateConAssigns SIZE::::'+updateConAssigns.size());
             
             if(updateConAssigns.size() > 0){
                 update updateConAssigns;
@@ -791,7 +797,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                 taskRecs.add(t);
             }
         }
-        System.debug(':::taskRecs::::'+taskRecs);
         
         if(taskRecs.size() > 0){
             
@@ -835,8 +840,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                     projIds.add(p.Id);
                 }               
             }
-            System.debug('projIdAndContractId===='+projIdAndContractId+'projIdAndContractId SIZE==='+projIdAndContractId.size());
-            System.debug('projIds===='+projIds+'projIds SIZE==='+projIds.size());
             
             if(projIdAndContractId.size() > 0){
                                 
@@ -845,7 +848,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                     FROM AcctSeed__Project_Task__c
                     WHERE AcctSeed__Project__c IN : projIdAndContractId.keySet()
                 ];
-                System.debug('projTasks===='+projTasks+'projTasks SIZE=='+projTasks.size());
                 
                 if(projTasks.size() > 0){
                 
@@ -859,7 +861,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                             updateProjTasks.add(pt);
                         }
                     }
-                    System.debug('updateProjTasks===='+updateProjTasks+'updateProjTasks SIZE=='+updateProjTasks.size());
                     
                     if(updateProjTasks.size() > 0){
                         update updateProjTasks;
@@ -873,7 +874,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                 projIdAndAllStdFirstName = UserManagementUtil.getAllStdFirstNameForProject(projIds);
                 
                 Integer currentYear = System.Today().year();
-                System.debug(':::currentYear:::'+currentYear);
                 
                 for(AcctSeed__Project__c p : [SELECT Id, Moodle_Sync_Status__c, Course_Name__c, DLS_Class__c, Language__r.Name
                                                 FROM AcctSeed__Project__c
@@ -886,7 +886,6 @@ trigger projectTriggerToUpdateAccount on AcctSeed__Project__c (before insert, be
                     }
                     updateProjs.add(p);
                 }
-                System.debug(':::updateProjs:::'+updateProjs);
                 
                 if(updateProjs != NULL && updateProjs.size() > 0){
             

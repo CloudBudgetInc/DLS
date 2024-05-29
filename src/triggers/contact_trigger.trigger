@@ -116,6 +116,10 @@ trigger contact_trigger on Contact (before insert,before update,after update) {
                     c.Virtual_Conference_License__c = null;
                     ContactTrigger_FutureHandler.contactIdsForZoomUserCreation.add(c.Id);
                 }
+                // May 21 2024 - W-008053 : Automatically Update "Experience with DLI Students?" Field to True
+                if(!c.Experience_with_DLI_Students__c && c.DLI_Hours_in_Current_Year__c > 0 && (Trigger.oldMap.get(c.Id).DLI_Hours_in_Current_Year__c == null || Trigger.oldMap.get(c.Id).DLI_Hours_in_Current_Year__c == 0)){
+                    c.Experience_with_DLI_Students__c = true;
+                }
             }
             
             // Added By HL to update Contact_Record_Type__c field value in Cost Rate record when Contact RecordType is changed
@@ -332,8 +336,12 @@ trigger contact_trigger on Contact (before insert,before update,after update) {
             if(userList.size() > 0) {
                 
                 //update userList;
-                ContactTrigger_FutureHandler.updateUserRecords(JSON.serialize(userList));
-            }
+                if(System.isBatch()){
+                    ContactTrigger_FutureHandler.updateUserRecs(JSON.serialize(userList));
+                }else{
+                    ContactTrigger_FutureHandler.updateUserRecords(JSON.serialize(userList));
+                }
+            }        
         }
         //End of my added code
         

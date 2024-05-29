@@ -14,24 +14,19 @@ public class AssessmentReportEmailToInstructor{
     
         // Send an email before 7 days of Report Date
         Date reportDate = Date.Today()+7;
-        System.debug('reportDate:::'+reportDate);
         
         Date projStartDate = Date.Today();
-        System.debug('reportDate:::'+reportDate);
                 
         List<Assessment_Report__c> reports = [SELECT Id, Name, Project__c, Project__r.DLS_Ref__c, Project_Manager__r.Name, Instructor__c,
                                                     Student__r.Name, Report_Date__c, Report_Type__c, Evaluation_Period_From__c, 
                                                     Evaluation_Period_To__c, RecordType_Name__c, Test_Report_Type__c, Tester__c, Account_Name__c
                                                 FROM Assessment_Report__c 
-                                                WHERE ((RecordType_Name__c != 'Test_Report' AND Instructor__c != NULL) OR 
-                                                    (RecordType_Name__c = 'Test_Report' AND Tester__c != NULL)) AND 
-                                                    Status__c = 'Scheduled' AND ((Report_Date__c = :reportDate AND 
-                                                    (RecordType_Name__c IN ('DLI_W_Progress', 'DLI_W_Progress_2022', 'DLI_W_Test_Report', 'DLI_W_Self_Assessment_Test_Report', 'Language_Training_Progress', 'APMO_Progress', 'DEA_Progress') OR 
+                                                WHERE Status__c = 'Scheduled' AND ((RecordType_Name__c != 'Test_Report' AND Instructor__c != NULL) OR 
+                                                    (RecordType_Name__c = 'Test_Report' AND Tester__c != NULL) OR (RecordType_Name__c = 'DLI_W_Self_Assessment_Test_Report' AND Student__c != NULL)) AND 
+                                                    ((Report_Date__c = :reportDate AND (RecordType_Name__c IN ('DLI_W_Progress', 'DLI_W_Progress_2022', 'DLI_W_Test_Report', 'DLI_W_Self_Assessment_Test_Report', 'Language_Training_Progress', 'APMO_Progress', 'DEA_Progress') OR 
                                                     (RecordType_Name__c = 'Test_Report' AND Test_Report_Type__c IN ('Progress','Final')))) OR
                                                     (Project__r.Start_Date__c = :projStartDate AND RecordType_Name__c = 'Test_Report' AND 
-                                                    Test_Report_Type__c = 'Initial'))];
-        System.debug(':::::reports:::'+reports);    
-        
+                                                    Test_Report_Type__c = 'Initial'))];        
         if(reports.size() > 0){
             
             List<Assessment_Report__c> trainingReports = new List<Assessment_Report__c>();
@@ -51,16 +46,26 @@ public class AssessmentReportEmailToInstructor{
         
         if(reports != NULL && reports.size() > 0){
         
-            
             Map<Id, String> insIdAndDLSClassNos = new Map<Id, String>();
-        
             Map<Id, List<Assessment_Report__c>> insIdAndAssRepRecs = new Map<Id, List<Assessment_Report__c>>();
-        
+            Map<Id, String> conIdAndCommunitySitePrefix = new Map<Id, String>();
+            
             for(Assessment_Report__c ar : reports){
             
                 String dlsClassNos = '';
                 
-                Id insId = ar.RecordType_Name__c != 'Test_Report' ? ar.Instructor__c : ar.Tester__c;
+                Id insId;
+                
+                if(ar.RecordType_Name__c != 'DLI_W_Self_Assessment_Test_Report'){
+                    insId = ar.RecordType_Name__c != 'Test_Report' ? ar.Instructor__c : ar.Tester__c;
+                    conIdAndCommunitySitePrefix.put(insId, 'Instructor');
+                }else{
+                
+                    // Added on Mar 25 2024 : W-008014 - Request to Send Email Notification to Students When DLI Self Assessment Report Status = Scheduled
+                    // To send an email notification to the students to complete their DLI W Self Assessment Test Report(s) before 7 days of Its Report_Date__c
+                    insId = ar.Student__c;
+                    conIdAndCommunitySitePrefix.put(insId, 'Student');
+                }
                 
                 // Map to store all related DLS Class # for instructors
                 if(!insIdAndDLSClassNos.containsKey(insId)){
@@ -83,13 +88,10 @@ public class AssessmentReportEmailToInstructor{
                 }
                 insIdAndAssRepRecs.get(insId).add(ar);
             }
-            System.debug(':::::insIdAndAssRepRecs:::'+insIdAndAssRepRecs);    
-            System.debug(':::::insIdAndDLSClassNos:::'+insIdAndDLSClassNos); 
             
-            if(insIdAndAssRepRecs != NULL && insIdAndAssRepRecs.size() > 0){
+            if(insIdAndAssRepRecs.size() > 0){
             
                 Map<Id, Contact> conIdRec = new Map<Id, Contact>([SELECT Id, FirstName, Name, Email, IsEmailBounced FROM Contact WHERE Id IN :insIdAndAssRepRecs.keySet() AND Email != NULL]);
-                System.debug('conIdRec========='+conIdRec+'conIdRec SIZE========'+conIdRec.size());
                 
                 List<Messaging.SingleEmailMessage> sendEmailToInstructors = new List<Messaging.SingleEmailMessage>();
                 
@@ -98,13 +100,7 @@ public class AssessmentReportEmailToInstructor{
                     
                 try{
                     
-                    List<OrgWideEmailAddress> orgWideEmail = [SELECT Id,Address,DisplayName FROM OrgWideEmailAddress WHERE DisplayName = 'support@dlsdc.com'];
-            
-                    String orgWideEmailId = '';
-                    
-                    if(orgWideEmail != NULL && orgWideEmail.size() > 0){
-                        orgWideEmailId = orgWideEmail[0].Id;
-                    }
+                   String orgWideEmailId = ProjectTrigger_Handler.getOrgWideEmailId('support@dlsdc.com');
                 
                     // One email (consolidated email) per instructor for all the Assessment Reports he/she is related to
                     for(Id insId : insIdAndAssRepRecs.keySet()){
@@ -120,14 +116,12 @@ public class AssessmentReportEmailToInstructor{
                                 String dueDate = String.valueOf(reportDate);
                                 String dueDateStr = dueDate.split('-')[1]+'/'+dueDate.split('-')[2]+'/'+dueDate.split('-')[0];
                                 
-                                Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-                                if(orgWideEmailId != NULL) {
-                                    mail.setOrgWideEmailAddressId(orgWideEmailId);
-                                }
-                                mail.setTargetObjectId(insId);
-                                //mail.setToAddresses(new List<String>{'hemalatha@softsquare.biz'});
-                                mail.subject = 'Complete DLS Training Report for Class # '+dlsClassNos;
+                                String communitySitePrefix = '';
+                                if(conIdAndCommunitySitePrefix.containsKey(insId)){
                                     
+                                    communitySitePrefix = conIdAndCommunitySitePrefix.get(insId) == 'Instructor' ? System.Label.Instructor_Community_Site_Prefix : System.Label.Student_Community_Site_Prefix;
+                                }
+                                                
                                 String htmlBody = '';
                                 htmlBody += 'Dear '+ conIdRec.get(insId).FirstName + ', <br/><br/>';
                                 htmlBody += 'Please complete the following Training Report for Class # ' + dlsClassNos + ' which is due on '+dueDateStr+'.<br/>';
@@ -144,10 +138,10 @@ public class AssessmentReportEmailToInstructor{
                                     String evaPeriodTo = '';
                                     String evaPeriodToStr = '';
 
-                                    String assRepDetPageLink = '<a href="'+ System.Label.Instructor_Community_Site_Prefix+'/s/assessment-report/'+ ar.Id +'/'+ ar.Name+'" target="_blank">'+ ar.Student__r.Name +'</a>';
+                                    String assRepDetPageLink = '<a href="'+ communitySitePrefix +'/s/assessment-report/'+ ar.Id +'/'+ ar.Name+'" target="_blank">'+ ar.Student__r.Name +'</a>';
                                     
                                     String reportType = '';
-                                    if(ar.RecordType_Name__c != 'Test_Report' ){
+                                    if(ar.RecordType_Name__c != 'Test_Report'){
                                     
                                         reportType = (ar.Report_Type__c != null ? ar.Report_Type__c : '');
                                         
@@ -168,13 +162,15 @@ public class AssessmentReportEmailToInstructor{
                                 }
                                 htmlBody += '</table><br/>';
                                 
-                                String urlLink = '<a href="'+ System.Label.Instructor_Community_Site_Prefix+'/s/reports'+ '" target="_blank"> Click Here </a>';
+                                String urlLink = '<a href="'+ communitySitePrefix +'/s/reports'+ '" target="_blank"> Click Here </a>';
                                 htmlBody += '<br/>Please '+ urlLink +' to view the Training Reports.';
                                 htmlBody += '<br/><br/>Thanks,<br/>DLS Team';
-                                mail.setHtmlBody(htmlBody);
-                                mail.setSaveAsActivity(true);
+                                
+                                String subjectStr = 'Complete DLS Training Report for Class # '+dlsClassNos;
+                                
+                                Messaging.SingleEmailMessage mail = ProjectTrigger_Handler.getSingleEmail(orgWideEmailId, String.valueOf(insId), new List<String>(), new List<String>(), '', '', htmlBody, subjectStr, true, true);
                                 sendEmailToInstructors.add(mail);
-                            }else {
+                            }else{
                             
                                 mailContent += '<a href="'+System.Label.Org_Prefix_Start_URL+'/'+conIdRec.get(insId).Id+'" target="_blank">'+conIdRec.get(insId).Name+'</a><br/>';
                                 hasBouncedEmail = TRUE;
@@ -184,35 +180,24 @@ public class AssessmentReportEmailToInstructor{
                     mailContent += '<br/><p>This e-mail was auto generated. Please do not respond.</p>';
                     mailContent += '</html>';    
                     
-                    if(hasBouncedEmail || Test.isRunningTest()) {
+                    if(hasBouncedEmail || Test.isRunningTest()){
                     
-                        //Added custome setting to hold the exception recipients email ids
-                        List<String> toAddressIds = new List<String>();
-            
-                        System_Values__c sysVal = System_Values__c.getValues('Contact Bounced Exception Email Ids'); 
-                        if (sysVal != null && sysVal.Value__c != null) {
-                            for (String st : sysVal.Value__c.split(',')) {
-                                toAddressIds.add(st.trim());
-                            }
-                        }
+                        // Custom setting to hold the exception recipients email ids
+                        List<String> toAddresses = ProjectTrigger_Handler.getSystemValuesList('Contact Bounced Exception Email Ids');
+                        Messaging.SingleEmailMessage bouncedmail = ProjectTrigger_Handler.getSingleEmail('', '', toAddresses, new List<String>(), '', '', mailContent, 'Bounced email contact information', false, false);
                         
-                        Messaging.SingleEmailMessage bouncedmail = new Messaging.SingleEmailMessage();
-                        bouncedmail.setToAddresses(toAddressIds);
-                        bouncedmail.setSubject('Bounced email contact information');
-                        bouncedmail.sethtmlBody(mailContent);
                         sendEmailToInstructors.add(bouncedmail);
                     }
-                    System.debug('sendEmailToInstructors::::'+sendEmailToInstructors);
             
-                    if( sendEmailToInstructors != null && sendEmailToInstructors.size() > 0 ) {
+                    if(sendEmailToInstructors.size() > 0){
                         Messaging.SendEmailResult[] results = Messaging.sendEmail(sendEmailToInstructors);
                     }
-                }catch(Exception e) {
+                }catch(Exception e){
                     
                     String errorMessage = '';
                     errorMessage += 'ERROR: ' + e.getTypeName() + ':'+e.getMessage() + ':' + e.getLineNumber() + ':' + e.getStackTraceString();
-                    ErrorHandler errHandler = new ErrorHandler();
-                    errHandler.sendExceptionEmail(errorMessage,system.Label.TimeCardDayEmail,'Error on Training Report Email To Instructor');
+                    ErrorHandler errHandler = new ErrorHandler(); 
+                    errHandler.sendExceptionEmail(errorMessage,System.Label.TimeCardDayEmail,'Error on Training Report Email To Instructor');
                 } 
             }
         }

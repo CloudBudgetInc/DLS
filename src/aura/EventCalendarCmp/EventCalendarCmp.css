@@ -223,3 +223,6 @@ display: block;
 /*.THIS .slds-button_icon-bare{
     color: white !important;
 }*/
+.THIS .widthCls{
+    width: 15rem !important;
+}

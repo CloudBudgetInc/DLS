@@ -88,7 +88,7 @@ private Class projectTriggerToUpdateAccount_Test{
                  System.assertEquals(Date.ValueOf(System.today().addDays(-6)), updatedList[0].End_Date__c);
          }else {
              List<AcctSeed__Project__c> newlyUpdated = [SELECT Id,Name,End_Date__c,Oral_Exam_Date_Time__c FROM AcctSeed__Project__c WHERE Id = :newProList[0].Id LIMIT 1];
-             DateTime dT = System.now().addDays(-15);
+             DateTime dT =System.now().addDays(-15);
              Date etDate = date.newinstance(dT.year(), dT.month(), dT.day());
              System.assertEquals(etDate, newlyUpdated[0].End_Date__c);
          }
@@ -873,4 +873,76 @@ private Class projectTriggerToUpdateAccount_Test{
             update projTask;
         Test.stopTest();
     }
+    
+    private static testMethod void sendEmail_CostRateTypeChange_Test(){
+        
+        Account a = new Account(Name = 'DLS');
+        insert a;
+        
+        Id ltRTId = Schema.SObjectType.AcctSeed__Project__c.getRecordTypeInfosByDeveloperName().get('Language_Training_Projects').getRecordTypeId();
+    
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        List<Contact> stdCon = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Id usrId = UserInfo.getUserId();
+        
+        Date projSD = Date.newInstance(System.today().year(),System.today().month(),01);
+        Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+        List<AcctSeed__GL_Account__c> glAccList = [SELECT Id, Name FROM AcctSeed__GL_Account__c LIMIT 2];
+        
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(Default_Cost_Rate_Rate_Type__c = 'LT without Billable Prep',Scheduled_Hours_Week__c = 20, AcctSeed__Account__c = a.Id, Name = 'Test DCRRT Change Email Proj',AcctSeed__Status__c = 'Active',RecordTypeId = ltRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = projSD, End_Date__c = projED);
+        insert proj;
+        
+        Test.startTest(); 
+            AcctSeed__Project_Task__c projTask = new AcctSeed__Project_Task__c(Total_Qty_Paid__c = 18, Name = 'Test Task-Hindi',AcctSeed__Project__c=proj.Id,Project_Task_Type__c='Language Training', AcctSeed__Labor_GL_Account__c=glAccList[0].Id, Total_Qty_Planned__c = 100);
+            insert projTask;
+            
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(RecordTypeId = stdRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[0].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Student'),
+                new Contact_Assignments__c(RecordTypeId = insRTId, Project__c = proj.Id, Candidate_Name__c = stdCon[1].Id, Start_Date__c = projSD, End_Date__c = projED, Opportunity_Name__c = opp[0].Id,Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert conAssignRecs;
+            
+            proj.Default_Cost_Rate_Rate_Type__c = 'LT with Billable Prep';
+            update proj;
+        Test.stopTest();
+    }
+    
+    // To update Account__c field in Instructor/Student/Staff contact assignments when the account of opportunity or project is updated
+    @isTest
+    static void updateContactAssignmentAccount_Test(){
+        
+        Account acc = new Account(Name = 'Proj Test Account');
+        insert acc;
+        
+        List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
+        List<AcctSeed__Project__c> projRec = [SELECT Id, AcctSeed__Account__c FROM AcctSeed__Project__c LIMIT 1];
+        List<Contact> contacts = [SELECT Id, Name FROM Contact WHERE NAME LIKE '%Test%' LIMIT 2];
+        
+        Test.startTest();
+        
+            Date projSD = Date.newInstance(System.today().year(),System.today().month(),01);
+            Date projED = Date.newInstance(System.today().year(),System.today().month()+2,15);
+                        
+            Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
+            Id insRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Instructor').getRecordTypeId();
+            
+            List<Contact_Assignments__c> conAssignRecs = new List<Contact_Assignments__c>{
+                new Contact_Assignments__c(Account__c = projRec[0].AcctSeed__Account__c, RecordTypeId = stdRTId, Project__c = projRec[0].Id, Candidate_Name__c = contacts[0].Id, Start_Date__c = projSD, End_Date__c = projED, Status__c = 'Active', Assignment_Position__c = 'Student'),
+                new Contact_Assignments__c(Account__c = projRec[0].AcctSeed__Account__c, RecordTypeId = insRTId, Project__c = projRec[0].Id, Candidate_Name__c = contacts[1].Id, Start_Date__c = projSD, End_Date__c = projED, Status__c = 'Active', Assignment_Position__c = 'Instructor')
+            };
+            insert conAssignRecs;                    
+        
+        Test.stopTest();
+        
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(Id = projRec[0].Id, AcctSeed__Account__c = acc.Id);
+        update proj;    
+        
+        List<Contact_Assignments__c> updateCARec = [SELECT Id, Account__c FROM Contact_Assignments__c WHERE Id = :conAssignRecs[0].Id];
+        System.assertEquals(acc.Id, updateCARec[0].Account__c);
+    }   
 }

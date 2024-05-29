@@ -1048,7 +1048,7 @@ Public Class plannedDaysOff_Trigger_Test{
         
         List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'UpdateChildPDO Test Project 2',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
         insert proj;
         
         Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
@@ -1103,7 +1103,7 @@ Public Class plannedDaysOff_Trigger_Test{
          
         List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'UpdateChildPDO Test Project 3',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
         insert proj;
         
         Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
@@ -1158,7 +1158,7 @@ Public Class plannedDaysOff_Trigger_Test{
         
         List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
                 
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'UpdateChildPDO Test Project 3a',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
         insert proj;
         
         Id reqPDORTId = Schema.SObjectType.Planned_Days_Off__c.getRecordTypeInfosByDeveloperName().get('Request').getRecordTypeId();
@@ -1257,7 +1257,7 @@ Public Class plannedDaysOff_Trigger_Test{
                 
         List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'UpdateChildPDO Test Project 5',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
         insert proj;
         
         Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
@@ -1308,7 +1308,7 @@ Public Class plannedDaysOff_Trigger_Test{
         
         List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'UpdateChildPDO Test Project 6',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
         insert proj;
         
         Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();
@@ -1365,7 +1365,7 @@ Public Class plannedDaysOff_Trigger_Test{
         
         List<Opportunity> opp = [SELECT Id FROM Opportunity LIMIT 1];
         
-        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'Test Project 1',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
+        AcctSeed__Project__c proj = new AcctSeed__Project__c(AcctSeed__Account__c = a.Id, Name = 'UpdateChildPDO Test Project 7',AcctSeed__Status__c = 'Active',RecordTypeId = lTProjRTId, Project_Manager__c = usrId, AcctSeed__Opportunity__c = opp[0].Id, Start_Date__c = Date.Today().addDays(5), End_Date__c = Date.Today().addDays(60));
         insert proj;
         
         Id stdRTId = Schema.SObjectType.Contact_Assignments__c.getRecordTypeInfosByDeveloperName().get('Student').getRecordTypeId();

@@ -115,9 +115,12 @@
         var items = component.get("v.dummyProjectList"),
               projectIdWithCAStatus = component.get('v.projectIdWithCAStatus');
         var itemList = [];
+        console.log(filter);
+
         items.forEach(function(item){
-            //console.log('status:::::'+JSON.stringify(item));
+
             var caStatus = projectIdWithCAStatus[item.projectId];
+
             filter = filter == 'Order' ? 'Planned' : filter;
             if(caStatus == filter){ //item.status == filter && 
                 itemList.push(item);

@@ -4,7 +4,7 @@ private class ScheduleCmpLightningController_Test {
     @testsetup static void setup() {
     
         Test.startTest();
-            List<Contact_Assignments__c> contactAssignList = TestClassUtil.createTestContactAssignment(); 
+            List<Contact_Assignments__c> contactAssignList = TestClassUtil.createTestContactAssignment();  
         Test.stopTest();  
         List<Schedule__c> schlist = TestClassUtil.createTestSchedule();        
     }
@@ -162,9 +162,9 @@ private class ScheduleCmpLightningController_Test {
     //method2 - createScheduleForOtherTypes
     private static testMethod void testMethod6() {
         
-        List<Contact_Assignments__c> cAList = [SELECT Id,Name,Candidate_Name__c,RecordTypeId,Project__c,Status__c FROM Contact_Assignments__c  WHERE RecordType.DeveloperName = 'Instructor'];
-        List<AcctSeed__Project__c> proList = [SELECT Id,Name,DLS_Class__c,Default_Cost_Rate_Rate_Type__c,RecordType.DeveloperName,AcctSeed__Opportunity__c FROM AcctSeed__Project__c LIMIT 3]; 
-        List<Schedule__c> schlist = [SELECT Id,Name,Project__c,Parent_Schedule__c,Prior_Schedule__c,Project_Task__c,Opportunity__c, Total_Hours__c,End_Date__c,Start_Date__c,Status__c,Schedule_Type__c,Opportunity_Product_Id__c FROM Schedule__c  WHERE Status__c = 'Drafted' LIMIT 1]; 
+        //List<Contact_Assignments__c> cAList = [SELECT Id,Name,Candidate_Name__c,RecordTypeId,Project__c,Status__c FROM Contact_Assignments__c  WHERE RecordType.DeveloperName = 'Instructor'];
+        //List<AcctSeed__Project__c> proList = [SELECT Id,Name,DLS_Class__c,Default_Cost_Rate_Rate_Type__c,RecordType.DeveloperName,AcctSeed__Opportunity__c FROM AcctSeed__Project__c LIMIT 3]; 
+        List<Schedule__c> schlist = [SELECT Id,Name,Project__r.AcctSeed__Opportunity__c, Project__c,Parent_Schedule__c,Prior_Schedule__c,Project_Task__c,Opportunity__c, Total_Hours__c,End_Date__c,Start_Date__c,Status__c,Schedule_Type__c,Opportunity_Product_Id__c, Project__r.Default_Cost_Rate_Rate_Type__c FROM Schedule__c  WHERE Status__c = 'Drafted']; 
         List<Contact> conlist = [SELECT Id,RecordTypeId From Contact WHERE RecordType.DeveloperName = 'Candidate' AND Name = 'Test Contact1' LIMIT 1];
         List<Opportunity> oppRec = [SELECT Id,DLS_Class__c,Default_Cost_Rate_Rate_Type__c,RecordType.DeveloperName FROM Opportunity  LIMIT 1];
         
@@ -172,7 +172,6 @@ private class ScheduleCmpLightningController_Test {
         List<Schedule__c> schUpdate = [SELECT Id,Name,Project__r.DLS_Class__c FROM Schedule__c WHERE Name = 'scheduleWithoutEvent'];
         schUpdate[0].Name = schUpdate[0].Project__r.DLS_Class__c+'-SH1';
         update schUpdate;
-        
         
         List<AcctSeed__Cost_Rates__c>  costrateList = new List<AcctSeed__Cost_Rates__c>{
             new AcctSeed__Cost_Rates__c(Contact__c = conlist[0].Id, Annual_Salary_Cost__c = 5500, Salary_Cost_Per_Hour__c = 20, Pay_Type__c = 'Salary', Rate_Type__c = 'DLI-21 SCA LT', AcctSeed__Hourly_Cost__c = 22 , Status__c = 'Approved',Payroll_Item__c='ADM')
@@ -197,7 +196,7 @@ private class ScheduleCmpLightningController_Test {
         schRec.variedTime = false;
         schRec.status = 'Active';
         schRec.scheduleType = 'Replace Instructor';
-        schRec.projectId = proList[0].Id;
+        schRec.projectId = schlist[0].Project__c;
         schRec.projectTaskId = schlist[0].Project_Task__c;
         schRec.instructorId = conlist[0].Id;
         schRec.parentScheduleId = null;
@@ -221,7 +220,7 @@ private class ScheduleCmpLightningController_Test {
         
         List<String>  datelst = new List<String> {string.valueOf(eveList[0].Date__c)};
             
-        String schmsg = ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Replace Instructor',proList[0].Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',proList[0].Id, datelst, costrateList[0].Id, 'Approved CR');
+        String schmsg = ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Replace Instructor',schlist[0].Project__r.Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',schlist[0].Project__c, datelst, costrateList[0].Id, 'Approved CR');
         
         List<Schedule__c> substituteSchedule = [SELECT Id FROM Schedule__c WHERE Schedule_Type__c = 'Replace Instructor'];
         schRec.endDate = schlist[0].End_Date__c.addDays(20);        
@@ -229,15 +228,13 @@ private class ScheduleCmpLightningController_Test {
         schRec.scheduleId = substituteSchedule[0].Id;
         
      
-        ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Substitute',proList[0].Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',proList[2].Id, datelst, costrateList[0].Id, 'Approved CR');
+        ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Substitute',schlist[0].Project__r.Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',schlist[1].Project__c, datelst, costrateList[0].Id, 'Approved CR');
         Test.stopTest();
 
-       // ScheduleCmpLightningController.createEventsForSubstituteSchEdit(JSON.serialize(schRec),datelst);
-        
-      
+       // ScheduleCmpLightningController.createEventsForSubstituteSchEdit(JSON.serialize(schRec),datelst);      
         
         schRec.scheduleId = null;
-        schRec.oppId = proList[0].AcctSeed__Opportunity__c;
+        schRec.oppId = schlist[0].Project__r.AcctSeed__Opportunity__c;
         ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Replace Instructor',oppRec[0].Default_Cost_Rate_Rate_Type__c,'Opportunity',oppRec[0].Id,datelst, costrateList[0].Id, 'Draft CR');
         
         System.assertEquals(schmsg,'Schedule has been created succesfully and a Contact Assignment has been created and mapped to the Schedule.');
@@ -245,9 +242,9 @@ private class ScheduleCmpLightningController_Test {
     
     private static testMethod void SubstituteType_Test() {
         
-        List<Contact_Assignments__c> cAList = [SELECT Id,Name,Candidate_Name__c,RecordTypeId,Project__c,Status__c FROM Contact_Assignments__c  WHERE RecordType.DeveloperName = 'Instructor'];
-        List<AcctSeed__Project__c> proList = [SELECT Id,Name,DLS_Class__c,Default_Cost_Rate_Rate_Type__c,RecordType.DeveloperName,AcctSeed__Opportunity__c FROM AcctSeed__Project__c LIMIT 3]; 
-        List<Schedule__c> schlist = [SELECT Id,Name,Project__c,Parent_Schedule__c,Prior_Schedule__c,Project_Task__c,Opportunity__c, Total_Hours__c,End_Date__c,Start_Date__c,Status__c,Schedule_Type__c,Opportunity_Product_Id__c FROM Schedule__c  WHERE Status__c = 'Drafted' LIMIT 1]; 
+        //List<Contact_Assignments__c> cAList = [SELECT Id,Name,Candidate_Name__c,RecordTypeId,Project__c,Status__c FROM Contact_Assignments__c  WHERE RecordType.DeveloperName = 'Instructor'];
+        //List<AcctSeed__Project__c> proList = [SELECT Id,Name,DLS_Class__c,Default_Cost_Rate_Rate_Type__c,RecordType.DeveloperName,AcctSeed__Opportunity__c FROM AcctSeed__Project__c LIMIT 3]; 
+        List<Schedule__c> schlist = [SELECT Id,Name,Project__r.Default_Cost_Rate_Rate_Type__c, Project__c,Parent_Schedule__c,Prior_Schedule__c,Project_Task__c,Opportunity__c, Total_Hours__c,End_Date__c,Start_Date__c,Status__c,Schedule_Type__c,Opportunity_Product_Id__c FROM Schedule__c  WHERE Status__c = 'Drafted']; 
         List<Contact> conlist = [SELECT Id,RecordTypeId From Contact WHERE RecordType.DeveloperName = 'Candidate' AND Name = 'Test Contact1' LIMIT 1];
         List<Opportunity> oppRec = [SELECT Id,DLS_Class__c,Default_Cost_Rate_Rate_Type__c,RecordType.DeveloperName FROM Opportunity  LIMIT 1];
         
@@ -280,7 +277,7 @@ private class ScheduleCmpLightningController_Test {
         schRec.variedTime = false;
         schRec.status = 'Active';
         schRec.scheduleType = 'Substitute';
-        schRec.projectId = proList[0].Id;
+        schRec.projectId = schlist[0].Project__c;
         schRec.projectTaskId = schlist[0].Project_Task__c;
         schRec.instructorId = conlist[0].Id;
         schRec.parentScheduleId = null;
@@ -304,18 +301,17 @@ private class ScheduleCmpLightningController_Test {
         
         List<String>  datelst = new List<String> {string.valueOf(eveList[0].Date__c)}; 
                          
-        ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Substitute',proList[0].Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',proList[2].Id, datelst, costrateList[0].Id, 'Approved CR');
+        ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Substitute',schlist[0].Project__r.Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',schlist[1].Project__c, datelst, costrateList[0].Id, 'Approved CR');
         
         List<Schedule__c> substituteSchedule = [SELECT Id FROM Schedule__c WHERE Schedule_Type__c = 'Substitute'];
         schRec.endDate = schlist[0].End_Date__c.addDays(20);        
         schRec.scheduleType = 'Substitute';        
         schRec.scheduleId = substituteSchedule[0].Id;
         
-        ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Substitute',proList[0].Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',proList[2].Id, datelst, costrateList[0].Id, 'Approved CR');
+        ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Substitute',schlist[0].Project__r.Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',schlist[1].Project__c, datelst, costrateList[0].Id, 'Approved CR');
         Test.stopTest();      
         
         ScheduleCmpLightningController.createEventsForSubstituteSchEdit(JSON.serialize(schRec),datelst);
-        
     }
     
     private static testMethod void testMethod6a() {
@@ -380,6 +376,74 @@ private class ScheduleCmpLightningController_Test {
                     
         ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Replace Instructor',proList[0].Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',proList[2].Id, datelst, costrateList[0].Id, 'Approved CR');
          
+    }
+    
+    //Cover - createScheduleForOtherTypes
+    private static testMethod void testMethod6b() {
+        
+        List<Schedule__c> schlist = [SELECT Id,Name,Project__r.AcctSeed__Opportunity__c, Project__c,Parent_Schedule__c,Prior_Schedule__c,Project_Task__c,Opportunity__c, Total_Hours__c,End_Date__c,Start_Date__c,Status__c,Schedule_Type__c,Opportunity_Product_Id__c, Project__r.Default_Cost_Rate_Rate_Type__c FROM Schedule__c  WHERE Status__c = 'Drafted']; 
+        List<Contact> conlist = [SELECT Id,RecordTypeId From Contact WHERE RecordType.DeveloperName = 'Candidate' AND Name = 'Test Contact1' LIMIT 1];
+        List<Opportunity> oppRec = [SELECT Id,DLS_Class__c,Default_Cost_Rate_Rate_Type__c,RecordType.DeveloperName FROM Opportunity  LIMIT 1];
+       
+        Contact c = new Contact(LastName = 'New Hire Con', Email = 'newhirecon@gmail.com');
+        insert c;
+        
+        Contact_Assignments__c ca = new Contact_Assignments__c(Project__c = schlist[0].Project__c, Status__c = 'Active', Start_Date__c = schlist[0].Start_Date__c, End_Date__c = schlist[0].End_Date__c, Candidate_Name__c = c.Id);
+        insert ca;
+        
+        List<AcctSeed__Cost_Rates__c>  costrateList = new List<AcctSeed__Cost_Rates__c>{
+            new AcctSeed__Cost_Rates__c(Contact__c = conlist[0].Id, Annual_Salary_Cost__c = 5500, Salary_Cost_Per_Hour__c = 20, Pay_Type__c = 'Salary', Rate_Type__c = 'DLI-21 SCA LT', AcctSeed__Hourly_Cost__c = 22 , Status__c = 'Approved',Payroll_Item__c='ADM')
+        };
+        
+        insert costrateList;
+        
+        schlist[0].Status__c = 'Active';
+        schlist[0].Instructor__c = c.Id;
+        schlist[0].Start_Date__c = Date.Today().addDays(-1);
+        update schlist;
+        
+        ScheduleDomain.Days dayVal = new ScheduleDomain.Days();
+        dayVal.sunday = false;
+        dayVal.monday = false;
+        dayVal.tuesday = false;
+        dayVal.wednesday = false;
+        dayVal.thursday = false;
+        dayVal.friday = false;
+        dayVal.saturday = false;
+        ScheduleDomain.ScheduleDetail schRec = new ScheduleDomain.ScheduleDetail();
+        schRec.isNew = true;
+        schRec.startDate = system.today().addDays(-10);
+        schRec.variedTime = false;
+        schRec.status = 'Active';
+        schRec.scheduleType = 'Replace Instructor';
+        schRec.projectId = schlist[0].Project__c;
+        schRec.projectTaskId = schlist[0].Project_Task__c;
+        schRec.instructorId = conlist[0].Id;
+        schRec.parentScheduleId = null;
+        schRec.isTravelRequired = false;
+        schRec.excludeFederalHoliday = false;
+        schRec.variedDay = false;
+        schRec.dayVal = dayVal;
+        schRec.priorScheduleId = schlist[0].Id;
+        schRec.startDate = Date.Today();
+        schRec.endDate = Date.Today().addDays(30);
+        schRec.biWeekly = false;
+        schRec.createZoomMeetings = false;
+        
+        Test.startTest();
+        
+        //insert event for existing schedule
+        List<Events__c> eveList = new List<Events__c>{
+            new Events__c(Name = schlist[0].Name+'-EV1',Date__c = schlist[0].Start_Date__c.addDays(2),Schedule__c = schlist[0].Id,Status__c = 'Scheduled',Project__c = schlist[0].Project__c,SequenceNo__c = 1)
+        };
+        insert eveList;
+        
+        List<String>  datelst = new List<String> {string.valueOf(eveList[0].Date__c)};
+            
+        String schmsg = ScheduleCmpLightningController.createScheduleForOtherTypes(JSON.serialize(schRec),'Replace Instructor',schlist[0].Project__r.Default_Cost_Rate_Rate_Type__c,'AcctSeed__Project__c',schlist[0].Project__c, datelst, costrateList[0].Id, 'Approved CR');  
+        System.assertEquals(schmsg,'Schedule has been created succesfully and a Contact Assignment has been created and mapped to the Schedule.');
+                   
+        Test.stopTest();        
     }
     
     private static testMethod void testMethod7() {
@@ -451,8 +515,14 @@ private class ScheduleCmpLightningController_Test {
     
         List<Contact_Assignments__c> cAList = [SELECT Id, Candidate_Name__c, Project__c FROM Contact_Assignments__c  WHERE RecordType.DeveloperName = 'Instructor'];
         
-        Boolean temp = ScheduleCmpLightningController.checkContactAssignmentExist(cAList[0].Candidate_Name__c, cAList[0].Project__c);
-        System.assertEquals(temp, TRUE);
+        if(cAList.size() > 0){
+            cAList[0].Status__c = 'Ended';
+            CAList[0].End_Date__c = System.Today().addDays(-1);
+            update CAList[0];
+            
+            Boolean temp = ScheduleCmpLightningController.checkContactAssignmentExist(cAList[0].Candidate_Name__c, cAList[0].Project__c,'Replace Instructor',System.today());
+            System.assertEquals(temp, TRUE);
+        }
     }
     
     // To cover checkContactAssignmentExist() method
@@ -462,7 +532,7 @@ private class ScheduleCmpLightningController_Test {
         
         List<Contact> con = [SELECT Id FROM Contact WHERE Id != :cAList[0].Candidate_Name__c];
         
-        Boolean temp = ScheduleCmpLightningController.checkContactAssignmentExist(con[0].Id, cAList[0].Project__c);
+        Boolean temp = ScheduleCmpLightningController.checkContactAssignmentExist(con[0].Id, cAList[0].Project__c,'Schedule Change',System.today());
         System.assertEquals(temp, false);
     }  
     

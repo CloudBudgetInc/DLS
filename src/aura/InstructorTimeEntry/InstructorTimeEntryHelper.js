@@ -184,7 +184,17 @@
                 }
                 cmp.set("v.showSpinner",false);
             }else {
-                console.log(':::::error:::on ::row::infor:::',response.getError()[0].message);
+                console.log(':::::complete::::erro::::::',response.getError()[0].message);
+                cmp.set("v.successMsg",response.getError()[0].message);
+                cmp.set("v.successTitle",'Error');
+                cmp.set("v.showSpinner",false);
+                cmp.set("v.displaySuccessModal",true);
+                
+                if(Array.isArray(cmp.find("successModal"))) {
+                    cmp.find("successModal")[0].open();
+                }else{
+                    cmp.find("successModal").open();
+                }
             }
         });
         $A.enqueueAction(action);

@@ -60,16 +60,15 @@
                 }
             }
         }
+
         if(isValidInputs) {
             cmp.set("v.showSpinner",true);
             var action = cmp.get("c.modifyCostRates");
             var fTPTOptions = cmp.get("v.fTPTOptions");
             var crRecord = cmp.get("v.simpleRecord");
             var conId = crRecord.Contact__c;
-            
             var crRec = JSON.parse(JSON.stringify(crRecord));
-            var conRecToUpdate = [];
-            var conRec = {};
+            
             
             crRec.Payroll_Item__c = null;
             crRec.Exempt_Status__c = null;
@@ -144,37 +143,29 @@
                 }
                 
                 if(crInfo.selectedChangeinEmployValues){
-                    crRec.Change_in_Employment_Category__c	 = crInfo.selectedChangeinEmployValues; 
+                    crRec.Change_in_Employment_Category__c = crInfo.selectedChangeinEmployValues; 
                 }else{
-                    crRec.Change_in_Employment_Category__c	 = null; 
+                    crRec.Change_in_Employment_Category__c = null; 
                 }
                 
-                if(crRec.Contact__c){
-                    conRec.Id = crRec.Contact__c;
-                    conRec.EE_Pay_Status_Eff_Date__c = cmp.get("v.effectiveDate");
-                    
-                    if(crInfo.showJobTitle){
-                        conRec.Title = cmp.get("v.newJobTitle");
-                    }
-                    
-                    if(crInfo.showNewManager && selectedUser.length > 0){
-                        conRec.Supervisor_Name__c = selectedUser[0].Id;
-                    }
-                    
-                    if(crInfo.showNewDepartment){
-                        conRec.Home_Dept__c = cmp.get("v.selectedHomeDept");
-                    }
-
-                    conRecToUpdate.push(conRec);
+                if(crInfo.showJobTitle){
+                    crRec.New_Contact_Job_Title__c = cmp.get("v.newJobTitle");
                 }
+                
+                if(crInfo.showNewManager && selectedUser.length > 0){
+                    crRec.New_Supervisor_Id__c = selectedUser[0].Id;
+                }
+                
+                if(crInfo.showNewDepartment){
+                    crRec.New_Department_Name__c = cmp.get("v.selectedHomeDept");
+                }
+
             }
             
             console.log('crRec',crRec);
-            console.log('conRecToUpdate',conRecToUpdate);
             
             action.setParams({
                 crRec: crRec,
-                conRecToUpdate: conRecToUpdate,
                 conId: conId
             });
             action.setCallback(this, function(response) {

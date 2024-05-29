@@ -43,18 +43,23 @@ public without sharing class StudentApproval_Controller {
             //ThiS date condition to filter the Projects based on the ContactAssignment End Date values
             String caFilterDate = String.valueOf(stDate.addDays(-14)).split(' ')[0];
             
+            //W-007991 - if a Student is Transferring out of a particular class a week from today, and the LTS perform a Transfer action, the student should continue to have access to the class they are transferring out of; until the End Date of their Contact assignment has passed.
+            String currentDate = String.valueOf(System.today());
+
+            
             Date caEndDate = Date.valueOf(caFilterDate);
             
             if(studentId != null) {           
                 String parentFields = 'Candidate_Name__r.Home_Dept__c,Candidate_Name__r.Home_Department_Project__c,Candidate_Name__r.Home_Department_Project__r.Name,Candidate_Name__r.Name,'+
                     'Candidate_Name__r.Supervisor_Name__c,Candidate_Name__r.Supervisor_Name__r.Name,Candidate_Name__r.Supervisor_Name__r.ManagerId,Candidate_Name__r.Supervisor_Name__r.Manager.Name,'+
-                    'Project__r.Name,Rate_Card_Rate__r.Name,Project__r.RecordType.DeveloperName,Rate_Card_Rate__r.Payroll_Item__c,Rate_Card_Rate__r.Non_Billable_Payroll_Item__c,Rate_Card_Rate__r.Rate_Type__c,RecordType.DeveloperName';
+                    'Project__r.Name,Rate_Card_Rate__r.Name,Project__r.RecordType.DeveloperName,Rate_Card_Rate__r.Payroll_Item__c,Rate_Card_Rate__r.Non_Billable_Payroll_Item__c,Rate_Card_Rate__r.Rate_Type__c,RecordType.DeveloperName'; 
                 
-                String condition = ' WHERE RecordType.DeveloperName IN (\'Student\') AND ((Status__c = \'Active\' OR (Status__c IN (\'Ended\',\'On Hold\', \'Transferred\') AND End_Date__c >= '+caFilterDate+'))) AND Project__c != null AND Project__r.RecordType.DeveloperName IN (\'DLI_W_LT_Projects\',\'DODA_Projects\',\'Language_Training_Projects\',\'ESL_LT_Projects\') AND Candidate_Name__c = \''+studentId+'\' AND Project__r.No_Student_Approval__c = false';
+                String condition = ' WHERE RecordType.DeveloperName IN (\'Student\') AND ((Status__c = \'Active\' OR (Status__c IN (\'Ended\',\'On Hold\') AND End_Date__c >= '+caFilterDate+') OR (Status__c = \'Transferred\' AND (End_Date__c >= '+currentDate+' OR End_Date__c <= '+currentDate+')))) AND Project__c != null AND Project__r.RecordType.DeveloperName IN (\'DLI_W_LT_Projects\',\'DODA_Projects\',\'Language_Training_Projects\',\'ESL_LT_Projects\') AND Candidate_Name__c = \''+studentId+'\' AND Project__r.No_Student_Approval__c = false';
                 
                 for(Contact_Assignments__c assign : ContactAssignmentService.getContactassignmentRec(condition,parentFields)) {
-                    projectId.add(assign.Project__c);
+                    projectId.add(assign.Project__c); 
                 }
+                
                  //W-002990 -Internal User Time Entries for LT Projects - Student Approval
                  //
                 for(Contact_Assignments__c conAssignIns : [SELECT Id,Candidate_Name__c 
@@ -62,7 +67,7 @@ public without sharing class StudentApproval_Controller {
                                                                 WHERE RecordType.DeveloperName = 'Instructor' AND (Status__c = 'Active' OR (Status__c IN ('Ended','On Hold') AND End_Date__c > :caEndDate)) AND  Project__c IN:projectId AND Paper_Timesheet__c = false]){
                     instructorId.add(conAssignIns.Candidate_Name__c);
                 }
-               
+                   System.debug(':::instructorId:::'+instructorId);
                 for(AcctSeed__Time_Card_Day__c tcdList : [SELECT Id,AcctSeed__Date__c,AcctSeed__Time_Card_Line__r.AcctSeed__Project__c,
                                                           AcctSeed__Time_Card_Line__r.AcctSeed__Time_Card__r.Intructor__c,
                                                           Student_Approval_Status__c FROM AcctSeed__Time_Card_Day__c 
@@ -86,14 +91,13 @@ public without sharing class StudentApproval_Controller {
                 
                 projectRelatedCAStuNames = [SELECT Id,Name,DLS_Class__c,
                                             (SELECT Id,Candidate_Name__r.Name ,Candidate_Name__r.FirstName,Candidate_Name__r.LastName
-                                             FROM Contact_Assignments__r WHERE RecordType.DeveloperName = 'Student' AND (Status__c = 'Active' OR (Status__c IN ('Ended','On Hold') AND End_Date__c > :caEndDate))) 
+                                             FROM Contact_Assignments__r WHERE RecordType.DeveloperName = 'Student' AND (Status__c = 'Active' OR ((Status__c IN ('Ended','On Hold') AND End_Date__c > :caEndDate) OR (Status__c = 'Transferred' AND (End_Date__c >= :System.today() OR End_Date__c <= :System.today()))))) 
                                             FROM AcctSeed__Project__c WHERE Id IN :tcdRelprojectId];
                 
                 projectForSupervisor = [SELECT Id,Name,DLS_Class__c,
                                         (SELECT Id,Candidate_Name__r.Name 
                                          FROM Contact_Assignments__r WHERE RecordType.DeveloperName = 'Staff' AND (Status__c = 'Active' OR (Status__c IN ('Ended','On Hold') AND End_Date__c > :caEndDate))) 
                                         FROM AcctSeed__Project__c WHERE Id IN :tcdRelprojectId];
-                
                 
                 projectRelatedCAInsRecords = [SELECT Id,Name,DLS_Class__c,
                                               (SELECT Id,Candidate_Name__r.Name,Candidate_Name__c

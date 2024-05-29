@@ -85,14 +85,16 @@
     },
     tabActionClick : function(component, event, helper){
         
-        var actionId=event.getParam('actionId');
+        var actionId = event.getParam('actionId');
         component.set("v.displayAddModal",false);
         var selectedTab = component.get("v.selectedTab");
         var rowRecord = event.getParam("row");
         component.set("v.CAId",rowRecord.Id);   
-        component.set("v.contactId",rowRecord.Candidate_Name__c);
+        component.set("v.contactId",rowRecord.Candidate_Name__c); 
         component.set("v.caRecord",rowRecord);
         component.set("v.isPayRateModifyCRRateTypes",false);
+        
+        console.log('::ActionId',actionId);
 
         if(actionId == 'detailstask') {
             
@@ -161,6 +163,7 @@
             component.set("v.contactId",rowRecord.Candidate_Name__c);
             component.set("v.displayPlannedOffDays",true);
         }else if(actionId == 'genOffer') {
+            console.log('Called');
             helper.genOfferMethod(component,event,helper);
         }else if(actionId == 'genTesterPaymentForm') {
             helper.genTesterPaymentForm(component,event,helper,'Tester Payment Form');

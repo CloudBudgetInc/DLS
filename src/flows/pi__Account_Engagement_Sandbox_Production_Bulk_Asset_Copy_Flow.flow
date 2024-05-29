@@ -1912,7 +1912,7 @@
         </fields>
         <fields>
             <name>CopiedAssets</name>
-            <fieldText>&lt;p&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;The following records were successfully copied from &lt;/span&gt;&lt;strong style=&quot;font-size: 16px;&quot;&gt;{!Source_Business_Unit}&lt;/strong&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt; to &lt;/span&gt;&lt;strong style=&quot;font-size: 16px;&quot;&gt;{!Destination_Business_Unit} &lt;/strong&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldText>&lt;p&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;The following records were processed from &lt;/span&gt;&lt;strong style=&quot;font-size: 16px;&quot;&gt;{!Source_Business_Unit}&lt;/strong&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt; to &lt;/span&gt;&lt;strong style=&quot;font-size: 16px;&quot;&gt;{!Destination_Business_Unit} &lt;/strong&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
         </fields>
         <fields>

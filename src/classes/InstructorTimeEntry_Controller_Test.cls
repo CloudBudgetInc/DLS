@@ -7,7 +7,7 @@ private class InstructorTimeEntry_Controller_Test{
             List<Contact_Assignments__c> contactAssignList = TestClassUtil.createTestContactAssignment(); 
             List<MTT_Location__c> location = TestClassUtil.createTestLocations();
         Test.StopTest();
-        
+         
         List<Attendance__c> stuAtn = TestClassUtil.createTestAttendance();
 
         List<AcctSeed__Cost_Rates__c> costRates = TestClassUtil.createTestCostRates();
@@ -2243,7 +2243,7 @@ private class InstructorTimeEntry_Controller_Test{
         update conAss[0]; 
                 
         List<AcctSeed__Project__c> proj = [SELECT Id, DLS_Class__c,RecordType.DeveloperName, RecordTypeId, 
-                                                No_Student_Approval__c, Name, No_Student_Hours_Verification__c
+                                                No_Student_Approval__c, Name, No_Student_Hours_Verification__c,DLI_Project_Type__c 
                                             FROM AcctSeed__Project__c WHERE Id = :conAss[0].Project__c];
         
         Test.stopTest();
@@ -2340,7 +2340,7 @@ private class InstructorTimeEntry_Controller_Test{
         update insConAss[0];
         
         //List<AcctSeed__Time_Card_Line__c> timeCardLines,List<AcctSeed__Project_Task__c> taskRecords,List<Contact_Assignments__c> caRecord,Map<Id,Integer> taskIdTimeCount,Map<Id,String> taskIdTimeMap,List<Contact_Assignments__History> caHistory,List<AcctSeed__Cost_Rates__c> oldCRRecord){
-        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', new List<AcctSeed__Time_Card_Line__c>(), new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{});
+        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', new List<AcctSeed__Time_Card_Line__c>(), new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{},new Map<Id,Map<String,List<String>>>{});
         
         Test.stopTest();
     }
@@ -2421,7 +2421,7 @@ private class InstructorTimeEntry_Controller_Test{
             AcctSeed__Project_Task__r.Project_Task_Type__c,  AcctSeed__Project_Task__r.Name, 
             (SELECT Id, Late_Cancellation__c, Recall_Reason__c, Student_Approval_Status__c, Cancellation_Reason__c, Total_Hours_Before_Approved__c, Status__c, Start_Time1__c, End_Time1__c, AcctSeed__Date__c, AcctSeed__Internal_Comment__c, AcctSeed__Time_Card_Line__c, Start_Time2__c, End_Time2__c FROM AcctSeed__Time_Card_Days__r) FROM AcctSeed__Time_Card_Line__c WHERE Id = :timeCardLine.Id];
         
-        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', lines, new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{});
+        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', lines, new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{},new Map<Id,Map<String,List<String>>>{});
         
         Test.stopTest();
     }
@@ -2503,7 +2503,7 @@ private class InstructorTimeEntry_Controller_Test{
             AcctSeed__Project_Task__r.Project_Task_Type__c,  AcctSeed__Project_Task__r.Name, 
             (SELECT Id, Late_Cancellation__c, Recall_Reason__c, Student_Approval_Status__c, Cancellation_Reason__c, Total_Hours_Before_Approved__c, Status__c, Start_Time1__c, End_Time1__c, AcctSeed__Date__c, AcctSeed__Internal_Comment__c, AcctSeed__Time_Card_Line__c, Start_Time2__c, End_Time2__c FROM AcctSeed__Time_Card_Days__r) FROM AcctSeed__Time_Card_Line__c WHERE Id = :timeCardLine.Id];
         
-        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', lines, new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{});
+        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', lines, new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{},new Map<Id,Map<String,List<String>>>{});
         
         Test.stopTest();
     }
@@ -2574,7 +2574,7 @@ private class InstructorTimeEntry_Controller_Test{
             AcctSeed__Project_Task__r.Project_Task_Type__c,  AcctSeed__Project_Task__r.Name, 
             (SELECT Id, Late_Cancellation__c, Recall_Reason__c, Student_Approval_Status__c, Cancellation_Reason__c, Total_Hours_Before_Approved__c, Status__c, Start_Time1__c, End_Time1__c, AcctSeed__Date__c, AcctSeed__Internal_Comment__c, AcctSeed__Time_Card_Line__c, Start_Time2__c, End_Time2__c FROM AcctSeed__Time_Card_Days__r) FROM AcctSeed__Time_Card_Line__c WHERE Id = :timeCardLine.Id];
         
-        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', lines, new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{});
+        TimeCardDayCommunityTranslator.instructorDayRowFormation(Date.Today(), Date.Today(), '', '', lines, new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>{insConAss[0]}, new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>{}, new List<AcctSeed__Cost_Rates__c>{},new Map<Id,String>{}, new Set<Date>{},new Map<Id,Map<String,List<String>>>{});
         
         Test.stopTest();
     }

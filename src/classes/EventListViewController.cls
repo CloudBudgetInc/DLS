@@ -209,7 +209,7 @@ public without sharing class EventListViewController {
         // Currently Event Approval process only for Instructor
         List<EventDomain.EventCalendarInfo> pendingApprovalEvtList = new List<EventDomain.EventCalendarInfo>();
         if(communityName == 'instructor'){            
-            pendingApprovalEvtList = EventApproval_Ctrl.getEventsForApproval();
+            pendingApprovalEvtList = EventApproval_Ctrl.getEventsForApproval(null);
         }
         
         String childEventRelParentIdsJSON = getChildEventRelParentIds(eventRecords);
@@ -249,7 +249,7 @@ public without sharing class EventListViewController {
             }
         }
             
-        List<EventDomain.EventCalendarInfo> eventWrapList = EventTranslator.eventCalendarInfo(eventRecords,holidayRecords,proIdStudentNames,planNedLeaves,startDate,endDate,childEventRelParentIds);
+        List<EventDomain.EventCalendarInfo> eventWrapList = EventTranslator.eventCalendarInfo(eventRecords,holidayRecords,proIdStudentNames,planNedLeaves,startDate,endDate,childEventRelParentIds,new Map<Id,Date>());
         
         if(pendingApprovalEvtList.size() > 0){
             eventWrapList.addAll(pendingApprovalEvtList);
@@ -330,10 +330,11 @@ public without sharing class EventListViewController {
         
         
         if(String.isNotBlank(contactId) && communityName != null) {
-            for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,Project__r.DLS_Ref__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName 
+            
+            for(Contact_Assignments__c ca : [SELECT Id,Name,Status__c,Project__c,Project__r.DLS_Ref__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName 
                                                 FROM Contact_Assignments__c 
                                                     WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName = :recordTypeName AND Project__c != null]){
-                if(ca.Project__c != null){
+                if(ca.Project__c != null && (!recordLimit || ca.Status__c == 'Active')){ //Modified by Dhinesh - 4/3/2024 - W-007995 - Added Status filter to exclude ended CA Project PDO for Instructor Community 
                      projectIds.add(ca.Project__c);
                 }
             }
@@ -613,7 +614,7 @@ public without sharing class EventListViewController {
                 }
             }
             
-            eventRecordInfo = EventTranslator.eventCalendarInfo(eventLst,new List<Holiday>(),proIdStudentNames,new List<Planned_Days_Off__c>(),null,null,childEventRelParentIds);
+            eventRecordInfo = EventTranslator.eventCalendarInfo(eventLst,new List<Holiday>(),proIdStudentNames,new List<Planned_Days_Off__c>(),null,null,childEventRelParentIds,new Map<Id,Date>());
         }     
         return JSON.serialize(eventRecordInfo);
     }
@@ -784,7 +785,7 @@ public without sharing class EventListViewController {
     //Added By Jain S. (Aug 04, 2020)
     @AuraEnabled
     public static List<EventDomain.PendingEventsInfo> getEventsForApproval(){
-        return EventApproval_Ctrl.getPendingEventsForApproval();
+        return EventApproval_Ctrl.getPendingEventsForApproval(null);
     }
     
     //Modified By Dhinesh - W-006142 - Request an Event feature for Student Community - to get the initial values for request new events

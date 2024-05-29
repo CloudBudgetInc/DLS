@@ -354,8 +354,10 @@ trigger UpdateMaterialRequestName on Materials_Request__c (before insert, before
         
         for(Materials_Request__c mr : Trigger.new){
         
+            // W-008040 : Request for checkbox field "No LMS Welcome Email" on Materials Request Object
+            // If the class is already in session or the students are transferred from one course to another in the middle of training, then there's no need to send out the LMS welcome email.
             if(Trigger.isUpdate && mr.Materials_Name_Formula__c != null && mr.Materials_Name_Formula__c == 'Student LMS Enrollment (Free)' && 
-                mr.Request_Status__c != Trigger.oldMap.get(mr.Id).Request_Status__c && mr.Request_Status__c == 'Delivered' && mr.Project__c != null){
+                mr.Request_Status__c != Trigger.oldMap.get(mr.Id).Request_Status__c && mr.Request_Status__c == 'Delivered' && mr.Project__c != null && !mr.No_LMS_Welcome_Email__c){
                 
                 mrIdAndProjId.put(mr.Id, mr.Project__c);
                 materialReqMap.put(mr.Id, mr);  

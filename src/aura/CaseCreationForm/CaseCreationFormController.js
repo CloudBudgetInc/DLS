@@ -8,11 +8,15 @@
                 console.log('::::result::::::::',result);
                 var type = result.typeValues;
                 var priority = result.priorityValues;
+                var enviroment = result.enviromentValues;
+
                 type.unshift({'label':'--None--','value':''});
                 priority.unshift({'label':'--None--','value':''});
+                enviroment.unshift({'label':'--None--','value':''});
                 
                 cmp.set("v.types",type);
                 cmp.set("v.priorities",priority);
+                cmp.set("v.enviroments",enviroment);
             }else {
                 console.log(':::doinit::::error::::::',response.getError()[0].message);
             }

@@ -16,7 +16,7 @@ public Class Pay_Rate_Modification_Handler{
         return the newly inserted Cost Rate Id
     ************************************************************************************/
     @AuraEnabled
-    public static String modifyCostRates(AcctSeed__Cost_Rates__c crRec, List<Contact> conRecToUpdate, String conId) {
+    public static String modifyCostRates(AcctSeed__Cost_Rates__c crRec, String conId) {
         isFromCRModify = true;
         try {
             List<Contact> conInfo = [SELECT Id,Supervisor_Name__c,Supervisor_Name__r.Name,Title FROM Contact WHERE Id = :conId];
@@ -25,32 +25,18 @@ public Class Pay_Rate_Modification_Handler{
             crRec.Prior_Version__c = crRec.Id;
             crRec.Id = null;
             
-            if(conRecToUpdate.size() > 0 && conInfo.size() > 0){
+            if(conInfo.size() > 0){
                 if(crRec.Change_in_Reporting_New_Manager__c == true && conInfo[0].Supervisor_Name__c != null){
                     crRec.Prior_Contact_Supervisor__c = conInfo[0].Supervisor_Name__r.Name; 
                 }
-                
                 if(crRec.New_Job_Title__c == true && conInfo[0].Title != null){
                     crRec.Prior_Contact_Title__c = conInfo[0].Title;  
                 }
-                
-                if(crRec.Rate_Type__c == 'FT Salary & Benefits'){
-                    conRecToUpdate[0].EE_Pay_Status__c = 'Salary';
-                }else if(crRec.Rate_Type__c == 'FT Hourly & Benefits'){
-                    conRecToUpdate[0].EE_Pay_Status__c = 'Hourly - FT';
-                }else if(crRec.Rate_Type__c == 'PT Hourly (OH & G&A)'){
-                    conRecToUpdate[0].EE_Pay_Status__c = 'Hourly - PT';
-                }
-                
             }
             
             AcctSeed__Cost_Rates__c cr = crRec.clone(false,true,false,false);
 
             insert cr;
-            
-            if(conRecToUpdate.size() > 0){
-                update conRecToUpdate;
-            }
             return cr.Id;
         } catch(Exception e) {
              throw new AuraHandledException(e.getMessage());

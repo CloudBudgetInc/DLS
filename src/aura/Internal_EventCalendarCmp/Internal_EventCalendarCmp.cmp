@@ -1,0 +1,10 @@
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" >
+        <aura:attribute name="recordId" type="String" default=""/>
+
+    <lightning:card>
+        <aura:set attribute="title">
+            <h1 style="font-weight:bold;">Event Calendar</h1>
+        </aura:set>
+       <div style="padding:1rem"><c:EventCalendarCmp communityName="Internal" recordId="{!v.recordId}"/></div> 
+    </lightning:card>
+</aura:component>

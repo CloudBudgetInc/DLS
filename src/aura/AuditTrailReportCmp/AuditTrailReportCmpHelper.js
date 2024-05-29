@@ -5,12 +5,13 @@
         
         var fromDate = filterObj.fromDateVal || null;
         var toDate = filterObj.toDateVal || null;
-        var insName = '';
+        var insId = '';
         var userName = '';
-        var projName = '';
+        var projName = ''; 
+        var tcType = component.get("v.timeCardTypeValue");
         
-        if(filterObj && filterObj.selectedConName && filterObj.selectedConName.length > 0 && filterObj.selectedConName[0].Name){
-            insName = filterObj.selectedConName[0].Name;
+        if(filterObj && filterObj.selectedConName && filterObj.selectedConName.length > 0 && filterObj.selectedConName[0].Id){
+            insId = filterObj.selectedConName[0].Id;
         }
         if(filterObj && filterObj.selectedUser && filterObj.selectedUser.length > 0 && filterObj.selectedUser[0].Name){
             userName = filterObj.selectedUser[0].Name;
@@ -18,12 +19,17 @@
         if(filterObj && filterObj.selectedProjName && filterObj.selectedProjName.length > 0 && filterObj.selectedProjName[0].Name){
             projName = filterObj.selectedProjName[0].Name;
         }
+      
         var param = {};
         param.fromDate = fromDate;
         param.toDate = toDate;
-        param.insName = insName;
+        param.insId = insId;
         param.userName = userName;
         param.projName = projName;
+        param.tcType = tcType;
+        param.selectedField = component.get("v.selectedTCDLField");
+        param.intialize = component.get("v.initialize")
+
         
         var self = this;
         const server = component.find('server');
@@ -34,12 +40,33 @@
             false, 
             $A.getCallback(function(response) {                
                 var result = response;
-                component.set("v.tcdHistoryRecs", result);
-                component.set("v.spinner", false);
+                var tcdHistory = [];
                 
+                if(response.tcsHistoryReports && response.tcsHistoryReports.length > 0){
+                    tcdHistory = response.tcsHistoryReports;
+                }
+                if(response.getTimeCardTypes){
+                    component.set("v.timecardType", response.getTimeCardTypes);
+                }
+                if(response.tcdFieldWithLabels){
+                    if(tcType == 'Time Card Day'){
+                        component.set("v.tcdFields", response.tcdFieldWithLabels);
+                    }
+                    component.set("v.tcdFieldWithLabels",response.tcdFieldWithLabels);
+                }
+                if(response.tclFieldWithLabels){
+                    if(tcType == 'Time Card Line'){
+                        component.set("v.tcdFields", response.tclFieldWithLabels);
+                    }
+                    component.set("v.tclFieldWithLabels",response.tclFieldWithLabels);
+                }
+                component.set("v.tcdHistoryRecs", tcdHistory);
+                component.set("v.spinner", false);
+                component.set("v.initialize",false);
             }),
             $A.getCallback(function(errors) { 
-                console.log('error',errors)
+                console.log('error',errors);
+                component.set("v.spinner", false);
                 self.showToast(component,event,'Error',errors[0].message,'error');
             }),
             false, 
@@ -101,58 +128,12 @@
     },
     
     getRecsToDownload : function(component, event, helper) {
-        
-        var filterObj = component.get("v.filterObj");
-        
-        var fromDate = filterObj.fromDateVal || null;
-        var toDate = filterObj.toDateVal || null;
-        var insName = '';
-        var userName = '';
-        var projName = '';
-        
-        if(filterObj && filterObj.selectedConName && filterObj.selectedConName.length > 0 && filterObj.selectedConName[0].Name){
-            insName = filterObj.selectedConName[0].Name;
+        var tcdHistory = component.get("v.tcdHistoryRecs");
+        if(tcdHistory.length > 0){
+            var columns = component.get("v.tabelHeader");
+            var fileName = 'Audit Trail Report';
+            helper.exportAsFileType(component,columns,tcdHistory,fileName,'csv',false); 
         }
-        if(filterObj && filterObj.selectedUser && filterObj.selectedUser.length > 0 && filterObj.selectedUser[0].Name){
-            userName = filterObj.selectedUser[0].Name;
-        }
-        if(filterObj && filterObj.selectedProjName && filterObj.selectedProjName.length > 0 && filterObj.selectedProjName[0].Name){
-            projName = filterObj.selectedProjName[0].Name;
-        }
-        
-        var param = {};
-        param.fromDate = fromDate;
-        param.toDate = toDate;
-        param.insName = insName;
-        param.userName = userName;
-        param.projName = projName;
-        
-        var self = this;
-        const server = component.find('server');
-        const action = component.get('c.getAuditReportRecsToDownload');
-        server.callServer(
-            action, 
-            param, 
-            false, 
-            $A.getCallback(function(response) {
-                
-                var result = response;
-                component.set("v.tcdHistoryRecsToDownload", result);
-                var rows = component.get("v.tcdHistoryRecsToDownload");
-                if(rows.length > 0){
-                    var columns = component.get("v.tabelHeader");
-                    var fileName = 'Audit Trail Report';
-                    helper.exportAsFileType(component,columns,rows,fileName,'csv',false); 
-                }
-            }),
-            $A.getCallback(function(errors) { 
-                console.log('error',errors)
-                self.showToast(component,event,'Error',errors[0].message,'error');
-            }),
-            false, 
-            false, 
-            false 
-        );
     },
     
     exportAsFileType : function(component,columns,rows,fileName,type,useValuePropForReference) {

@@ -1,22 +1,37 @@
 public without sharing class EventCalendarController{
     
     @AuraEnabled
-    public static List<EventDomain.EventCalendarInfo> getEventRecordList(String year1,String year2,List<String> statusValues) {
+    public static List<EventDomain.EventCalendarInfo> getEventRecordList(String year1,String year2,List<String> statusValues,String contactId) {
+        String communityName = null;
+        Map<Id,Date> transferedCAWithDatesMap = new Map<Id,Date>();
         
-        String contactId = getLoggedUserContactId(); // Get Currently logged user's contact Id
-        String communityName = getCommunityPathPrefix();
+        if(String.isNotBlank(contactId)){
+            communityName = 'Internal';// for Internal 
+        }else{
+            communityName = getCommunityPathPrefix();
+            contactId = getLoggedUserContactId(); // Get Currently logged user's contact Id
+        }
+        
         String recordTypeName = '';
+        Set<String> recordTypeNames = new Set<String>();
         
         system.debug(':::::contactId:::'+contactId);
         system.debug('::::::::year:::values::'+year1+'::::'+year2);
         system.debug('::::::::statusValues:::::'+statusValues);
         
-        if(communityName == 'instructor' || Test.isRunningTest()){
+        if(communityName == 'instructor' || (communityName == null && Test.isRunningTest())){
+            recordTypeNames.add('Instructor');
             recordTypeName = 'Instructor';
         }else if(communityName == 'student'){
+            recordTypeNames.add('Student');
             recordTypeName = 'Student';
         }else if(communityName == 'client'){
+            recordTypeNames.add('Client_Partner');
             recordTypeName = 'Client_Partner';
+        }else if(communityName == 'Internal' || Test.isRunningTest()){
+            recordTypeNames.add('Student');
+            recordTypeNames.add('Instructor');
+            recordTypeName = 'Internal';
         }
         
         String stDate1;
@@ -58,10 +73,12 @@ public without sharing class EventCalendarController{
         }
         
         Set<Id> projectIds = new Set<Id>();
+        Set<Id> studentIds = new Set<Id>();
+
         Map<Id,String> proIdStudentNames = new Map<Id,String>();
         
-        if(String.isNotBlank(contactId) && communityName == 'student') {
-            for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName FROM Contact_Assignments__c WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName = :recordTypeName AND Project__c != null]){
+        if((String.isNotBlank(contactId) && communityName == 'student') || (String.isBlank(communityName) && Test.isRunningTest())){
+            for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,End_Date__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName,Status__c FROM Contact_Assignments__c WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName IN :recordTypeNames AND Project__c != null]){
                 projectIds.add(ca.Project__c);
                 
                 String studentName = ca.Candidate_Name__r.FirstName+' '+ca.Candidate_Name__r.LastName.subString(0,1)+'.';
@@ -74,15 +91,23 @@ public without sharing class EventCalendarController{
                     proIdStudentNames.put(ca.Project__c,(existingName+', '+studentName));
                 }
                 
+                if(ca.Status__c == 'Transferred'){
+                    if(!transferedCAWithDatesMap.containsKey(ca.Project__c)){
+                        transferedCAWithDatesMap.put(ca.Project__c,ca.End_Date__c);
+                    }
+                }
             }
         }else {
             
             //Get Student Names for Instructor View
-            for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName FROM Contact_Assignments__c WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName = :recordTypeName AND Project__c != null]){
+            for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName FROM Contact_Assignments__c WHERE Candidate_Name__c = :contactId AND RecordType.DeveloperName IN :recordTypeNames AND Project__c != null]){
+                if(ca.RecordType.DeveloperName == 'Student'){
+                    studentIds.add(ca.Project__c);
+                }
                 projectIds.add(ca.Project__c);
             }
             
-            for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName FROM Contact_Assignments__c WHERE RecordType.DeveloperName = 'Student' AND Project__c IN :projectIds]){
+            for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,Status__c,End_Date__c,RecordType.DeveloperName,Candidate_Name__r.FirstName,Candidate_Name__r.LastName FROM Contact_Assignments__c WHERE RecordType.DeveloperName = 'Student' AND Project__c IN :projectIds]){
                 String studentName = '';
                 
                 studentName = (ca.Candidate_Name__r.FirstName == null ? '' : ca.Candidate_Name__r.FirstName);
@@ -95,9 +120,16 @@ public without sharing class EventCalendarController{
                     
                     proIdStudentNames.put(ca.Project__c,(existingName+', '+studentName));
                 }
+                
+                if(ca.Status__c == 'Transferred' && communityName == 'Internal' && studentIds.size() > 0 && studentIds.contains(ca.Project__c)){
+                    if(!transferedCAWithDatesMap.containsKey(ca.Project__c)){
+                        transferedCAWithDatesMap.put(ca.Project__c,ca.End_Date__c);
+                    }
+                }
             }
             
         }
+        System.debug('recordTypeNames::::'+recordTypeNames);
         System.debug('contact Id::::'+contactId);
         system.debug('::::::::::proIdStudentNames:::'+proIdStudentNames);
         
@@ -107,28 +139,48 @@ public without sharing class EventCalendarController{
         eventQryStr += ', Start_Date_Time__c, Start_Time__c, Status__c, Time_Card_Day__c, Timezone__c, Total_Used_Hours__c,Day_of_Week__c,Approval_Status__c';
         eventQryStr += ',Schedule__r.Project_Task__c,Schedule__r.Project_Task__r.Name,Project_Task__r.Name, Project_Task__r.Project_Task_Type__c, Schedule__r.Project_Task__r.Project_Task_Type__c,Parent_Event__c,Schedule__r.Meeting_URL__c, Project__r.AcctSeed__Account__c, Project__r.AcctSeed__Account__r.Name, Project__r.RecordType.DeveloperName, Project__r.Project_Type__c, Instructor__r.FirstName, Instructor__r.LastName, Schedule__r.Create_Zoom_Meetings__c  FROM Events__c';
         
-        if((communityName == 'instructor' && contactId != null && contactId != '') || Test.isRunningTest()){
-            eventQryStr += ' WHERE Instructor__c = :contactId';
-        }else if((communityName == 'student' || communityName == 'client') && projectIds.size() > 0){
-            eventQryStr += ' WHERE Project__c IN :projectIds AND (Project_Task__r.Project_Task_Type__c != \'Preparation time\' OR Schedule__r.Project_Task__r.Project_Task_Type__c != \'Preparation time\')';
-        }
         
-        if(dt1 != null && dt2 != null){
-            eventQryStr += ' AND Date__c >= '+dt1+' AND Date__c <= '+dt2+''; 
+        if(((communityName == 'instructor' || communityName == 'Internal') && String.isNotBlank(contactId)) || communityName == 'student' || communityName == 'client'){
+            eventQryStr += ' WHERE ';
+            
+            if((communityName == 'instructor' ||  communityName == 'Internal') || Test.isRunningTest()){
+                if(communityName == 'Internal'){
+                    eventQryStr += '(';
+                }
+                eventQryStr += '(Instructor__c = :contactId AND Approval_Status__c != \'Instructor Rejected\' AND ((Approval_Status__c = null AND Status__c != \'Draft\') OR (Approval_Status__c != null)))';
+            }
+            
+            if(communityName == 'Internal' && studentIds.size() > 0){
+                if(communityName == 'Internal'){
+                    eventQryStr +=  ' OR ';
+                }  
+                eventQryStr += ' (Project__c IN :studentIds AND (Project_Task__r.Project_Task_Type__c != \'Preparation time\' OR Schedule__r.Project_Task__r.Project_Task_Type__c != \'Preparation time\')) ';
+            }
+            
+            if((communityName == 'student' || communityName == 'client') && projectIds.size() > 0){
+                eventQryStr += ' (Project__c IN :projectIds AND (Project_Task__r.Project_Task_Type__c != \'Preparation time\' OR Schedule__r.Project_Task__r.Project_Task_Type__c != \'Preparation time\')) ';
+                                                                   
+            }
+            
+            if(communityName == 'Internal'){
+                eventQryStr += ')';
+            }
+            
+            if(dt1 != null && dt2 != null){
+                eventQryStr += ' AND Date__c >= '+dt1+' AND Date__c <= '+dt2+'';  
+            }
+            
+            if(statusValues.size() > 0){
+                eventQryStr += ' AND Status__c IN :statusValues ';
+            }
+            
+            eventQryStr += ' AND Approval_Status__c != \'LTS Rejected\'';
         }
-        
-        if(statusValues.size() > 0){
-            eventQryStr += ' AND Status__c IN :statusValues ';
-        }
-        
-        if(communityName == 'instructor'){
-           eventQryStr += ' AND Approval_Status__c != \'Instructor Rejected\' AND ((Approval_Status__c = null AND Status__c != \'Draft\') OR (Approval_Status__c != null))';  
-        }
-        
-        eventQryStr += ' AND Approval_Status__c != \'LTS Rejected\'';
         system.debug('::::::::::eventQryStr:::'+eventQryStr);
         
         List<Events__c> eventRecords = database.query(eventQryStr);
+        
+          system.debug('::::::::::eventRecords:::'+eventRecords.size());
         
         //Get Holiday Records based on the date range
         
@@ -152,11 +204,22 @@ public without sharing class EventCalendarController{
             }
         }*/ 
         
-        if(projectIDs.size() > 0){            
-            String rtType = (recordTypeName == 'Student' ? 'Instructor' : 'Student');
+        if(projectIDs.size() > 0 && (recordTypeName == 'Instructor' || recordTypeName == 'Student' || recordTypeName == 'Internal')){ 
+            
+            Set<String> rtType = new Set<String>();
+            
+            if(recordTypeName == 'Student'){
+                rtType.add('Instructor');
+            }else if(recordTypeName == 'Instructor'){
+                rtType.add('Student');
+            }else if(recordTypeName == 'Internal'){
+                rtType.add('Student');
+                rtType.add('Instructor');
+            }
+            
             for(Contact_Assignments__c ca : [SELECT Id,Name,Project__c,Project__r.DLS_Ref__c,RecordType.DeveloperName,Candidate_Name__c,Candidate_Name__r.FirstName,Candidate_Name__r.LastName 
                                              FROM Contact_Assignments__c 
-                                             WHERE RecordType.DeveloperName = :rtType AND Status__c != 'Ended' AND 
+                                             WHERE RecordType.DeveloperName IN :rtType AND Status__c != 'Ended' AND 
                                              Project__c IN :projectIDs]){                
                 if(ca.Candidate_Name__c != null){
                     contactIDs.add(ca.Candidate_Name__c);
@@ -169,18 +232,22 @@ public without sharing class EventCalendarController{
         plannedQuery1 = 'SELECT Id,name,Description__c,Contact__c,Contact__r.Name,Leave_Type__c,Project__c,Project__r.DLS_Ref__c,Project__r.name ,Date__c, Type__c,Status__c '+
                 'FROM Planned_Days_Off__c WHERE Contact__c = :contactId AND Status__c IN :statusFilters';
         
+        
         if(recordTypeName == 'Student'){
             filterRecordTypes .add('Student_Planned_Days_Off');
             //get logged Contact related Planned Days Off records
             
-             plannedQuery1 += ' AND RecordType.DeveloperName = \'Student_Planned_Days_Off\'';
+            plannedQuery1 += ' AND RecordType.DeveloperName = \'Student_Planned_Days_Off\'';
             
         }else if(recordTypeName == 'Instructor'){
-            filterRecordTypes .add('Instructor_Planned_Days_Off');
+            filterRecordTypes.add('Instructor_Planned_Days_Off');
             //get logged Contact related Planned Days Off records
-                                    
-             plannedQuery1 += ' AND RecordType.DeveloperName = \'Instructor_Planned_Days_Off\''; 
+            
+            plannedQuery1 += ' AND RecordType.DeveloperName = \'Instructor_Planned_Days_Off\''; 
+        }else if(recordTypeName == 'Internal'){
+            plannedQuery1 += ' AND (RecordType.DeveloperName = \'Instructor_Planned_Days_Off\' OR  RecordType.DeveloperName = \'Student_Planned_Days_Off\')'; 
         }
+        
         //get Planned Days Off records except logged Contact related planned Days Off records
         plannedQuery2 = 'SELECT Id,name,Description__c,Contact__c,Contact__r.Name,Leave_Type__c,Project__c,Project__r.DLS_Ref__c,Project__r.name ,Date__c, Type__c,Status__c '+
             'FROM Planned_Days_Off__c WHERE RecordType.DeveloperName Not IN :filterRecordTypes AND Status__c IN :statusFilters AND Contact__c IN :contactIDs';
@@ -196,14 +263,16 @@ public without sharing class EventCalendarController{
         
         // Currently Event Approval process only for Instructor
         List<EventDomain.EventCalendarInfo> pendingApprovalEvtList = new List<EventDomain.EventCalendarInfo>();
-        if(communityName == 'instructor'){            
-            pendingApprovalEvtList = EventApproval_Ctrl.getEventsForApproval();
+        if(communityName == 'instructor' || communityName == 'Internal'){            
+            pendingApprovalEvtList = EventApproval_Ctrl.getEventsForApproval(contactId);
         }
         
         String childEventRelParentIdsJSON = EventListViewController.getChildEventRelParentIds(eventRecords);
+        
         Set<Id> childEventRelParentIds = (Set<Id>) JSON.deserialize(childEventRelParentIdsJSON, Set<Id>.class);
         
-        List<EventDomain.EventCalendarInfo> eventWrapList = EventTranslator.eventCalendarInfo(eventRecords,holidays,proIdStudentNames,plannedLeaves1,null,null,childEventRelParentIds);
+        List<EventDomain.EventCalendarInfo> eventWrapList = EventTranslator.eventCalendarInfo(eventRecords,holidays,proIdStudentNames,plannedLeaves1,null,null,childEventRelParentIds,transferedCAWithDatesMap);
+        
         if(pendingApprovalEvtList.size() > 0){
             eventWrapList.addAll(pendingApprovalEvtList);
         }
@@ -728,8 +797,8 @@ public without sharing class EventCalendarController{
         EventApproval_Ctrl.saveEventRecords(newEventRecs);
     }
     @AuraEnabled
-    public static List<EventDomain.PendingEventsInfo> getEventsForApproval(){
-        return EventApproval_Ctrl.getPendingEventsForApproval();
+    public static List<EventDomain.PendingEventsInfo> getEventsForApproval(String contactId){
+        return EventApproval_Ctrl.getPendingEventsForApproval(contactId);
     }
     
     @AuraEnabled

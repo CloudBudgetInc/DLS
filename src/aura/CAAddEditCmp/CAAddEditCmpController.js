@@ -272,7 +272,7 @@
         
         if(costRateInfo.isErrorFROMCRModal){
             cmp.set("v.showCostRateModal",false);
-        }else if(isCACreatewithCR){
+        }else if(isCACreatewithCR || costRateInfo.createCAWithoutCR){
             helper.upsertActionforOtherTab(cmp,event,helper); 
         }else{
             var appEvent = $A.get("e.c:reloadEvent");

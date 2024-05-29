@@ -43,6 +43,8 @@ Created by Karthiga on Feb 06, 2017: Domain class used for AssignmentTabComponen
         public String costLabel;
         @AuraEnabled
         public String contactRTName;
+        @AuraEnabled
+        public Boolean createCAWithoutCR;
     }
     
     public class MultiplePayRateCostRate{

@@ -1,5 +1,5 @@
 @isTest
-private class Mobile_InstructorTimeEntryCtrl_Test{
+private class Mobile_InstructorTimeEntryCtrl_Test{ 
 
     @testSetup static void setupMethod() {
     
@@ -2364,7 +2364,7 @@ private class Mobile_InstructorTimeEntryCtrl_Test{
 
         List<Planned_Days_Off__c> pdos = [SELECT Id, Date__c, Description__c, Contact__r.Name FROM Planned_Days_Off__c LIMIT 2];
         system.runAs(user) {
-            TimeCardDayCommunityTranslator.instructorTimeEntryRowWrapperFormation(currst, currend, 'My Test Project', stdConAss[0].Candidate_Name__r.Name, '', new List<AcctSeed__Time_Card_Line__c>(), new List<Accounting_Seed_Time_Snapshot__c>(), new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>(), new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>(), new List<AcctSeed__Cost_Rates__c>(), new List<Contact_Assignments__c>(), new Map<Id,List<Attendance__c>>(),false,pdos, new Set<Date>(), new Map<Id,String>());
+            TimeCardDayCommunityTranslator.instructorTimeEntryRowWrapperFormation(currst, currend, 'My Test Project', stdConAss[0].Candidate_Name__r.Name, '', new List<AcctSeed__Time_Card_Line__c>(), new List<Accounting_Seed_Time_Snapshot__c>(), new List<AcctSeed__Project_Task__c>{task}, new List<Contact_Assignments__c>(), new Map<Id,Integer>(), new Map<Id,String>(), new List<Contact_Assignments__History>(), new List<AcctSeed__Cost_Rates__c>(), new List<Contact_Assignments__c>(), new Map<Id,List<Attendance__c>>(),false,pdos, new Set<Date>(), new Map<Id,String>(),new  Map<Id,Map<String,List<String>>>());
         }
         Test.stopTest();
     }

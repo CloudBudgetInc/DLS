@@ -184,59 +184,37 @@ public class UpdateContAssignStatusAsEnded{
     public static void lTWith_withoutPrepEmailAlert(Set<Id> prepProjIds, List<AcctSeed__Project_Task__c> prepProjectTasks){
         
         Map<Id, Acctseed__Project__c> projMap = new Map<Id, Acctseed__Project__c>([SELECT Id, Name, Default_Cost_Rate_Rate_Type__c FROM Acctseed__Project__c WHERE Id IN : prepProjIds]);
-        
-        List<String> emailToAddresses = new List<String>();
         List<Messaging.SingleEmailMessage> sendEmailList = new List<Messaging.SingleEmailMessage>();
         
         try{            
-            List<OrgWideEmailAddress> orgWideEmail = [SELECT Id,Address,DisplayName FROM OrgWideEmailAddress WHERE DisplayName = 'support@dlsdc.com'];
-            
-            String orgWideEmailId = '';
-            if(orgWideEmail != null && orgWideEmail.size() > 0){
-                orgWideEmailId = orgWideEmail[0].Id;
-            }
-            
-            System_Values__c sysVal = System_Values__c.getValues('LT With_without Prep Email To Address'); 
-            if (sysVal != null && sysVal.Value__c != null) {
-                for (String st : sysVal.Value__c.split(',')) {
-                    emailToAddresses.add(st.trim());
-                }
-            }
+            String orgWideEmailId = ProjectTrigger_Handler.getOrgWideEmailId('support@dlsdc.com');
+            List<String> toAddresses = ProjectTrigger_Handler.getSystemValuesList('LT With_without Prep Email To Address');
             
             String subject = 'Default Cost Rate Alert';
             String starting_Content = 'Hello '+ ', <br/><br/>';
             starting_Content += 'Following Project found with Default Cost Rate mismatched with Project Task(s) in the Project. Please, check and fix the issue.<br/>';
-            
             String ending_Content = 'Thank you,<br/><br/>System Generated Email<br/>';
             
             for(AcctSeed__Project_Task__c pt : prepProjectTasks){
                 
                 if(projMap.containsKey(pt.AcctSeed__Project__c)){
                     
-                    if((projMap.get(pt.AcctSeed__Project__c).Default_Cost_Rate_Rate_Type__c == 'LT without Prep' && Trigger.isInsert) || 
-                        (projMap.get(pt.AcctSeed__Project__c).Default_Cost_Rate_Rate_Type__c == 'LT with Prep' && Trigger.isDelete)){
+                    // W-008006 : Default Cost Rate and Project Task Mismatch
+                    Acctseed__Project__c proj = projMap.get(pt.AcctSeed__Project__c);
+                    if(((proj.Default_Cost_Rate_Rate_Type__c == 'LT without Prep' || proj.Default_Cost_Rate_Rate_Type__c == 'LT without Billable Prep') && Trigger.isInsert) || 
+                        ((proj.Default_Cost_Rate_Rate_Type__c == 'LT with Prep' || proj.Default_Cost_Rate_Rate_Type__c == 'LT with Billable Prep') && Trigger.isDelete)){
                         
-                        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-                        if(orgWideEmailId != null) {
-                            mail.setOrgWideEmailAddressId(orgWideEmailId);
-                        }
-                        
-                        String proj_URL = '<br/><a href="'+ System.Label.Org_Prefix_Start_URL +'/lightning/r/AcctSeed__Project__c/' + projMap.get(pt.AcctSeed__Project__c).Id +'/view" target="_blank">'+ projMap.get(pt.AcctSeed__Project__c).Name +'</a><br/><br/>';
-                        
+                        String proj_URL = '<br/><a href="'+ System.Label.Org_Prefix_Start_URL +'/lightning/r/AcctSeed__Project__c/' + proj.Id +'/view" target="_blank">'+ proj.Name +'</a><br/><br/>';
                         String dynamicContent = '';
                         dynamicContent += starting_Content;
                         dynamicContent += proj_URL;
                         dynamicContent += ending_Content;
-                        
-                        mail.setSubject(subject);
-                        mail.setHtmlBody(dynamicContent);
-                        mail.setToAddresses(emailToAddresses);
+                                
+                        Messaging.SingleEmailMessage mail = ProjectTrigger_Handler.getSingleEmail(orgWideEmailId, '', toAddresses, new List<String>(), '', '', dynamicContent, subject, true, false);
                         sendEmailList.add(mail);
                     }
                 }    
             }
-            
-            System.debug(':sendEmailList:::'+sendEmailList);
             if(sendEmailList.size() > 0) {
                 Messaging.SendEmailResult[] results = Messaging.sendEmail(sendEmailList);
             }

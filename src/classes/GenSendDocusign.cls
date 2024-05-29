@@ -16,7 +16,7 @@ global class GenSendDocusign {
         Set<String> fsiOfferLetters = new Set<String>{'FSI Offer Letter','PT FSI Offer Letter','FSI Letter of Intent','PT FSI Letter of Intent'};
 
 
-        try {
+       try {
             String retUrl;
             //Id congaTempId;
             Id signer1Id;
@@ -26,8 +26,9 @@ global class GenSendDocusign {
             DateTime expDateTime =  System.now().addDays(30);
             String expDate = expDateTime.format('yyyy-MM-dd') + 'T' + expDateTime.format('HH:mm:ss.SSS')+'Z';
             List<Contact> recipientBoxCont = [SELECT Id,Email,Name FROM Contact WHERE Name = 'Labor Cost Rate - Conga Sign' LIMIT 1];
+            Set<String> cosfEmails = new Set<String>();
              
-            AcctSeed__Cost_Rates__c cr = [SELECT Id,Name,Rate_Type__c,Contact__c,Contact__r.Name,Contact__r.FirstName,Contact__r.DLS_User__c,Contact__r.DLS_User__r.Email,Contact__r.Supervisor_Name__r.Email,Contact__r.Supervisor_Name__c,CreatedById,CreatedBy.Name,Contact__r.Supervisor_Name_Formula__c,Gen_Email_Doc_Conga_Workflow_Template__c FROM AcctSeed__Cost_Rates__c WHERE Id =: crId];
+            AcctSeed__Cost_Rates__c cr = [SELECT Id,Name,Rate_Type__c,Contact__c,Change_in_Reporting_New_Manager__c,New_Supervisor_Id__c,Contact__r.Name,Contact__r.FirstName,Contact__r.DLS_User__c,Contact__r.DLS_User__r.Email,Contact__r.Supervisor_Name__r.Email,Contact__r.Supervisor_Name__c,CreatedById,CreatedBy.Name,Contact__r.Supervisor_Name_Formula__c,Contact__r.Email,Gen_Email_Doc_Conga_Workflow_Template__c FROM AcctSeed__Cost_Rates__c WHERE Id =: crId];
             
             // Gen_Email_Doc_Conga_Workflow_Template__c field value population handled in trigger (Cost_Rate_Trigger -> Cost_Rate_Trigger_Handler)
             // To set Corresponding person as the initial Signer for T&I, some ICA documents
@@ -108,6 +109,7 @@ global class GenSendDocusign {
             if(!fsiOfferLetters.contains(cTName)){
                 signer2Id = cr.Contact__c;
                 signer2Name = cr.Contact__r.Name;
+                cosfEmails.add(cr.Contact__r.Email);
             }
                        
             if(!retUrl.contains('Gen & Email Doc Conga Workflow Template field is blank')) {
@@ -138,31 +140,63 @@ global class GenSendDocusign {
                     //'&DocuSignR6Name=Pim Tovanabutra&DocuSignR6RoutingOrder=6&DocuSignR6Email=ptovanabutra@dlsdc.com&DocuSignR6Type=Carbon+Copy&DocuSignR6Role=Carbon+Copy'+
                     '&DocuSignExpireIn=30&DocuSignEndpoint='+System.Label.DocuSign_Endpoint;*/
                     
+                    Set<String> cosfSignerIds = new Set<String>();
+                    if(String.isNotBlank(signer2Staff)){
+                        cosfSignerIds.add(signer2Staff);
+                    }
+                    if(String.isNotBlank(signer3Staff)){
+                        cosfSignerIds.add(signer3Staff);
+                    }
+                    if(String.isNotBlank(signer1Id)){
+                        cosfSignerIds.add(signer1Id);
+                    }
+                    
+                    if(cosfSignerIds.size() > 0){
+                        for(User u :[SELECT Id,Email FROM User WHERE Id IN :cosfSignerIds]){
+                            cosfEmails.add(u.Email); 
+                        }
+                    }
+                    
+                    if(cr.Change_in_Reporting_New_Manager__c == true && cr.New_Supervisor_Id__c != null){
+                        retUrl += ',[Sup]'+CongaTranslator.getCongaQuery('User Query')+'?pv0='+ cr.New_Supervisor_Id__c; 
+                    }
+                    
                     //Added by Dhinesh - 31/5/22 - Moving Cost rate from docsign to congasign
                     retUrl += '&CSVisible=1&CSRoutingType=SERIAL&CSExpiration='+expDate;
                     retUrl += '&CSRecipient1='+signer2Staff+'&CSRole1=SIGNER'+
-                        	  '&CSRecipient2='+signer1Id+'&CSRole2=SIGNER'+
-                        	  '&CSRecipient3='+signer3Staff+'&CSRole3=SIGNER'+
+                              '&CSRecipient2='+signer1Id+'&CSRole2=SIGNER'+
+                              '&CSRecipient3='+signer3Staff+'&CSRole3=SIGNER'+
                               '&CSRecipient4='+signer2Id+'&CSRole4=SIGNER';                   
                     
                     if(!ccUserEmails.contains(conUserEmail) && !ccUserEmails.contains(conSupervisorEmail)){
-                     
+                        Integer boxCount = 0;
                         if(recipientBoxCont.size() > 0){
-                            retUrl += '&CSRecipient5='+recipientBoxCont[0].Id+'&CSRole5=CC&CSEmail6=ptovanabutra@dlsdc.com&CSName6=Pim Tovanabutra&CSRole6=CC&CSEmail7=jdumont@dlsdc.com&CSName7=Julie Dumont&CSRole7=CC';
-                        }else{
-                            retUrl += '&CSEmail5=ptovanabutra@dlsdc.com&CSName5=Pim Tovanabutra&CSRole5=CC&CSEmail6=jdumont@dlsdc.com&CSName6=Julie Dumont&CSRole6=CC';
+                            retUrl += '&CSRecipient5='+recipientBoxCont[0].Id+'&CSRole5=CC';
+                            boxCount = 1;
                         }
+                        if(!cosfEmails.contains('ptovanabutra@dlsdc.com')){
+                            Integer ccNo1 = (recipientBoxCont.size() > 0 ? 6 : 5);
+                            retUrl +='&CSEmail'+ccNo1+'=ptovanabutra@dlsdc.com&CSName'+ccNo1+'=Pim Tovanabutra&CSRole'+ccNo1+'=CC'; 
+                        }
+                        if(!cosfEmails.contains('jdumont@dlsdc.com')){
+                            Integer ccNo2 = (cosfEmails.contains('ptovanabutra@dlsdc.com') ? 5 : 6);
+                            if(recipientBoxCont.size() > 0){
+                                ccNo2 = ccNo2 + 1;
+                            }
+                            retUrl +='&CSEmail'+ccNo2+'=jdumont@dlsdc.com&CSName'+ccNo2+'=Julie Dumont&CSRole'+ccNo2+'=CC'; 
+                        } 
+                        
                     }else if((ccUserEmails.contains(conUserEmail) || ccUserEmails.contains(conSupervisorEmail))){
                         
-                        if((conUserEmail == 'ptovanabutra@dlsdc.com' || conSupervisorEmail == 'ptovanabutra@dlsdc.com') && 
-                           (conUserEmail == 'jdumont@dlsdc.com' || conSupervisorEmail == 'jdumont@dlsdc.com')){
+                        if((conUserEmail == 'ptovanabutra@dlsdc.com' || conSupervisorEmail == 'ptovanabutra@dlsdc.com' || cosfEmails.contains('ptovanabutra@dlsdc.com')) && 
+                           (conUserEmail == 'jdumont@dlsdc.com' || conSupervisorEmail == 'jdumont@dlsdc.com' || cosfEmails.contains('jdumont@dlsdc.com'))){
                                retUrl +=((recipientBoxCont.size() > 0) ? '&CSRecipient5='+recipientBoxCont[0].Id+'&CSRole5=CC' : '');
                            }else{
-                                if(recipientBoxCont.size() > 0){
-                               		retUrl += '&CSRecipient5='+recipientBoxCont[0].Id+'&CSRole5=CC&CSEmail6='+((conUserEmail == 'ptovanabutra@dlsdc.com' || conSupervisorEmail == 'ptovanabutra@dlsdc.com' ) ? 'jdumont@dlsdc.com&CSName6=Julie Dumont' : 'ptovanabutra@dlsdc.com&CSName6=Pim Tovanabutra')+'&CSRole6=CC';
-                                }else{
-                               		retUrl += '&CSEmail5='+((conUserEmail == 'ptovanabutra@dlsdc.com' || conSupervisorEmail == 'ptovanabutra@dlsdc.com' )? 'jdumont@dlsdc.com&CSName5=Julie Dumont' : 'ptovanabutra@dlsdc.com&CSName5=Pim Tovanabutra')+'&CSRole5=CC';
-                                }
+                               if(recipientBoxCont.size() > 0){
+                                   retUrl += '&CSRecipient5='+recipientBoxCont[0].Id+'&CSRole5=CC&CSEmail6='+((conUserEmail == 'ptovanabutra@dlsdc.com' || conSupervisorEmail == 'ptovanabutra@dlsdc.com' || cosfEmails.contains('ptovanabutra@dlsdc.com')) ? 'jdumont@dlsdc.com&CSName6=Julie Dumont' : 'ptovanabutra@dlsdc.com&CSName6=Pim Tovanabutra')+'&CSRole6=CC';
+                               }else{
+                                   retUrl += '&CSEmail5='+((conUserEmail == 'ptovanabutra@dlsdc.com' || conSupervisorEmail == 'ptovanabutra@dlsdc.com' || cosfEmails.contains('ptovanabutra@dlsdc.com')) ? 'jdumont@dlsdc.com&CSName5=Julie Dumont' : 'ptovanabutra@dlsdc.com&CSName5=Pim Tovanabutra')+'&CSRole5=CC';
+                               }
                            }
                     }
                     
@@ -175,9 +209,9 @@ global class GenSendDocusign {
                     
                     //Added by Dhinesh - 31/5/22 - Moving Cost rate from docsign to congasign
                         List<User> ccUserForFSI = getUserIdByName('Lindsey Weaver');
-                   	    Set<String> transIntrepTemplates = new Set<String>{'Translation and Interpretation ICA','Translation and Interpretation Addendum to ICA','FSI Letter of Intent','PT FSI Letter of Intent'};
+                        Set<String> transIntrepTemplates = new Set<String>{'Translation and Interpretation ICA','Translation and Interpretation Addendum to ICA','FSI Letter of Intent','PT FSI Letter of Intent'};
                         retUrl += '&CSVisible=1&CSRoutingType=SERIAL&CSExpiration='+expDate+'&CSRecipient1='+signer1Id+'&CSRole1=SIGNER'+
-                            	  '&CSRecipient2='+signer2Id+'&CSRole2=SIGNER'+((recipientBoxCont.size() > 0) ? '&CSRecipient3='+recipientBoxCont[0].Id+
+                                  '&CSRecipient2='+signer2Id+'&CSRole2=SIGNER'+((recipientBoxCont.size() > 0) ? '&CSRecipient3='+recipientBoxCont[0].Id+
                                   '&CSRole3=CC' : '');
                     
                         if(!transIntrepTemplates.contains(cTName)){
@@ -194,8 +228,8 @@ global class GenSendDocusign {
                         
                         List<Contact_Assignments__c> cA = [SELECT Id,Project__c,Start_Date__c,Project__r.Name,Opportunity_Name__r.Language_LU__c,Opportunity_Name__r.Language_LU__r.Name,Opportunity_Name__c,Project__r.Language__c,Project__r.Language__r.Name,Assignment_Position__c FROM Contact_Assignments__c
                                                             WHERE Id =:cAProId 
-                                                           	 AND RecordType.DeveloperName = 'Instructor' 
-                                                          	 AND (Rate_Card_Rate__c = :crId OR Drafted_Labor_Cost_Rate__c = :crId) AND ((Project__c != null AND Status__c IN ('Active','Planned')) OR (Project__c= NULL AND Opportunity_Name__c != null AND Status__c IN ('Proposed','Awarded'))) 
+                                                             AND RecordType.DeveloperName = 'Instructor' 
+                                                             AND (Rate_Card_Rate__c = :crId OR Drafted_Labor_Cost_Rate__c = :crId) AND ((Project__c != null AND Status__c IN ('Active','Planned')) OR (Project__c= NULL AND Opportunity_Name__c != null AND Status__c IN ('Proposed','Awarded'))) 
                                                            LIMIT 1];
                         
                         if(cA.size() > 0){     
@@ -213,10 +247,10 @@ global class GenSendDocusign {
                             
                             if(cTName == 'FSI Offer Letter' || cTName == 'PT FSI Offer Letter'){
                                 retUrl += '&CSEmailSubject=Offer Letter for FSI project for '+cr.Contact__r.Name+'&CSEmailMessage=Dear '+cr.Contact__r.FirstName+',%250a%250aWe are happy to extend the offer for the '+ langName+' '+cA[0].Assignment_Position__c+' position with FSI as of '+stDate;
-                                retUrl += '. Please, review this letter and sign at your earliest convenience. Once signed, we will continue with the next steps.%250a%250aSincerely,%250aNatalia Stepanov%250a%250aHR Director%250aDLS%250ahr@dlsdc.com';            
+                                retUrl += '. Please, review this letter and sign at your earliest convenience. Once signed, we will continue with the next steps.%250a%250aDLS%250ahr@dlsdc.com';            
                             }else if(cTName == 'FSI Letter of Intent' || cTName == 'PT FSI Letter of Intent'){
                                 retUrl += '&CSEmailSubject=FSI Employment Letter of Intent for '+cr.Contact__r.Name+'&CSEmailMessage=Dear '+cr.Contact__r.FirstName+',%250a%250aPlease, review this letter of intent and sign at your earliest convenience. Once signed, we will continue with the next steps';
-                                retUrl += '. This offer is contingent on FSI accepting your application.%250a%250aSincerely,%250aNatalia Stepanov%250a%250aHR Director%250aDLS%250ahr@dlsdc.com';            
+                                retUrl += '. This offer is contingent on FSI accepting your application.%250a%250aDLS%250ahr@dlsdc.com';            
                             }
                         }
                     }else{

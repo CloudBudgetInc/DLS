@@ -91,7 +91,12 @@ global class ManageProjectDatescontroller {
             if(parentId.subString(0,3) == projectKeyPrefix) {
                 childDetails.parentType = 'Project';
                 //conass = [SELECT Id, Name, Candidate_Name__c, Candidate_Name__r.Name, Project__c, Project__r.Name, Project_Task__c, Project_Task__r.Name, Start_Date__c, End_Date__c, Assignment_Position__c, Status__c,RecordType.DeveloperName FROM Contact_Assignments__c WHERE Status__c != 'Ended' AND Project__c = :parentId];
-                conass = ContactAssignmentService.getContactassignmentByprojectId(' WHERE Status__c  NOT IN (\'Ended\',\'Transferred\') AND Rate_Card_Rate__r.Expiration_Date__c = null AND Project__c ','Project__r.Name,Project__r.End_Date__c,Candidate_Name__r.Name,Project_Task__r.Name,RecordType.DeveloperName,Rate_Card_Rate__r.Cost_Rate_Name__c, Rate_Card_Rate__r.Status__c',new Set<Id>{parentId},'');
+                /************
+                    - W-008028 : Manage Project Status Button Action Reverts Withdrawn Student CA's back to Updated Project Status
+                    - Canceled & Withdrawn status condition added on Apr 22 2024
+                    - To prevent updating the status of Canceled and Withdrawn CAs when updating the project's status via the Manage Project Status button.
+                    *************/
+                conass = ContactAssignmentService.getContactassignmentByprojectId(' WHERE Status__c  NOT IN (\'Ended\',\'Transferred\',\'Canceled\',\'Withdrawn\') AND Rate_Card_Rate__r.Expiration_Date__c = null AND Project__c ','Project__r.Name,Project__r.End_Date__c,Candidate_Name__r.Name,Project_Task__r.Name,RecordType.DeveloperName,Rate_Card_Rate__r.Cost_Rate_Name__c, Rate_Card_Rate__r.Status__c',new Set<Id>{parentId},'');
                 //sch = [SELECT Id, Name, Project__c, Project_Task__c,Room__c,Room__r.Name, Project_Task__r.Name, Days__c, Start_Date__c, Start_Time__c, End_Date__c, End_Time__c, Status__c, Instructor__c, Instructor__r.Name FROM Schedule__c WHERE Status__c NOT IN ('Canceled','Completed') AND Project__c = :parentId];
                 sch = ScheduleService.getScheduleRec(' WHERE Status__c NOT IN (\'Canceled\',\'Canceled\',\'Completed\') AND Project__c ',',Project__r.Name,Project_Task__r.Name,Instructor__r.Name,Room__r.Name',new Set<Id>{parentId});
                 //proj = SObjectQueryService.SObjectQuery('AcctSeed__Project__c',new Set<Id>{parentId},',RecordType.DeveloperName,AcctSeed__Account__r.Name,Program_Iteration__r.Project_Type__c');
@@ -287,6 +292,7 @@ global class ManageProjectDatescontroller {
                 //update pro;                
            }
            
+            System.debug(':::caList:::'+caList);
             if(caList.size() > 0 && pro.size() < 1){
                 upsert caList;
             }

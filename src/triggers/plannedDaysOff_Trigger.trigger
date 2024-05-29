@@ -310,8 +310,10 @@ trigger plannedDaysOff_Trigger on Planned_Days_Off__c (before insert,before upda
                 
             // Added by HL on Oct 19 2019
             // To send an email notification to LTS / Project Manager or Contact Supervisor Whenever a Planned Days Off record is edited or deleted
+            // "Submitted for Approval" status condition added on Mar 12 2024 : W-008008 - Edited PDO Request in DLS Online created new PDO Request Record in Production with Blank Values
+            // To send an email notification to LTS / Project Manager or Contact Supervisor Whenever a Planned Days Off record is edited or deleted when it is in Submitted for Approval status too
             if(off.User__c != NULL && off.User__c == loggedInUserId && (rtIdName.get(off.RecordTypeId) == 'Instructor_Planned_Days_Off' || rtIdName.get(off.RecordTypeId) == 'Student_Planned_Days_Off' || rtIdName.get(off.RecordTypeId) == 'Request') 
-                && Trigger.oldMap.get(off.Id).Status__c == 'Approved'){
+                && (Trigger.oldMap.get(off.Id).Status__c == 'Approved' || Trigger.oldMap.get(off.Id).Status__c == 'Submitted for Approval')){
             
                 if((off.Type__c != Trigger.oldMap.get(off.Id).Type__c || off.Description__c != Trigger.oldMap.get(off.Id).Description__c || 
                     off.From_Date__c != Trigger.oldMap.get(off.Id).From_Date__c || off.To_Date__c != Trigger.oldMap.get(off.Id).To_Date__c ||

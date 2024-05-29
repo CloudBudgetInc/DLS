@@ -173,15 +173,25 @@
                             </lightning:layoutItem>
 
                             <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize= "6" smallDeviceSize="12">
-                              <aura:if isTrue="{!not(v.LMSonlyEntered)}">
-                                  <lightning:input type="checkbox" class="checkboxClass" label="LMS Only" checked="{!v.newOrderObj.lmsOnly}"/>
-                                    <aura:set attribute="else">
-                                        <lightning:input type="checkbox" class="checkboxClass" label="LMS Only Varied" disabled="true"/>
-                                    </aura:set>
-                                </aura:if>
+                                <lightning:layout  multipleRows="true">
+                                    <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                        <aura:if isTrue="{!not(v.LMSonlyEntered)}">
+                                            <lightning:input type="checkbox" class="checkboxClass" label="LMS Only" checked="{!v.newOrderObj.lmsOnly}"/>
+                                            <aura:set attribute="else">
+                                                <lightning:input type="checkbox" class="checkboxClass" label="LMS Only Varied" disabled="true"/>
+                                            </aura:set>
+                                        </aura:if>
+                                        
+                                        
+                                        <div><a onclick="{!c.getLMSValues}">Apply LMS Only</a></div>
+                                    </lightning:layoutItem>
+                                    <!--W-008040 Added by NS on 7.5.2024-->
+                                    <lightning:layoutItem padding="around-small" size="12" largeDeviceSize="6" mediumDeviceSize="6" smallDeviceSize="12">
+                                    	<lightning:input type="checkbox" class="checkboxClass" label="No LMS Welcome Email" checked="{!v.newOrderObj.noLmsWelcomeEmail}"/>
+                                    </lightning:layoutItem>
+                                </lightning:layout>
                                 
-                               
-                                <div><a onclick="{!c.getLMSValues}">Apply LMS Only</a></div>
+                                
                             </lightning:layoutItem>
                             
                              <!-- W-005442 - Materials Request - Delivery Location Autofill -->                            

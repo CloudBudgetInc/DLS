@@ -592,15 +592,23 @@ public class PlannedDaysOffHandler {
                 if(pdoIdAndLTSIdAndName.size() > 0){
                 
                     for(Planned_Days_Off__c pdo : editDelPDOReqs){
-                    
-                        if(pdoIdAndLTSIdAndName.containsKey(pdo.Id)){
                         
+                        // Added on Mar 14 2024 : W-008008 - Edited PDO Request in DLS Online created new PDO Request Record in Production with Blank Values
+                        String dynamicStr = '';
+                        if(pdo.Status__c == 'Delete'){
+                            dynamicStr = ' deleted ';
+                        }else{
+                            dynamicStr = ' updated ';
+                        }
+                            
+                        if(pdoIdAndLTSIdAndName.containsKey(pdo.Id)){
+                                                        
                             Messaging.SingleEmailMessage lts_mail = new Messaging.SingleEmailMessage();
                             Id ltsId = pdoIdAndLTSIdAndName.get(pdo.Id).split('-')[0];
                             String ltsName = pdoIdAndLTSIdAndName.get(pdo.Id).split('-')[1];
                             lts_mail.setTargetObjectId(ltsId);
                             lts_mail.setWhatId(pdo.Id);
-                            lts_mail.subject = pdoIdAndRec.get(pdo.Id).Contact__r.Name+ ' has edited or deleted an approved Planned Day Off';
+                            lts_mail.subject = pdoIdAndRec.get(pdo.Id).Contact__r.Name+ ' has' + dynamicStr + oldPDOReqs.get(pdo.Id).Status__c + ' Planned Day Off';
                             
                             String dateVal = '';
                             if(pdo.Parent_Planned_Day_Off__c != null){
@@ -611,13 +619,13 @@ public class PlannedDaysOffHandler {
                             }
                             String htmlBody = '';
                             htmlBody += 'Hi '+ ltsName + ',<br/><br/>';
-                            htmlBody += pdoIdAndRec.get(pdo.Id).Contact__r.Name + ' has edited or deleted a Planned Day Off that has already been approved.  Please see below for the details of the change. <br/>';
+                            htmlBody += pdoIdAndRec.get(pdo.Id).Contact__r.Name + ' has' + dynamicStr + 'a Planned Day Off that has already been ' + oldPDOReqs.get(pdo.Id).Status__c +'. Please see below for the details of the change. <br/>';
                             
                             //Table of fields that were changed with the old value and new value
                             if(pdoIdAndfieldNamefieldValue.size() > 0 && pdoIdAndfieldNamefieldValue.containsKey(pdo.Id)){
                                                             
-                                if(pdo.Status__c == 'Delete' && oldPDOReqs.get(pdo.Id).Status__c == 'Approved'){
-                                     htmlBody += '<br/><table border="1" style="border-collapse: collapse"><tr><th width="25%" style="text-align: center; vertical-align: middle;">Date</th><th width="25%" style="text-align: center; vertical-align: middle;">Field</th><th width="25%" style="text-align: center; vertical-align: middle;">Old Value</th><th width="25%" style="text-align: center; vertical-align: middle;">New Value</th></tr>'; 
+                                if(pdo.Status__c == 'Delete' && (oldPDOReqs.get(pdo.Id).Status__c == 'Approved' ||  oldPDOReqs.get(pdo.Id).Status__c == 'Submitted for Approval')){
+                                    htmlBody += '<br/><table border="1" style="border-collapse: collapse"><tr><th width="25%" style="text-align: center; vertical-align: middle;">Date</th><th width="25%" style="text-align: center; vertical-align: middle;">Field</th><th width="25%" style="text-align: center; vertical-align: middle;">Old Value</th><th width="25%" style="text-align: center; vertical-align: middle;">New Value</th></tr>'; 
                                 }else{
                                     htmlBody += '<br/><table border="1" style="border-collapse: collapse"><tr><th width="25%" style="text-align: center; vertical-align: middle;">Field</th><th width="25%" style="text-align: center; vertical-align: middle;">Old Value</th><th width="25%" style="text-align: center; vertical-align: middle;">New Value</th></tr>';
                                 }
@@ -630,7 +638,7 @@ public class PlannedDaysOffHandler {
                                     oldValue = fieldvalue.split(',')[0];
                                     newValue = fieldvalue.split(',')[1];
                                     
-                                    if(pdo.Status__c == 'Delete' && oldPDOReqs.get(pdo.Id).Status__c == 'Approved'){
+                                    if(pdo.Status__c == 'Delete' && (oldPDOReqs.get(pdo.Id).Status__c == 'Approved' || oldPDOReqs.get(pdo.Id).Status__c == 'Submitted for Approval')){
                                         htmlBody += '<tr><td style="text-align: center; vertical-align: middle;">' + dateVal  + '</td><td style="text-align: center; vertical-align: middle;">' + label  + '</td><td style="text-align: center; vertical-align: middle;">' + oldValue + '</td><td style="text-align: center; vertical-align: middle;">' + newValue + '</td></tr>';
                                     }else{
                                         htmlBody += '<tr><td style="text-align: center; vertical-align: middle;">' + label  + '</td><td style="text-align: center; vertical-align: middle;">' + oldValue + '</td><td style="text-align: center; vertical-align: middle;">' + newValue + '</td></tr>';
@@ -644,6 +652,7 @@ public class PlannedDaysOffHandler {
                             lts_mail.setSaveAsActivity(false);
                             emailToLTSAndIns.add(lts_mail);
                         }
+                        
                         if(projIdAndInsIds.containsKey(pdo.Project__c)){
                         
                             for(Id insId : projIdAndInsIds.get(pdo.Project__c)){
@@ -651,12 +660,12 @@ public class PlannedDaysOffHandler {
                                 Messaging.SingleEmailMessage ins_mail = new Messaging.SingleEmailMessage();
                                 ins_mail.setTargetObjectId(insId);
                                 ins_mail.setWhatId(pdo.Id);
-                                ins_mail.subject = pdoIdAndRec.get(pdo.Id).Contact__r.Name+ ' has updated planned day(s) off for ' + pdoIdAndRec.get(pdo.Id).Date_Range__c;
+                                ins_mail.subject = pdoIdAndRec.get(pdo.Id).Contact__r.Name+ ' has' + dynamicStr + 'planned day(s) off for ' + pdoIdAndRec.get(pdo.Id).Date_Range__c;
                                 
                                 String htmlBody = '';
                                 htmlBody += 'Dear '+ conIdRec.get(insId).FirstName + ',<br/><br/>';
                                 htmlBody += 'This email is to notify you that ' + pdoIdAndRec.get(pdo.Id).Contact__r.Name;
-                                if(pdo.Status__c == 'Delete' && oldPDOReqs.get(pdo.Id).Status__c == 'Approved'){
+                                if(pdo.Status__c == 'Delete' && (oldPDOReqs.get(pdo.Id).Status__c == 'Approved' || oldPDOReqs.get(pdo.Id).Status__c == 'Submitted for Approval')){
                                     htmlBody += ' has deleted their planned days off for: <br/>';   
                                     htmlBody += '<p>Dates: '+  pdoIdAndRec.get(pdo.Id).Date_Range__c;
                                 }else{
@@ -680,12 +689,12 @@ public class PlannedDaysOffHandler {
                                 Messaging.SingleEmailMessage ins_mail = new Messaging.SingleEmailMessage();
                                 ins_mail.setTargetObjectId(insId);
                                 ins_mail.setWhatId(pdo.Id);
-                                ins_mail.subject = pdoIdAndRec.get(pdo.Id).Contact__r.Name+ ' has updated planned day(s) off for ' + pdoIdAndRec.get(pdo.Id).Date_Range__c;
+                                ins_mail.subject = pdoIdAndRec.get(pdo.Id).Contact__r.Name+ ' has' + dynamicStr + 'planned day(s) off for ' + pdoIdAndRec.get(pdo.Id).Date_Range__c;
                                 
                                 String htmlBody = '';
                                 htmlBody += 'Dear '+ conIdRec.get(insId).FirstName + ',<br/><br/>';
                                 htmlBody += 'This email is to notify you that ' + pdoIdAndRec.get(pdo.Id).Contact__r.Name;
-                                if(pdo.Status__c == 'Delete' && oldPDOReqs.get(pdo.Id).Status__c == 'Approved'){
+                                if(pdo.Status__c == 'Delete' && (oldPDOReqs.get(pdo.Id).Status__c == 'Approved' || oldPDOReqs.get(pdo.Id).Status__c == 'Submitted for Approval')){
                                     htmlBody += ' has deleted their planned days off for: <br/>';   
                                     htmlBody += '<p>Dates: '+  pdoIdAndRec.get(pdo.Id).Date_Range__c;
                                 }else{
