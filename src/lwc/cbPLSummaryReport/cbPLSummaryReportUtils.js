@@ -1,15 +1,31 @@
+import {_message} from "c/cbUtils";
+import {ReportLine} from "./cbPLSummaryReportWrapper";
+
+/**
+ * @param selectedPeriodId
+ * @param periodSO
+ * @return previous period Id
+ */
 const getPriorPeriodId = (selectedPeriodId, periodSO) => {
 	const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
 	return periodSO[currentPeriodIndex - 1].value;
 };
-
+/**
+ * @param selectedPeriodId
+ * @param periodSO
+ * @return the first period of the budget year
+ */
 const getBYFirstPeriodId = (selectedPeriodId, periodSO) => {
 	const currentPeriod = periodSO.find(p => p.value === selectedPeriodId);
 	for (let i = 0; i < periodSO.length; i++) {
 		if (periodSO[i].byId === currentPeriod.byId) return periodSO[i].value;
 	}
 };
-
+/**
+ * @param selectedPeriodId
+ * @param periodSO
+ * @return CB PeriodId of the previous budget year. One year back
+ */
 const getPriorYearPeriodId = (selectedPeriodId, periodSO) => {
 	const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
 	return periodSO[currentPeriodIndex - 12].value;
@@ -26,7 +42,7 @@ const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 		}
 		populateNumbers(cube, reportLine, dataType);
 	} catch (e) {
-		alert('Convert cube to RL Error: ' + e);
+		_message('error', 'Convert cube to RL Error: ' + e);
 	}
 };
 
@@ -48,7 +64,7 @@ const populateNumbers = (cube, reportLine, dataType) => {
 
 const getRLKey = (cube) => {
 	if (cube.cb5__CBAccount__r.cb5__CBAccountType__r.Name.includes('Rev')) {
-		return cube.cb5__CBAccount__r.Name.replace(/^\d+\s*-?\s*/, '');
+		return cube.cb5__CBVariable2__r?.Name.replace(/^\d+\s*-?\s*/, '');
 	} else if (cube.CBAccountSubtype2__c.includes('Direct')) {
 		return 'Direct Cost';
 	} else if (cube.CBAccountSubtype2__c.includes('Fringe')) {
@@ -106,134 +122,29 @@ const addSubLinesAndTotals = (reportLines) => {
 		netProfit.formatStyle = 'percent';
 
 		return [
-			new ReportLineSeparator('Revenue'),
+			new ReportLine('Revenue', 'totalLine', true),
 			...revenueLines,
 			revenueTotal,
-			new ReportLineSeparator(' '),
-			new ReportLineSeparator('Direct Cost'),
+			new ReportLine(' ', null, true),
+			new ReportLine('Direct Cost'),
 			...directCostLines,
 			directCostTotal,
-			new ReportLineSeparator(' '),
+			new ReportLine(' ', null, true),
 			grossMargin,
-			new ReportLineSeparator(' '),
+			new ReportLine(' ', null, true),
 			grossMarginPercent,
-			new ReportLineSeparator(' '),
-			new ReportLineSeparator('Indirect Cost'),
+			new ReportLine(' ', null, true),
+			new ReportLine('Indirect Cost'),
 			...indirectCosts,
-			new ReportLineSeparator(' '),
+			new ReportLine(' ', null, true),
 			ordinaryIncomeLoss,
-			new ReportLineSeparator(' '),
+			new ReportLine(' ', null, true),
 			netProfit
 		]
 	} catch (e) {
-		alert('Add subtotals and totals error: ' + e);
+		_message('error', 'Add subtotals and totals error: ' + e);
 	}
 };
 
-const SUM_FIELDS = ['currentActual', 'currentBudget', 'priorActual', 'priorBudget', 'priorYearActual', 'priorYearBudget'];
-
-class ReportLine {
-	constructor(label, sClass) {
-		this.label = label;
-		this.styleClass = sClass;
-
-		this.currentActual = 0;
-		this.currentBudget = 0;
-
-		this.priorActual = 0;
-		this.priorBudget = 0;
-
-		this.priorYearActual = 0;
-		this.priorYearBudget = 0;
-
-		this.priorYearDiffActual = 0;
-		this.priorYearDiffBudget = 0;
-
-		this.priorYearDiffPercentActual = 0;
-		this.priorYearDiffPercentBudget = 0;
-
-		this.currentYTDActual = 0;
-		this.currentYTDBudget = 0;
-
-		this.priorYTDActual = 0;
-		this.priorYTDBudget = 0;
-	}
-
-	key;
-	label;
-	styleClass;
-	type;
-	formatStyle = 'currency';
-
-	currentActual;
-	currentBudget;
-
-	priorActual;
-	priorBudget;
-
-	currentDiffActual;
-	currentDiffBudget;
-
-	currentDiffPercentActual;
-	currentDiffPercentBudget;
-
-	priorYearActual;
-	priorYearBudget;
-
-	priorYearDiffActual;
-	priorYearDiffBudget;
-
-	priorYearDiffPercentActual;
-	priorYearDiffPercentBudget;
-
-	currentYTDActual;
-	currentYTDBudget;
-
-	priorYTDActual;
-	priorYTDBudget;
-
-	sumUpLines = (reportLine) => {
-		try {
-			SUM_FIELDS.forEach(f => this[f] += +reportLine[f]);
-		} catch (e) {
-			alert('Sum Up Error : ' + e);
-		}
-	};
-
-	subtractLines = (reportLine) => {
-		try {
-			SUM_FIELDS.forEach(f => this[f] -= +reportLine[f]);
-		} catch (e) {
-			alert('Subtract Error : ' + e);
-		}
-	};
-
-	setPercent = (reportLine) => {
-		try {
-			SUM_FIELDS.forEach(f => this[f] = this[f] ? (reportLine[f] / this[f]) : 1);
-		} catch (e) {
-			alert('Set Percent Error : ' + e);
-		}
-	};
-
-	normalizeReportLine = () => {
-		this.currentDiffActual = this.currentActual - this.priorActual;
-		this.currentDiffBudget = this.currentBudget - this.priorBudget;
-
-		this.currentDiffPercentActual = this.priorActual ? this.currentActual / this.priorActual : 0;
-		this.currentDiffPercentBudget = this.priorBudget ? this.currentBudget / this.priorBudget : 0;
-	}
-}
-
-class ReportLineSeparator {
-	constructor(label) {
-		this.label = label;
-	}
-
-	label = '   ';
-	styleClass = 'separator';
-	normalizeReportLine = () => {
-	}
-}
 
 export {getPriorPeriodId, getBYFirstPeriodId, getPriorYearPeriodId, convertCubeToReportLine, addSubLinesAndTotals}

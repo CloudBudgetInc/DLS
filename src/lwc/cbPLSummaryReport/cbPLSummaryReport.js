@@ -32,6 +32,7 @@ import {
 	getPriorPeriodId,
 	getPriorYearPeriodId
 } from "./cbPLSummaryReportUtils";
+import {_parseServerError} from "c/cbUtils";
 
 
 export default class CBPLSummaryReport extends LightningElement {
@@ -41,7 +42,7 @@ export default class CBPLSummaryReport extends LightningElement {
 	@track showSpinner = false;
 	@track readyToRender = false;
 	@track periodSO = [];
-	@track typeSO = [
+	@track typeSO = [ // Type of displayed data
 		{label: 'Actual', value: 'actual'},
 		{label: 'Budget', value: 'budget'},
 		{label: 'Both', value: 'both'}
@@ -66,8 +67,11 @@ export default class CBPLSummaryReport extends LightningElement {
 		await this.analytics();
 	}
 
+	/**
+	 * Method gets base analytics form the database. Periods, etc
+	 */
 	analytics = async () => {
-		const periods = await getPeriodsServer().catch(e => alert('ERROR ' + e));
+		const periods = await getPeriodsServer().catch(e => _parseServerError('Get Periods Error: ', e));
 		this.periodSO = periods.reduce((r, p) => {
 			r.push({label: p.Name, value: p.Id, byId: p.cb5__CBBudgetYear__c});
 			return r;
@@ -84,11 +88,17 @@ export default class CBPLSummaryReport extends LightningElement {
 		this.renderReport();
 	};
 
+	/**
+	 * The main method to generate the report data
+	 */
 	renderReport = async () => {
 		await this.getSourceData();
 		this.generateReportLines();
 	};
 
+	/**
+	 *
+	 */
 	getSourceData = async () => {
 		this.readyToRender = false;
 		const priorPeriodId = getPriorPeriodId(this.selectedPeriodId, this.periodSO);
