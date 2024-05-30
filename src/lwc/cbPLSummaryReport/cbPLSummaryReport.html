@@ -16,7 +16,7 @@
 						value={selectedType}
 						placeholder="Select Type"
 						options={typeSO}
-						onchange={handleChangeType}></lightning-combobox>
+						onchange={handleChangeMainFilter}></lightning-combobox>
 			</lightning-layout-item>
 			<lightning-layout-item>
 				<lightning-combobox
@@ -25,7 +25,7 @@
 						value={selectedPeriodId}
 						placeholder="Select Some Period"
 						options={periodSO}
-						onchange={handleChangePeriod}></lightning-combobox>
+						onchange={handleChangeMainFilter}></lightning-combobox>
 			</lightning-layout-item>
 
 		</lightning-layout>
@@ -215,9 +215,7 @@
 		</template>
 
 
-		<template if:true={showSpinner}>
-			<c-cb-spinner></c-cb-spinner>
-		</template>
+		<c-cb-spinner show={showSpinner}></c-cb-spinner>
 	</lightning-card>
 
 </template>

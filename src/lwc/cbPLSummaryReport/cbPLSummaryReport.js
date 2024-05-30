@@ -32,14 +32,14 @@ import {
 	getPriorPeriodId,
 	getPriorYearPeriodId
 } from "./cbPLSummaryReportUtils";
-import {_parseServerError} from "c/cbUtils";
+import {_message, _parseServerError} from "c/cbUtils";
 
 
 export default class CBPLSummaryReport extends LightningElement {
 
 	@track selectedPeriodId;
-	@track selectedType = 'actual';
-	@track showSpinner = false;
+	@track selectedType;
+	@track showSpinner = true;
 	@track readyToRender = false;
 	@track periodSO = [];
 	@track typeSO = [ // Type of displayed data
@@ -65,7 +65,14 @@ export default class CBPLSummaryReport extends LightningElement {
 
 	async connectedCallback() {
 		await this.analytics();
+		this.applyLastSelected();
+		this.renderReport();
 	}
+
+	applyLastSelected = () => {
+		this.selectedType = localStorage.getItem('selectedType') ? localStorage.getItem('selectedType') : 'actual';
+		this.selectedPeriodId = localStorage.getItem('selectedPeriodId') ? localStorage.getItem('selectedPeriodId') : undefined;
+	};
 
 	/**
 	 * Method gets base analytics form the database. Periods, etc
@@ -78,13 +85,9 @@ export default class CBPLSummaryReport extends LightningElement {
 		}, []);
 	};
 
-	handleChangePeriod = async (event) => {
+	handleChangeMainFilter = async (event) => {
 		this[event.target.name] = event.target.value;
-		this.renderReport();
-	};
-
-	handleChangeType = async (event) => {
-		this[event.target.name] = event.target.value;
+		localStorage.setItem(event.target.name, event.target.value);
 		this.renderReport();
 	};
 
@@ -92,8 +95,13 @@ export default class CBPLSummaryReport extends LightningElement {
 	 * The main method to generate the report data
 	 */
 	renderReport = async () => {
+		if (!this.selectedPeriodId) return null;
+		this.showSpinner = true;
+		this.readyToRender = false;
 		await this.getSourceData();
 		this.generateReportLines();
+		this.showSpinner = false;
+		this.readyToRender = true;
 	};
 
 	/**
@@ -146,7 +154,7 @@ export default class CBPLSummaryReport extends LightningElement {
 	};
 
 	downloadToExcel = () => {
-		alert('In progress');
+		_message('warning', 'In progress');
 	}
 
 
