@@ -1,6 +1,6 @@
 import {_message} from "c/cbUtils";
 
-const SUM_FIELDS = ['currentActual', 'currentBudget', 'priorActual', 'priorBudget', 'priorYearActual', 'priorYearBudget'];
+const SUM_FIELDS = ['currentMonthActual', 'currentMonthBudget', 'priorMonthActual', 'priorYearActual'];
 
 class ReportLine {
 	/**
@@ -14,26 +14,18 @@ class ReportLine {
 		this.isSeparator = isSeparator;
 		if (isSeparator) return this;
 
-		this.currentActual = 0;
-		this.currentBudget = 0;
+		this.currentMonthActual = 0;
+		this.currentMonthBudget = 0;
+		this.currentMonthDiff = 0;
+		this.currentMonthDiffPercent = 0;
 
-		this.priorActual = 0;
-		this.priorBudget = 0;
+		this.priorMonthActual = 0;
+		this.priorMonthDiff = 0;
+		this.priorMonthDiffPercent = 0;
 
 		this.priorYearActual = 0;
-		this.priorYearBudget = 0;
-
-		this.priorYearDiffActual = 0;
-		this.priorYearDiffBudget = 0;
-
-		this.priorYearDiffPercentActual = 0;
-		this.priorYearDiffPercentBudget = 0;
-
-		this.currentYTDActual = 0;
-		this.currentYTDBudget = 0;
-
-		this.priorYTDActual = 0;
-		this.priorYTDBudget = 0;
+		this.priorYearDiff = 0;
+		this.priorYearDiffPercent = 0;
 	}
 
 	key;
@@ -43,32 +35,16 @@ class ReportLine {
 	type;
 	formatStyle = 'currency';
 
-	currentActual;
-	currentBudget;
-
-	priorActual;
-	priorBudget;
-
-	currentDiffActual;
-	currentDiffBudget;
-
-	currentDiffPercentActual;
-	currentDiffPercentBudget;
-
+	currentMonthActual;
+	currentMonthBudget;
+	currentMonthDiff;
+	currentMonthDiffPercent;
+	priorMonthActual;
+	priorMonthDiff;
+	priorMonthDiffPercent;
 	priorYearActual;
-	priorYearBudget;
-
-	priorYearDiffActual;
-	priorYearDiffBudget;
-
-	priorYearDiffPercentActual;
-	priorYearDiffPercentBudget;
-
-	currentYTDActual;
-	currentYTDBudget;
-
-	priorYTDActual;
-	priorYTDBudget;
+	priorYearDiff;
+	priorYearDiffPercent;
 
 	sumUpLines = (reportLine) => {
 		try {
@@ -99,11 +75,12 @@ class ReportLine {
 	 */
 	normalizeReportLine = () => {
 		if (this.isSeparator) return null;
-		this.currentDiffActual = this.currentActual - this.priorActual;
-		this.currentDiffBudget = this.currentBudget - this.priorBudget;
-
-		this.currentDiffPercentActual = this.priorActual ? this.currentActual / this.priorActual : 0;
-		this.currentDiffPercentBudget = this.priorBudget ? this.currentBudget / this.priorBudget : 0;
+		this.currentMonthDiff = this.currentMonthActual - this.currentMonthBudget;
+		this.currentMonthDiffPercent = this.currentMonthBudget ? 1 - this.currentMonthBudget / this.currentMonthActual : 1;
+		this.priorMonthDiff = this.currentMonthActual - this.priorMonthActual;
+		this.priorMonthDiffPercent = this.priorMonthActual ? 1 - this.priorMonthActual / this.currentMonthActual : 1;
+		this.priorYearDiff = this.currentMonthActual - this.priorYearActual;
+		this.priorYearDiffPercent = this.priorYearActual ? 1 - this.priorYearActual / this.currentMonthActual : 1;
 	}
 }
 

@@ -23,8 +23,8 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISE
 OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 import {LightningElement, track} from 'lwc';
-import getPeriodsServer from '@salesforce/apex/CBDashboardReportPageController.getPeriodsServer';
-import getCBCubesForPeriodServer from '@salesforce/apex/CBDashboardReportPageController.getCBCubesForPeriodServer';
+import getPeriodsServer from '@salesforce/apex/CBPLSummaryReportPageController.getPeriodsServer';
+import getCBCubesForPeriodServer from '@salesforce/apex/CBPLSummaryReportPageController.getCBCubesForPeriodServer';
 import {
 	addSubLinesAndTotals,
 	convertCubeToReportLine,
@@ -38,7 +38,6 @@ import {_message, _parseServerError} from "c/cbUtils";
 export default class CBPLSummaryReport extends LightningElement {
 
 	@track selectedPeriodId;
-	@track selectedType;
 	@track showSpinner = true;
 	@track readyToRender = false;
 	@track periodSO = [];
@@ -50,18 +49,8 @@ export default class CBPLSummaryReport extends LightningElement {
 	@track currentMonthCubes = [];
 	@track priorMonthCubes = [];
 	@track priorYearCubes = [];
-	@track currentYTDCubes = [];
-	@track priorYTDCubes = [];
 
 	@track reportLines = [];
-
-	get renderActual() {
-		return this.selectedType === 'actual' || this.selectedType === 'both';
-	}
-
-	get renderBudget() {
-		return this.selectedType === 'budget' || this.selectedType === 'both';
-	}
 
 	async connectedCallback() {
 		await this.analytics();
@@ -69,8 +58,10 @@ export default class CBPLSummaryReport extends LightningElement {
 		this.renderReport();
 	}
 
+	/**
+	 * Restoring initial selected items from localeStorage
+	 */
 	applyLastSelected = () => {
-		this.selectedType = localStorage.getItem('selectedType') ? localStorage.getItem('selectedType') : 'actual';
 		this.selectedPeriodId = localStorage.getItem('selectedPeriodId') ? localStorage.getItem('selectedPeriodId') : undefined;
 	};
 
@@ -105,52 +96,36 @@ export default class CBPLSummaryReport extends LightningElement {
 	};
 
 	/**
-	 *
+	 * Method requests needed CBCubes from the database
 	 */
 	getSourceData = async () => {
-		this.readyToRender = false;
 		const priorPeriodId = getPriorPeriodId(this.selectedPeriodId, this.periodSO);
 		const BYFirstPeriodId = getBYFirstPeriodId(this.selectedPeriodId, this.periodSO);
 		const priorYearPeriodId = getPriorYearPeriodId(this.selectedPeriodId, this.periodSO);
-		const priorBYFirstPeriodId = getBYFirstPeriodId(priorYearPeriodId, this.periodSO);
-		console.log('Current Period Id: ' + this.selectedPeriodId);
-		console.log('Prior Period Id: ' + priorPeriodId);
-		console.log('Current YTD Period Id: ' + BYFirstPeriodId);
-		console.log('Prior Year Period Id: ' + priorYearPeriodId);
 		try {
-			this.currentMonthCubes = await getCBCubesForPeriodServer({startPeriodId: this.selectedPeriodId});
-			this.priorMonthCubes = await getCBCubesForPeriodServer({startPeriodId: priorPeriodId});
-			this.currentYTDCubes = await getCBCubesForPeriodServer({
-				startPeriodId: BYFirstPeriodId,
-				endPeriodId: this.selectedPeriodId
+			this.currentMonthCubes = await getCBCubesForPeriodServer({startPeriodId: this.selectedPeriodId}).catch(e => _parseServerError('Get Current Month Data Error: ', e));
+			this.currentMonthCubes.forEach(cube => {
+				if (!cube.cb5__Actual__c) console.log('CURRENT CUBE: ' + JSON.stringify(cube));
 			});
-			this.priorYearCubes = await getCBCubesForPeriodServer({startPeriodId: priorYearPeriodId});
-			this.priorYTDCubes = await getCBCubesForPeriodServer({
-				startPeriodId: priorBYFirstPeriodId,
-				endPeriodId: priorYearPeriodId
-			});
-
-			console.log('Current YTD Month Data Received : ' + this.currentYTDCubes.length);
+			this.priorMonthCubes = await getCBCubesForPeriodServer({startPeriodId: priorPeriodId}).catch(e => _parseServerError('Get Prior Month Data Error: ', e));
+			this.priorYearCubes = await getCBCubesForPeriodServer({startPeriodId: priorYearPeriodId}).catch(e => _parseServerError('Get Prior Year Month Data Error: ', e));
 		} catch (e) {
-			alert('Get Data Error ' + e);
+			this.showSpinner = false;
+			_message('error', 'Get Data Error ' + e);
 		}
 	};
 
 	generateReportLines = () => {
-		this.readyToRender = false;
 		this.reportLines = [];
 		const reportLineMap = {};
 
 		this.currentMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'currentMonthCubes'));
 		this.priorMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorMonthCubes'));
-		this.currentYTDCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'currentYTDCubes'));
 		this.priorYearCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYearCubes'));
-		this.priorYTDCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYTDCubes'));
 
 		const reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
 		reportLines.forEach(rl => rl.normalizeReportLine());
 		this.reportLines = reportLines;
-		this.readyToRender = true;
 	};
 
 	downloadToExcel = () => {
