@@ -1,6 +1,9 @@
 import {_message} from "c/cbUtils";
 import {ReportLine} from "./cbPLSummaryReportWrapper";
 
+let showAccounts = false;
+const setShowAccounts = (v) => showAccounts = v;
+
 /**
  * @param selectedPeriodId
  * @param periodSO
@@ -39,11 +42,12 @@ const getPriorYearPeriodId = (selectedPeriodId, periodSO) => {
  */
 const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 	try {
-		const {label, type} = getLabelAndType(cube);
-		const key = label + type;
+		const {label, type, account} = getLabelAndType(cube);
+		let key = label + type + (showAccounts && account ? account : '');
 		let reportLine = reportLineMap[key];
 		if (!reportLine) {
-			reportLine = new ReportLine(label);
+			const rowLabel = label + (showAccounts && account ? ' (' + account + ')' : '');
+			reportLine = new ReportLine(rowLabel);
 			reportLine.type = type;
 			reportLineMap[key] = reportLine;
 		}
@@ -73,10 +77,10 @@ const populateNumbers = (cube, reportLine, dataType) => {
 const getLabelAndType = (cube) => {
 	if (cube.cb5__CBVariable2__c) {
 		if (cube.cb5__CBAccount__r.Name.startsWith('4')) {
-			return {label: cube.cb5__CBVariable2__r.Name, type: 'Revenue'};
+			return {label: cube.cb5__CBVariable2__r.Name, type: 'Revenue', account: cube.cb5__CBAccount__r.Name};
 		}
 		if (cube.cb5__CBAccount__r.Name.startsWith('5')) {
-			return {label: cube.cb5__CBVariable2__r.Name, type: 'COGS'};
+			return {label: cube.cb5__CBVariable2__r.Name, type: 'COGS', account: cube.cb5__CBAccount__r.Name};
 		}
 	}
 	const subTypes = [
@@ -89,7 +93,7 @@ const getLabelAndType = (cube) => {
 		'Other Expense'
 	];
 	if (subTypes.includes(cube.cb5__AccSubType__c)) {
-		return {label: cube.CBAccountSubtype2__c, type: cube.cb5__AccSubType__c};
+		return {label: cube.CBAccountSubtype2__c, type: cube.cb5__AccSubType__c, account: cube.cb5__CBAccount__r.Name};
 	}
 	return {label: 'Other', type: 'Other'};
 };
@@ -216,4 +220,11 @@ const addSubLinesAndTotals = (reportLines) => {
 };
 
 
-export {getPriorPeriodId, getBYFirstPeriodId, getPriorYearPeriodId, convertCubeToReportLine, addSubLinesAndTotals}
+export {
+	getPriorPeriodId,
+	getBYFirstPeriodId,
+	getPriorYearPeriodId,
+	convertCubeToReportLine,
+	addSubLinesAndTotals,
+	setShowAccounts
+}
