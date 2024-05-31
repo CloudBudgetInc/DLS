@@ -1,5 +1,4 @@
 <template>
-
 	<lightning-card title="Current Vs. Prior Vs. Budget Month P&L Summary">
 
 		<lightning-layout slot="actions">
@@ -24,124 +23,118 @@
 						options={periodSO}
 						onchange={handleChangeMainFilter}></lightning-combobox>
 			</lightning-layout-item>
-
 		</lightning-layout>
 
 		<template lwc:if={readyToRender}>
-			<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
-				   aria-label="Example table of Opportunities with vertical borders">
-				<thead>
-				<tr class="slds-line-height_reset">
-					<th>
-						<div class="slds-truncate" title="Label">Label</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Current Month Budget">Current Month</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Prior Month Budget">Current Budget</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Dollar Diff">Dollar Diff</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Percent Diff">Percent Diff</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Prior Year Month">Prior Month</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Dollar Diff">Dollar Diff</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Percent Diff">Percent Diff</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Prior Year Month">Prior Year</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Dollar Diff">Dollar Diff</div>
-					</th>
-					<th>
-						<div class="slds-truncate dec" title="Percent Diff">Percent Diff</div>
-					</th>
-				</tr>
-
-				</thead>
-				<tbody>
-
-				<template for:each={reportLines} for:item="rl">
-					<tr class={rl.styleClass} key={rl}>
-						<th class={rl.styleClass}>
-							{rl.label}
+			<div style="overflow-x:auto; height: 70vh">
+				<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped slds-table_sticky-header">
+					<thead>
+					<tr class="slds-line-height_reset">
+						<th>
+							<div class="slds-truncate" title="Label">Label</div>
 						</th>
-
-						<!-- CURRENT MONTH -->
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.currentMonthActual} format-style={rl.formatStyle}
-														class="dec"
-														currency-code="USD"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Current Month Actual">Current Month</div>
 						</th>
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.currentMonthBudget} format-style={rl.formatStyle}
-														class="dec"
-														currency-code="USD"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Current Month Budget">Current Budget</div>
 						</th>
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.currentMonthDiff} format-style={rl.formatStyle}
-														class="dec"
-														currency-code="USD"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Current Month Dollar Diff">Dollar Diff</div>
 						</th>
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.currentMonthDiffPercent} class="dec"
-														format-style="percent"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Current Month Percent Diff">Percent Diff</div>
 						</th>
-						<!-- CURRENT MONTH -->
-
-						<!-- PRIOR MONTH -->
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.priorMonthActual} format-style={rl.formatStyle}
-														class="dec"
-														currency-code="USD"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Prior Month Actual">Prior Month</div>
 						</th>
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.priorMonthDiff} format-style={rl.formatStyle}
-														class="dec"
-														currency-code="USD"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Prior Month Dollar Diff">Dollar Diff</div>
 						</th>
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.priorMonthDiffPercent} class="dec"
-														format-style="percent"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Prior Month Percent Diff">Percent Diff</div>
 						</th>
-						<!-- PRIOR MONTH -->
-
-						<!-- PRIOR YEAR -->
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.priorYearActual} format-style={rl.formatStyle}
-														class="dec"
-														currency-code="USD"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Prior Year Actual">Prior Year</div>
 						</th>
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.priorYearDiff} format-style={rl.formatStyle}
-														class="dec"
-														currency-code="USD"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Prior Year Dollar Diff">Dollar Diff</div>
 						</th>
-						<th class={rl.styleClass}>
-							<lightning-formatted-number value={rl.priorYearDiffPercent} class="dec"
-														format-style="percent"></lightning-formatted-number>
+						<th>
+							<div class="slds-truncate dec" title="Prior Year Percent Diff">Percent Diff</div>
 						</th>
-						<!-- PRIOR YEAR -->
-
 					</tr>
-				</template>
+					</thead>
+					<tbody>
+					<template for:each={reportLines} for:item="rl">
+						<tr class={rl.styleClass} key={rl}>
+							<th class={rl.styleClass}>
+								{rl.label}
+							</th>
 
+							<!-- CURRENT MONTH -->
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentMonthActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentMonthBudget} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentMonthDiff} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.currentMonthDiffPercent} class="dec"
+															format-style="percent"></lightning-formatted-number>
+							</th>
+							<!-- CURRENT MONTH -->
 
-				</tbody>
-			</table>
+							<!-- PRIOR MONTH -->
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorMonthActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorMonthDiff} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorMonthDiffPercent} class="dec"
+															format-style="percent"></lightning-formatted-number>
+							</th>
+							<!-- PRIOR MONTH -->
+
+							<!-- PRIOR YEAR -->
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearActual} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearDiff} format-style={rl.formatStyle}
+															class="dec"
+															currency-code="USD"></lightning-formatted-number>
+							</th>
+							<th class={rl.styleClass}>
+								<lightning-formatted-number value={rl.priorYearDiffPercent} class="dec"
+															format-style="percent"></lightning-formatted-number>
+							</th>
+							<!-- PRIOR YEAR -->
+
+						</tr>
+					</template>
+					</tbody>
+				</table>
+			</div>
 		</template>
-
 
 		<c-cb-spinner show={showSpinner}></c-cb-spinner>
 	</lightning-card>
-
 </template>

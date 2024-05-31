@@ -18,3 +18,10 @@
     font-weight: bold;
     color: #2e844a;
 }
+
+.slds-table_sticky-header thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
