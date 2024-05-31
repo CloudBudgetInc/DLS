@@ -2,10 +2,6 @@
 	<lightning-card title="Current Vs. Prior Vs. Budget Month P&L Summary">
 
 		<lightning-layout slot="actions">
-			<div class="slds-p-top_large slds-m-right_large">
-				<lightning-input type="toggle" label="Details" name="details" checked={showAccounts}
-								 onchange={toggleAccounts}></lightning-input>
-			</div>
 			<lightning-layout-item>
 				<div class="slds-p-top_large">
 					<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadToExcel}>
@@ -17,6 +13,14 @@
 					<lightning-button label="Refresh" icon-name="utility:refresh" onclick={renderReport}>
 					</lightning-button>
 				</div>
+			</lightning-layout-item>
+			<lightning-layout-item>
+				<lightning-combobox
+						name="selectedReportType"
+						label="Report Type"
+						value={selectedReportType}
+						options={reportTypeSO}
+						onchange={handleChangeMainFilter}></lightning-combobox>
 			</lightning-layout-item>
 			<lightning-layout-item>
 				<lightning-combobox

@@ -32,7 +32,7 @@ import {
 	getPriorPeriodId,
 	getPriorYearPeriodId,
 	setShowAccounts
-} from "./cbPLSummaryReportUtils";
+} from "./cbPLSummaryReportBase";
 import {_message, _parseServerError} from "c/cbUtils";
 
 
@@ -42,17 +42,17 @@ export default class CBPLSummaryReport extends LightningElement {
 	@track showSpinner = true;
 	@track readyToRender = false;
 	@track periodSO = [];
-	@track typeSO = [ // Type of displayed data
-		{label: 'Actual', value: 'actual'},
-		{label: 'Budget', value: 'budget'},
-		{label: 'Both', value: 'both'}
+	@track selectedReportType = 'summary';
+	@track reportTypeSO = [
+		{label: 'Summary', value: 'summary'},
+		{label: 'Summary+', value: 'summary+'}, // + accounts
+		{label: 'Facilities', value: 'facilities'}
 	];
 	@track currentMonthCubes = [];
 	@track priorMonthCubes = [];
 	@track priorYearCubes = [];
 
 	@track reportLines = [];
-	@track showAccounts = false;
 
 	async connectedCallback() {
 		await this.analytics();
@@ -92,7 +92,7 @@ export default class CBPLSummaryReport extends LightningElement {
 		this.showSpinner = true;
 		this.readyToRender = false;
 		await this.getSourceData();
-		this.generateReportLines();
+		this.generateSummaryReportLines();
 		this.showSpinner = false;
 		this.readyToRender = true;
 	};
@@ -106,9 +106,6 @@ export default class CBPLSummaryReport extends LightningElement {
 		const priorYearPeriodId = getPriorYearPeriodId(this.selectedPeriodId, this.periodSO);
 		try {
 			this.currentMonthCubes = await getCBCubesForPeriodServer({startPeriodId: this.selectedPeriodId}).catch(e => _parseServerError('Get Current Month Data Error: ', e));
-			this.currentMonthCubes.forEach(cube => {
-				if (!cube.cb5__Actual__c) console.log('CURRENT CUBE: ' + JSON.stringify(cube));
-			});
 			this.priorMonthCubes = await getCBCubesForPeriodServer({startPeriodId: priorPeriodId}).catch(e => _parseServerError('Get Prior Month Data Error: ', e));
 			this.priorYearCubes = await getCBCubesForPeriodServer({startPeriodId: priorYearPeriodId}).catch(e => _parseServerError('Get Prior Year Month Data Error: ', e));
 		} catch (e) {
@@ -117,11 +114,11 @@ export default class CBPLSummaryReport extends LightningElement {
 		}
 	};
 
-	generateReportLines = () => {
+	generateSummaryReportLines = () => {
 		this.reportLines = [];
 		const reportLineMap = {};
 
-		setShowAccounts(this.showAccounts);
+		setShowAccounts(this.selectedReportType === 'summary+');
 		this.currentMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'currentMonthCubes'));
 		this.priorMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorMonthCubes'));
 		this.priorYearCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYearCubes'));
@@ -134,11 +131,6 @@ export default class CBPLSummaryReport extends LightningElement {
 	downloadToExcel = () => {
 		_message('warning', 'In progress');
 	};
-
-	toggleAccounts = () => {
-		this.showAccounts = !this.showAccounts;
-		this.renderReport().then(x => null);
-	}
 
 
 }

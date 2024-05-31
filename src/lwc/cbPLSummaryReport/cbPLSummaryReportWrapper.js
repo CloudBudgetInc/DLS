@@ -33,6 +33,8 @@ class ReportLine {
 	styleClass;
 	isSeparator = false;
 	type;
+	var1;
+	var2;
 	formatStyle = 'currency';
 
 	currentMonthActual;

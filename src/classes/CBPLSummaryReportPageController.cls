@@ -51,9 +51,8 @@ public with sharing class CBPLSummaryReportPageController {
 		Set<String> neededPeriods = getSetOfAllNeededPeriods(startPeriodId, endPeriodId);
 		return [
 				SELECT Id, cb5__DrillDownIds__c,cb5__CBAccount__c,cb5__CBDivision__c,cb5__Actual__c,cb5__Budget__c,cb5__CBAccount__r.Name,
-						cb5__AccSubType__c,
-						cb5__CBAccount__r.cb5__CBAccountType__r.Name, CBAccountSubtype2__c,cb5__CBDivision__r.Name,
-						cb5__CBVariable2__r.Name
+						cb5__AccSubType__c,cb5__CBVariable1__r.Name,cb5__CBVariable2__r.Name,
+						cb5__CBAccount__r.cb5__CBAccountType__r.Name,CBAccountSubtype2__c,cb5__CBDivision__r.Name
 				FROM cb5__CBCube__c
 				WHERE cb5__CBPeriod__c IN:neededPeriods AND cb5__CBDivision__r.Name != null
 				ORDER BY cb5__CBVariable2__r.Name, cb5__CBAccount__r.Name
