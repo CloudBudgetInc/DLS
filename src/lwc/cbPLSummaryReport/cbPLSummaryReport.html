@@ -77,7 +77,7 @@
 					<template for:each={reportLines} for:item="rl">
 						<tr class={rl.styleClass} key={rl}>
 							<th class={rl.styleClass}>
-								{rl.label}
+								<div ondblclick={showDrillDown} data-id={rl.ddParams}>{rl.label}</div>
 							</th>
 
 							<!-- CURRENT MONTH -->

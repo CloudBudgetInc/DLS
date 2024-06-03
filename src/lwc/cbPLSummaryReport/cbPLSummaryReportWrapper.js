@@ -33,9 +33,11 @@ class ReportLine {
 	styleClass;
 	isSeparator = false;
 	type;
+	account;
 	var1;
 	var2;
 	formatStyle = 'currency';
+	ddParams = 'currency';
 
 	currentMonthActual;
 	currentMonthBudget;
@@ -83,7 +85,19 @@ class ReportLine {
 		this.priorMonthDiffPercent = this.priorMonthActual ? 1 - this.priorMonthActual / this.currentMonthActual : 1;
 		this.priorYearDiff = this.currentMonthActual - this.priorYearActual;
 		this.priorYearDiffPercent = this.priorYearActual ? 1 - this.priorYearActual / this.currentMonthActual : 1;
+		this.updateDDInfo();
+
+	};
+
+	updateDDInfo = () => {
+		this.ddParams = JSON.stringify({
+			account: this.account,
+			var1: this.var1,
+			var2: this.var2,
+			type: this.type
+		});
 	}
 }
+
 
 export {ReportLine}

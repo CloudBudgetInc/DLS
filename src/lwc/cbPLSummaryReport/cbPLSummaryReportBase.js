@@ -1,8 +1,11 @@
 import {_message} from "c/cbUtils";
 import {ReportLine} from "./cbPLSummaryReportWrapper";
+import {getFacilityReportLines} from "./cbPLSummaryReportFacility";
 
-let showAccounts = false;
-const setShowAccounts = (v) => showAccounts = v;
+let c; // context
+const setContext = (_this) => c = _this;
+const includeAccounts = () => c.selectedReportType === 'summary+' || c.selectedReportType === 'facilities';
+const includeVar1 = () => c.selectedReportType === 'facilities';
 
 /**
  * @param selectedPeriodId
@@ -43,12 +46,15 @@ const getPriorYearPeriodId = (selectedPeriodId, periodSO) => {
 const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 	try {
 		const {label, type, account, var1, var2} = getLabelAndType(cube);
-		let key = label + type + (showAccounts && account ? account : '');
+		let key = label + type + (includeAccounts() ? account : '') + (includeVar1() ? var1 : '');
 		let reportLine = reportLineMap[key];
 		if (!reportLine) {
-			const rowLabel = label + (showAccounts && account ? ' (' + account + ')' : '');
+			let rowLabel = label;
+			if (includeAccounts()) rowLabel = label + ' (' + account + ')';
+			if (includeVar1()) rowLabel = account;
 			reportLine = new ReportLine(rowLabel);
 			reportLine.type = type;
+			reportLine.account = account;
 			reportLine.var1 = var1;
 			reportLine.var2 = var2;
 			reportLineMap[key] = reportLine;
@@ -108,6 +114,11 @@ const getLabelAndType = (cube) => {
 
 const addSubLinesAndTotals = (reportLines) => {
 	try {
+
+		if (c.selectedReportType === 'facilities') {
+			return getFacilityReportLines(reportLines);
+		}
+
 		const revenueTotal = new ReportLine('Total Revenue', 'totalLine');
 		const COGSTotal = new ReportLine('Total Cost of Goods Sold', 'totalLine');
 		const grossMargin = new ReportLine('Gross Margin', 'totalLine');
@@ -228,12 +239,11 @@ const addSubLinesAndTotals = (reportLines) => {
 };
 
 
-
 export {
 	getPriorPeriodId,
 	getBYFirstPeriodId,
 	getPriorYearPeriodId,
 	convertCubeToReportLine,
 	addSubLinesAndTotals,
-	setShowAccounts
+	setContext
 }

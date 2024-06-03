@@ -31,7 +31,7 @@ import {
 	getBYFirstPeriodId,
 	getPriorPeriodId,
 	getPriorYearPeriodId,
-	setShowAccounts
+	setContext
 } from "./cbPLSummaryReportBase";
 import {_message, _parseServerError} from "c/cbUtils";
 
@@ -118,7 +118,7 @@ export default class CBPLSummaryReport extends LightningElement {
 		this.reportLines = [];
 		const reportLineMap = {};
 
-		setShowAccounts(this.selectedReportType === 'summary+');
+		setContext(this);
 		this.currentMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'currentMonthCubes'));
 		this.priorMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorMonthCubes'));
 		this.priorYearCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYearCubes'));
@@ -131,6 +131,11 @@ export default class CBPLSummaryReport extends LightningElement {
 	downloadToExcel = () => {
 		_message('warning', 'In progress');
 	};
+
+	showDrillDown = (event) => {
+		const dataId = event.target.dataset.id;
+		alert('R: ' + dataId);
+	}
 
 
 }
