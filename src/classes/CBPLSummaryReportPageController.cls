@@ -79,4 +79,26 @@ public with sharing class CBPLSummaryReportPageController {
 		}
 		return r;
 	}
+
+
+	@AuraEnabled
+	public static DDResult getDDRecordsServer(List<String> ddIds) {
+		DDResult r = new DDResult();
+		r.BLAmounts = [SELECT cb5__CBBudgetLine__c,cb5__CBBudgetLine__r.Name,cb5__Value__c FROM cb5__CBAmount__c WHERE Id IN:new Set<String>(ddIds)];
+		return r;
+	}
+
+	public class DDResult {
+		@AuraEnabled
+		public List<cb5__CBAmount__c> BLAmounts {
+			get;
+			set;
+		}
+		@AuraEnabled
+		public List<AcctSeed__Financial_Cube__c> accSeedCubes {
+			get;
+			set;
+		}
+	}
+
 }

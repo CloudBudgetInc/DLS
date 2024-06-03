@@ -94,7 +94,8 @@ class ReportLine {
 			account: this.account,
 			var1: this.var1,
 			var2: this.var2,
-			type: this.type
+			type: this.type,
+			label: this.label
 		});
 	}
 }

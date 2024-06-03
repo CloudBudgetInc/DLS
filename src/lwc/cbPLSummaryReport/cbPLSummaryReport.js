@@ -48,9 +48,14 @@ export default class CBPLSummaryReport extends LightningElement {
 		{label: 'Summary+', value: 'summary+'}, // + accounts
 		{label: 'Facilities', value: 'facilities'}
 	];
+	@track reportPeriodMode = [
+		{label: 'Current', value: 'current'},
+		{label: 'YTD', value: 'YTD'},
+	];
 	@track currentMonthCubes = [];
 	@track priorMonthCubes = [];
 	@track priorYearCubes = [];
+	@track renderDD = false;
 
 	@track reportLines = [];
 
@@ -133,9 +138,29 @@ export default class CBPLSummaryReport extends LightningElement {
 	};
 
 	showDrillDown = (event) => {
-		const dataId = event.target.dataset.id;
-		alert('R: ' + dataId);
-	}
+		try {
+			const dataId = event.target.dataset.id;
+			let params = JSON.parse(dataId);
+			let engagedCubes = [];
+			if (this.selectedReportType === 'summary') {
+				engagedCubes = this.currentMonthCubes.filter(cube => cube.CBAccountSubtype2__c === params.label && cube.cb5__AccSubType__c === params.type);
+			}
+			const DDIDS = {};
+			engagedCubes.forEach(cube => {
+				if (cube.cb5__DrillDownIds__c) {
+					cube.cb5__DrillDownIds__c.split(',').forEach(id => DDIDS[id] = true);
+				}
+			});
+			this.ddParams = JSON.stringify(Object.keys(DDIDS));
+			this.renderDD = true;
+		} catch (e) {
+			_message('error', 'DD Error: ' + e);
+		}
+	};
+	closeDrillDown = () => {
+		this.ddParams = [];
+		this.renderDD = false;
+	};
 
 
 }

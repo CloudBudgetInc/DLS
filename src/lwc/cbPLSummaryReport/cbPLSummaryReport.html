@@ -143,6 +143,11 @@
 			</div>
 		</template>
 
+		<template lwc:if={renderDD}>
+			<c-cb-p-l-summary-report-drill-down dd-params={ddParams}
+												close-function={closeDrillDown}></c-cb-p-l-summary-report-drill-down>
+		</template>
+
 		<c-cb-spinner show={showSpinner}></c-cb-spinner>
 	</lightning-card>
 </template>
