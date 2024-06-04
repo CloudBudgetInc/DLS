@@ -48,15 +48,22 @@ export default class CBPLSummaryReport extends LightningElement {
 		{label: 'Summary+', value: 'summary+'}, // + accounts
 		{label: 'Facilities', value: 'facilities'}
 	];
-	@track reportPeriodMode = [
+	@track selectedPeriodMode = 'current';
+	@track reportPeriodModeSO = [
 		{label: 'Current', value: 'current'},
 		{label: 'YTD', value: 'YTD'},
 	];
 	@track currentMonthCubes = [];
 	@track priorMonthCubes = [];
 	@track priorYearCubes = [];
-	@track renderDD = false;
+	@track currentMonthCubesYTD = [];
+	@track priorYearCubesYTD = [];
 
+	get renderCurrent() {
+		return this.selectedPeriodMode === 'current';
+	}
+
+	@track renderDD = false;
 	@track reportLines = [];
 
 	async connectedCallback() {
@@ -109,10 +116,22 @@ export default class CBPLSummaryReport extends LightningElement {
 		const priorPeriodId = getPriorPeriodId(this.selectedPeriodId, this.periodSO);
 		const BYFirstPeriodId = getBYFirstPeriodId(this.selectedPeriodId, this.periodSO);
 		const priorYearPeriodId = getPriorYearPeriodId(this.selectedPeriodId, this.periodSO);
+		const BYFirstPeriodPriorYearId = getPriorYearPeriodId(priorYearPeriodId, this.periodSO);
 		try {
-			this.currentMonthCubes = await getCBCubesForPeriodServer({startPeriodId: this.selectedPeriodId}).catch(e => _parseServerError('Get Current Month Data Error: ', e));
-			this.priorMonthCubes = await getCBCubesForPeriodServer({startPeriodId: priorPeriodId}).catch(e => _parseServerError('Get Prior Month Data Error: ', e));
-			this.priorYearCubes = await getCBCubesForPeriodServer({startPeriodId: priorYearPeriodId}).catch(e => _parseServerError('Get Prior Year Month Data Error: ', e));
+			if (this.selectedPeriodMode === 'current') {
+				this.currentMonthCubes = await getCBCubesForPeriodServer({startPeriodId: this.selectedPeriodId}).catch(e => _parseServerError('Get Current Month Data Error: ', e));
+				this.priorMonthCubes = await getCBCubesForPeriodServer({startPeriodId: priorPeriodId}).catch(e => _parseServerError('Get Prior Month Data Error: ', e));
+				this.priorYearCubes = await getCBCubesForPeriodServer({startPeriodId: priorYearPeriodId}).catch(e => _parseServerError('Get Prior Year Month Data Error: ', e));
+			} else {
+				this.currentMonthCubesYTD = await getCBCubesForPeriodServer({
+					startPeriodId: BYFirstPeriodId,
+					endPeriodId: this.selectedPeriodId
+				}).catch(e => _parseServerError('Get Current Month YTD Data Error: ', e));
+				this.priorYearCubesYTD = await getCBCubesForPeriodServer({
+					startPeriodId: BYFirstPeriodPriorYearId,
+					endPeriodId: priorYearPeriodId
+				}).catch(e => _parseServerError('Get Prior Year YTD Data Error: ', e));
+			}
 		} catch (e) {
 			this.showSpinner = false;
 			_message('error', 'Get Data Error ' + e);
@@ -124,9 +143,14 @@ export default class CBPLSummaryReport extends LightningElement {
 		const reportLineMap = {};
 
 		setContext(this);
-		this.currentMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'currentMonthCubes'));
-		this.priorMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorMonthCubes'));
-		this.priorYearCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYearCubes'));
+		if (this.selectedPeriodMode === 'current') {
+			this.currentMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'currentMonthCubes'));
+			this.priorMonthCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorMonthCubes'));
+			this.priorYearCubes.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYearCubes'));
+		} else {
+			this.currentMonthCubesYTD.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'currentMonthCubesYTD'));
+			this.priorYearCubesYTD.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYearCubesYTD'));
+		}
 
 		const reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
 		reportLines.forEach(rl => rl.normalizeReportLine());

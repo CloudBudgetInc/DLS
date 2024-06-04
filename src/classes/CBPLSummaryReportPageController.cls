@@ -85,6 +85,7 @@ public with sharing class CBPLSummaryReportPageController {
 	public static DDResult getDDRecordsServer(List<String> ddIds) {
 		DDResult r = new DDResult();
 		r.BLAmounts = [SELECT cb5__CBBudgetLine__c,cb5__CBBudgetLine__r.Name,cb5__Value__c FROM cb5__CBAmount__c WHERE Id IN:new Set<String>(ddIds)];
+		r.accSeedCubes = [SELECT Id,Name,AcctSeed__MTD_Actual_P_L__c FROM AcctSeed__Financial_Cube__c WHERE Id IN:new Set<String>(ddIds)];
 		return r;
 	}
 

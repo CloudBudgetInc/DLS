@@ -41,7 +41,7 @@ const getPriorYearPeriodId = (selectedPeriodId, periodSO) => {
  *
  * @param cube source cube
  * @param reportLineMap object where key is RLKey, value is reportLine
- * @param dataType
+ * @param dataType currentMonthCubes || priorMonthCubes || priorYearCubes || currentMonthCubesYTD || priorYearCubesYTD
  */
 const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 	try {
@@ -68,7 +68,10 @@ const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 const dataMappings = {
 	'currentMonthCubes': ['currentMonthActual', 'currentMonthBudget'],
 	'priorMonthCubes': ['priorMonthActual', null],
-	'priorYearCubes': ['priorYearActual', null]
+	'priorYearCubes': ['priorYearActual', null],
+	//// YTD
+	'currentMonthCubesYTD': ['currentMonthActualYTD', 'currentMonthBudgetYTD'],
+	'priorYearCubesYTD': ['priorYearActualYTD', null],
 };
 
 const populateNumbers = (cube, reportLine, dataType) => {

@@ -1,6 +1,6 @@
 import {_message} from "c/cbUtils";
 
-const SUM_FIELDS = ['currentMonthActual', 'currentMonthBudget', 'priorMonthActual', 'priorYearActual'];
+const SUM_FIELDS = ['currentMonthActual', 'currentMonthBudget', 'priorMonthActual', 'priorYearActual', 'currentMonthActualYTD', 'currentMonthBudgetYTD', 'priorYearActualYTD'];
 
 class ReportLine {
 	/**
@@ -26,6 +26,14 @@ class ReportLine {
 		this.priorYearActual = 0;
 		this.priorYearDiff = 0;
 		this.priorYearDiffPercent = 0;
+
+		this.currentMonthActualYTD = 0;
+		this.currentMonthBudgetYTD = 0;
+		this.currentMonthDiffYTD = 0;
+		this.currentMonthDiffPercentYTD = 0;
+		this.priorYearActualYTD = 0;
+		this.priorYearDiffYTD = 0;
+		this.priorYearDiffPercentYTD = 0;
 	}
 
 	key;
@@ -49,6 +57,14 @@ class ReportLine {
 	priorYearActual;
 	priorYearDiff;
 	priorYearDiffPercent;
+
+	currentMonthActualYTD;
+	currentMonthBudgetYTD;
+	currentMonthDiffYTD;
+	currentMonthDiffPercentYTD;
+	priorYearActualYTD;
+	priorYearDiffYTD;
+	priorYearDiffPercentYTD;
 
 	sumUpLines = (reportLine) => {
 		try {
@@ -79,12 +95,19 @@ class ReportLine {
 	 */
 	normalizeReportLine = () => {
 		if (this.isSeparator) return null;
+		//// Current
 		this.currentMonthDiff = this.currentMonthActual - this.currentMonthBudget;
-		this.currentMonthDiffPercent = this.currentMonthBudget ? 1 - this.currentMonthBudget / this.currentMonthActual : 1;
+		this.currentMonthDiffPercent = this.currentMonthActual ? 1 - this.currentMonthBudget / this.currentMonthActual : 1;
 		this.priorMonthDiff = this.currentMonthActual - this.priorMonthActual;
 		this.priorMonthDiffPercent = this.priorMonthActual ? 1 - this.priorMonthActual / this.currentMonthActual : 1;
 		this.priorYearDiff = this.currentMonthActual - this.priorYearActual;
 		this.priorYearDiffPercent = this.priorYearActual ? 1 - this.priorYearActual / this.currentMonthActual : 1;
+		//// YTD
+		this.currentMonthDiffYTD = this.currentMonthActualYTD - this.currentMonthBudgetYTD;
+		this.currentMonthDiffPercentYTD = this.currentMonthActualYTD ? 1 - this.currentMonthBudgetYTD / this.currentMonthActualYTD : 1;
+		this.priorYearDiffYTD = this.currentMonthActualYTD - this.priorYearActualYTD;
+		this.priorYearDiffPercentYTD = this.priorYearActualYTD ? 1 - this.currentMonthActualYTD / this.priorYearActualYTD : 1;
+
 		this.updateDDInfo();
 
 	};
