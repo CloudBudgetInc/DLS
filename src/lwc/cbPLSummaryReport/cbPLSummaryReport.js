@@ -67,6 +67,11 @@ export default class CBPLSummaryReport extends LightningElement {
 		return this.selectedPeriodMode === 'current';
 	}
 
+	get selectedMonthName() {
+		if (!this.selectedPeriodId || !this.periodSO) return 'N/A';
+		return this.periodSO.find(pSO => pSO.value === this.selectedPeriodId).label;
+	}
+
 	get totalNumberOfRawData() {
 		return this.currentMonthCubes.length + this.priorMonthCubes.length + this.priorYearCubes.length + this.currentMonthCubesYTD.length + this.priorYearCubesYTD.length;
 	}
