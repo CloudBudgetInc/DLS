@@ -13,8 +13,12 @@ const includeVar1 = () => c.selectedReportType === 'facilities';
  * @return previous period Id
  */
 const getPriorPeriodId = (selectedPeriodId, periodSO) => {
-	const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
-	return periodSO[currentPeriodIndex - 1].value;
+	try {
+		const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
+		return periodSO[currentPeriodIndex - 1].value;
+	} catch (e) {
+		return selectedPeriodId;
+	}
 };
 /**
  * @param selectedPeriodId
@@ -33,8 +37,12 @@ const getBYFirstPeriodId = (selectedPeriodId, periodSO) => {
  * @return CB PeriodId of the previous budget year. One year back
  */
 const getPriorYearPeriodId = (selectedPeriodId, periodSO) => {
-	const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
-	return periodSO[currentPeriodIndex - 12].value;
+	try {
+		const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
+		return periodSO[currentPeriodIndex - 12].value;
+	} catch (e) {
+		return selectedPeriodId;
+	}
 };
 
 /**

@@ -34,10 +34,14 @@ import {
 	setContext
 } from "./cbPLSummaryReportBase";
 import {_message, _parseServerError} from "c/cbUtils";
+import exceljs from "@salesforce/resourceUrl/cb5__exceljs";
+import {loadScript} from "lightning/platformResourceLoader";
+import {downloadExcelFile, setExcelLibContext} from "./cbPLSummaryReportExcel";
 
 
 export default class CBPLSummaryReport extends LightningElement {
 
+	librariesLoaded = false;
 	@track selectedPeriodId;
 	@track showSpinner = true;
 	@track readyToRender = false;
@@ -63,6 +67,10 @@ export default class CBPLSummaryReport extends LightningElement {
 		return this.selectedPeriodMode === 'current';
 	}
 
+	get totalNumberOfRawData() {
+		return this.currentMonthCubes.length + this.priorMonthCubes.length + this.priorYearCubes.length + this.currentMonthCubesYTD.length + this.priorYearCubesYTD.length;
+	}
+
 	@track renderDD = false;
 	@track reportLines = [];
 
@@ -70,6 +78,14 @@ export default class CBPLSummaryReport extends LightningElement {
 		await this.analytics();
 		this.applyLastSelected();
 		this.renderReport();
+	}
+
+	renderedCallback() {
+		if (this.librariesLoaded) return;
+		this.librariesLoaded = true;
+		Promise.all([loadScript(this, exceljs)]).catch(function (e) {
+			_message(`error`, `BLME : Excel Backup load library ${e}`);
+		});
 	}
 
 	/**
@@ -104,6 +120,11 @@ export default class CBPLSummaryReport extends LightningElement {
 		this.showSpinner = true;
 		this.readyToRender = false;
 		await this.getSourceData();
+		if (this.totalNumberOfRawData === 0) {
+			this.showSpinner = false;
+			_message('info', 'No data for this period. Please select another period');
+			return null;
+		}
 		this.generateSummaryReportLines();
 		this.showSpinner = false;
 		this.readyToRender = true;
@@ -117,6 +138,11 @@ export default class CBPLSummaryReport extends LightningElement {
 		const BYFirstPeriodId = getBYFirstPeriodId(this.selectedPeriodId, this.periodSO);
 		const priorYearPeriodId = getPriorYearPeriodId(this.selectedPeriodId, this.periodSO);
 		const BYFirstPeriodPriorYearId = getPriorYearPeriodId(priorYearPeriodId, this.periodSO);
+		this.currentMonthCubes = [];
+		this.priorMonthCubes = [];
+		this.priorYearCubes = [];
+		this.currentMonthCubesYTD = [];
+		this.priorYearCubesYTD = [];
 		try {
 			if (this.selectedPeriodMode === 'current') {
 				this.currentMonthCubes = await getCBCubesForPeriodServer({startPeriodId: this.selectedPeriodId}).catch(e => _parseServerError('Get Current Month Data Error: ', e));
@@ -158,7 +184,8 @@ export default class CBPLSummaryReport extends LightningElement {
 	};
 
 	downloadToExcel = () => {
-		_message('warning', 'In progress');
+		setExcelLibContext(this);
+		downloadExcelFile();
 	};
 
 	showDrillDown = (event) => {
