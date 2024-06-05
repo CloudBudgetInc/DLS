@@ -54,7 +54,7 @@ public with sharing class CBPLSummaryReportPageController {
 						cb5__AccSubType__c,cb5__CBVariable1__r.Name,cb5__CBVariable2__r.Name,
 						cb5__CBAccount__r.cb5__CBAccountType__r.Name,CBAccountSubtype2__c,cb5__CBDivision__r.Name
 				FROM cb5__CBCube__c
-				WHERE cb5__CBPeriod__c IN:neededPeriods AND cb5__CBDivision__r.Name != null
+				WHERE cb5__CBPeriod__c IN:neededPeriods
 				ORDER BY cb5__CBVariable2__r.Name, cb5__CBAccount__r.Name
 				LIMIT 48000
 		];
