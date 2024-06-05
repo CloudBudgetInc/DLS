@@ -5,7 +5,7 @@ const getFacilityReportLines = (reportLines) => {
 	reportLines = reportLines.filter(rl => rl.var1?.includes('FSC'));
 	const reportLinesByDim1 = {};
 	reportLines.forEach(rl => {
-		if (!rl.var1?.includes('FSC')) return null; // no facility
+		if (!rl.var1?.includes('FSC0')) return null; // no facility
 		let rLines = reportLinesByDim1[rl.var1];
 		if (!rLines) {
 			rLines = [];
