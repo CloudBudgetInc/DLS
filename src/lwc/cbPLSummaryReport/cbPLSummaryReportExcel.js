@@ -1,12 +1,10 @@
 import {_message} from "c/cbUtils";
 
 let c; // context
-const setExcelLibContext = (_this) => {
-	c = _this;
-};
+const setExcelLibContext = _this => c = _this;
 
 const FIRST_COLUMN_WIDTH = 40;
-const NUMBER_COLUMNS_WIDTH = 15;
+const NUMBER_COLUMNS_WIDTH = 14;
 const CURRENCY_FORMATTER = "$#,##0.00";
 const PERCENT_FORMATTER = "0.00%";
 const HEADER_CURRENT = [
@@ -63,11 +61,12 @@ const ROW_STRUCTURE_YTD = [
 	{fld: "priorYearActualYTD", formatter: "currency"},
 	{fld: "priorYearDiffYTD", formatter: "currency"},
 	{fld: "priorYearDiffPercentYTD", formatter: "percent"},
-	{fld: "notes2", formatter: "text"},
-	{fld: "notes3", formatter: "text"}
+	{fld: "notes2", formatter: "text"}
 ];
 
 const downloadExcelFile = () => {
+	alert(c.selectedReportType);
+	alert(c.selectedPeriodMode);
 	generateAndUploadExcelFile().then((r) => null);
 };
 
@@ -75,9 +74,7 @@ const generateAndUploadExcelFile = async () => {
 	try {
 		let fileName = `PL Summary Report ${c.selectedMonthName} (${c.selectedReportType})`;
 		let workbook = new ExcelJS.Workbook();
-		const sheet = workbook.addWorksheet(fileName, {
-			views: [{state: "frozen", ySplit: 3, xSplit: 0}],
-		});
+		const sheet = workbook.addWorksheet(fileName, {views: [{state: "frozen", ySplit: 3, xSplit: 0}],});
 		setHeader(sheet);
 		setRows(sheet);
 
@@ -95,7 +92,7 @@ const generateAndUploadExcelFile = async () => {
 
 const setHeader = (sheet) => {
 	try {
-		const headers = c.selectedPeriodMode === "current" ? HEADER_CURRENT : HEADER_YTD;
+		const headers = c.selectedPeriodMode === "current" ? HEADER_CURRENT : HEADER_YTD; /// RIGHT
 
 		// Add CloudBudget3.0 in the top left corner and merge cells
 		sheet.mergeCells("A1:B1");
@@ -105,7 +102,7 @@ const setHeader = (sheet) => {
 
 		// Add the second row
 		const A2Cell = sheet.getCell("A2");
-		A2Cell.value = c.selectedPeriodMode === 'current' ? "Current Vs. Prior Vs. Budget Month P&L Summary" : "Facilities";
+		A2Cell.value = c.selectedReportType === 'summary' || c.selectedReportType === 'summary+' ? "Current Vs. Prior Vs. Budget Month P&L Summary" : "Facilities";
 		A2Cell.font = {bold: true, size: 18};
 		A2Cell.alignment = {horizontal: "left"};
 		sheet.mergeCells(2, 1, 2, headers.length); // Merge all cells in the second row
@@ -120,10 +117,8 @@ const setHeader = (sheet) => {
 		});
 
 		// Add bottom border to the header
-		headerRow.eachCell((cell) => {
-			cell.border = {
-				bottom: {style: "thin"},
-			};
+		headerRow.eachCell(cell => {
+			cell.border = {bottom: {style: "thin"},}
 		});
 	} catch (e) {
 		_message("error", "Set Header Error : " + JSON.stringify(e));
@@ -132,7 +127,7 @@ const setHeader = (sheet) => {
 
 const setRows = (sheet) => {
 	let rowIdx = 4;
-	const rlFields = c.selectedPeriodMode === "current" ? ROW_STRUCTURE_CURRENT : ROW_STRUCTURE_YTD;
+	const rlFields = c.selectedPeriodMode === 'current' ? ROW_STRUCTURE_CURRENT : ROW_STRUCTURE_YTD; /// RIGHT!
 	c.reportLines.forEach((rl) => {
 		const excelRow = sheet.getRow(rowIdx++);
 		rlFields.forEach((f, i) => {
@@ -143,16 +138,22 @@ const setRows = (sheet) => {
 			} else if (f.formatter === "percent") {
 				cell.numFmt = PERCENT_FORMATTER; // Example format for percent
 			}
-			if (rl.styleClass) cell.font = {bold: true};
+			if (rl.styleClass) {
+				cell.font = {bold: true};
+				cell.border = {
+					bottom: {style: "dotted"},
+					top: {style: "dotted"},
+				};
+			}
 
 			// Apply column color formatting as per the example
-			if (["currentMonthDiffPercent", "notes1"].includes(f.fld)) {
+			if (["currentMonthDiffPercent", "currentMonthDiffPercentYTD", "notes1"].includes(f.fld)) {
 				cell.fill = {
 					type: "pattern",
 					pattern: "solid",
 					fgColor: {argb: "D3D3D3"},
 				};
-			} else if (["priorMonthDiffPercent", "notes2"].includes(f.fld)) {
+			} else if (["priorMonthDiffPercent", "priorYearDiffPercentYTD", "notes2"].includes(f.fld)) {
 				cell.fill = {
 					type: "pattern",
 					pattern: "solid",
