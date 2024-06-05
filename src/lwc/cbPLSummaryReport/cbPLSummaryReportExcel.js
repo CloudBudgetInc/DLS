@@ -65,8 +65,6 @@ const ROW_STRUCTURE_YTD = [
 ];
 
 const downloadExcelFile = () => {
-	alert(c.selectedReportType);
-	alert(c.selectedPeriodMode);
 	generateAndUploadExcelFile().then((r) => null);
 };
 
