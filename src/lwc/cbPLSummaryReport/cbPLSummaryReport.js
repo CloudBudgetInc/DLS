@@ -193,19 +193,33 @@ export default class CBPLSummaryReport extends LightningElement {
 		downloadExcelFile();
 	};
 
+	////////// DRILL DOWN //////////
+
+	cubeFitsConditions = (cube, params) => {
+		const { label, type } = params;
+		if (cube.CBAccountSubtype2__c === label && cube.cb5__AccSubType__c === type) return true;
+		if (cube.cb5__CBVariable2__r?.Name === label) {
+			const accountName = cube.cb5__CBAccount__r?.Name || '';
+			return (type === 'Revenue' && accountName.startsWith('4')) || (type !== 'Revenue' && accountName.startsWith('5'));
+		}
+		return false;
+	};
+
 	showDrillDown = (event) => {
 		try {
 			const dataId = event.target.dataset.id;
 			let params = JSON.parse(dataId);
+			if (!params.type) {
+				_message('info', 'DrillDown is not applicable for the selected row');
+				return null;
+			}
 			let engagedCubes = [];
 			if (this.selectedReportType === 'summary') {
-				engagedCubes = this.currentMonthCubes.filter(cube => cube.CBAccountSubtype2__c === params.label && cube.cb5__AccSubType__c === params.type);
+				engagedCubes = this.currentMonthCubes.filter(cube => this.cubeFitsConditions(cube, params));
 			}
 			const DDIDS = {};
 			engagedCubes.forEach(cube => {
-				if (cube.cb5__DrillDownIds__c) {
-					cube.cb5__DrillDownIds__c.split(',').forEach(id => DDIDS[id] = true);
-				}
+				if (cube.cb5__DrillDownIds__c) cube.cb5__DrillDownIds__c.split(',').forEach(id => DDIDS[id] = true);
 			});
 			this.ddParams = JSON.stringify(Object.keys(DDIDS));
 			this.renderDD = true;
@@ -217,6 +231,5 @@ export default class CBPLSummaryReport extends LightningElement {
 		this.ddParams = [];
 		this.renderDD = false;
 	};
-
-
+	////////// DRILL DOWN //////////
 }
