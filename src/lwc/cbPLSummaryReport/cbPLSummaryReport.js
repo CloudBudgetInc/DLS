@@ -98,6 +98,9 @@ export default class CBPLSummaryReport extends LightningElement {
 	 */
 	applyLastSelected = () => {
 		this.selectedPeriodId = localStorage.getItem('selectedPeriodId') ? localStorage.getItem('selectedPeriodId') : undefined;
+		if (!this.selectedPeriodId) {
+			this.selectedPeriodId = this.periodSO[0].value; // first run
+		}
 	};
 
 	/**
@@ -197,9 +200,6 @@ export default class CBPLSummaryReport extends LightningElement {
 
 	cubeFitsConditions = (cube, params) => {
 		const {label, type} = params;
-		console.log('HERE ');
-		console.log('PARAMS: ' + JSON.stringify(params));
-		console.log('this.selectedReportType: ' + this.selectedReportType);
 		if (this.selectedReportType === 'facilities') {
 			console.log('FACILITIES: ' + 'cube.cb5__CBVariable1__r?.Name = ' + cube.cb5__CBVariable1__r?.Name + ' cube.cb5__CBAccount__r.Name= ' + cube.cb5__CBAccount__r.Name);
 			return cube.cb5__CBVariable1__r?.Name === params.var1 && cube.cb5__CBAccount__r.Name === params.account;
