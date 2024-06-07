@@ -98,6 +98,9 @@ const getLabelAndType = (cube) => {
 		if (cube.cb5__CBAccount__r.Name.startsWith('4')) {
 			return {label: cube.cb5__CBVariable2__r.Name, type: 'Revenue', account: cube.cb5__CBAccount__r.Name};
 		}
+		if (cube.cb5__CBAccount__r.Name.startsWith('58')) {
+			return {label: 'Direct Fringe', type: 'COGS', account: cube.cb5__CBAccount__r.Name};
+		}
 		if (cube.cb5__CBAccount__r.Name.startsWith('5')) {
 			return {label: cube.cb5__CBVariable2__r.Name, type: 'COGS', account: cube.cb5__CBAccount__r.Name};
 		}

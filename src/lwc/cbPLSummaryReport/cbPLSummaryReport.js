@@ -201,15 +201,18 @@ export default class CBPLSummaryReport extends LightningElement {
 
 	cubeFitsConditions = (cube, params) => {
 		const {label, type} = params;
+		const accountName = cube.cb5__CBAccount__r.Name;
 		if (this.selectedReportType === 'facilities') {
-			console.log('FACILITIES: ' + 'cube.cb5__CBVariable1__r?.Name = ' + cube.cb5__CBVariable1__r?.Name + ' cube.cb5__CBAccount__r.Name= ' + cube.cb5__CBAccount__r.Name);
 			return cube.cb5__CBVariable1__r?.Name === params.var1 && cube.cb5__CBAccount__r.Name === params.account;
 		}
 		if (this.selectedReportType === 'summary') {
 			if (cube.CBAccountSubtype2__c === label && cube.cb5__AccSubType__c === type) return true; // for undirect expenses
+			if (label === 'Direct Fringe') {
+				if (type === 'COGS' && accountName.startsWith('58')) return true;
+			}
 			if (cube.cb5__CBVariable2__r?.Name === label) { /// for direct expenses
-				const accountName = cube.cb5__CBAccount__r?.Name || '';
-				return (type === 'Revenue' && accountName.startsWith('4')) || (type !== 'Revenue' && accountName.startsWith('5'));
+				if (type === 'Revenue' && accountName.startsWith('4')) return true;
+				if (type === 'COGS' && !accountName.startsWith('58') && accountName.startsWith('5')) return true
 			}
 		}
 		return false;
