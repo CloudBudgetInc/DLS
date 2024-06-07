@@ -207,6 +207,9 @@ export default class CBPLSummaryReport extends LightningElement {
 		}
 		if (this.selectedReportType === 'summary') {
 			if (cube.CBAccountSubtype2__c === label && cube.cb5__AccSubType__c === type) return true; // for undirect expenses
+			if (label === 'GSA IFF Fee') {
+				if (accountName.startsWith('481')) return true;
+			}
 			if (label === 'Direct Fringe') {
 				if (type === 'COGS' && accountName.startsWith('58')) return true;
 			}

@@ -94,12 +94,15 @@ const populateNumbers = (cube, reportLine, dataType) => {
  * The main method to split data between sections
  */
 const getLabelAndType = (cube) => {
+	if (cube.cb5__CBAccount__r.Name.startsWith('481')) {
+		return {label: 'GSA IFF Fee', type: 'Revenue', account: cube.cb5__CBAccount__r.Name};
+	}
+	if (cube.cb5__CBAccount__r.Name.startsWith('58')) {
+		return {label: 'Direct Fringe', type: 'COGS', account: cube.cb5__CBAccount__r.Name};
+	}
 	if (cube.cb5__CBVariable2__c) {
 		if (cube.cb5__CBAccount__r.Name.startsWith('4')) {
 			return {label: cube.cb5__CBVariable2__r.Name, type: 'Revenue', account: cube.cb5__CBAccount__r.Name};
-		}
-		if (cube.cb5__CBAccount__r.Name.startsWith('58')) {
-			return {label: 'Direct Fringe', type: 'COGS', account: cube.cb5__CBAccount__r.Name};
 		}
 		if (cube.cb5__CBAccount__r.Name.startsWith('5')) {
 			return {label: cube.cb5__CBVariable2__r.Name, type: 'COGS', account: cube.cb5__CBAccount__r.Name};
@@ -176,6 +179,7 @@ const addSubLinesAndTotals = (reportLines) => {
 				if (section.lines) section.lines.push(rl);
 			}
 		});
+		sortReportLines([revenueLines, COGSLines, fringeLines, overheadLines, facilitiesLines, eescLines, GALines]);
 
 		grossMargin.sumUpLines(revenueTotal);
 		grossMargin.subtractLines(COGSTotal);
@@ -184,7 +188,8 @@ const addSubLinesAndTotals = (reportLines) => {
 		grossMarginPercent.formatStyle = 'percent';
 		grossMarginPercent.styleClass = 'green';
 		[fringeTotal, overheadTotal, facilitiesTotal, eescTotal, GATotal].forEach(rl => indirectExpenseTotal.sumUpLines(rl));
-		netOrdinaryTotal.sumUpLines(grossMargin);
+		netOrdinaryTotal.sumUpLines(revenueTotal);
+		netOrdinaryTotal.subtractLines(COGSTotal);
 		netOrdinaryTotal.subtractLines(indirectExpenseTotal);
 		nonOperatingOtherIncomeExpenseTotal.sumUpLines(nonOperatingIncomeTotal);
 		nonOperatingOtherIncomeExpenseTotal.subtractLines(nonOperatingExpenseTotal);
@@ -250,6 +255,31 @@ const addSubLinesAndTotals = (reportLines) => {
 	} catch (e) {
 		_message('error', 'Add subtotals and totals error: ' + e);
 	}
+};
+
+const sortReportLines = (reportLineSections) => {
+	const specialLabels = ["Direct Fringe", "GSA IFF Fee"];
+	const isSpecial = label => specialLabels.some(specialLabel => label.includes(specialLabel));
+	const sortSection = (section) => {
+		section.sort((a, b) => {
+			const aIsSpecial = isSpecial(a.label);
+			const bIsSpecial = isSpecial(b.label);
+			if (aIsSpecial && !bIsSpecial) {
+				return 1; // a is special, move it to the end
+			}
+			if (!aIsSpecial && bIsSpecial) {
+				return -1; // b is special, move it to the end
+			}
+			if (a.label < b.label) {
+				return -1;
+			}
+			if (a.label > b.label) {
+				return 1;
+			}
+			return 0;
+		});
+	};
+	reportLineSections.forEach(sortSection);
 };
 
 

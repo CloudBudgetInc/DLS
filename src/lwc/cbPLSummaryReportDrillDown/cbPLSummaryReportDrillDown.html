@@ -13,7 +13,44 @@
 				<p>{dialogLabel}</p>
 			</div>
 			<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
-				<div class="slds-text-heading_medium slds-m-left_medium">Budget:</div>
+
+				<div class="slds-text-heading_medium slds-m-left_medium">Actual:</div>
+				<table class="slds-table slds-table_bordered slds-table_cell-buffer">
+					<thead>
+					<tr>
+						<th style="width: 80%">
+							<div class="slds-truncate" title="Financial Cube">Financial Cube</div>
+						</th>
+						<th>
+							<div class="slds-truncate" title="Amount">Amount</div>
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+					<template for:each={ddResult.accSeedCubes} for:item="accSeedCube">
+						<tr key={accSeedCube}>
+							<td class={accSeedCube.styleClass}>
+								<template lwc:if={accSeedCube.styleClass}>
+									{accSeedCube.Name}
+								</template>
+								<template lwc:else>
+									<a href={accSeedCube.link} class="slds-truncate" title='Click to redirect'
+									   target="_blank">{accSeedCube.AcctSeed__GL_Account__r.Name}
+										({accSeedCube.Name})</a>
+								</template>
+							</td>
+							<td class="slds-text-align_right">
+								<lightning-formatted-number value={accSeedCube.AcctSeed__MTD_Actual_P_L__c}
+															format-style="currency"
+															class={accSeedCube.styleClass}
+															currency-code="USD"></lightning-formatted-number>
+							</td>
+						</tr>
+					</template>
+					</tbody>
+				</table>
+
+				<div class="slds-text-heading_medium slds-m-left_medium slds-m-top_medium">Budget:</div>
 				<table class="slds-table slds-table_bordered slds-table_cell-buffer">
 					<thead>
 					<tr>
@@ -46,40 +83,7 @@
 					</template>
 					</tbody>
 				</table>
-				<div class="slds-text-heading_medium slds-m-top_medium slds-m-left_medium">Actual:</div>
-				<table class="slds-table slds-table_bordered slds-table_cell-buffer">
-					<thead>
-					<tr>
-						<th style="width: 80%">
-							<div class="slds-truncate" title="Financial Cube">Financial Cube</div>
-						</th>
-						<th>
-							<div class="slds-truncate" title="Amount">Amount</div>
-						</th>
-					</tr>
-					</thead>
-					<tbody>
-					<template for:each={ddResult.accSeedCubes} for:item="accSeedCube">
-						<tr key={accSeedCube}>
-							<td class={accSeedCube.styleClass}>
-								<template lwc:if={accSeedCube.styleClass}>
-									{accSeedCube.Name}
-								</template>
-								<template lwc:else>
-									<a href={accSeedCube.link} class="slds-truncate" title='Click to redirect'
-									   target="_blank">{accSeedCube.AcctSeed__GL_Account__r.Name} ({accSeedCube.Name})</a>
-								</template>
-							</td>
-							<td class="slds-text-align_right">
-								<lightning-formatted-number value={accSeedCube.AcctSeed__MTD_Actual_P_L__c}
-															format-style="currency"
-															class={accSeedCube.styleClass}
-															currency-code="USD"></lightning-formatted-number>
-							</td>
-						</tr>
-					</template>
-					</tbody>
-				</table>
+
 			</div>
 			<div class="slds-modal__footer">
 				<!--<lightning-textarea value={ddParams} label="Service Info"></lightning-textarea>-->
