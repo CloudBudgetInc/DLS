@@ -50,7 +50,7 @@ public with sharing class CBPLSummaryReportPageController {
 	public static List<cb5__CBCube__c> getCBCubesForPeriodServer(String startPeriodId, String endPeriodId) {
 		Set<String> neededPeriods = getSetOfAllNeededPeriods(startPeriodId, endPeriodId);
 		return [
-				SELECT Id, cb5__DrillDownIds__c,cb5__CBAccount__c,cb5__CBDivision__c,cb5__Actual__c,cb5__Budget__c,cb5__CBAccount__r.Name,
+				SELECT Id, cb5__DrillDownIds__c,cb5__CBAccount__c,cb5__CBDivision__c,Actual_Inverted__c,cb5__Budget__c,cb5__CBAccount__r.Name,
 						cb5__AccSubType__c,cb5__CBVariable1__r.Name,cb5__CBVariable2__r.Name,
 						cb5__CBAccount__r.cb5__CBAccountType__r.Name,CBAccountSubtype2__c,cb5__CBDivision__r.Name
 				FROM cb5__CBCube__c
@@ -84,8 +84,8 @@ public with sharing class CBPLSummaryReportPageController {
 	@AuraEnabled
 	public static DDResult getDDRecordsServer(List<String> ddIds) {
 		DDResult r = new DDResult();
-		r.BLAmounts = [SELECT cb5__CBBudgetLine__c,cb5__CBBudgetLine__r.Name,cb5__Value__c FROM cb5__CBAmount__c WHERE Id IN:new Set<String>(ddIds)];
-		r.accSeedCubes = [SELECT Id,Name,AcctSeed__MTD_Actual_P_L__c FROM AcctSeed__Financial_Cube__c WHERE Id IN:new Set<String>(ddIds)];
+		r.BLAmounts = [SELECT cb5__CBBudgetLine__c,cb5__CBBudgetLine__r.Name,cb5__Value__c FROM cb5__CBAmount__c WHERE Id IN:new Set<String>(ddIds) ORDER BY cb5__CBBudgetLine__r.Name];
+		r.accSeedCubes = [SELECT Id,Name,AcctSeed__MTD_Actual_P_L__c,AcctSeed__GL_Account__r.Name FROM AcctSeed__Financial_Cube__c WHERE Id IN:new Set<String>(ddIds) ORDER BY AcctSeed__GL_Account__r.Name];
 		return r;
 	}
 

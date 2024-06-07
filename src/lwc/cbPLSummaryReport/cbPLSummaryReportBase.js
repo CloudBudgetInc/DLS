@@ -85,7 +85,7 @@ const dataMappings = {
 const populateNumbers = (cube, reportLine, dataType) => {
 	if (dataMappings[dataType]) {
 		const [actualField, budgetField] = dataMappings[dataType];
-		reportLine[actualField] += +cube.cb5__Actual__c;
+		reportLine[actualField] += +cube.Actual_Inverted__c;
 		if (budgetField) reportLine[budgetField] += +cube.cb5__Budget__c;
 	}
 };

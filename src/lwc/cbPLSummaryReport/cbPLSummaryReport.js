@@ -77,6 +77,7 @@ export default class CBPLSummaryReport extends LightningElement {
 	}
 
 	@track renderDD = false;
+	@track ddLabel = '';
 	@track reportLines = [];
 
 	async connectedCallback() {
@@ -218,6 +219,7 @@ export default class CBPLSummaryReport extends LightningElement {
 		try {
 			const dataId = event.target.dataset.id;
 			let params = JSON.parse(dataId);
+			this.ddLabel = params.label;
 			console.clear();
 			console.log('Params : ' + JSON.stringify(params));
 			if (!params.type) {
@@ -238,6 +240,7 @@ export default class CBPLSummaryReport extends LightningElement {
 	};
 	closeDrillDown = () => {
 		this.ddParams = [];
+		this.ddLabel = [];
 		this.renderDD = false;
 	};
 	////////// DRILL DOWN //////////

@@ -4,6 +4,7 @@ import {_parseServerError} from "c/cbUtils";
 
 export default class CbPLSummaryReportDrillDown extends LightningElement {
 	@api ddParams;
+	@api dialogLabel;
 	@api closeFunction;
 	@track ddResult = {BLAmounts: [], ASCubes: []};
 
