@@ -7,11 +7,13 @@ class ReportLine {
 	 * @param label label of the line
 	 * @param sClass style class
 	 * @param isSeparator if true no numbers needed
+	 * @param isWrapper
 	 */
-	constructor(label, sClass, isSeparator) {
+	constructor(label, sClass, isSeparator, isWrapper) {
 		this.label = label;
 		this.styleClass = sClass;
 		this.isSeparator = isSeparator;
+		if (isWrapper) this.isWrapper = true;
 		if (isSeparator) return this;
 
 		this.currentMonthActual = 0;
@@ -46,6 +48,7 @@ class ReportLine {
 	var2;
 	formatStyle = 'currency';
 	ddParams = 'currency';
+	isWrapper = false;
 
 	currentMonthActual;
 	currentMonthBudget;

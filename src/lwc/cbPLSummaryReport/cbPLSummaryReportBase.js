@@ -15,7 +15,7 @@ const includeVar1 = () => c.selectedReportType === 'facilities';
 const getPriorPeriodId = (selectedPeriodId, periodSO) => {
 	try {
 		const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
-		return periodSO[currentPeriodIndex - 1].value;
+		return periodSO[currentPeriodIndex + 1].value;
 	} catch (e) {
 		return selectedPeriodId;
 	}
@@ -27,7 +27,7 @@ const getPriorPeriodId = (selectedPeriodId, periodSO) => {
  */
 const getBYFirstPeriodId = (selectedPeriodId, periodSO) => {
 	const currentPeriod = periodSO.find(p => p.value === selectedPeriodId);
-	for (let i = 0; i < periodSO.length; i++) {
+	for (let i = periodSO.length - 1; i >= 0; i--) {
 		if (periodSO[i].byId === currentPeriod.byId) return periodSO[i].value;
 	}
 };
@@ -39,7 +39,7 @@ const getBYFirstPeriodId = (selectedPeriodId, periodSO) => {
 const getPriorYearPeriodId = (selectedPeriodId, periodSO) => {
 	try {
 		const currentPeriodIndex = periodSO.findIndex(p => p.value === selectedPeriodId);
-		return periodSO[currentPeriodIndex - 12].value;
+		return periodSO[currentPeriodIndex + 12].value;
 	} catch (e) {
 		return selectedPeriodId;
 	}
@@ -107,6 +107,12 @@ const getLabelAndType = (cube) => {
 		if (cube.cb5__CBAccount__r.Name.startsWith('5')) {
 			return {label: cube.cb5__CBVariable2__r.Name, type: 'COGS', account: cube.cb5__CBAccount__r.Name};
 		}
+	}
+	if (cube.CBAccountSubtype2__c === 'Non-Operating Other Income') {
+		return {label: cube.CBAccountSubtype2__c, type: 'Other Income', account: cube.cb5__CBAccount__r.Name};
+	}
+	if (cube.CBAccountSubtype2__c === 'Non-Operating Other Expenses') {
+		return {label: cube.CBAccountSubtype2__c, type: 'Other Expense', account: cube.cb5__CBAccount__r.Name};
 	}
 	const subTypes = [
 		'Fringes',
@@ -197,9 +203,9 @@ const addSubLinesAndTotals = (reportLines) => {
 		netProfit.sumUpLines(nonOperatingOtherIncomeExpenseTotal);
 
 		const split = () => new ReportLine(' ', null, true);
-		const addHeader = (label) => new ReportLine(label, 'totalLine', true);
+		const addHeader = (label, isWrapper) => new ReportLine(label, 'totalLine', true, isWrapper);
 		return [
-			addHeader('Revenue'),
+			addHeader('Revenue', true),
 			...revenueLines,
 			revenueTotal,
 
@@ -281,7 +287,6 @@ const sortReportLines = (reportLineSections) => {
 	};
 	reportLineSections.forEach(sortSection);
 };
-
 
 export {
 	getPriorPeriodId,

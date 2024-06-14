@@ -29,7 +29,7 @@ public with sharing class CBPLSummaryReportPageController {
 
 	private static List<cb5__CBPeriod__c> sortedPeriods {
 		get {
-			if (sortedPeriods == null) sortedPeriods = [SELECT Id,cb5__CBBudgetYear__c,Name FROM cb5__CBPeriod__c ORDER BY cb5__Start__c LIMIT 5000];
+			if (sortedPeriods == null) sortedPeriods = [SELECT Id,cb5__CBBudgetYear__c,Name FROM cb5__CBPeriod__c ORDER BY cb5__Start__c DESC LIMIT 5000];
 			return sortedPeriods;
 		}
 		set;
@@ -48,7 +48,9 @@ public with sharing class CBPLSummaryReportPageController {
 	 */
 	@AuraEnabled
 	public static List<cb5__CBCube__c> getCBCubesForPeriodServer(String startPeriodId, String endPeriodId) {
+		System.debug('Start: ' + startPeriodId + ' End: ' + endPeriodId);
 		Set<String> neededPeriods = getSetOfAllNeededPeriods(startPeriodId, endPeriodId);
+		System.debug('neededPeriods: ' + neededPeriods);
 		return [
 				SELECT Id, cb5__DrillDownIds__c,cb5__CBAccount__c,cb5__CBDivision__c,Actual_Inverted__c,cb5__Budget__c,cb5__CBAccount__r.Name,
 						cb5__AccSubType__c,cb5__CBVariable1__r.Name,cb5__CBVariable2__r.Name,
@@ -67,12 +69,11 @@ public with sharing class CBPLSummaryReportPageController {
 	 * @return list of CBPeriod from start to the end
 	 */
 	private static Set<String> getSetOfAllNeededPeriods(String startPeriodId, String endPeriodId) {
-		if (endPeriodId == null) return new Set<String>{
-				startPeriodId
-		};
+		if (endPeriodId == null) return new Set<String>{ startPeriodId };
 		Set<String> r = new Set<String>();
 		Boolean isNeededPeriod = false;
-		for (cb5__CBPeriod__c p : sortedPeriods) {
+		for (Integer i = sortedPeriods.size() - 1; i >= 0; i--) {
+			cb5__CBPeriod__c p = sortedPeriods[i];
 			if (startPeriodId == p.Id) isNeededPeriod = true;
 			if (isNeededPeriod) r.add(p.Id);
 			if (endPeriodId == p.Id) break;
