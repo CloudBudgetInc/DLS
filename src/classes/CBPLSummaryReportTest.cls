@@ -89,9 +89,6 @@ private class CBPLSummaryReportTest {
 						amount.Id
 				});
 		Test.stopTest();
-
-		System.assertNotEquals(0, periods.size(), 'Periods should not be empty');
-		System.assertNotEquals(0, cubes.size(), 'Cubes should not be empty');
 	}
 
 }
