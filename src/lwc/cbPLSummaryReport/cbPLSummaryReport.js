@@ -67,6 +67,10 @@ export default class CBPLSummaryReport extends LightningElement {
 		return this.selectedPeriodMode === 'current';
 	}
 
+	get pageTitle() {
+		return this.selectedPeriodMode === 'current' ? 'Current Vs. Prior Vs. Budget Month P&L Summary' : 'YTD Current Vs. Prior Vs. Budget Month P&L Summary Report';
+	}
+
 	get selectedMonthName() {
 		if (!this.selectedPeriodId || !this.periodSO) return 'N/A';
 		return this.periodSO.find(pSO => pSO.value === this.selectedPeriodId).label;
