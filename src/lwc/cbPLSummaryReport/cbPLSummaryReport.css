@@ -25,3 +25,7 @@
     background: white;
     z-index: 1;
 }
+
+.number-wrapper[data-value^="-"] {
+    color: red;
+}
