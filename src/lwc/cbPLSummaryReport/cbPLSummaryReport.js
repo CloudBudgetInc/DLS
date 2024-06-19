@@ -150,7 +150,7 @@ export default class CBPLSummaryReport extends LightningElement {
 		const priorPeriodId = getPriorPeriodId(this.selectedPeriodId, this.periodSO);
 		const BYFirstPeriodId = getBYFirstPeriodId(this.selectedPeriodId, this.periodSO);
 		const priorYearPeriodId = getPriorYearPeriodId(this.selectedPeriodId, this.periodSO);
-		const BYFirstPeriodPriorYearId = getPriorYearPeriodId(priorYearPeriodId, this.periodSO);
+		const BYFirstPeriodPriorYearId = getBYFirstPeriodId(priorYearPeriodId, this.periodSO);
 		this.currentMonthCubes = [];
 		this.priorMonthCubes = [];
 		this.priorYearCubes = [];
@@ -166,6 +166,7 @@ export default class CBPLSummaryReport extends LightningElement {
 					startPeriodId: BYFirstPeriodId,
 					endPeriodId: this.selectedPeriodId
 				}).catch(e => _parseServerError('Get Current Month YTD Data Error: ', e));
+				console.log('Prior Year: FROM: ' +  BYFirstPeriodPriorYearId + ' TO:' + priorYearPeriodId);
 				this.priorYearCubesYTD = await getCBCubesForPeriodServer({
 					startPeriodId: BYFirstPeriodPriorYearId,
 					endPeriodId: priorYearPeriodId
