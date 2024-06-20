@@ -5,8 +5,8 @@ const setExcelLibContext = _this => c = _this;
 
 const FIRST_COLUMN_WIDTH = 40;
 const NUMBER_COLUMNS_WIDTH = 14;
-const CURRENCY_FORMATTER = "$#,##0.00";
-const PERCENT_FORMATTER = "0.00%";
+const CURRENCY_FORMATTER = '$#,##0_);[Red]($#,##0)';
+const PERCENT_FORMATTER = "0.0%";
 const HEADER_CURRENT = [
 	"Label",
 	"Current Month",
