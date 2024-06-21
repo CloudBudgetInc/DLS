@@ -4,6 +4,12 @@
 		<lightning-layout slot="actions">
 			<lightning-layout-item>
 				<div class="slds-p-top_large">
+					<lightning-button label="Dashboard" icon-name="utility:chart" onclick={openDashboard}>
+					</lightning-button>
+				</div>
+			</lightning-layout-item>
+			<lightning-layout-item>
+				<div class="slds-p-top_large">
 					<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadToExcel}>
 					</lightning-button>
 				</div>
@@ -155,6 +161,12 @@
 																	minimum-fraction-digits="1"
 																	format-style="percent"></lightning-formatted-number>
 									</div>
+									<template lwc:if={rl.currentMonthDiffPercent}>
+										<div>
+											<lightning-progress-bar value={rl.currentMonthDiffPercentX100} size="small"
+																	variant="circular"></lightning-progress-bar>
+										</div>
+									</template>
 								</th>
 								<!-- CURRENT MONTH -->
 
@@ -304,6 +316,11 @@
 		<template lwc:if={renderDD}>
 			<c-cb-p-l-summary-report-drill-down dd-params={ddParams} dialog-label={ddLabel}
 												close-function={closeDrillDown}></c-cb-p-l-summary-report-drill-down>
+		</template>
+
+		<template lwc:if={renderDashboard}>
+			<c-cb-p-l-summary-dashboard close-function={closeDashboard}
+										report-lines={reportLinesJSON}></c-cb-p-l-summary-dashboard>
 		</template>
 
 		<c-cb-spinner show={showSpinner}></c-cb-spinner>

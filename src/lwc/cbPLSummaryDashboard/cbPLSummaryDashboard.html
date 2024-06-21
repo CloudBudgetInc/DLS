@@ -1,0 +1,45 @@
+<template>
+	<section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01"
+			 class="slds-modal slds-fade-in-open slds-modal_large">
+		<div class="slds-modal__container">
+			<button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse">
+				<svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+					<use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+				</svg>
+				<span class="slds-assistive-text">Summary Dashboard</span>
+			</button>
+			<div class="slds-modal__header">
+				<h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate" tabindex="-1">Dashboard</h1>
+			</div>
+			<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+
+
+				<template lwc:if={readyToRender}>
+					<div class="slds-align_absolute-center">
+						<div class="slds-text-heading_medium">REVENUE</div>
+						<lightning-input class="slds-m-left_large" type="checkbox" label="Group" checked={groupRevenue}
+										 onchange={toggleRevenueGrouping}></lightning-input>
+					</div>
+					<lightning-layout>
+						<lightning-layout-item size="4">
+							<c-cb-chart chart-config={revenueCurrentPlanActualPercentDiffConfig}></c-cb-chart>
+						</lightning-layout-item>
+						<lightning-layout-item size="4">
+							<c-cb-chart chart-config={revenueCurrentPreviousMonthPercentDiffConfig}></c-cb-chart>
+						</lightning-layout-item>
+						<lightning-layout-item size="4">
+							<c-cb-chart chart-config={revenueCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
+						</lightning-layout-item>
+					</lightning-layout>
+
+				</template>
+
+
+			</div>
+			<div class="slds-modal__footer">
+				<lightning-button label="Close" onclick={closeDashboardDialog}></lightning-button>
+			</div>
+		</div>
+	</section>
+	<div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+</template>

@@ -20,6 +20,7 @@ class ReportLine {
 		this.currentMonthBudget = 0;
 		this.currentMonthDiff = 0;
 		this.currentMonthDiffPercent = 0;
+		this.currentMonthDiffPercentX100 = 0;
 
 		this.priorMonthActual = 0;
 		this.priorMonthDiff = 0;
@@ -54,6 +55,7 @@ class ReportLine {
 	currentMonthBudget;
 	currentMonthDiff;
 	currentMonthDiffPercent;
+	currentMonthDiffPercentX100;
 	priorMonthActual;
 	priorMonthDiff;
 	priorMonthDiffPercent;
@@ -110,6 +112,8 @@ class ReportLine {
 		this.currentMonthDiffPercentYTD = this.currentMonthActualYTD ? 1 - this.currentMonthBudgetYTD / this.currentMonthActualYTD : 1;
 		this.priorYearDiffYTD = this.currentMonthActualYTD - this.priorYearActualYTD;
 		this.priorYearDiffPercentYTD = this.priorYearActualYTD ? 1 - this.currentMonthActualYTD / this.priorYearActualYTD : 1;
+
+		this.currentMonthDiffPercentX100 = this.currentMonthDiffPercent * 100;
 
 		this.updateDDInfo();
 

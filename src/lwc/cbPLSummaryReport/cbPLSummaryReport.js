@@ -62,9 +62,14 @@ export default class CBPLSummaryReport extends LightningElement {
 	@track priorYearCubes = [];
 	@track currentMonthCubesYTD = [];
 	@track priorYearCubesYTD = [];
+	@track renderDashboard = false;
 
 	get renderCurrent() {
 		return this.selectedPeriodMode === 'current';
+	}
+
+	get reportLinesJSON() {
+		return JSON.stringify(this.reportLines);
 	}
 
 	get pageTitle() {
@@ -166,7 +171,7 @@ export default class CBPLSummaryReport extends LightningElement {
 					startPeriodId: BYFirstPeriodId,
 					endPeriodId: this.selectedPeriodId
 				}).catch(e => _parseServerError('Get Current Month YTD Data Error: ', e));
-				console.log('Prior Year: FROM: ' +  BYFirstPeriodPriorYearId + ' TO:' + priorYearPeriodId);
+				console.log('Prior Year: FROM: ' + BYFirstPeriodPriorYearId + ' TO:' + priorYearPeriodId);
 				this.priorYearCubesYTD = await getCBCubesForPeriodServer({
 					startPeriodId: BYFirstPeriodPriorYearId,
 					endPeriodId: priorYearPeriodId
@@ -194,6 +199,7 @@ export default class CBPLSummaryReport extends LightningElement {
 
 		const reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
 		reportLines.forEach(rl => rl.normalizeReportLine());
+		reportLines.forEach(rl => console.log(JSON.stringify(rl)));
 		this.reportLines = reportLines;
 	};
 
@@ -255,4 +261,11 @@ export default class CBPLSummaryReport extends LightningElement {
 		this.renderDD = false;
 	};
 	////////// DRILL DOWN //////////
+
+
+	////////// DASHBOARD //////////
+	openDashboard = () => this.renderDashboard = true;
+	closeDashboard = () => this.renderDashboard = false;
+	////////// DASHBOARD //////////
+
 }
