@@ -53,7 +53,7 @@ export default class CbPLSummaryDashboard extends LightningElement {
 			'LT - GSA': 'COMM, (non)GSA, PVT',
 			'LT - NonGSA': 'COMM, (non)GSA, PVT',
 			'LT - PVT': 'COMM, (non)GSA, PVT',
-			'LT - DODA': 'DODA (PS)',
+			'LT - DODA': 'LT - DODA (PS)',
 			'LT - DODA PS': 'LT - DODA (PS)',
 			'LT - DLI-W': 'LT - DLI-W (PS)',
 			'LT - DLI-W PS': 'LT - DLI-W (PS)'
