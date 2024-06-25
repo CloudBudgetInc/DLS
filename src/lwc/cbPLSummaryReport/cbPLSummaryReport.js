@@ -234,6 +234,10 @@ export default class CBPLSummaryReport extends LightningElement {
 
 	showDrillDown = (event) => {
 		try {
+			if(this.selectedPeriodMode === 'YTD') {
+				alert('Not allowed in YTD mode');
+				return null;
+			}
 			const dataId = event.target.dataset.id;
 			let params = JSON.parse(dataId);
 			this.ddLabel = params.label;

@@ -12,14 +12,33 @@
 				<h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate" tabindex="-1">Dashboard</h1>
 			</div>
 			<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+				<div class="slds-align_absolute-center">
+					<div class="slds-text-heading_medium">REVENUE</div>
+				</div>
+				<template lwc:if={revenueOptions}>
+					<template lwc:if={isRevenueOptionsRendered}>
+						<div class="slds-box" style="position: absolute; background-color: white; width: 200px"
+							 onmouseover={handleMouseOverRevenue}
+							 onmouseout={handleMouseOutRevenue}>
+							<lightning-checkbox-group name="Var 2"
+													  label="Var 2"
+													  options={revenueOptions}
+													  value={revenueValues}
+													  onchange={handleRevenueOptionsChange}></lightning-checkbox-group>
+							<lightning-button label="Apply" onclick={applyRevenueOptions}></lightning-button>
 
+						</div>
+					</template>
+					<template lwc:else>
+						<div style="width: 80px; border: 1px grey; border-radius: 5px;"
+							 onmouseover={handleMouseOverRevenue}
+							 onmouseout={handleMouseOutRevenue}>
+							Options
+						</div>
+					</template>
+				</template>
 
-				<template lwc:if={readyToRender}>
-					<div class="slds-align_absolute-center">
-						<div class="slds-text-heading_medium">REVENUE</div>
-						<lightning-input class="slds-m-left_large" type="checkbox" label="Group" checked={groupRevenue}
-										 onchange={toggleRevenueGrouping}></lightning-input>
-					</div>
+				<template lwc:if={readyToRenderRevenue}>
 					<lightning-layout>
 						<lightning-layout-item size="4">
 							<c-cb-chart chart-config={revenueCurrentPlanActualPercentDiffConfig}></c-cb-chart>
