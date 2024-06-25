@@ -34,6 +34,7 @@ const getDataForRevenueChart = (revenueReportLines, field, label) => {
 		if (!rl[field] || !c.revenueValues.includes(rl.label)) return;
 		labels.push(rl.label);
 		data.push(rl[field] * 100);
+		console.log('RL -> ' + JSON.stringify(rl));
 	});
 
 
@@ -93,7 +94,6 @@ const getDataForRevenueChart = (revenueReportLines, field, label) => {
 			}
 		}
 	};
-
 };
 
 // Method to generate an array of colors
