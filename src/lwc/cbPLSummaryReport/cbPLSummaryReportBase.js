@@ -75,8 +75,8 @@ const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 
 const dataMappings = {
 	'currentMonthCubes': ['currentMonthActual', 'currentMonthBudget'],
-	'priorMonthCubes': ['priorMonthActual', null],
-	'priorYearCubes': ['priorYearActual', null],
+	'priorMonthCubes': ['priorMonthActual', 'priorMonthBudget'],
+	'priorYearCubes': ['priorYearActual', 'priorYearBudget'],
 	//// YTD
 	'currentMonthCubesYTD': ['currentMonthActualYTD', 'currentMonthBudgetYTD'],
 	'priorYearCubesYTD': ['priorYearActualYTD', null],

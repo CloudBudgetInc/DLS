@@ -23,10 +23,12 @@ class ReportLine {
 		this.currentMonthDiffPercentX100 = 0;
 
 		this.priorMonthActual = 0;
+		this.priorMonthBudget = 0;// new field
 		this.priorMonthDiff = 0;
 		this.priorMonthDiffPercent = 0;
 
 		this.priorYearActual = 0;
+		this.priorYearBudget = 0; // new field
 		this.priorYearDiff = 0;
 		this.priorYearDiffPercent = 0;
 
@@ -57,9 +59,11 @@ class ReportLine {
 	currentMonthDiffPercent;
 	currentMonthDiffPercentX100;
 	priorMonthActual;
+	priorMonthBudget;
 	priorMonthDiff;
 	priorMonthDiffPercent;
 	priorYearActual;
+	priorYearBudget;
 	priorYearDiff;
 	priorYearDiffPercent;
 
