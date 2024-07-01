@@ -54,6 +54,7 @@
 					<tr class="slds-line-height_reset">
 						<th>
 							<div class="slds-truncate" title="Label">Label</div>
+
 						</th>
 						<template lwc:if={renderCurrent}>
 							<th>
@@ -155,18 +156,22 @@
 									</div>
 								</th>
 								<th class={rl.styleClass} style="background-color: #d8d8d8 !important;">
+									<template lwc:if={rl.currentMonthDiffPercent}>
+										<c-cb-value-bar value={rl.currentMonthDiffPercent}></c-cb-value-bar>
+									</template>
 									<div class="number-wrapper" data-value={rl.currentMonthDiffPercent}>
 										<lightning-formatted-number value={rl.currentMonthDiffPercent} class="dec"
 																	maximum-fraction-digits="1"
 																	minimum-fraction-digits="1"
 																	format-style="percent"></lightning-formatted-number>
 									</div>
-									<template lwc:if={rl.currentMonthDiffPercent}>
+									<!--<template lwc:if={rl.currentMonthDiffPercent}>
 										<div>
 											<lightning-progress-bar value={rl.currentMonthDiffPercentX100} size="small"
 																	variant="circular"></lightning-progress-bar>
 										</div>
-									</template>
+									</template>-->
+
 								</th>
 								<!-- CURRENT MONTH -->
 

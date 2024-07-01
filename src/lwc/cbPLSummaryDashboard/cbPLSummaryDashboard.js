@@ -37,6 +37,7 @@ export default class CbPLSummaryDashboard extends LightningElement {
 	@track revenueCurrentPlanActualPercentDiffConfig;
 	@track revenueCurrentPreviousMonthPercentDiffConfig;
 	@track revenueCurrentPreviousYearPercentDiffConfig;
+	@track revenueBudgetActualConfig;
 	@track revenueOptions;
 	@track revenueValues;
 
@@ -53,8 +54,10 @@ export default class CbPLSummaryDashboard extends LightningElement {
 		}, 500);
 	};
 
-	invertRevenueOptions = () => {
-		this.revenueValues = this.revenueOptions.filter(so => !this.revenueValues.includes(so.value)).map(so => so.value);
+	invertRevenueOptions = () => this.revenueValues = this.revenueOptions.filter(so => !this.revenueValues.includes(so.value)).map(so => so.value);
+
+	allRevenueOptions = () => {
+		this.revenueValues = this.revenueOptions.map(so => so.value);
 	};
 
 	@track isRevenueOptionsRendered = false;

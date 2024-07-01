@@ -1,5 +1,6 @@
 import {api, LightningElement, track} from 'lwc';
 import chartjs from '@salesforce/resourceUrl/cb5__ChartJs';
+//import chartjs from '@salesforce/resourceUrl/chartjs443';
 import {loadScript} from 'lightning/platformResourceLoader';
 
 export default class CbChart extends LightningElement {

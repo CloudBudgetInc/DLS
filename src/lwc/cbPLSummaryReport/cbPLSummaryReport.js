@@ -199,7 +199,7 @@ export default class CBPLSummaryReport extends LightningElement {
 
 		const reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
 		reportLines.forEach(rl => rl.normalizeReportLine());
-		reportLines.forEach(rl => console.log(JSON.stringify(rl)));
+		//reportLines.forEach(rl => console.log(JSON.stringify(rl)));
 		this.reportLines = reportLines;
 	};
 

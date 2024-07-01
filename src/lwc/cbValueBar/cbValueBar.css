@@ -1,0 +1,23 @@
+.barWrapper {
+    width: 100%;
+    min-height: 5px;
+    border: 1px #ff2513;
+    border-radius: 4px;
+}
+
+.blueBarFill {
+    background-color: #3447ff;
+    font-size: 3px;
+    margin: 0;
+    padding: 0;
+    border-radius: 5px;
+}
+
+.redBarFill {
+    background-color: #ff3046;
+    font-size: 3px;
+    margin: 0;
+    padding: 0;
+    border-radius: 5px;
+}
+

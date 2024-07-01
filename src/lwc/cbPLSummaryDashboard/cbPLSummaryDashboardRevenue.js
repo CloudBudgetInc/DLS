@@ -1,15 +1,22 @@
+import {_message} from "c/cbUtils";
+
 let c;
 
 const prepareRevenue = (context) => {
-	if (context) c = context;
-	const revenueReportLines = c.reportLines.filter(rl => rl.type === 'Revenue');
-	console.log('revenueReportLines = ' + JSON.stringify(revenueReportLines));
-	c.revenueOptions = getRevenueOptions(revenueReportLines);
-	if (!c.revenueValues || c.revenueValues.length === 0) c.revenueValues = getRevenueValues(revenueReportLines);
-	c.revenueCurrentPlanActualPercentDiffConfig = getDataForRevenueChart(revenueReportLines, 'currentMonthDiffPercent', 'Plan/Actual Diff');
-	c.revenueCurrentPreviousMonthPercentDiffConfig = getDataForRevenueChart(revenueReportLines, 'priorMonthDiffPercent', 'Current/Previous Month Diff');
-	c.revenueCurrentPreviousYearPercentDiffConfig = getDataForRevenueChart(revenueReportLines, 'priorYearDiffPercent', 'Current/Previous Year Diff');
-	c.readyToRenderRevenue = true;
+	try {
+		if (context) c = context;
+		let revenueReportLines = c.reportLines.filter(rl => rl.type === 'Revenue');
+		c.revenueOptions = getRevenueOptions(revenueReportLines);
+		if (!c.revenueValues || c.revenueValues.length === 0) c.revenueValues = getRevenueValues(revenueReportLines);
+		revenueReportLines = revenueReportLines.filter(rl => c.revenueValues.includes(rl.label));
+		c.revenueCurrentPlanActualPercentDiffConfig = getDataForRevenueBudgetByVar2Chart(revenueReportLines, 'currentMonthDiffPercent', 'Plan/Actual Diff');
+		c.revenueCurrentPreviousMonthPercentDiffConfig = getDataForRevenueBudgetByVar2Chart(revenueReportLines, 'priorMonthDiffPercent', 'Current/Previous Month Diff');
+		c.revenueCurrentPreviousYearPercentDiffConfig = getDataForRevenueBudgetByVar2Chart(revenueReportLines, 'priorYearDiffPercent', 'Current/Previous Year Diff');
+		c.revenueBudgetActualConfig = getDataForRevenueBudgetActualChart(revenueReportLines);
+		c.readyToRenderRevenue = true;
+	} catch (e) {
+		_message('error', 'Revenue Chart Error: ' + JSON.stringify(e));
+	}
 };
 
 const getRevenueOptions = (revenueReportLines) => {
@@ -26,17 +33,14 @@ const getRevenueValues = (revenueReportLines) => {
 	}, []);
 };
 
-const getDataForRevenueChart = (revenueReportLines, field, label) => {
+const getDataForRevenueBudgetByVar2Chart = (revenueReportLines, field, label) => {
 
 	const labels = [];
 	const data = [];
 	revenueReportLines.forEach(rl => {
-		if (!rl[field] || !c.revenueValues.includes(rl.label)) return;
 		labels.push(rl.label);
 		data.push(rl[field] * 100);
-		console.log('RL -> ' + JSON.stringify(rl));
 	});
-
 
 	const backgroundColors = generateColors(data.length);
 	const borderColors = backgroundColors.map(color => color.replace('0.2', '1'));
@@ -90,6 +94,72 @@ const getDataForRevenueChart = (revenueReportLines, field, label) => {
 						meta.data[index].hidden = !meta.data[index].hidden;
 						chart.update();
 					}
+				}
+			}
+		}
+	};
+};
+
+const getDataForRevenueBudgetActualChart = (revenueReportLines) => {
+	const labels = ['Current Month', 'Prior Month', 'Prior Year Month'];
+	const actualData = [0, 0, 0];
+	const budgetData = [0, 0, 0];
+
+	revenueReportLines.forEach(rl => {
+		actualData[0] += rl.currentMonthActual;
+		actualData[1] += rl.priorMonthActual;
+		actualData[2] += rl.priorYearActual;
+		budgetData[0] += rl.currentMonthBudget;
+		budgetData[1] += rl.priorMonthBudget;
+		budgetData[2] += rl.priorYearBudget;
+	});
+
+	const actualDataset = {
+		label: 'Actual',
+		data: actualData,
+		type: 'line',
+		borderColor: 'rgba(255, 99, 132, 1)',
+		fill: false,
+		borderWidth: 2,
+		tension: 0
+	};
+	const budgetDataset = {
+		label: 'Budget',
+		data: budgetData,
+		backgroundColor: 'rgba(54, 162, 235, 0.2)',
+		borderColor: 'rgba(54, 162, 235, 1)',
+		borderWidth: 1
+	};
+
+	return {
+		type: 'bar',
+		data: {
+			labels,
+			datasets: [actualDataset, budgetDataset]
+		},
+		options: {
+			scales: {
+				y: {
+					ticks: {
+						// Include a dollar sign in the ticks
+						callback: (value, index, ticks) => {
+							return '$' + value;
+						}
+					},
+					scaleLabel: {
+						display: true,
+						labelString: 'Amount ($)'
+					},
+					title: {
+						display: true,
+						text: 'Amount ($)',
+					}
+				}
+			},
+			plugins: {
+				title: {
+					display: true,
+					text: 'Revenue Budget vs Actual'
 				}
 			}
 		}
