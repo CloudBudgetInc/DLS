@@ -12,6 +12,7 @@
 				<h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate" tabindex="-1">Dashboard</h1>
 			</div>
 			<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+				<!-- REVENUE -->
 				<div class="slds-align_absolute-center">
 					<div class="slds-text-heading_medium">REVENUE</div>
 				</div>
@@ -62,8 +63,62 @@
 							<c-cb-chart chart-config={revenueBudgetActualConfig}></c-cb-chart>
 						</lightning-layout-item>
 					</lightning-layout>
-
 				</template>
+				<!-- REVENUE -->
+
+				<!-- COGS -->
+				<div class="slds-align_absolute-center">
+					<div class="slds-text-heading_medium">COST OF GOODS SOLD</div>
+				</div>
+				<template lwc:if={COGSOptions}>
+					<template lwc:if={isCOGSOptionsRendered}>
+						<div class="slds-box filterOptions"
+							 onmouseover={handleMouseOverCOGS}
+							 onmouseout={handleMouseOutCOGS}>
+							<lightning-checkbox-group name="Var 2"
+													  label="Var 2"
+													  options={COGSOptions}
+													  value={COGSValues}
+													  onchange={handleCOGSOptionsChange}></lightning-checkbox-group>
+							<div class="slds-m-top_small">
+								<lightning-button label="Apply Filter" variant="brand" icon-name="utility:check"
+												  onclick={applyCOGSOptions}></lightning-button>
+							</div>
+							<lightning-button label="Invert" icon-name="utility:change_record_type"
+											  onclick={invertCOGSOptions}></lightning-button>
+							<lightning-button label="All" icon-name="utility:mark_all_as_read"
+											  onclick={allCOGSOptions}></lightning-button>
+
+						</div>
+					</template>
+					<template lwc:else>
+						<div class="filterButton"
+							 onmouseover={handleMouseOverCOGS}
+							 onmouseout={handleMouseOutCOGS}>
+							COGS Filter
+						</div>
+					</template>
+				</template>
+
+				<template lwc:if={readyToRenderCOGS}>
+					<lightning-layout>
+						<lightning-layout-item size="4">
+							<c-cb-chart chart-config={COGSCurrentPlanActualPercentDiffConfig}></c-cb-chart>
+						</lightning-layout-item>
+						<lightning-layout-item size="4">
+							<c-cb-chart chart-config={COGSCurrentPreviousMonthPercentDiffConfig}></c-cb-chart>
+						</lightning-layout-item>
+						<lightning-layout-item size="4">
+							<c-cb-chart chart-config={COGSCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
+						</lightning-layout-item>
+					</lightning-layout>
+					<lightning-layout>
+						<lightning-layout-item size="4">
+							<c-cb-chart chart-config={COGSBudgetActualConfig}></c-cb-chart>
+						</lightning-layout-item>
+					</lightning-layout>
+				</template>
+				<!-- COGS -->
 
 
 			</div>

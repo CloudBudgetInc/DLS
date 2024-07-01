@@ -6,6 +6,7 @@
 
 .filterOptions {
     position: absolute;
+    top: 25%;
     background-color: white;
     width: 200px
 }
