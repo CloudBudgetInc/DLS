@@ -5,9 +5,7 @@ let c;
 const prepareCOGS = (context) => {
 	try {
 		if (context) c = context;
-		c.reportLines.forEach(rl => console.log('ALLRL: ' + JSON.stringify(rl)));
 		let COGSReportLines = c.reportLines.filter(rl => rl.type === 'COGS');
-		console.log('SELECTED COGS:: ' + JSON.stringify(COGSReportLines));
 		c.COGSOptions = getCOGSOptions(COGSReportLines);
 		if (!c.COGSValues || c.COGSValues.length === 0) c.COGSValues = getCOGSValues(COGSReportLines);
 		COGSReportLines = COGSReportLines.filter(rl => c.COGSValues.includes(rl.label));
@@ -15,6 +13,7 @@ const prepareCOGS = (context) => {
 		c.COGSCurrentPreviousMonthPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'priorMonthDiffPercent', 'Current/Previous Month Diff');
 		c.COGSCurrentPreviousYearPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'priorYearDiffPercent', 'Current/Previous Year Diff');
 		c.COGSBudgetActualConfig = getDataForCOGSBudgetActualChart(COGSReportLines);
+		console.log('c.COGSBudgetActualConfig = ' + JSON.stringify(c.COGSBudgetActualConfig));
 		c.readyToRenderCOGS = true;
 	} catch (e) {
 		_message('error', 'COGS Chart Error: ' + JSON.stringify(e));
@@ -119,18 +118,18 @@ const getDataForCOGSBudgetActualChart = (COGSReportLines) => {
 	const actualDataset = {
 		label: 'Actual',
 		data: actualData,
+		backgroundColor: 'rgba(54, 162, 235, 0.2)',
+		borderColor: 'rgba(54, 162, 235, 1)',
+		borderWidth: 1
+	};
+	const budgetDataset = {
+		label: 'Budget',
+		data: budgetData,
 		type: 'line',
 		borderColor: 'rgba(255, 99, 132, 1)',
 		fill: false,
 		borderWidth: 2,
 		tension: 0
-	};
-	const budgetDataset = {
-		label: 'Budget',
-		data: budgetData,
-		backgroundColor: 'rgba(54, 162, 235, 0.2)',
-		borderColor: 'rgba(54, 162, 235, 1)',
-		borderWidth: 1
 	};
 
 	return {

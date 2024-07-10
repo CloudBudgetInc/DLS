@@ -12,114 +12,187 @@
 				<h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate" tabindex="-1">Dashboard</h1>
 			</div>
 			<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
-				<!-- REVENUE -->
-				<div class="slds-align_absolute-center">
-					<div class="slds-text-heading_medium">REVENUE</div>
-				</div>
-				<template lwc:if={revenueOptions}>
-					<template lwc:if={isRevenueOptionsRendered}>
-						<div class="slds-box filterOptions"
-							 onmouseover={handleMouseOverRevenue}
-							 onmouseout={handleMouseOutRevenue}>
-							<lightning-checkbox-group name="Var 2"
-													  label="Var 2"
-													  options={revenueOptions}
-													  value={revenueValues}
-													  onchange={handleRevenueOptionsChange}></lightning-checkbox-group>
-							<div class="slds-m-top_small">
-								<lightning-button label="Apply Filter" variant="brand" icon-name="utility:check"
-												  onclick={applyRevenueOptions}></lightning-button>
-							</div>
-							<lightning-button label="Invert" icon-name="utility:change_record_type"
-											  onclick={invertRevenueOptions}></lightning-button>
-							<lightning-button label="All" icon-name="utility:mark_all_as_read"
-											  onclick={allRevenueOptions}></lightning-button>
 
+				<lightning-accordion active-section-name="Revenue">
+
+
+					<!-- REVENUE -->
+					<lightning-accordion-section name="Revenue" label="Revenue">
+						<div class="slds-align_absolute-center">
+							<div class="slds-text-heading_medium">REVENUE</div>
 						</div>
-					</template>
-					<template lwc:else>
-						<div class="filterButton"
-							 onmouseover={handleMouseOverRevenue}
-							 onmouseout={handleMouseOutRevenue}>
-							Revenue Filter
+						<template lwc:if={revenueOptions}>
+							<template lwc:if={isRevenueOptionsRendered}>
+								<div class="slds-box filterOptions"
+									 onmouseover={handleMouseOverRevenue}
+									 onmouseout={handleMouseOutRevenue}>
+									<lightning-checkbox-group name="Var 2"
+															  label="Var 2"
+															  options={revenueOptions}
+															  value={revenueValues}
+															  onchange={handleRevenueOptionsChange}></lightning-checkbox-group>
+									<div class="slds-m-top_small">
+										<lightning-button label="Apply Filter" variant="brand" icon-name="utility:check"
+														  onclick={applyRevenueOptions}></lightning-button>
+									</div>
+									<lightning-button label="Invert" icon-name="utility:change_record_type"
+													  onclick={invertRevenueOptions}></lightning-button>
+									<lightning-button label="All" icon-name="utility:mark_all_as_read"
+													  onclick={allRevenueOptions}></lightning-button>
+
+								</div>
+							</template>
+							<template lwc:else>
+								<div class="filterButton"
+									 onmouseover={handleMouseOverRevenue}
+									 onmouseout={handleMouseOutRevenue}>
+									Revenue Filter
+								</div>
+							</template>
+						</template>
+						<template lwc:if={readyToRenderRevenue}>
+							<lightning-layout>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={revenueCurrentPlanActualPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+								<lightning-layout-item size="4">
+									<c-cb-chart
+											chart-config={revenueCurrentPreviousMonthPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={revenueCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+							</lightning-layout>
+							<lightning-layout>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={revenueBudgetActualConfig}></c-cb-chart>
+								</lightning-layout-item>
+							</lightning-layout>
+						</template>
+					</lightning-accordion-section>
+					<!-- REVENUE -->
+
+					<!-- COGS -->
+					<lightning-accordion-section name="COGS" label="COGS">
+						<div class="slds-align_absolute-center">
+							<div class="slds-text-heading_medium">COST OF GOODS SOLD</div>
 						</div>
-					</template>
-				</template>
+						<template lwc:if={COGSOptions}>
+							<template lwc:if={isCOGSOptionsRendered}>
+								<div class="slds-box filterOptions"
+									 onmouseover={handleMouseOverCOGS}
+									 onmouseout={handleMouseOutCOGS}>
+									<lightning-checkbox-group name="Var 2"
+															  label="Var 2"
+															  options={COGSOptions}
+															  value={COGSValues}
+															  onchange={handleCOGSOptionsChange}></lightning-checkbox-group>
+									<div class="slds-m-top_small">
+										<lightning-button label="Apply Filter" variant="brand" icon-name="utility:check"
+														  onclick={applyCOGSOptions}></lightning-button>
+									</div>
+									<lightning-button label="Invert" icon-name="utility:change_record_type"
+													  onclick={invertCOGSOptions}></lightning-button>
+									<lightning-button label="All" icon-name="utility:mark_all_as_read"
+													  onclick={allCOGSOptions}></lightning-button>
 
-				<template lwc:if={readyToRenderRevenue}>
-					<lightning-layout>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={revenueCurrentPlanActualPercentDiffConfig}></c-cb-chart>
-						</lightning-layout-item>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={revenueCurrentPreviousMonthPercentDiffConfig}></c-cb-chart>
-						</lightning-layout-item>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={revenueCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
-						</lightning-layout-item>
-					</lightning-layout>
-					<lightning-layout>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={revenueBudgetActualConfig}></c-cb-chart>
-						</lightning-layout-item>
-					</lightning-layout>
-				</template>
-				<!-- REVENUE -->
+								</div>
+							</template>
+							<template lwc:else>
+								<div class="filterButton"
+									 onmouseover={handleMouseOverCOGS}
+									 onmouseout={handleMouseOutCOGS}>
+									COGS Filter
+								</div>
+							</template>
+						</template>
+						<template lwc:if={readyToRenderCOGS}>
+							<lightning-layout>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={COGSCurrentPlanActualPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={COGSCurrentPreviousMonthPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={COGSCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+							</lightning-layout>
+							<lightning-layout>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={COGSBudgetActualConfig}></c-cb-chart>
+								</lightning-layout-item>
+							</lightning-layout>
+						</template>
+					</lightning-accordion-section>
+					<!-- COGS -->
 
-				<!-- COGS -->
-				<div class="slds-align_absolute-center">
-					<div class="slds-text-heading_medium">COST OF GOODS SOLD</div>
-				</div>
-				<template lwc:if={COGSOptions}>
-					<template lwc:if={isCOGSOptionsRendered}>
-						<div class="slds-box filterOptions"
-							 onmouseover={handleMouseOverCOGS}
-							 onmouseout={handleMouseOutCOGS}>
-							<lightning-checkbox-group name="Var 2"
-													  label="Var 2"
-													  options={COGSOptions}
-													  value={COGSValues}
-													  onchange={handleCOGSOptionsChange}></lightning-checkbox-group>
-							<div class="slds-m-top_small">
-								<lightning-button label="Apply Filter" variant="brand" icon-name="utility:check"
-												  onclick={applyCOGSOptions}></lightning-button>
-							</div>
-							<lightning-button label="Invert" icon-name="utility:change_record_type"
-											  onclick={invertCOGSOptions}></lightning-button>
-							<lightning-button label="All" icon-name="utility:mark_all_as_read"
-											  onclick={allCOGSOptions}></lightning-button>
-
+					<!-- INDIRECT EXPENSES -->
+					<lightning-accordion-section name="Indirect Expenses" label="Indirect Expenses">
+						<div class="slds-align_absolute-center">
+							<div class="slds-text-heading_medium">INDIRECT EXPENSES</div>
 						</div>
-					</template>
-					<template lwc:else>
-						<div class="filterButton"
-							 onmouseover={handleMouseOverCOGS}
-							 onmouseout={handleMouseOutCOGS}>
-							COGS Filter
-						</div>
-					</template>
-				</template>
+						<template lwc:if={indirectOptions}>
+							<template lwc:if={isIndirectOptionsRendered}>
+								<div class="slds-box filterOptions"
+									 onmouseover={handleMouseOverIndirect}
+									 onmouseout={handleMouseOutIndirect}>
+									<lightning-checkbox-group name="Var 2"
+															  label="Var 2"
+															  options={indirectOptions}
+															  value={indirectValues}
+															  onchange={handleIndirectOptionsChange}></lightning-checkbox-group>
+									<div class="slds-m-top_small">
+										<lightning-button label="Apply Filter" variant="brand" icon-name="utility:check"
+														  onclick={applyIndirectOptions}></lightning-button>
+									</div>
+									<lightning-button label="Invert" icon-name="utility:change_record_type"
+													  onclick={invertIndirectOptions}></lightning-button>
+									<lightning-button label="All" icon-name="utility:mark_all_as_read"
+													  onclick={allIndirectOptions}></lightning-button>
 
-				<template lwc:if={readyToRenderCOGS}>
-					<lightning-layout>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={COGSCurrentPlanActualPercentDiffConfig}></c-cb-chart>
-						</lightning-layout-item>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={COGSCurrentPreviousMonthPercentDiffConfig}></c-cb-chart>
-						</lightning-layout-item>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={COGSCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
-						</lightning-layout-item>
-					</lightning-layout>
-					<lightning-layout>
-						<lightning-layout-item size="4">
-							<c-cb-chart chart-config={COGSBudgetActualConfig}></c-cb-chart>
-						</lightning-layout-item>
-					</lightning-layout>
-				</template>
-				<!-- COGS -->
+								</div>
+							</template>
+							<template lwc:else>
+								<div class="filterButton"
+									 onmouseover={handleMouseOverIndirect}
+									 onmouseout={handleMouseOutIndirect}>
+									Indirect Expenses Filter
+								</div>
+							</template>
+						</template>
+						<template lwc:if={readyToRenderIndirect}>
+							<lightning-layout>
+								<lightning-layout-item size="4">
+									<c-cb-chart chart-config={indirectCurrentPlanActualPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+								<lightning-layout-item size="4">
+									<c-cb-chart
+											chart-config={indirectCurrentPreviousMonthPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+								<lightning-layout-item size="4">
+									<c-cb-chart
+											chart-config={indirectCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
+								</lightning-layout-item>
+							</lightning-layout>
 
+							<template for:each={indirectBudgetActualConfigChunks} for:item="chunk">
+								<lightning-layout key={chunk}>
+									<template for:each={chunk} for:item="conf">
+										<lightning-layout-item size="4" key={conf}>
+											<c-cb-chart chart-config={conf}></c-cb-chart>
+										</lightning-layout-item>
+									</template>
+								</lightning-layout>
+							</template>
+
+
+						</template>
+					</lightning-accordion-section>
+					<!-- INDIRECT EXPENSES -->
+
+
+				</lightning-accordion>
 
 			</div>
 			<div class="slds-modal__footer">

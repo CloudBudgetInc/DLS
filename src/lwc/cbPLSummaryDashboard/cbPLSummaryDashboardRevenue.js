@@ -117,18 +117,18 @@ const getDataForRevenueBudgetActualChart = (revenueReportLines) => {
 	const actualDataset = {
 		label: 'Actual',
 		data: actualData,
+		backgroundColor: 'rgba(54, 162, 235, 0.2)',
+		borderColor: 'rgba(54, 162, 235, 1)',
+		borderWidth: 1
+	};
+	const budgetDataset = {
+		label: 'Budget',
+		data: budgetData,
 		type: 'line',
 		borderColor: 'rgba(255, 99, 132, 1)',
 		fill: false,
 		borderWidth: 2,
 		tension: 0
-	};
-	const budgetDataset = {
-		label: 'Budget',
-		data: budgetData,
-		backgroundColor: 'rgba(54, 162, 235, 0.2)',
-		borderColor: 'rgba(54, 162, 235, 1)',
-		borderWidth: 1
 	};
 
 	return {

@@ -1,6 +1,7 @@
 import {api, LightningElement, track} from 'lwc';
 import {prepareRevenue} from "./cbPLSummaryDashboardRevenue";
 import {prepareCOGS} from "./cbPLSummaryDashboardCOGS";
+import {prepareIndirect} from "./cbPLSummaryDashboardIndirect";
 import {_message} from "c/cbUtils";
 
 export default class CbPLSummaryDashboard extends LightningElement {
@@ -25,6 +26,7 @@ export default class CbPLSummaryDashboard extends LightningElement {
 		this.readyToRenderRevenue = false;
 		prepareRevenue(this);
 		prepareCOGS(this);
+		prepareIndirect(this);
 		this.readyToRenderRevenue = true;
 	};
 
@@ -93,5 +95,36 @@ export default class CbPLSummaryDashboard extends LightningElement {
 
 	handleMouseOutCOGS = () => this.timeoutId = setTimeout(() => this.isCOGSOptionsRendered = false, 1000);
 	///////// COGS PART ///////////
+
+	///////// INDIRECT EXPENSES ///////////
+	@track readyToRenderIndirect = false;
+	@track isIndirectOptionsRendered = false;
+	@track groupIndirect = false;
+	@track indirectCurrentPlanActualPercentDiffConfig;
+	@track indirectCurrentPreviousMonthPercentDiffConfig;
+	@track indirectCurrentPreviousYearPercentDiffConfig;
+	@track indirectBudgetActualConfig;
+	@track indirectBudgetActualConfigChunks;
+	@track indirectOptions;
+	@track indirectValues;
+	handleIndirectOptionsChange = (event) => this.indirectValues = event.detail.value;
+	applyIndirectOptions = () => {
+		this.readyToRenderIndirect = false;
+		this.isIndirectOptionsRendered = false;
+		setTimeout(() => {
+			prepareIndirect(this);
+			this.readyToRenderIndirect = true;
+		}, 500);
+	};
+	invertIndirectOptions = () => this.indirectValues = this.indirectOptions.filter(so => !this.indirectValues.includes(so.value)).map(so => so.value);
+	allIndirectOptions = () => this.indirectValues = this.indirectOptions.map(so => so.value);
+
+	handleMouseOverIndirect() {
+		clearTimeout(this.timeoutId);
+		this.isIndirectOptionsRendered = true;
+	}
+
+	handleMouseOutIndirect = () => this.timeoutId = setTimeout(() => this.isIndirectOptionsRendered = false, 1000);
+	///////// INDIRECT EXPENSES ///////////
 
 }
