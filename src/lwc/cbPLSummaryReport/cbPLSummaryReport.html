@@ -48,274 +48,291 @@
 		</lightning-layout>
 
 		<template lwc:if={readyToRender}>
-			<div style="overflow-x:auto; height: 77vh">
-				<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped slds-table_sticky-header">
-					<thead>
-					<tr class="slds-line-height_reset">
-						<th>
-							<div class="slds-truncate" title="Label">Label</div>
 
-						</th>
-						<template lwc:if={renderCurrent}>
-							<th>
-								<div class="slds-truncate dec" title="Current Month Actual">Current Month</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Current Month Budget">Current Budget</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Current Month Dollar Diff">Dollar Diff</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Current Month Percent Diff">Percent Diff</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Prior Month Actual">Prior Month</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Prior Month Dollar Diff">Dollar Diff</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Prior Month Percent Diff">Percent Diff</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Prior Year Actual">Prior Year</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Prior Year Dollar Diff">Dollar Diff</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="Prior Year Percent Diff">Percent Diff</div>
-							</th>
-						</template>
-						<template lwc:else>
-							<th>
-								<div class="slds-truncate dec" title="YTD Current Month Actual">YTD Current Month</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="YTD Current Month Budget">YTD Current Budget</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="YTD Current Month Dollar Diff">YTD Dollar Diff
-								</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="YTD Current Month Percent Diff">YTD Percent Diff
-								</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="YTD Prior Year Actual">YTD Prior Year</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="YTD Prior Year Dollar Diff">YTD Dollar Diff</div>
-							</th>
-							<th>
-								<div class="slds-truncate dec" title="YTD Prior Year Percent Diff">YTD Percent Diff
-								</div>
-							</th>
-						</template>
-					</tr>
-					</thead>
-					<tbody>
-					<template for:each={reportLines} for:item="rl">
-						<tr class={rl.styleClass} key={rl}>
-							<th class={rl.styleClass}>
-								<div ondblclick={showDrillDown} data-id={rl.ddParams}>{rl.label}</div>
-							</th>
+			<lightning-tabset>
+				<lightning-tab label="PL">
+					<div style="overflow-x:auto; height: 77vh">
+						<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped slds-table_sticky-header">
+							<thead>
+							<tr class="slds-line-height_reset">
+								<th>
+									<div class="slds-truncate" title="Label">Label</div>
 
-							<template lwc:if={renderCurrent}>
-								<!-- CURRENT MONTH -->
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.currentMonthActual}>
-										<lightning-formatted-number value={rl.currentMonthActual}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
 								</th>
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.currentMonthBudget}>
-										<lightning-formatted-number value={rl.currentMonthBudget}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.currentMonthDiff}>
-										<lightning-formatted-number value={rl.currentMonthDiff}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass} style="background-color: #d8d8d8 !important;">
-									<template lwc:if={rl.currentMonthDiffPercent}>
-										<c-cb-value-bar value={rl.currentMonthDiffPercent}></c-cb-value-bar>
-									</template>
-									<div class="number-wrapper" data-value={rl.currentMonthDiffPercent}>
-										<lightning-formatted-number value={rl.currentMonthDiffPercent} class="dec"
-																	maximum-fraction-digits="1"
-																	minimum-fraction-digits="1"
-																	format-style="percent"></lightning-formatted-number>
-									</div>
-									<!--<template lwc:if={rl.currentMonthDiffPercent}>
-										<div>
-											<lightning-progress-bar value={rl.currentMonthDiffPercentX100} size="small"
-																	variant="circular"></lightning-progress-bar>
+								<template lwc:if={renderCurrent}>
+									<th>
+										<div class="slds-truncate dec" title="Current Month Actual">Current Month</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Current Month Budget">Current Budget</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Current Month Dollar Diff">Dollar Diff</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Current Month Percent Diff">Percent Diff</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Prior Month Actual">Prior Month</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Prior Month Dollar Diff">Dollar Diff</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Prior Month Percent Diff">Percent Diff</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Prior Year Actual">Prior Year</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Prior Year Dollar Diff">Dollar Diff</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="Prior Year Percent Diff">Percent Diff</div>
+									</th>
+								</template>
+								<template lwc:else>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Actual">YTD Current Month</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Budget">YTD Current Budget</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Dollar Diff">YTD Dollar Diff
 										</div>
-									</template>-->
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Percent Diff">YTD Percent Diff
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Actual">YTD Prior Year</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Dollar Diff">YTD Dollar Diff</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Percent Diff">YTD Percent Diff
+										</div>
+									</th>
+								</template>
+							</tr>
+							</thead>
+							<tbody>
+							<template for:each={reportLines} for:item="rl">
+								<tr class={rl.styleClass} key={rl}>
+									<th class={rl.styleClass}>
+										<div ondblclick={showDrillDown} data-id={rl.ddParams}>{rl.label}</div>
+									</th>
 
-								</th>
-								<!-- CURRENT MONTH -->
+									<template lwc:if={renderCurrent}>
+										<!-- CURRENT MONTH -->
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.currentMonthActual}>
+												<lightning-formatted-number value={rl.currentMonthActual}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.currentMonthBudget}>
+												<lightning-formatted-number value={rl.currentMonthBudget}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.currentMonthDiff}>
+												<lightning-formatted-number value={rl.currentMonthDiff}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass} style="background-color: #d8d8d8 !important;">
+											<template lwc:if={rl.currentMonthDiffPercent}>
+												<c-cb-value-bar value={rl.currentMonthDiffPercent}></c-cb-value-bar>
+											</template>
+											<div class="number-wrapper" data-value={rl.currentMonthDiffPercent}>
+												<lightning-formatted-number value={rl.currentMonthDiffPercent} class="dec"
+																			maximum-fraction-digits="1"
+																			minimum-fraction-digits="1"
+																			format-style="percent"></lightning-formatted-number>
+											</div>
+											<!--<template lwc:if={rl.currentMonthDiffPercent}>
+												<div>
+													<lightning-progress-bar value={rl.currentMonthDiffPercentX100} size="small"
+																			variant="circular"></lightning-progress-bar>
+												</div>
+											</template>-->
 
-								<!-- PRIOR MONTH -->
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.priorMonthActual}>
-										<lightning-formatted-number value={rl.priorMonthActual}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.priorMonthDiff}>
-										<lightning-formatted-number value={rl.priorMonthDiff}
-																	format-style={rl.formatStyle}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass} style="background-color: #d9e2f3 !important;">
-									<div class="number-wrapper" data-value={rl.priorMonthDiffPercent}>
-										<lightning-formatted-number value={rl.priorMonthDiffPercent} class="dec"
-																	maximum-fraction-digits="1"
-																	minimum-fraction-digits="1"
-																	format-style="percent"></lightning-formatted-number>
-									</div>
-								</th>
-								<!-- PRIOR MONTH -->
+										</th>
+										<!-- CURRENT MONTH -->
 
-								<!-- PRIOR YEAR -->
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.priorYearActual}>
-										<lightning-formatted-number value={rl.priorYearActual}
-																	format-style={rl.formatStyle}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.priorYearDiff}>
-										<lightning-formatted-number value={rl.priorYearDiff}
-																	format-style={rl.formatStyle}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass} style="background-color: #e2efd9 !important;">
-									<div class="number-wrapper" data-value={rl.priorYearDiffPercent}>
-										<lightning-formatted-number value={rl.priorYearDiffPercent} class="dec"
-																	maximum-fraction-digits="1"
-																	minimum-fraction-digits="1"
-																	format-style="percent"></lightning-formatted-number>
-									</div>
-								</th>
-								<!-- PRIOR YEAR -->
+										<!-- PRIOR MONTH -->
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.priorMonthActual}>
+												<lightning-formatted-number value={rl.priorMonthActual}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.priorMonthDiff}>
+												<lightning-formatted-number value={rl.priorMonthDiff}
+																			format-style={rl.formatStyle}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass} style="background-color: #d9e2f3 !important;">
+											<div class="number-wrapper" data-value={rl.priorMonthDiffPercent}>
+												<lightning-formatted-number value={rl.priorMonthDiffPercent} class="dec"
+																			maximum-fraction-digits="1"
+																			minimum-fraction-digits="1"
+																			format-style="percent"></lightning-formatted-number>
+											</div>
+										</th>
+										<!-- PRIOR MONTH -->
+
+										<!-- PRIOR YEAR -->
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.priorYearActual}>
+												<lightning-formatted-number value={rl.priorYearActual}
+																			format-style={rl.formatStyle}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.priorYearDiff}>
+												<lightning-formatted-number value={rl.priorYearDiff}
+																			format-style={rl.formatStyle}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass} style="background-color: #e2efd9 !important;">
+											<div class="number-wrapper" data-value={rl.priorYearDiffPercent}>
+												<lightning-formatted-number value={rl.priorYearDiffPercent} class="dec"
+																			maximum-fraction-digits="1"
+																			minimum-fraction-digits="1"
+																			format-style="percent"></lightning-formatted-number>
+											</div>
+										</th>
+										<!-- PRIOR YEAR -->
+									</template>
+									<template lwc:else>
+										<!-- CURRENT MONTH -->
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.currentMonthActualYTD}>
+												<lightning-formatted-number value={rl.currentMonthActualYTD}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.currentMonthBudgetYTD}>
+												<lightning-formatted-number value={rl.currentMonthBudgetYTD}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.currentMonthDiffYTD}>
+												<lightning-formatted-number value={rl.currentMonthDiffYTD}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass} style="background-color: #e2efd9 !important;">
+											<div class="number-wrapper" data-value={rl.currentMonthDiffPercentYTD}>
+												<lightning-formatted-number value={rl.currentMonthDiffPercentYTD} class="dec"
+																			maximum-fraction-digits="1"
+																			minimum-fraction-digits="1"
+																			format-style="percent"></lightning-formatted-number>
+											</div>
+										</th>
+										<!-- CURRENT MONTH -->
+
+										<!-- PRIOR YEAR -->
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.priorYearActualYTD}>
+												<lightning-formatted-number value={rl.priorYearActualYTD}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass}>
+											<div class="number-wrapper" data-value={rl.priorYearDiffYTD}>
+												<lightning-formatted-number value={rl.priorYearDiffYTD}
+																			maximum-fraction-digits="0"
+																			minimum-fraction-digits="0"
+																			format-style={rl.formatStyle}
+																			class="dec"
+																			currency-code="USD"></lightning-formatted-number>
+											</div>
+										</th>
+										<th class={rl.styleClass} style="background-color: #d9e2f3 !important;">
+											<div class="number-wrapper" data-value={rl.priorYearDiffPercentYTD}>
+												<lightning-formatted-number value={rl.priorYearDiffPercentYTD} class="dec"
+																			maximum-fraction-digits="1"
+																			minimum-fraction-digits="1"
+																			format-style="percent"></lightning-formatted-number>
+											</div>
+										</th>
+										<!-- PRIOR YEAR -->
+									</template>
+
+								</tr>
 							</template>
-							<template lwc:else>
-								<!-- CURRENT MONTH -->
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.currentMonthActualYTD}>
-										<lightning-formatted-number value={rl.currentMonthActualYTD}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.currentMonthBudgetYTD}>
-										<lightning-formatted-number value={rl.currentMonthBudgetYTD}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.currentMonthDiffYTD}>
-										<lightning-formatted-number value={rl.currentMonthDiffYTD}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass} style="background-color: #e2efd9 !important;">
-									<div class="number-wrapper" data-value={rl.currentMonthDiffPercentYTD}>
-										<lightning-formatted-number value={rl.currentMonthDiffPercentYTD} class="dec"
-																	maximum-fraction-digits="1"
-																	minimum-fraction-digits="1"
-																	format-style="percent"></lightning-formatted-number>
-									</div>
-								</th>
-								<!-- CURRENT MONTH -->
+							</tbody>
+						</table>
+					</div>
+				</lightning-tab>
+				<lightning-tab label="Gross Margin">
+					<template lwc:if={readyToRender}>
+						<template lwc:if={reportLines}>
+							<c-cb-p-l-summary-gross-margin selected-period-id={selectedPeriodId} report-lines={reportLines}>
 
-								<!-- PRIOR YEAR -->
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.priorYearActualYTD}>
-										<lightning-formatted-number value={rl.priorYearActualYTD}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass}>
-									<div class="number-wrapper" data-value={rl.priorYearDiffYTD}>
-										<lightning-formatted-number value={rl.priorYearDiffYTD}
-																	maximum-fraction-digits="0"
-																	minimum-fraction-digits="0"
-																	format-style={rl.formatStyle}
-																	class="dec"
-																	currency-code="USD"></lightning-formatted-number>
-									</div>
-								</th>
-								<th class={rl.styleClass} style="background-color: #d9e2f3 !important;">
-									<div class="number-wrapper" data-value={rl.priorYearDiffPercentYTD}>
-										<lightning-formatted-number value={rl.priorYearDiffPercentYTD} class="dec"
-																	maximum-fraction-digits="1"
-																	minimum-fraction-digits="1"
-																	format-style="percent"></lightning-formatted-number>
-									</div>
-								</th>
-								<!-- PRIOR YEAR -->
-							</template>
-
-						</tr>
+							</c-cb-p-l-summary-gross-margin>
+						</template>
 					</template>
-					</tbody>
-				</table>
-			</div>
+				</lightning-tab>
+			</lightning-tabset>
+
+
+
 		</template>
 
 		<template lwc:if={renderDD}>

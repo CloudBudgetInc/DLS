@@ -69,7 +69,9 @@ public with sharing class CBPLSummaryReportPageController {
 	 * @return list of CBPeriod from start to the end
 	 */
 	private static Set<String> getSetOfAllNeededPeriods(String startPeriodId, String endPeriodId) {
-		if (endPeriodId == null) return new Set<String>{ startPeriodId };
+		if (endPeriodId == null) return new Set<String>{
+				startPeriodId
+		};
 		Set<String> r = new Set<String>();
 		Boolean isNeededPeriod = false;
 		for (Integer i = sortedPeriods.size() - 1; i >= 0; i--) {
@@ -101,6 +103,19 @@ public with sharing class CBPLSummaryReportPageController {
 			get;
 			set;
 		}
+	}
+
+	@AuraEnabled
+	public static Map<String, Decimal> getGetFringePercentServer(String periodsId) {
+		Map<String, Decimal> r = new Map<String, Decimal>();
+		for (cb5__CBNonFinancialItem__c item : [
+				SELECT cb5__NonFinancialLibrary__r.Name, cb5__Value__c
+				FROM cb5__CBNonFinancialItem__c
+				WHERE cb5__NonFinancialLibrary__r.cb5__LayerTitle__c = 'Fringes' AND cb5__CBPeriod__c = :periodsId
+		]) {
+			r.put(item.cb5__NonFinancialLibrary__r.Name, item.cb5__Value__c);
+		}
+		return r;
 	}
 
 }
