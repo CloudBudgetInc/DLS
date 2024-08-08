@@ -105,15 +105,23 @@ public with sharing class CBPLSummaryReportPageController {
 		}
 	}
 
+	/**
+	 * Gross margin uses fringe percent for calculation. Percent depends on the Var 2 lookup
+	 * @param periodsId needed period Id
+	 * @return
+	 */
 	@AuraEnabled
-	public static Map<String, Decimal> getGetFringePercentServer(String periodsId) {
+	public static Map<String, Decimal> getFringePercentServer(String periodsId) {
 		Map<String, Decimal> r = new Map<String, Decimal>();
+		Map<Id, Decimal> nflValueMap = new Map<Id, Decimal>();
 		for (cb5__CBNonFinancialItem__c item : [
-				SELECT cb5__NonFinancialLibrary__r.Name, cb5__Value__c
+				SELECT cb5__NonFinancialLibrary__c, cb5__Value__c
 				FROM cb5__CBNonFinancialItem__c
 				WHERE cb5__NonFinancialLibrary__r.cb5__LayerTitle__c = 'Fringes' AND cb5__CBPeriod__c = :periodsId
-		]) {
-			r.put(item.cb5__NonFinancialLibrary__r.Name, item.cb5__Value__c);
+		]) nflValueMap.put(item.cb5__NonFinancialLibrary__c, item.cb5__Value__c);
+		for (cb5__CBVariable2__c var2 : [SELECT Name, IRM__c FROM cb5__CBVariable2__c]) {
+			Decimal v = nflValueMap.get(var2.IRM__c);
+			r.put(var2.Name, v == null ? 0 : v);
 		}
 		return r;
 	}

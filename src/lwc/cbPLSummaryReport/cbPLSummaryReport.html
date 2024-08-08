@@ -240,7 +240,7 @@
 										</th>
 										<!-- PRIOR YEAR -->
 									</template>
-									<template lwc:else>
+									<template lwc:else> <!-- YTD MODE -->
 										<!-- CURRENT MONTH -->
 										<th class={rl.styleClass}>
 											<div class="number-wrapper" data-value={rl.currentMonthActualYTD}>
@@ -330,7 +330,6 @@
 					</template>
 				</lightning-tab>
 			</lightning-tabset>
-
 
 
 		</template>

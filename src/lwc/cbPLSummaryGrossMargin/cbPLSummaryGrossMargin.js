@@ -1,13 +1,13 @@
 import {api, LightningElement, track} from 'lwc';
 import {_message, _parseServerError} from "c/cbUtils";
-import getGetFringePercentServer from '@salesforce/apex/CBPLSummaryReportPageController.getGetFringePercentServer';
+import getFringePercentServer from '@salesforce/apex/CBPLSummaryReportPageController.getFringePercentServer';
 import {GMReportLine} from "./cbPLSummaryGrossMarginWrapper";
 
 export default class CbPLSummaryGrossMargin extends LightningElement {
 
 	@api selectedPeriodId;
 	@api reportLines;
-	@track fringes;
+	@track fringesMap;
 	@track GMReportLines;
 	@track actualFringeTotal;
 	@track budgetFringeTotal;
@@ -26,14 +26,14 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 		console.log('Gross Margin CMP');
 		console.log('selectedPeriodId = ' + this.selectedPeriodId);
 		console.log('reportLines = ' + JSON.stringify(this.reportLines));
-		console.log('Fringes = ' + this.fringes);
+		console.log('fringesMap = ' + this.fringesMap);
 		this.generateGMReportLines();
 		console.log('GMReportLines = ' + this.GMReportLines);
 
 	};
 
 	getGetFringePercent = async () => {
-		this.fringes = await getGetFringePercentServer().catch(e => _parseServerError('Fringe Error: ', e));
+		this.fringesMap = await getFringePercentServer({periodsId: this.selectedPeriodId}).catch(e => _parseServerError('Fringe Error: ', e));
 	};
 
 	generateGMReportLines = () => {
@@ -42,40 +42,35 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 			const GMReportLinesObj = {};
 			const totalGMReportLine = new GMReportLine('TOTAL');
 			totalGMReportLine.styleClass = 'totalLine';
+			const isYTDMode = this.reportLines.some(rl => rl.currentMonthActualYTD > 5); // true if YTD activated
+
 			this.reportLines.forEach(rl => {
-				try {
-					if (rl.label === 'Direct Fringe') {
-						totalGMReportLine.actualDLFringe = rl.currentMonthActual;
-						totalGMReportLine.budgetDLFringe = rl.currentMonthBudget;
-						return null;
-					}
-					if (rl.type === 'Revenue' || rl.type === 'COGS') {
-						let GMRL = GMReportLinesObj[rl.label];
-						if (!GMRL) {
-							GMRL = new GMReportLine(rl.label);
-							GMReportLinesObj[rl.label] = GMRL;
-						}
-						if (rl.type === 'Revenue') {
-							GMRL.actualRevenue += rl.currentMonthActual;
-							GMRL.budgetRevenue += rl.currentMonthBudget;
-						}
-						if (rl.type === 'COGS') {
-							GMRL.actualExpense += rl.currentMonthActual;
-							GMRL.budgetExpense += rl.currentMonthBudget;
-						}
-					}
-				} catch (e) {
-					_message('error', 'Gen GM Error : ' + JSON.stringify(e))
+				if (rl.label === 'Direct Fringe') {
+					totalGMReportLine.actualDLFringe = rl.currentMonthActual;
+					totalGMReportLine.budgetDLFringe = rl.currentMonthBudget;
+					return;
+				}
+				if (rl.type !== 'Revenue' && rl.type !== 'COGS') return;
+				if (!GMReportLinesObj[rl.label]) {
+					GMReportLinesObj[rl.label] = new GMReportLine(rl.label);
+				}
+				const GMRL = GMReportLinesObj[rl.label];
+				if (rl.type === 'Revenue') {
+					GMRL.actualRevenue += isYTDMode ? rl.currentMonthActualYTD : rl.currentMonthActual;
+					GMRL.budgetRevenue += isYTDMode ? rl.currentMonthBudgetYTD : rl.currentMonthBudget;
+				} else if (rl.type === 'COGS') {
+					GMRL.actualExpense += isYTDMode ? rl.currentMonthActualYTD : rl.currentMonthActual;
+					GMRL.budgetExpense += isYTDMode ? rl.currentMonthBudgetYTD : rl.currentMonthBudget;
 				}
 			});
+
 			const GMReportLines = Object.values(GMReportLinesObj);
-			new GMReportLine().calculateDLFringe(GMReportLines, totalGMReportLine);
+			new GMReportLine().calculateDLFringe(GMReportLines, totalGMReportLine, this.fringesMap);
 			GMReportLines.push(totalGMReportLine);
 			this.GMReportLines = GMReportLines;
 		} catch (e) {
-			_message('error', 'Get GM Report Lines Error : ' + JSON.stringify(e));
+			_message('error', 'Get GM Report Lines Error: ' + JSON.stringify(e));
 		}
 	};
-
 
 }
