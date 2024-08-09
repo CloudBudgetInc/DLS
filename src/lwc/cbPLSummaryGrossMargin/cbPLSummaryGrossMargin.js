@@ -13,6 +13,20 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	@track budgetFringeTotal;
 	@track splitLT = false;
 	@track renderAllColumns = true;
+	sumFields = [
+		'actualRevenue',
+		'actualExpense',
+		'actualDLFringe',
+		'actualDLFringeIRM',
+		'actualDLFringeTotal',
+		'actualGrossMargin',
+		'budgetRevenue',
+		'budgetExpense',
+		'budgetDLFringe',
+		'budgetDLFringeIRM',
+		'budgetDLFringeTotal',
+		'budgetGrossMargin'
+	];
 
 	async connectedCallback() {
 		try {
@@ -25,12 +39,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	doInit = async () => {
 		this.GMReportLines = [];
 		await this.getGetFringePercent().then(r => null);
-		console.log('Gross Margin CMP');
-		console.log('selectedPeriodId = ' + this.selectedPeriodId);
-		console.log('reportLines = ' + JSON.stringify(this.reportLines));
-		console.log('fringesMap = ' + this.fringesMap);
 		this.generateGMReportLines();
-		console.log('GMReportLines = ' + this.GMReportLines);
 	};
 
 	getGetFringePercent = async () => {
@@ -43,13 +52,13 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 			this.GMReportLines = [];
 			const GMReportLinesObj = {};
 			const totalGMReportLine = this.createGMReportLine('TOTAL', 'totalLine');
-			const isYTDMode = this.isYTDMode(this.reportLines);
+			const isYTDMode =  this.reportLines.some(rl => rl.currentMonthActualYTD > 5);
 			this.processReportLines(this.reportLines, GMReportLinesObj, isYTDMode, totalGMReportLine);
 			let GMReportLines = Object.values(GMReportLinesObj);
+			new GMReportLine().calculateDLFringe(GMReportLines, totalGMReportLine, this.fringesMap);
 			if (this.splitLT) {
-				GMReportLines = this.handleSplitLT(GMReportLines, totalGMReportLine);
+				GMReportLines = this.handleSplitLT(GMReportLines);
 			} else {
-				new GMReportLine().calculateDLFringe(GMReportLines, totalGMReportLine, this.fringesMap);
 				GMReportLines.push(totalGMReportLine);
 			}
 			this.GMReportLines = GMReportLines;
@@ -65,13 +74,11 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 		return line;
 	};
 
-	isYTDMode = (reportLines) => reportLines.some(rl => rl.currentMonthActualYTD > 5);
-
 	processReportLines = (reportLines, GMReportLinesObj, isYTDMode, totalGMReportLine) => {
 		reportLines.forEach(rl => {
 			if (rl.label === 'Direct Fringe') {
-				totalGMReportLine.actualDLFringe = rl.currentMonthActual;
-				totalGMReportLine.budgetDLFringe = rl.currentMonthBudget;
+				totalGMReportLine.actualDLFringe = isYTDMode ? rl.currentMonthActualYTD : rl.currentMonthActual;
+				totalGMReportLine.budgetDLFringe = isYTDMode ? rl.currentMonthBudgetYTD : rl.currentMonthBudget;
 				return;
 			}
 			if (rl.type !== 'Revenue' && rl.type !== 'COGS') return;
@@ -97,28 +104,25 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	 * @param totalGMReportLine
 	 * @return {*[]}
 	 */
-	handleSplitLT = (GMReportLines, totalGMReportLine) => {
+	handleSplitLT = (GMReportLines) => {
 		const LTVar2 = [];
 		const otherVar2 = [];
+		const LTTotalGMReportLine = this.createGMReportLine('LT TOTAL', 'totalLine');
+		const otherTotalGMReportLine = this.createGMReportLine('OTHER TOTAL', 'totalLine');
 
 		GMReportLines.forEach(rl => {
 			if (rl.label.includes('LT')) {
+				this.sumFields.forEach(f => LTTotalGMReportLine[f] += +rl[f]);
 				LTVar2.push(rl);
 			} else {
+				this.sumFields.forEach(f => otherTotalGMReportLine[f] += +rl[f]);
 				otherVar2.push(rl);
 			}
 		});
-
-		const LTTotalGMReportLine = this.createGMReportLine('LT TOTAL', 'totalLine');
-		LTTotalGMReportLine.actualDLFringe = totalGMReportLine.actualDLFringe;
-		LTTotalGMReportLine.budgetDLFringe = totalGMReportLine.budgetDLFringe;
-
-		const otherTotalGMReportLine = this.createGMReportLine('OTHER TOTAL', 'totalLine');
-		otherTotalGMReportLine.actualDLFringe = totalGMReportLine.actualDLFringe;
-		otherTotalGMReportLine.budgetDLFringe = totalGMReportLine.budgetDLFringe;
-
-		new GMReportLine().calculateDLFringe(LTVar2, LTTotalGMReportLine, this.fringesMap);
-		new GMReportLine().calculateDLFringe(otherVar2, otherTotalGMReportLine, this.fringesMap);
+		LTTotalGMReportLine.actualGrossMarginPercent = LTTotalGMReportLine.actualGrossMargin / LTTotalGMReportLine.actualRevenue;
+		LTTotalGMReportLine.budgetGrossMarginPercent = LTTotalGMReportLine.budgetGrossMargin / LTTotalGMReportLine.budgetRevenue;
+		otherTotalGMReportLine.actualGrossMarginPercent = otherTotalGMReportLine.actualGrossMargin / otherTotalGMReportLine.actualRevenue;
+		otherTotalGMReportLine.budgetGrossMarginPercent = otherTotalGMReportLine.budgetGrossMargin / otherTotalGMReportLine.budgetRevenue;
 
 		return [...LTVar2, LTTotalGMReportLine, ...otherVar2, otherTotalGMReportLine];
 	};

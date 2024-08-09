@@ -1,19 +1,5 @@
 <template>
 
-	<lightning-layout>
-		<lightning-layout-item size="10">
-
-		</lightning-layout-item>
-		<lightning-layout-item size="1">
-			<lightning-input type="toggle" label="Split LT" name="splitLT" onchange={handleToggle}
-							 checked={splitLT}></lightning-input>
-		</lightning-layout-item>
-		<lightning-layout-item size="1">
-			<lightning-input type="toggle" label="All Columns" name="renderAllColumns" onchange={handleToggle}
-							 checked={renderAllColumns}></lightning-input>
-		</lightning-layout-item>
-	</lightning-layout>
-
 	<template lwc:if={renderAllColumns}>
 		<lightning-layout class="slds-m-bottom_medium">
 			<lightning-layout-item size="6" class="slds-p-right_small">
@@ -294,6 +280,20 @@
 			</lightning-layout-item>
 		</lightning-layout>
 	</template>
+
+	<lightning-layout>
+		<lightning-layout-item size="10">
+
+		</lightning-layout-item>
+		<lightning-layout-item size="1">
+			<lightning-input type="toggle" label="Split LT" name="splitLT" onchange={handleToggle}
+							 checked={splitLT}></lightning-input>
+		</lightning-layout-item>
+		<lightning-layout-item size="1">
+			<lightning-input type="toggle" label="All Columns" name="renderAllColumns" onchange={handleToggle}
+							 checked={renderAllColumns}></lightning-input>
+		</lightning-layout-item>
+	</lightning-layout>
 
 
 </template>
