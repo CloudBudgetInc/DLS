@@ -31,34 +31,26 @@ class GMReportLine {
 
 	actualRevenue;
 	actualExpense;
+	actualDLFringe;
+	actualDLFringeIRM;
+	actualDLFringeTotal;
+	actualGrossMargin;
+	actualGrossMarginPercent;
+	actualRevenuePercent;
+
 	budgetRevenue;
 	budgetExpense;
-
-	actualDLFringe;
 	budgetDLFringe;
-
-	actualDLFringeIRM;
 	budgetDLFringeIRM;
-
-	actualDLFringeTotal;
 	budgetDLFringeTotal;
-
-	actualGrossMargin;
 	budgetGrossMargin;
-
-	actualGrossMarginPercent;
 	budgetGrossMarginPercent;
-
-	actualRevenuePercent;
 	budgetRevenuePercent;
 
 	formatStyle = 'currency';
 
 	calculateDLFringe = (lines, totalGMReportLine, fringesMap) => {
-		// Step 1: Accumulate totals
 		const {actualDLFringeIRMTotal, budgetDLFringeIRMTotal} = this.accumulateTotals(lines, totalGMReportLine, fringesMap);
-
-		// Step 2: Calculate line fringes and other metrics
 		this.calculateLineFringes(lines, totalGMReportLine, fringesMap, actualDLFringeIRMTotal, budgetDLFringeIRMTotal);
 	};
 
