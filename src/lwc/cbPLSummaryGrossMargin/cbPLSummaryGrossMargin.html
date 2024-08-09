@@ -3,7 +3,8 @@
 	<template lwc:if={renderAllColumns}>
 		<lightning-layout class="slds-m-bottom_medium">
 			<lightning-layout-item size="6" class="slds-p-right_small">
-				<div style="font-weight: bold">Actual</div>
+				<div style="font-weight: bold" class="slds-align_absolute-center">Actual</div>
+				<div class="gradient-bar"></div>
 				<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered"
 					   aria-label="Example table of Opportunities with vertical borders">
 					<thead>
@@ -115,7 +116,8 @@
 
 			</lightning-layout-item>
 			<lightning-layout-item size="6">
-				<div style="font-weight: bold">Budget</div>
+				<div style="font-weight: bold" class="slds-align_absolute-center">Budget</div>
+				<div class="gradient-bar"></div>
 				<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered"
 					   aria-label="Example table of Opportunities with vertical borders">
 					<thead>
