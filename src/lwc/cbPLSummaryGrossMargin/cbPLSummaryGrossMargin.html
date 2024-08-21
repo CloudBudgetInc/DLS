@@ -1,5 +1,39 @@
 <template>
 
+	<lightning-layout>
+		<lightning-layout-item size="10">
+
+		</lightning-layout-item>
+		<lightning-layout-item size="2">
+			<lightning-button-group class="slds-float_right">
+				<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadExcel}>
+				</lightning-button>
+
+				<div class="slds-form-element"  title="Split customers by LT and other">
+					<label class="slds-checkbox__label">
+						<lightning-input type="checkbox-button" label=" " name="splitLT" checked={splitLT} onchange={handleToggle}></lightning-input>
+						<span class="slds-checkbox_faux"></span>
+						<span class="slds-form-element__label">Split</span>
+					</label>
+				</div>
+				<div class="slds-form-element slds-m-right_small" title="Show/hide all columns with calculations">
+					<label class="slds-checkbox__label">
+						<lightning-input type="checkbox-button" label=" " name="renderAllColumns" checked={renderAllColumns} onchange={handleToggle}></lightning-input>
+						<span class="slds-checkbox_faux"></span>
+						<span class="slds-form-element__label">Details</span>
+					</label>
+				</div>
+
+				<!--<lightning-input type="toggle" label="Split LT" name="splitLT" onchange={handleToggle}
+								 checked={splitLT}></lightning-input>
+				<lightning-input type="toggle" label="All Columns" name="renderAllColumns" onchange={handleToggle}
+								 checked={renderAllColumns}></lightning-input>-->
+
+
+			</lightning-button-group>
+		</lightning-layout-item>
+	</lightning-layout>
+
 	<template lwc:if={renderAllColumns}>
 		<lightning-layout class="slds-m-bottom_medium">
 			<lightning-layout-item size="6" class="slds-p-right_small">
@@ -282,20 +316,6 @@
 			</lightning-layout-item>
 		</lightning-layout>
 	</template>
-
-	<lightning-layout>
-		<lightning-layout-item size="10">
-
-		</lightning-layout-item>
-		<lightning-layout-item size="1">
-			<lightning-input type="toggle" label="Split LT" name="splitLT" onchange={handleToggle}
-							 checked={splitLT}></lightning-input>
-		</lightning-layout-item>
-		<lightning-layout-item size="1">
-			<lightning-input type="toggle" label="All Columns" name="renderAllColumns" onchange={handleToggle}
-							 checked={renderAllColumns}></lightning-input>
-		</lightning-layout-item>
-	</lightning-layout>
 
 
 </template>

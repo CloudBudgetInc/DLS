@@ -126,4 +126,9 @@ public with sharing class CBPLSummaryReportPageController {
 		return r;
 	}
 
+	@AuraEnabled
+	public static List<cb5__CBVariable2__c> getVar2Server() {
+		return [SELECT Id, Subtype__c, Name FROM cb5__CBVariable2__c];
+	}
+
 }

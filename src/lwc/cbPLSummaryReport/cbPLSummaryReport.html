@@ -4,53 +4,68 @@
 		<lightning-layout slot="actions">
 			<lightning-layout-item>
 				<div class="slds-p-top_large">
-					<lightning-button label="Dashboard" icon-name="utility:chart" onclick={openDashboard}>
-					</lightning-button>
-				</div>
-			</lightning-layout-item>
-			<lightning-layout-item>
-				<div class="slds-p-top_large">
-					<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadToExcel}>
-					</lightning-button>
-				</div>
-			</lightning-layout-item>
-			<lightning-layout-item>
-				<div class="slds-p-top_large">
 					<lightning-button label="Refresh" icon-name="utility:refresh" onclick={renderReport}>
 					</lightning-button>
 				</div>
 			</lightning-layout-item>
 			<lightning-layout-item>
-				<lightning-combobox
-						name="selectedReportType"
-						label="Report Type"
-						value={selectedReportType}
-						options={reportTypeSO}
-						onchange={handleChangeMainFilter}></lightning-combobox>
+				<div class="slds-p-top_xxx-small">
+					<lightning-combobox
+							name="selectedPeriodMode"
+							label="Period Mode"
+							value={selectedPeriodMode}
+							options={reportPeriodModeSO}
+							onchange={handleChangeMainFilter}></lightning-combobox>
+				</div>
 			</lightning-layout-item>
 			<lightning-layout-item>
-				<lightning-combobox
-						name="selectedPeriodMode"
-						label="Period Mode"
-						value={selectedPeriodMode}
-						options={reportPeriodModeSO}
-						onchange={handleChangeMainFilter}></lightning-combobox>
-			</lightning-layout-item>
-			<lightning-layout-item>
-				<lightning-combobox
-						name="selectedPeriodId"
-						label="Period"
-						value={selectedPeriodId}
-						placeholder="Select Some Period"
-						options={periodSO}
-						onchange={handleChangeMainFilter}></lightning-combobox>
+				<div class="slds-p-top_xxx-small">
+					<lightning-combobox
+							name="selectedPeriodId"
+							label="Period"
+							value={selectedPeriodId}
+							placeholder="Select Some Period"
+							options={periodSO}
+							onchange={handleChangeMainFilter}></lightning-combobox>
+				</div>
 			</lightning-layout-item>
 		</lightning-layout>
 
 		<template lwc:if={readyToRender}>
 
 			<lightning-tabset>
-				<lightning-tab label="PL">
+				<lightning-tab label="PL" class="slds-p-top_none">
+
+					<lightning-layout>
+						<lightning-layout-item size="9">
+
+						</lightning-layout-item>
+						<lightning-layout-item size="3">
+							<lightning-button-group class="slds-float_right">
+								<div class="slds-p-top_large">
+									<lightning-button label="Dashboard" icon-name="utility:chart"
+													  onclick={openDashboard}>
+									</lightning-button>
+								</div>
+								<div class="slds-p-top_large">
+									<lightning-button label="Download" icon-name="doctype:excel"
+													  onclick={downloadToExcel}>
+									</lightning-button>
+								</div>
+								<div class="slds-p-top_xxx-small">
+									<lightning-combobox class="slds-m-right_small"
+														name="selectedReportType"
+														label="Report Type"
+														value={selectedReportType}
+														options={reportTypeSO}
+														onchange={handleChangeMainFilter}></lightning-combobox>
+								</div>
+							</lightning-button-group>
+						</lightning-layout-item>
+
+
+					</lightning-layout>
+
 					<div style="overflow-x:auto; height: 77vh">
 						<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped slds-table_sticky-header">
 							<thead>
@@ -67,10 +82,12 @@
 										<div class="slds-truncate dec" title="Current Month Budget">Current Budget</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="Current Month Dollar Diff">Dollar Diff</div>
+										<div class="slds-truncate dec" title="Current Month Dollar Diff">Dollar Diff
+										</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="Current Month Percent Diff">Percent Diff</div>
+										<div class="slds-truncate dec" title="Current Month Percent Diff">Percent Diff
+										</div>
 									</th>
 									<th>
 										<div class="slds-truncate dec" title="Prior Month Actual">Prior Month</div>
@@ -79,7 +96,8 @@
 										<div class="slds-truncate dec" title="Prior Month Dollar Diff">Dollar Diff</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="Prior Month Percent Diff">Percent Diff</div>
+										<div class="slds-truncate dec" title="Prior Month Percent Diff">Percent Diff
+										</div>
 									</th>
 									<th>
 										<div class="slds-truncate dec" title="Prior Year Actual">Prior Year</div>
@@ -88,32 +106,43 @@
 										<div class="slds-truncate dec" title="Prior Year Dollar Diff">Dollar Diff</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="Prior Year Percent Diff">Percent Diff</div>
+										<div class="slds-truncate dec" title="Prior Year Percent Diff">Percent Diff
+										</div>
 									</th>
 								</template>
 								<template lwc:else>
 									<th>
-										<div class="slds-truncate dec" title="YTD Current Month Actual">YTD Current Month</div>
-									</th>
-									<th>
-										<div class="slds-truncate dec" title="YTD Current Month Budget">YTD Current Budget</div>
-									</th>
-									<th>
-										<div class="slds-truncate dec" title="YTD Current Month Dollar Diff">YTD Dollar Diff
+										<div class="slds-truncate dec" title="YTD Current Month Actual">YTD Current
+											Month
 										</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="YTD Current Month Percent Diff">YTD Percent Diff
+										<div class="slds-truncate dec" title="YTD Current Month Budget">YTD Current
+											Budget
 										</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="YTD Prior Year Actual">YTD Prior Year</div>
+										<div class="slds-truncate dec" title="YTD Current Month Dollar Diff">YTD Dollar
+											Diff
+										</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="YTD Prior Year Dollar Diff">YTD Dollar Diff</div>
+										<div class="slds-truncate dec" title="YTD Current Month Percent Diff">YTD
+											Percent Diff
+										</div>
 									</th>
 									<th>
-										<div class="slds-truncate dec" title="YTD Prior Year Percent Diff">YTD Percent Diff
+										<div class="slds-truncate dec" title="YTD Prior Year Actual">YTD Prior Year
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Dollar Diff">YTD Dollar
+											Diff
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Percent Diff">YTD Percent
+											Diff
 										</div>
 									</th>
 								</template>
@@ -163,7 +192,8 @@
 												<c-cb-value-bar value={rl.currentMonthDiffPercent}></c-cb-value-bar>
 											</template>
 											<div class="number-wrapper" data-value={rl.currentMonthDiffPercent}>
-												<lightning-formatted-number value={rl.currentMonthDiffPercent} class="dec"
+												<lightning-formatted-number value={rl.currentMonthDiffPercent}
+																			class="dec"
 																			maximum-fraction-digits="1"
 																			minimum-fraction-digits="1"
 																			format-style="percent"></lightning-formatted-number>
@@ -274,7 +304,8 @@
 										</th>
 										<th class={rl.styleClass} style="background-color: #e2efd9 !important;">
 											<div class="number-wrapper" data-value={rl.currentMonthDiffPercentYTD}>
-												<lightning-formatted-number value={rl.currentMonthDiffPercentYTD} class="dec"
+												<lightning-formatted-number value={rl.currentMonthDiffPercentYTD}
+																			class="dec"
 																			maximum-fraction-digits="1"
 																			minimum-fraction-digits="1"
 																			format-style="percent"></lightning-formatted-number>
@@ -305,7 +336,8 @@
 										</th>
 										<th class={rl.styleClass} style="background-color: #d9e2f3 !important;">
 											<div class="number-wrapper" data-value={rl.priorYearDiffPercentYTD}>
-												<lightning-formatted-number value={rl.priorYearDiffPercentYTD} class="dec"
+												<lightning-formatted-number value={rl.priorYearDiffPercentYTD}
+																			class="dec"
 																			maximum-fraction-digits="1"
 																			minimum-fraction-digits="1"
 																			format-style="percent"></lightning-formatted-number>
@@ -320,10 +352,11 @@
 						</table>
 					</div>
 				</lightning-tab>
-				<lightning-tab label="Gross Margin">
+				<lightning-tab label="Gross Margin" class="slds-p-top_none">
 					<template lwc:if={readyToRender}>
 						<template lwc:if={reportLines}>
-							<c-cb-p-l-summary-gross-margin selected-period-id={selectedPeriodId} report-lines={reportLines}>
+							<c-cb-p-l-summary-gross-margin selected-period-id={selectedPeriodId}
+														   report-lines={reportLines}>
 
 							</c-cb-p-l-summary-gross-margin>
 						</template>
