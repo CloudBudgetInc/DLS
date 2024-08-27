@@ -188,9 +188,6 @@
 											</div>
 										</th>
 										<th class={rl.styleClass} style="background-color: #d8d8d8 !important;">
-											<template lwc:if={rl.currentMonthDiffPercent}>
-												<c-cb-value-bar value={rl.currentMonthDiffPercent}></c-cb-value-bar>
-											</template>
 											<div class="number-wrapper" data-value={rl.currentMonthDiffPercent}>
 												<lightning-formatted-number value={rl.currentMonthDiffPercent}
 																			class="dec"
@@ -198,13 +195,6 @@
 																			minimum-fraction-digits="1"
 																			format-style="percent"></lightning-formatted-number>
 											</div>
-											<!--<template lwc:if={rl.currentMonthDiffPercent}>
-												<div>
-													<lightning-progress-bar value={rl.currentMonthDiffPercentX100} size="small"
-																			variant="circular"></lightning-progress-bar>
-												</div>
-											</template>-->
-
 										</th>
 										<!-- CURRENT MONTH -->
 
