@@ -47,6 +47,7 @@ class ReportLine {
 	isSeparator = false;
 	type;
 	account;
+	accountST2;
 	var1;
 	var2;
 	formatStyle = 'currency';

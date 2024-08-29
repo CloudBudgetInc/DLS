@@ -53,7 +53,7 @@ const getPriorYearPeriodId = (selectedPeriodId, periodSO) => {
  */
 const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 	try {
-		const {label, type, account, var1, var2} = getLabelAndType(cube);
+		const {label, type, account, var1, var2, accountST2} = getLabelAndType(cube);
 		let key = label + type + (includeAccounts() ? account : '') + (includeVar1() ? var1 : '');
 		let reportLine = reportLineMap[key];
 		if (!reportLine) {
@@ -65,6 +65,7 @@ const convertCubeToReportLine = (cube, reportLineMap, dataType) => {
 			reportLine.account = account;
 			reportLine.var1 = var1;
 			reportLine.var2 = var2;
+			reportLine.accountST2 = accountST2;
 			reportLineMap[key] = reportLine;
 		}
 		populateNumbers(cube, reportLine, dataType);
@@ -127,6 +128,7 @@ const getLabelAndType = (cube) => {
 		return {
 			label: cube.CBAccountSubtype2__c,
 			type: cube.cb5__AccSubType__c,
+			accountST2: cube.CBAccountSubtype2__c,
 			account: cube.cb5__CBAccount__r.Name,
 			var1: cube.cb5__CBVariable1__r?.Name,
 			var2: cube.cb5__CBVariable2__r?.Name
