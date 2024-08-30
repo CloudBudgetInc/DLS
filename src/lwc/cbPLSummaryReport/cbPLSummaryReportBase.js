@@ -103,10 +103,20 @@ const getLabelAndType = (cube) => {
 	}
 	if (cube.cb5__CBVariable2__c) {
 		if (cube.cb5__CBAccount__r.Name.startsWith('4')) {
-			return {label: cube.cb5__CBVariable2__r.Name, type: 'Revenue', account: cube.cb5__CBAccount__r.Name};
+			return {
+				label: cube.cb5__CBVariable2__r.Name,
+				type: 'Revenue',
+				account: cube.cb5__CBAccount__r.Name,
+				accountST2: cube.CBAccountSubtype2__c
+			};
 		}
 		if (cube.cb5__CBAccount__r.Name.startsWith('5')) {
-			return {label: cube.cb5__CBVariable2__r.Name, type: 'COGS', account: cube.cb5__CBAccount__r.Name};
+			return {
+				label: cube.cb5__CBVariable2__r.Name,
+				type: 'COGS',
+				account: cube.cb5__CBAccount__r.Name,
+				accountST2: cube.CBAccountSubtype2__c
+			};
 		}
 	}
 	if (cube.CBAccountSubtype2__c === 'Non-Operating Other Income') {
@@ -160,13 +170,13 @@ const addSubLinesAndTotals = (reportLines) => {
 		const nonOperatingOtherIncomeExpenseTotal = new ReportLine('Total Non-Operating Other Income & Expense', 'totalLine');
 		const netProfit = new ReportLine('Net Profit', 'totalLine');
 
-		const revenueLines = [];
-		const COGSLines = [];
-		const fringeLines = [];
-		const overheadLines = [];
-		const facilitiesLines = [];
-		const eescLines = [];
-		const GALines = [];
+		let revenueLines = [];
+		let COGSLines = [];
+		let fringeLines = [];
+		let overheadLines = [];
+		let facilitiesLines = [];
+		let eescLines = [];
+		let GALines = [];
 
 		const sectionType = {
 			'Revenue': {total: revenueTotal, lines: revenueLines},
@@ -188,6 +198,15 @@ const addSubLinesAndTotals = (reportLines) => {
 			}
 		});
 		sortReportLines([revenueLines, COGSLines, fringeLines, overheadLines, facilitiesLines, eescLines, GALines]);
+		if (includeAccounts()) { // add subtype totals for the Summary+ mode only
+			revenueLines = addSubtypeTotals(revenueLines, 'GSA IFF Fee');
+			COGSLines = addSubtypeTotals(COGSLines, 'Direct Fringe');
+			fringeLines = addSubtypeTotals(fringeLines, 'Other');
+			overheadLines = addSubtypeTotals(overheadLines, 'Other');
+			facilitiesLines = addSubtypeTotals(facilitiesLines, 'Other');
+			eescLines = addSubtypeTotals(eescLines, 'Other');
+			GALines = addSubtypeTotals(GALines, 'Other');
+		}
 
 		grossMargin.sumUpLines(revenueTotal);
 		grossMargin.subtractLines(COGSTotal);
@@ -263,6 +282,32 @@ const addSubLinesAndTotals = (reportLines) => {
 	} catch (e) {
 		_message('error', 'Add subtotals and totals error: ' + e);
 	}
+};
+
+const addSubtypeTotals = (rLines, defaultTitle) => {
+	if (!rLines) return rLines;
+	const subtypeMap = {};
+	const subtypeTotalRLMap = {};
+
+	rLines.forEach(rl => {
+		if (!rl.accountST2) rl.accountST2 = defaultTitle;
+		let stGroup = subtypeMap[rl.accountST2];
+		if (!stGroup) {
+			stGroup = [];
+			subtypeMap[rl.accountST2] = stGroup;
+			subtypeTotalRLMap[rl.accountST2] = new ReportLine(`Total ${rl.accountST2}`, 'subTotalLine');
+		}
+		const totalLine = subtypeTotalRLMap[rl.accountST2];
+		totalLine.sumUpLines(rl);
+		stGroup.push(rl);
+	});
+	let r = [];
+	Object.keys(subtypeMap).forEach(key => {
+		const stGroup = subtypeMap[key];
+		const totalLine = subtypeTotalRLMap[key];
+		r = [...r, ...stGroup, totalLine];
+	});
+	return r;
 };
 
 const sortReportLines = (reportLineSections) => {
