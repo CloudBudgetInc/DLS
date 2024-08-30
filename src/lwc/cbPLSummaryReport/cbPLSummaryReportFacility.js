@@ -3,13 +3,18 @@ import {ReportLine} from "./cbPLSummaryReportWrapper";
 
 const TOTAL_LINE_CSS = 'totalLine';
 const S_TOTAL_LINE_CSS = 'subTotalLine';
-
+const isNumberLessThan75130 = inputString => {
+	const numberPart = inputString.substring(0, 5);
+	const number = Number(numberPart);
+	return number < 75130;
+};
 const getFacilityReportLines = reportLines => {
 	reportLines = reportLines.filter(rl => rl.var1?.includes('FSC'));
 	const reportLinesByDim1 = {}; // key is rl.var1
 	reportLines.forEach(rl => {
 		if (!rl.var1?.includes('FSC0')) return null; // no facility
-		if(rl.label.startsWith('6')) return null;
+		if (rl.label.startsWith('6')) return null;
+		if (isNumberLessThan75130(rl.label)) return null;
 		let rLines = reportLinesByDim1[rl.var1];
 		if (!rLines) {
 			rLines = [];
@@ -41,7 +46,7 @@ const addAccountST2Subtotals = (rLines) => {
 	const ST2Object = {};
 	rLines.forEach(rl => {
 		let rlGroup = ST2Object[rl.accountST2];
-		if(!rlGroup) {
+		if (!rlGroup) {
 			rlGroup = [];
 			ST2Object[rl.accountST2] = rlGroup;
 		}
