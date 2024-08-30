@@ -103,6 +103,18 @@ export default class CBPLSummaryReport extends LightningElement {
 		});
 	}
 
+	activeTabValue = 'summaryTab';
+	activateSummaryTab = () => {
+		this.activeTabValue = 'summaryTab';
+	};
+
+	activateGrossMarginTab = async () => {
+		if (this.selectedReportType === 'summary') return null;
+		this.selectedReportType = 'summary';
+		await this.renderReport();
+		this.activeTabValue = 'grossMarginTab';
+	};
+
 	/**
 	 * Restoring initial selected items from localeStorage
 	 */
@@ -234,7 +246,7 @@ export default class CBPLSummaryReport extends LightningElement {
 
 	showDrillDown = (event) => {
 		try {
-			if(this.selectedPeriodMode === 'YTD') {
+			if (this.selectedPeriodMode === 'YTD') {
 				alert('Not allowed in YTD mode');
 				return null;
 			}

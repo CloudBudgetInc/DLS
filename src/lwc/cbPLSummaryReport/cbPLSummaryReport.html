@@ -33,8 +33,8 @@
 
 		<template lwc:if={readyToRender}>
 
-			<lightning-tabset>
-				<lightning-tab label="PL" class="slds-p-top_none">
+			<lightning-tabset active-tab-value={activeTabValue}>
+				<lightning-tab label="PL" class="slds-p-top_none" value="summaryTab"  onactive={activateSummaryTab}>
 
 					<lightning-layout>
 						<lightning-layout-item size="9">
@@ -342,7 +342,7 @@
 						</table>
 					</div>
 				</lightning-tab>
-				<lightning-tab label="Gross Margin" class="slds-p-top_none">
+				<lightning-tab label="Gross Margin" class="slds-p-top_none" onactive={activateGrossMarginTab}  value="grossMarginTab">
 					<template lwc:if={readyToRender}>
 						<template lwc:if={reportLines}>
 							<c-cb-p-l-summary-gross-margin selected-period-id={selectedPeriodId}
