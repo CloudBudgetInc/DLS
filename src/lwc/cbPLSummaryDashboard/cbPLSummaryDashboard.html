@@ -162,7 +162,7 @@
 							</template>
 						</template>
 						<template lwc:if={readyToRenderIndirect}>
-							<lightning-layout>
+							<!--<lightning-layout>
 								<lightning-layout-item size="4">
 									<c-cb-chart chart-config={indirectCurrentPlanActualPercentDiffConfig}></c-cb-chart>
 								</lightning-layout-item>
@@ -174,7 +174,7 @@
 									<c-cb-chart
 											chart-config={indirectCurrentPreviousYearPercentDiffConfig}></c-cb-chart>
 								</lightning-layout-item>
-							</lightning-layout>
+							</lightning-layout>-->
 
 							<template for:each={indirectBudgetActualConfigChunks} for:item="chunk">
 								<lightning-layout key={chunk}>

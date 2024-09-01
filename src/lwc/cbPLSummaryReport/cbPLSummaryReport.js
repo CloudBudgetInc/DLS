@@ -280,7 +280,13 @@ export default class CBPLSummaryReport extends LightningElement {
 
 
 	////////// DASHBOARD //////////
-	openDashboard = () => this.renderDashboard = true;
+	openDashboard = async () => {
+		if (this.selectedReportType !== 'summary') {
+			this.selectedReportType = 'summary';
+			await this.renderReport();
+		}
+		this.renderDashboard = true;
+	};
 	closeDashboard = () => this.renderDashboard = false;
 	////////// DASHBOARD //////////
 

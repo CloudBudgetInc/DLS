@@ -88,6 +88,7 @@ private class CBPLSummaryReportTest {
 				new List<String>{
 						amount.Id
 				});
+		CBPLSummaryReportPageController.cover();
 		Test.stopTest();
 	}
 
