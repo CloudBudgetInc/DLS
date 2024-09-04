@@ -21,13 +21,13 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 		'actualExpense',
 		'actualDLFringe',
 		'actualDLFringeIRM',
-		'actualDLFringeTotal',
+		'actualDLFringe2',
 		'actualGrossMargin',
 		'budgetRevenue',
 		'budgetExpense',
 		'budgetDLFringe',
 		'budgetDLFringeIRM',
-		'budgetDLFringeTotal',
+		'budgetDLFringe2',
 		'budgetGrossMargin',
 		'actualRevenuePercent',
 		'budgetRevenuePercent'
@@ -119,13 +119,17 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	 */
 	handleSplitBySubtype = (GMReportLines) => {
 		try {
+			const globalTotalLine = this.createGMReportLine(`TOTAL`, 'totalLine');
 			const uniqueSubtypes = [...new Set(Object.values(this.var2Mapping))];
-			const subtypeObjectsArray = uniqueSubtypes.map(st => {
+			let subtypeObjectsArray = uniqueSubtypes.map(st => {
 				const totalLine = this.createGMReportLine(`${st} TOTAL`, 'totalLine');
 				const lines = GMReportLines.filter(rl => this.var2Mapping[rl.label] === st);
 				lines.forEach(rl => this.sumFields.forEach(f => totalLine[f] += +rl[f]));
 				totalLine.actualGrossMarginPercent = totalLine.actualGrossMargin / totalLine.actualRevenue;
 				totalLine.budgetGrossMarginPercent = totalLine.budgetGrossMargin / totalLine.budgetRevenue;
+				this.sumFields.forEach(f => globalTotalLine[f] += +totalLine[f]);
+				globalTotalLine.actualGrossMarginPercent = globalTotalLine.actualGrossMargin / globalTotalLine.actualRevenue;
+				globalTotalLine.budgetGrossMarginPercent = globalTotalLine.budgetGrossMargin / globalTotalLine.budgetRevenue;
 				return {
 					key: st,
 					totalLine,
@@ -133,43 +137,19 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 				};
 			});
 			const voidLine = {label: '-'};
-			return subtypeObjectsArray.flatMap(({lines, totalLine}) => [
+			subtypeObjectsArray = subtypeObjectsArray.flatMap(({lines, totalLine}) => [
 				...lines,
 				totalLine,
 				voidLine
 			]);
+			subtypeObjectsArray.push(globalTotalLine);
+			return subtypeObjectsArray;
 		} catch (e) {
 			_message('error', 'Splitting error ' + JSON.stringify(e));
 		}
 	};
 
-	/**
-	 * Method splits the data to LT and all another part to separate the report
-	 * @param GMReportLines
-	 * @return {*[]}
-	 */
-	handleSplitBySubtype2 = (GMReportLines) => {
-		const LTVar2 = [];
-		const otherVar2 = [];
-		const LTTotalGMReportLine = this.createGMReportLine('LT TOTAL', 'totalLine');
-		const otherTotalGMReportLine = this.createGMReportLine('OTHER TOTAL', 'totalLine');
 
-		GMReportLines.forEach(rl => {
-			if (rl.label.includes('LT')) {
-				this.sumFields.forEach(f => LTTotalGMReportLine[f] += +rl[f]);
-				LTVar2.push(rl);
-			} else {
-				this.sumFields.forEach(f => otherTotalGMReportLine[f] += +rl[f]);
-				otherVar2.push(rl);
-			}
-		});
-		LTTotalGMReportLine.actualGrossMarginPercent = LTTotalGMReportLine.actualGrossMargin / LTTotalGMReportLine.actualRevenue;
-		LTTotalGMReportLine.budgetGrossMarginPercent = LTTotalGMReportLine.budgetGrossMargin / LTTotalGMReportLine.budgetRevenue;
-		otherTotalGMReportLine.actualGrossMarginPercent = otherTotalGMReportLine.actualGrossMargin / otherTotalGMReportLine.actualRevenue;
-		otherTotalGMReportLine.budgetGrossMarginPercent = otherTotalGMReportLine.budgetGrossMargin / otherTotalGMReportLine.budgetRevenue;
-
-		return [...LTVar2, LTTotalGMReportLine, ...otherVar2, otherTotalGMReportLine];
-	};
 	///////////
 
 
