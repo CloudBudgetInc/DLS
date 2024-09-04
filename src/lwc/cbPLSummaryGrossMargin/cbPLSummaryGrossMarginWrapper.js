@@ -14,8 +14,8 @@ class GMReportLine {
 		this.budgetDLFringe = 0;
 		this.actualDLFringeIRM = 0;
 		this.budgetDLFringeIRM = 0;
-		this.actualDLFringeTotal = 0;
-		this.budgetDLFringeTotal = 0;
+		this.actualDLFringe2 = 0;
+		this.budgetDLFringe2 = 0;
 
 		this.actualGrossMargin = 0;
 		this.budgetGrossMargin = 0;
@@ -29,82 +29,84 @@ class GMReportLine {
 	label;
 	styleClass;
 
-	actualRevenue;
-	actualExpense;
-	actualDLFringe;
-	actualDLFringeIRM;
-	actualDLFringeTotal;
-	actualGrossMargin;
-	actualGrossMarginPercent;
-	actualRevenuePercent;
+	actualRevenue;				// С
+	actualExpense; 				// D
+	actualDLFringe;				// E
+	actualDLFringeIRM;			// F
+	actualDLFringe2;			// G
+	actualGrossMargin;			// H
+	actualGrossMarginPercent;	// I
+	actualRevenuePercent;		// J
 
 	budgetRevenue;
 	budgetExpense;
 	budgetDLFringe;
 	budgetDLFringeIRM;
-	budgetDLFringeTotal;
+	budgetDLFringe2;
 	budgetGrossMargin;
 	budgetGrossMarginPercent;
 	budgetRevenuePercent;
 
 	formatStyle = 'currency';
 
-	calculateDLFringe = (lines, totalGMReportLine, fringesMap) => {
-		const {actualDLFringeIRMTotal, budgetDLFringeIRMTotal} = this.accumulateTotals(lines, totalGMReportLine, fringesMap);
-		this.calculateLineFringes(lines, totalGMReportLine, fringesMap, actualDLFringeIRMTotal, budgetDLFringeIRMTotal);
+	/**
+	 *
+	 * @param lines source report lines
+	 * @param totalGMReportLine bottom section total
+	 * @param fringesMap mapping of percents
+	 */
+	runReportCalculations = (lines, totalGMReportLine, fringesMap) => {
+		this.calculateRevenueExpenseTotals(lines, totalGMReportLine);
+		this.calculateDLFringes(lines, totalGMReportLine);
+		this.calculateDLFringesIRM(lines, totalGMReportLine, fringesMap);
+		this.calculateDLFringe2(lines, totalGMReportLine);
+		this.calculateGrossMarginAndGrossMarginPercent(lines, totalGMReportLine);
+		this.calculateRevenuePercent(lines, totalGMReportLine);
 	};
 
-	accumulateTotals = (lines, totalGMReportLine, fringesMap) => {
-		let actualDLFringeIRMTotal = 0;
-		let budgetDLFringeIRMTotal = 0;
-
+	calculateRevenueExpenseTotals = (lines, totalGMReportLine) => {
 		lines.forEach(rl => {
 			totalGMReportLine.actualRevenue += +rl.actualRevenue;
 			totalGMReportLine.actualExpense += +rl.actualExpense;
 			totalGMReportLine.budgetRevenue += +rl.budgetRevenue;
 			totalGMReportLine.budgetExpense += +rl.budgetExpense;
-
-			let frPercent = fringesMap[rl.label] || 0;
-			let actualExpenseFringe = rl.actualExpense * frPercent;
-			let budgetExpenseFringe = rl.budgetExpense * frPercent;
-
-			actualDLFringeIRMTotal += actualExpenseFringe;
-			budgetDLFringeIRMTotal += budgetExpenseFringe;
-
-			totalGMReportLine.actualDLFringeIRM += actualExpenseFringe;
-			totalGMReportLine.budgetDLFringeIRM += budgetExpenseFringe;
 		});
-
-		totalGMReportLine.actualDLFringeTotal = totalGMReportLine.actualDLFringeIRM;
-		totalGMReportLine.budgetDLFringeTotal = totalGMReportLine.budgetDLFringeIRM;
-
-		totalGMReportLine.actualRevenuePercent = 1;
-		totalGMReportLine.budgetRevenuePercent = 1;
-
-		return {actualDLFringeIRMTotal, budgetDLFringeIRMTotal};
 	};
 
-	calculateLineFringes = (lines, totalGMReportLine, fringesMap, actualDLFringeIRMTotal, budgetDLFringeIRMTotal) => {
+	calculateDLFringes = (lines, totalGMReportLine) => {
+		const actualDiff = totalGMReportLine.actualDLFringe / totalGMReportLine.actualExpense;
+		const budgetDiff = totalGMReportLine.budgetDLFringe / totalGMReportLine.budgetExpense;
 		lines.forEach(rl => {
-			rl.actualDLFringe = (totalGMReportLine.actualDLFringe / totalGMReportLine.actualExpense) * rl.actualExpense;
-			rl.budgetDLFringe = (totalGMReportLine.budgetDLFringe / totalGMReportLine.budgetExpense) * rl.budgetExpense;
+			rl.actualDLFringe = actualDiff * rl.actualExpense;
+			rl.budgetDLFringe = budgetDiff * rl.budgetExpense;
+		});
+	};
 
+	calculateDLFringesIRM = (lines, totalGMReportLine, fringesMap) => {
+		lines.forEach(rl => {
 			let frPercent = fringesMap[rl.label] || 0;
 			rl.actualDLFringeIRM = rl.actualExpense * frPercent;
 			rl.budgetDLFringeIRM = rl.budgetExpense * frPercent;
+			totalGMReportLine.actualDLFringeIRM += rl.actualDLFringeIRM;
+			totalGMReportLine.budgetDLFringeIRM += rl.budgetDLFringeIRM;
+		});
+	};
 
-			rl.actualDLFringeTotal = (rl.actualDLFringeIRM / actualDLFringeIRMTotal) * totalGMReportLine.actualDLFringeTotal;
-			rl.budgetDLFringeTotal = (rl.budgetDLFringeIRM / budgetDLFringeIRMTotal) * totalGMReportLine.budgetDLFringeTotal;
+	calculateDLFringe2 = (lines, totalGMReportLine) => {
+		lines.forEach(rl => {
+			rl.actualDLFringe2 = (rl.actualDLFringeIRM / totalGMReportLine.actualDLFringeIRM) * totalGMReportLine.actualDLFringe;
+			rl.budgetDLFringe2 = (rl.budgetDLFringeIRM / totalGMReportLine.budgetDLFringeIRM) * totalGMReportLine.budgetDLFringe;
+			totalGMReportLine.actualDLFringe2 += rl.actualDLFringe2;
+			totalGMReportLine.budgetDLFringe2 += rl.budgetDLFringe2;
+		});
+	};
 
-			rl.actualGrossMargin = rl.actualRevenue - rl.actualExpense - rl.actualDLFringeTotal;
-			rl.budgetGrossMargin = rl.budgetRevenue - rl.budgetExpense - rl.budgetDLFringeTotal;
-
-			if (rl.actualRevenue) rl.actualGrossMarginPercent = rl.actualGrossMargin / rl.actualRevenue;
-			if (rl.budgetRevenue) rl.budgetGrossMarginPercent = rl.budgetGrossMargin / rl.budgetRevenue;
-
-			rl.actualRevenuePercent = rl.actualRevenue / totalGMReportLine.actualRevenue;
-			rl.budgetRevenuePercent = rl.budgetRevenue / totalGMReportLine.budgetRevenue;
-
+	calculateGrossMarginAndGrossMarginPercent = (lines, totalGMReportLine) => {
+		lines.forEach(rl => {
+			rl.actualGrossMargin = rl.actualRevenue - rl.actualExpense - rl.actualDLFringe2;
+			rl.budgetGrossMargin = rl.budgetRevenue - rl.budgetExpense - rl.budgetDLFringe2;
+			rl.actualGrossMarginPercent = rl.actualRevenue ? rl.actualGrossMargin / rl.actualRevenue : 0;
+			rl.budgetGrossMarginPercent = rl.budgetRevenue ? rl.budgetGrossMargin / rl.budgetRevenue : 0;
 			totalGMReportLine.actualGrossMargin += rl.actualGrossMargin;
 			totalGMReportLine.budgetGrossMargin += rl.budgetGrossMargin;
 		});
@@ -112,6 +114,14 @@ class GMReportLine {
 		totalGMReportLine.budgetGrossMarginPercent = totalGMReportLine.budgetGrossMargin / totalGMReportLine.budgetRevenue;
 	};
 
+	calculateRevenuePercent = (lines, totalGMReportLine) => {
+		lines.forEach(rl => {
+			rl.actualRevenuePercent = rl.actualRevenue / totalGMReportLine.actualRevenue;
+			rl.budgetRevenuePercent = rl.budgetRevenue / totalGMReportLine.budgetRevenue;
+		});
+		delete totalGMReportLine.actualRevenuePercent;
+		delete totalGMReportLine.budgetRevenuePercent;
+	};
 }
 
 

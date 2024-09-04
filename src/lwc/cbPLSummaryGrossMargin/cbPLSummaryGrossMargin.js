@@ -69,7 +69,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 			const isYTDMode = this.reportLines.some(rl => rl.currentMonthActualYTD > 5);
 			this.processReportLines(this.reportLines, GMReportLinesObj, isYTDMode, totalGMReportLine);
 			let GMReportLines = Object.values(GMReportLinesObj);
-			new GMReportLine().calculateDLFringe(GMReportLines, totalGMReportLine, this.fringesMap);
+			new GMReportLine().runReportCalculations(GMReportLines, totalGMReportLine, this.fringesMap);
 			if (this.splitLT) {
 				GMReportLines = this.handleSplitBySubtype(GMReportLines);
 			} else {
