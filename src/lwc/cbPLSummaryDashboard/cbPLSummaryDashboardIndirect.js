@@ -131,9 +131,7 @@ const getBudgetActualChartData = (typeArray, chartTitle) => {
 		actualData[0] += rl.currentMonthActual;
 		actualData[1] += rl.priorMonthActual;
 		actualData[2] += rl.priorYearActual;
-		budgetData[0] += rl.currentMonthBudget;
-		budgetData[1] += rl.priorMonthBudget;
-		budgetData[2] += rl.priorYearBudget;
+		budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudget;
 	});
 
 	const actualDataset = {
