@@ -1,6 +1,7 @@
 import {api, LightningElement, track} from 'lwc';
 import {_message, _parseServerError} from "c/cbUtils";
 import getFringePercentServer from '@salesforce/apex/CBPLSummaryReportPageController.getFringePercentServer';
+import getAFSATLaborTotalServer from '@salesforce/apex/CBPLSummaryReportPageController.getAFSATLaborTotalServer';
 import getVar2Server from '@salesforce/apex/CBPLSummaryReportPageController.getVar2Server';
 import {GMReportLine} from "./cbPLSummaryGrossMarginWrapper";
 import {downloadExcelFile, setExcelLibContext} from "./cbPLSummaryGrossMarginExcel";
@@ -8,14 +9,18 @@ import {downloadExcelFile, setExcelLibContext} from "./cbPLSummaryGrossMarginExc
 export default class CbPLSummaryGrossMargin extends LightningElement {
 
 	@api selectedPeriodId;
+	@api firstPeriodId;
+	@api selectedPeriodMode;
 	@api reportLines;
 	@track fringesMap;
 	@track GMReportLines;
 	@track actualFringeTotal;
 	@track budgetFringeTotal;
+	@track EFLSplit = true;
 	@track splitLT = false;
 	@track renderAllColumns = true;
 	@track var2Mapping;
+	@track AFSATLaborMap;
 	sumFields = [
 		'actualRevenue',
 		'actualExpense',
@@ -43,9 +48,17 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 
 	doInit = async () => {
 		this.GMReportLines = [];
+		await this.getAFSATLaborTotal();
 		await this.getVar2Info();
 		await this.getGetFringePercent().then(r => null);
 		this.generateGMReportLines();
+	};
+
+	getAFSATLaborTotal = async () => {
+		this.AFSATLaborMap = await getAFSATLaborTotalServer({
+			startPeriodId: this.selectedPeriodMode === 'current' ? this.selectedPeriodId : this.firstPeriodId,
+			endPeriodId: this.selectedPeriodId
+		}).catch(e => _parseServerError('Get EFL Other Error: ', e));
 	};
 
 	getVar2Info = async () => {
@@ -66,8 +79,10 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 			this.GMReportLines = [];
 			const GMReportLinesObj = {};
 			const totalGMReportLine = this.createGMReportLine('TOTAL', 'totalLine');
-			const isYTDMode = this.reportLines.some(rl => rl.currentMonthActualYTD > 5);
-			this.processReportLines(this.reportLines, GMReportLinesObj, isYTDMode, totalGMReportLine);
+			let reportLines = JSON.parse(JSON.stringify(this.reportLines));
+			const isYTDMode = reportLines.some(rl => rl.currentMonthActualYTD > 5);
+			if (this.EFLSplit) reportLines = this.splitELFReportLine(reportLines);
+			this.processReportLines(reportLines, GMReportLinesObj, isYTDMode, totalGMReportLine);
 			let GMReportLines = Object.values(GMReportLinesObj);
 			new GMReportLine().runReportCalculations(GMReportLines, totalGMReportLine, this.fringesMap);
 			if (this.splitLT) {
@@ -78,6 +93,51 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 			this.GMReportLines = GMReportLines;
 		} catch (e) {
 			_message('error', 'Get GM Report Lines Error: ' + JSON.stringify(e));
+		}
+	};
+
+	/**
+	 * [{"actual":46654.95,"budget":56926,"accType":"2.Expense"},{"actual":144472.34,"budget":148904,"accType":"1.Revenue"}]
+	 * {"label":"LT - EFL","type":"Revenue","account":"40130 - EFL Revenue","accountST2":"Language_Training","formatStyle":"currency","ddParams":"{\"account\":\"40130 - EFL Revenue\",\"type\":\"Revenue\",\"label\":\"LT - EFL\"}","isWrapper":false,"currentMonthActual":271658.18,"currentMonthBudget":280500,"currentMonthDiff":-8841.820000000007,"currentMonthDiffPercent":-0.0325475934499746,"currentMonthDiffPercentX100":-3.25475934499746,"priorMonthActual":274597.82,"priorMonthBudget":270559,"priorMonthDiff":-2939.640000000014,"priorMonthDiffPercent":-0.010821098779355776,"priorYearActual":244622.25,"priorYearBudget":0,"priorYearDiff":27035.929999999993,"priorYearDiffPercent":0.09952186972613886,"currentMonthActualYTD":0,"currentMonthBudgetYTD":0,"currentMonthDiffYTD":0,"currentMonthDiffPercentYTD":1,"priorYearActualYTD":0,"priorYearDiffYTD":0,"priorYearDiffPercentYTD":1}
+	 * @param reportLines
+	 * @return {[]}
+	 */
+	splitELFReportLine = (reportLines) => {
+		try {
+			let updatedReportLines = [];
+			reportLines.forEach(rl => {
+				if (rl.label === 'LT - EFL') {
+					try {
+						const type = rl.type.includes('Revenue') ? 'Rev' : 'Exp';
+						const AFSATLabor = this.AFSATLaborMap.find(m => m.accType.includes(type));
+						const laborRL = JSON.parse(JSON.stringify(rl));
+						const otherRL = JSON.parse(JSON.stringify(rl));
+						laborRL.label = 'LT AFSAT Labor';
+						otherRL.label = 'LT AFSAT ODCs';
+						if (this.selectedPeriodMode === 'current') {
+							laborRL.currentMonthActual = AFSATLabor.actual;
+							laborRL.currentMonthBudget = AFSATLabor.budget;
+							otherRL.currentMonthActual -= AFSATLabor.actual;
+							otherRL.currentMonthBudget -= AFSATLabor.budget;
+						} else {
+							laborRL.currentMonthActualYTD = AFSATLabor.actual;
+							laborRL.currentMonthBudgetYTD = AFSATLabor.budget;
+							otherRL.currentMonthActualYTD -= AFSATLabor.actual;
+							otherRL.currentMonthBudgetYTD -= AFSATLabor.budget;
+						}
+
+						updatedReportLines.push(laborRL);
+						updatedReportLines.push(otherRL);
+					} catch (e) {
+						_message('error', 'ELF Iteration Error :' + JSON.stringify(e));
+					}
+				} else {
+					updatedReportLines.push(rl);
+				}
+			});
+			return updatedReportLines;
+		} catch (e) {
+			_message('error', 'Split ELF Error: ' + JSON.stringify(e));
 		}
 	};
 
@@ -123,7 +183,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 			const uniqueSubtypes = [...new Set(Object.values(this.var2Mapping))];
 			let subtypeObjectsArray = uniqueSubtypes.map(st => {
 				const totalLine = this.createGMReportLine(`${st} TOTAL`, 'totalLine');
-				const lines = GMReportLines.filter(rl => this.var2Mapping[rl.label] === st);
+				const lines = GMReportLines.filter(rl => this.var2Mapping[rl.label.includes('AFSAT') ? 'LT - EFL' : rl.label] === st);
 				lines.forEach(rl => this.sumFields.forEach(f => totalLine[f] += +rl[f]));
 				totalLine.actualGrossMarginPercent = totalLine.actualGrossMargin / totalLine.actualRevenue;
 				totalLine.budgetGrossMarginPercent = totalLine.budgetGrossMargin / totalLine.budgetRevenue;

@@ -9,6 +9,13 @@
 				<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadExcel}>
 				</lightning-button>
 
+				<div class="slds-form-element"  title="Split LT EFL to AFSAT Labor and Other ">
+					<label class="slds-checkbox__label">
+						<lightning-input type="checkbox-button" label=" " name="EFLSplit" checked={EFLSplit} onchange={handleToggle}></lightning-input>
+						<span class="slds-checkbox_faux"></span>
+						<span class="slds-form-element__label">EFL</span>
+					</label>
+				</div>
 				<div class="slds-form-element"  title="Split customers by LT and other">
 					<label class="slds-checkbox__label">
 						<lightning-input type="checkbox-button" label=" " name="splitLT" checked={splitLT} onchange={handleToggle}></lightning-input>

@@ -131,6 +131,20 @@ public with sharing class CBPLSummaryReportPageController {
 		return [SELECT Id, Subtype__c, Name FROM cb5__CBVariable2__c];
 	}
 
+
+	@AuraEnabled
+	public static List<AggregateResult> getAFSATLaborTotalServer(String startPeriodId, String endPeriodId) {
+		List<AggregateResult> aggr;
+		Set<String> neededPeriods = getSetOfAllNeededPeriods(startPeriodId, endPeriodId);
+		aggr = [
+				SELECT SUM(Actual_Inverted__c) actual, SUM(cb5__Budget__c) budget, cb5__CBAccount__r.cb5__CBAccountType__r.Name accType
+				FROM cb5__CBCube__c
+				WHERE cb5__CBVariable2__r.Name = 'LT - EFL' AND cb5__CBPeriod__c IN :neededPeriods AND AFSATLabor__c = true
+				GROUP BY cb5__CBAccount__r.cb5__CBAccountType__r.Name
+		];
+		return aggr;
+	}
+
 	public static void cover() {
 		Integer i = 0;
 		i++;
@@ -283,7 +297,6 @@ public with sharing class CBPLSummaryReportPageController {
 		i++;
 		i++;
 		i++;
-
 
 
 	}
