@@ -52,6 +52,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 		await this.getVar2Info();
 		await this.getGetFringePercent().then(r => null);
 		this.generateGMReportLines();
+		if(!this.renderAllColumns) this.generateDataForChart();
 	};
 
 	getAFSATLaborTotal = async () => {
@@ -183,7 +184,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 			const uniqueSubtypes = [...new Set(Object.values(this.var2Mapping))];
 			let subtypeObjectsArray = uniqueSubtypes.map(st => {
 				const totalLine = this.createGMReportLine(`${st} TOTAL`, 'totalLine');
-				const lines = GMReportLines.filter(rl => this.var2Mapping[rl.label.includes('AFSAT') ? 'LT - EFL' : rl.label] === st);
+				const lines = GMReportLines.filter(rl => this.var2Mapping[rl.label] === st);
 				lines.forEach(rl => this.sumFields.forEach(f => totalLine[f] += +rl[f]));
 				totalLine.actualGrossMarginPercent = totalLine.actualGrossMargin / totalLine.actualRevenue;
 				totalLine.budgetGrossMarginPercent = totalLine.budgetGrossMargin / totalLine.budgetRevenue;
@@ -207,6 +208,63 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 		} catch (e) {
 			_message('error', 'Splitting error ' + JSON.stringify(e));
 		}
+	};
+
+	@track chartData;
+	@track chartIsReadyToRender = false;
+	generateDataForChart = () => {
+		this.chartData = this.GMReportLines.reduce((r, line) => {
+			if (line.label === 'TOTAL' || !line.actualRevenuePercent || line.actualRevenuePercent <= 0) return r;
+			r.push({label: line.label, value: (Math.round(line.actualRevenuePercent * 10000) / 10000) * 100});
+			return r;
+		}, []);
+		const labels = this.chartData.map(item => item.label);
+		const values = this.chartData.map(item => item.value);
+		const colors = this.chartData.map(() => this.getRandomColor());
+
+		// Prepare chart data in a format suitable for Chart.js
+		this.chartData = {
+			labels: labels,
+			datasets: [{
+				data: values,
+				backgroundColor: colors,
+				hoverBackgroundColor: colors
+			}]
+		};
+
+		this.chartData = {
+			type: 'pie',
+			data: this.chartData,
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: {
+						position: 'left', // Move legend to the left
+						labels: {
+							boxWidth: 20, // Adjust size of legend boxes (optional)
+						}
+					},
+					tooltip: {
+						callbacks: {
+							label: function(tooltipItem) {
+								const label = tooltipItem.label || '';
+								const value = tooltipItem.raw || 0;
+								return `${label}: ${value.toFixed(2)}%`;
+							}
+						}
+					}
+				}
+			}
+		};
+		this.chartIsReadyToRender = true;
+	};
+
+	getRandomColor = () => {
+		const letters = '0123456789ABCDEF';
+		let color = '#';
+		for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+		return color;
 	};
 
 

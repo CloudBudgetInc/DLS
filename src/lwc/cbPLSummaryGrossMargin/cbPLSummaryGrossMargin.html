@@ -6,36 +6,33 @@
 		</lightning-layout-item>
 		<lightning-layout-item size="2">
 			<lightning-button-group class="slds-float_right">
-				<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadExcel}>
+				<lightning-button icon-name="doctype:excel" label="Download" onclick={downloadExcel}>
 				</lightning-button>
 
-				<div class="slds-form-element"  title="Split LT EFL to AFSAT Labor and Other ">
+				<div class="slds-form-element" title="Split LT EFL to AFSAT Labor and Other ">
 					<label class="slds-checkbox__label">
-						<lightning-input type="checkbox-button" label=" " name="EFLSplit" checked={EFLSplit} onchange={handleToggle}></lightning-input>
+						<lightning-input checked={EFLSplit} label=" " name="EFLSplit" onchange={handleToggle}
+										 type="checkbox-button"></lightning-input>
 						<span class="slds-checkbox_faux"></span>
 						<span class="slds-form-element__label">EFL</span>
 					</label>
 				</div>
-				<div class="slds-form-element"  title="Split customers by LT and other">
+				<div class="slds-form-element" title="Split customers by LT and other">
 					<label class="slds-checkbox__label">
-						<lightning-input type="checkbox-button" label=" " name="splitLT" checked={splitLT} onchange={handleToggle}></lightning-input>
+						<lightning-input checked={splitLT} label=" " name="splitLT" onchange={handleToggle}
+										 type="checkbox-button"></lightning-input>
 						<span class="slds-checkbox_faux"></span>
 						<span class="slds-form-element__label">Split</span>
 					</label>
 				</div>
 				<div class="slds-form-element slds-m-right_small" title="Show/hide all columns with calculations">
 					<label class="slds-checkbox__label">
-						<lightning-input type="checkbox-button" label=" " name="renderAllColumns" checked={renderAllColumns} onchange={handleToggle}></lightning-input>
+						<lightning-input checked={renderAllColumns} label=" " name="renderAllColumns"
+										 onchange={handleToggle} type="checkbox-button"></lightning-input>
 						<span class="slds-checkbox_faux"></span>
 						<span class="slds-form-element__label">Details</span>
 					</label>
 				</div>
-
-				<!--<lightning-input type="toggle" label="Split LT" name="splitLT" onchange={handleToggle}
-								 checked={splitLT}></lightning-input>
-				<lightning-input type="toggle" label="All Columns" name="renderAllColumns" onchange={handleToggle}
-								 checked={renderAllColumns}></lightning-input>-->
-
 
 			</lightning-button-group>
 		</lightning-layout-item>
@@ -43,11 +40,11 @@
 
 	<template lwc:if={renderAllColumns}>
 		<lightning-layout class="slds-m-bottom_medium">
-			<lightning-layout-item size="6" class="slds-p-right_small">
-				<div style="font-weight: bold" class="slds-align_absolute-center">Actual</div>
+			<lightning-layout-item class="slds-p-right_small" size="6">
+				<div class="slds-align_absolute-center" style="font-weight: bold">Actual</div>
 				<div class="gradient-bar"></div>
-				<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered table-rounded"
-					   aria-label="Example table of Opportunities with vertical borders">
+				<table aria-label="Example table of Opportunities with vertical borders"
+					   class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered table-rounded">
 					<thead>
 					<tr class="slds-line-height_reset">
 						<th>
@@ -87,66 +84,66 @@
 								<div class="slds-truncate" title="Customer">{rl.label}</div>
 							</td>
 							<td data-label="Revenue">
-								<lightning-formatted-number value={rl.actualRevenue}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.actualRevenue}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Expense">
-								<lightning-formatted-number value={rl.actualExpense}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.actualExpense}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Fringe">
-								<lightning-formatted-number value={rl.actualDLFringe}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.actualDLFringe}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Fringe from IRM">
-								<lightning-formatted-number value={rl.actualDLFringeIRM}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.actualDLFringeIRM}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Fringe">
-								<lightning-formatted-number value={rl.actualDLFringe2}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.actualDLFringe2}></lightning-formatted-number>
 							</td>
 							<td data-label="Gross Margin">
-								<lightning-formatted-number value={rl.actualGrossMargin}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.actualGrossMargin}></lightning-formatted-number>
 							</td>
 							<td data-label="% Gross Margin">
-								<lightning-formatted-number value={rl.actualGrossMarginPercent}
+								<lightning-formatted-number class="dec"
+															format-style='percent'
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style='percent'
-															class="dec"></lightning-formatted-number>
+															value={rl.actualGrossMarginPercent}></lightning-formatted-number>
 							</td>
 							<td data-label="% Revenue">
-								<lightning-formatted-number value={rl.actualRevenuePercent}
+								<lightning-formatted-number class="dec"
+															format-style='percent'
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style='percent'
-															class="dec"></lightning-formatted-number>
+															value={rl.actualRevenuePercent}></lightning-formatted-number>
 							</td>
 						</tr>
 
@@ -157,10 +154,10 @@
 
 			</lightning-layout-item>
 			<lightning-layout-item size="6">
-				<div style="font-weight: bold" class="slds-align_absolute-center">Budget</div>
+				<div class="slds-align_absolute-center" style="font-weight: bold">Budget</div>
 				<div class="gradient-bar"></div>
-				<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered table-rounded"
-					   aria-label="Example table of Opportunities with vertical borders">
+				<table aria-label="Example table of Opportunities with vertical borders"
+					   class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered table-rounded">
 					<thead>
 					<tr class="slds-line-height_reset">
 						<th>
@@ -200,66 +197,66 @@
 								<div class="slds-truncate" title="Customer">{rl.label}</div>
 							</td>
 							<td data-label="Revenue">
-								<lightning-formatted-number value={rl.budgetRevenue}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.budgetRevenue}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Expense">
-								<lightning-formatted-number value={rl.budgetExpense}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.budgetExpense}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Fringe">
-								<lightning-formatted-number value={rl.budgetDLFringe}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.budgetDLFringe}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Fringe from IRM">
-								<lightning-formatted-number value={rl.budgetDLFringeIRM}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.budgetDLFringeIRM}></lightning-formatted-number>
 							</td>
 							<td data-label="DL Fringe">
-								<lightning-formatted-number value={rl.budgetDLFringe2}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.budgetDLFringe2}></lightning-formatted-number>
 							</td>
 							<td data-label="Gross Margin">
-								<lightning-formatted-number value={rl.budgetGrossMargin}
+								<lightning-formatted-number class="dec"
+															currency-code="USD"
+															format-style={rl.formatStyle}
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
-															format-style={rl.formatStyle}
-															class="dec"
-															currency-code="USD"></lightning-formatted-number>
+															value={rl.budgetGrossMargin}></lightning-formatted-number>
 							</td>
 							<td data-label="% Gross Margin">
-								<lightning-formatted-number value={rl.budgetGrossMarginPercent}
+								<lightning-formatted-number class="dec"
+															format-style='percent'
 															maximum-fraction-digits="2"
 															minimum-fraction-digits="2"
-															format-style='percent'
-															class="dec"></lightning-formatted-number>
+															value={rl.budgetGrossMarginPercent}></lightning-formatted-number>
 							</td>
 							<td data-label="% Revenue">
-								<lightning-formatted-number value={rl.budgetRevenuePercent}
+								<lightning-formatted-number class="dec"
+															format-style='percent'
 															maximum-fraction-digits="2"
 															minimum-fraction-digits="2"
-															format-style='percent'
-															class="dec"></lightning-formatted-number>
+															value={rl.budgetRevenuePercent}></lightning-formatted-number>
 							</td>
 						</tr>
 
@@ -274,10 +271,10 @@
 	</template>
 	<template lwc:else>
 		<lightning-layout class="slds-m-bottom_medium">
-			<lightning-layout-item size="6" class="slds-p-right_small">
+			<lightning-layout-item class="slds-p-right_small" size="6">
 				<div style="font-weight: bold">Gross Revenue</div>
-				<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered table-rounded"
-					   aria-label="Example table of Opportunities with vertical borders">
+				<table aria-label="Example table of Opportunities with vertical borders"
+					   class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered table-rounded">
 					<thead>
 					<tr class="slds-line-height_reset">
 						<th>
@@ -287,7 +284,13 @@
 							<div class="slds-truncate" title="% Gross Margin Actual">% Gross Margin Actual</div>
 						</th>
 						<th>
+							<div class="slds-truncate" title="% Revenue">% Revenue Actual</div>
+						</th>
+						<th>
 							<div class="slds-truncate" title="% Gross Margin Budget">% Gross Margin Budget</div>
+						</th>
+						<th>
+							<div class="slds-truncate" title="% Revenue">% Revenue Budget</div>
 						</th>
 					</tr>
 					</thead>
@@ -299,18 +302,32 @@
 								<div class="slds-truncate" title="Customer">{rl.label}</div>
 							</td>
 							<td data-label="% Gross Margin Actual">
-								<lightning-formatted-number value={rl.actualGrossMarginPercent}
+								<lightning-formatted-number class="dec"
+															format-style='percent'
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
+															value={rl.actualGrossMarginPercent}></lightning-formatted-number>
+							</td>
+							<td data-label="% Revenue">
+								<lightning-formatted-number class="dec"
 															format-style='percent'
-															class="dec"></lightning-formatted-number>
+															maximum-fraction-digits="0"
+															minimum-fraction-digits="0"
+															value={rl.actualRevenuePercent}></lightning-formatted-number>
 							</td>
 							<td data-label="% Gross Margin Budget">
-								<lightning-formatted-number value={rl.budgetGrossMarginPercent}
+								<lightning-formatted-number class="dec"
+															format-style='percent'
 															maximum-fraction-digits="0"
 															minimum-fraction-digits="0"
+															value={rl.budgetGrossMarginPercent}></lightning-formatted-number>
+							</td>
+							<td data-label="% Revenue">
+								<lightning-formatted-number class="dec"
 															format-style='percent'
-															class="dec"></lightning-formatted-number>
+															maximum-fraction-digits="2"
+															minimum-fraction-digits="2"
+															value={rl.budgetRevenuePercent}></lightning-formatted-number>
 							</td>
 
 						</tr>
@@ -319,6 +336,13 @@
 
 					</tbody>
 				</table>
+
+			</lightning-layout-item>
+			<lightning-layout-item class="slds-p-right_small" size="4">
+				<div  style="font-weight: bold">% Actual Revenue</div>
+				<template lwc:if={chartIsReadyToRender}>
+					<c-cb-chart chart-config={chartData}></c-cb-chart>
+				</template>
 
 			</lightning-layout-item>
 		</lightning-layout>
