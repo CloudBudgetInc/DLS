@@ -9,9 +9,9 @@ const prepareCOGS = (context) => {
 		c.COGSOptions = getCOGSOptions(COGSReportLines);
 		if (!c.COGSValues || c.COGSValues.length === 0) c.COGSValues = getCOGSValues(COGSReportLines);
 		COGSReportLines = COGSReportLines.filter(rl => c.COGSValues.includes(rl.label));
-		c.COGSCurrentPlanActualPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'currentMonthDiffPercent', 'Plan/Actual Diff');
-		c.COGSCurrentPreviousMonthPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'priorMonthDiffPercent', 'Current/Previous Month Diff');
-		c.COGSCurrentPreviousYearPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'priorYearDiffPercent', 'Current/Previous Year Diff');
+		//c.COGSCurrentPlanActualPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'currentMonthDiffPercent', 'Plan/Actual Diff');
+		//c.COGSCurrentPreviousMonthPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'priorMonthDiffPercent', 'Current/Previous Month Diff');
+		//c.COGSCurrentPreviousYearPercentDiffConfig = getDataForCOGSBudgetByVar2Chart(COGSReportLines, 'priorYearDiffPercent', 'Current/Previous Year Diff');
 		c.COGSBudgetActualConfig = getDataForCOGSBudgetActualChart(COGSReportLines);
 		console.log('c.COGSBudgetActualConfig = ' + JSON.stringify(c.COGSBudgetActualConfig));
 		c.readyToRenderCOGS = true;
@@ -107,10 +107,17 @@ const getDataForCOGSBudgetActualChart = (COGSReportLines) => {
 	const budgetData = [0, 0, 0];
 
 	COGSReportLines.forEach(rl => {
-		actualData[0] += rl.currentMonthActual;
-		actualData[1] += rl.priorMonthActual;
-		actualData[2] += rl.priorYearActual;
-		budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudget;
+		if(c.selectedPeriodMode === 'current') {
+			actualData[0] += rl.currentMonthActual;
+			actualData[1] += rl.priorMonthActual;
+			actualData[2] += rl.priorYearActual;
+			budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudget;
+		} else {
+			actualData[0] += rl.currentMonthActualYTD;
+			actualData[1] += rl.priorMonthActualYTD;
+			actualData[2] += rl.priorYearActualYTD;
+			budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudgetYTD;
+		}
 	});
 
 	const actualDataset = {

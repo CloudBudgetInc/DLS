@@ -7,6 +7,7 @@ import {_message} from "c/cbUtils";
 export default class CbPLSummaryDashboard extends LightningElement {
 
 	@api reportLines;
+	@api selectedPeriodMode;
 	@api closeFunction;
 
 	connectedCallback() {

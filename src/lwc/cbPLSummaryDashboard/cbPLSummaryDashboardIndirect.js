@@ -128,10 +128,17 @@ const getBudgetActualChartData = (typeArray, chartTitle) => {
 	if (!chartTitle) chartTitle = `${typeArray[0].type} Budget vs Actual`;
 
 	typeArray.forEach(rl => {
-		actualData[0] += rl.currentMonthActual;
-		actualData[1] += rl.priorMonthActual;
-		actualData[2] += rl.priorYearActual;
-		budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudget;
+		if(c.selectedPeriodMode === 'current') {
+			actualData[0] += rl.currentMonthActual;
+			actualData[1] += rl.priorMonthActual;
+			actualData[2] += rl.priorYearActual;
+			budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudget;
+		} else {
+			actualData[0] += rl.currentMonthActualYTD;
+			actualData[1] += rl.priorMonthActualYTD;
+			actualData[2] += rl.priorYearActualYTD;
+			budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudgetYTD;
+		}
 	});
 
 	const actualDataset = {
