@@ -214,7 +214,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	@track chartIsReadyToRender = false;
 	generateDataForChart = () => {
 		this.chartData = this.GMReportLines.reduce((r, line) => {
-			if (line.label === 'TOTAL' || !line.actualRevenuePercent || line.actualRevenuePercent <= 0) return r;
+			if (line.label.includes('TOTAL') || !line.actualRevenuePercent || line.actualRevenuePercent <= 0) return r;
 			r.push({label: line.label, value: (Math.round(line.actualRevenuePercent * 10000) / 10000) * 100});
 			return r;
 		}, []);
