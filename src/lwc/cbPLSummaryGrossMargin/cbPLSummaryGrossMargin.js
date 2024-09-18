@@ -5,6 +5,7 @@ import getAFSATLaborTotalServer from '@salesforce/apex/CBPLSummaryReportPageCont
 import getVar2Server from '@salesforce/apex/CBPLSummaryReportPageController.getVar2Server';
 import {GMReportLine} from "./cbPLSummaryGrossMarginWrapper";
 import {downloadExcelFile, setExcelLibContext} from "./cbPLSummaryGrossMarginExcel";
+import {prepareDataForChart} from "./cbPLSummaryGrossMarginChart";
 
 export default class CbPLSummaryGrossMargin extends LightningElement {
 
@@ -19,8 +20,10 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	@track EFLSplit = true;
 	@track splitLT = false;
 	@track renderAllColumns = true;
-	@track var2Mapping;
+	@track var2SubtypeMapping;
+	@track var2ChartSectionMapping;
 	@track AFSATLaborMap;
+	@track renderMargin = true; // toggle renders margin or revenue percent
 	sumFields = [
 		'actualRevenue',
 		'actualExpense',
@@ -64,8 +67,12 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 
 	getVar2Info = async () => {
 		const var2Array = await getVar2Server().catch(e => _parseServerError('Get Var2 Error: ', e));
-		this.var2Mapping = var2Array.reduce((r, v2) => {
+		this.var2SubtypeMapping = var2Array.reduce((r, v2) => {
 			r[v2.Name] = v2.Subtype__c ? v2.Subtype__c : '---';
+			return r;
+		}, {});
+		this.var2ChartSectionMapping = var2Array.reduce((r, v2) => {
+			r[v2.Name] = v2.ChartSection__c ? v2.ChartSection__c : 'Other';
 			return r;
 		}, {});
 	};
@@ -181,10 +188,10 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	handleSplitBySubtype = (GMReportLines) => {
 		try {
 			const globalTotalLine = this.createGMReportLine(`TOTAL`, 'totalLine');
-			const uniqueSubtypes = [...new Set(Object.values(this.var2Mapping))];
+			const uniqueSubtypes = [...new Set(Object.values(this.var2SubtypeMapping))];
 			let subtypeObjectsArray = uniqueSubtypes.map(st => {
 				const totalLine = this.createGMReportLine(`${st} TOTAL`, 'totalLine');
-				const lines = GMReportLines.filter(rl => this.var2Mapping[rl.label] === st);
+				const lines = GMReportLines.filter(rl => this.var2SubtypeMapping[rl.label] === st);
 				lines.forEach(rl => this.sumFields.forEach(f => totalLine[f] += +rl[f]));
 				totalLine.actualGrossMarginPercent = totalLine.actualGrossMargin / totalLine.actualRevenue;
 				totalLine.budgetGrossMarginPercent = totalLine.budgetGrossMargin / totalLine.budgetRevenue;
@@ -213,61 +220,9 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	@track chartData;
 	@track chartIsReadyToRender = false;
 	generateDataForChart = () => {
-		this.chartData = this.GMReportLines.reduce((r, line) => {
-			if (line.label.includes('TOTAL') || !line.actualRevenuePercent || line.actualRevenuePercent <= 0) return r;
-			r.push({label: line.label, value: (Math.round(line.actualRevenuePercent * 10000) / 10000) * 100});
-			return r;
-		}, []);
-		const labels = this.chartData.map(item => item.label);
-		const values = this.chartData.map(item => item.value);
-		const colors = this.chartData.map(() => this.getRandomColor());
-
-		// Prepare chart data in a format suitable for Chart.js
-		this.chartData = {
-			labels: labels,
-			datasets: [{
-				data: values,
-				backgroundColor: colors,
-				hoverBackgroundColor: colors
-			}]
-		};
-
-		this.chartData = {
-			type: 'pie',
-			data: this.chartData,
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				plugins: {
-					legend: {
-						position: 'left', // Move legend to the left
-						labels: {
-							boxWidth: 20, // Adjust size of legend boxes (optional)
-						}
-					},
-					tooltip: {
-						callbacks: {
-							label: function(tooltipItem) {
-								const label = tooltipItem.label || '';
-								const value = tooltipItem.raw || 0;
-								return `${label}: ${value.toFixed(2)}%`;
-							}
-						}
-					}
-				}
-			}
-		};
+		this.chartData = prepareDataForChart(this.GMReportLines, this.var2ChartSectionMapping);
 		this.chartIsReadyToRender = true;
 	};
-
-	getRandomColor = () => {
-		const letters = '0123456789ABCDEF';
-		let color = '#';
-		for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
-		return color;
-	};
-
-
 	///////////
 
 
@@ -283,5 +238,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 		this[event.target.name] = event.target.checked;
 		this.doInit();
 	};
+
+	toggleRenderMarginRevenue = () => this.renderMargin = !this.renderMargin;
 
 }

@@ -273,6 +273,11 @@
 		<lightning-layout class="slds-m-bottom_medium">
 			<lightning-layout-item class="slds-p-right_small" size="6">
 				<div style="font-weight: bold">Gross Revenue</div>
+				<div class="slds-float_right" style="margin-top: -30px;">
+					<lightning-input label="Margin/Revenue" message-toggle-active="Revenue"
+									 message-toggle-inactive="Margin"
+									 onchange={toggleRenderMarginRevenue} type="toggle"></lightning-input>
+				</div>
 				<table aria-label="Example table of Opportunities with vertical borders"
 					   class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered table-rounded">
 					<thead>
@@ -280,18 +285,22 @@
 						<th>
 							<div class="slds-truncate" title="Customer">Customer</div>
 						</th>
-						<th>
-							<div class="slds-truncate" title="% Gross Margin Actual">% Gross Margin Actual</div>
-						</th>
-						<th>
-							<div class="slds-truncate" title="% Revenue">% Revenue Actual</div>
-						</th>
-						<th>
-							<div class="slds-truncate" title="% Gross Margin Budget">% Gross Margin Budget</div>
-						</th>
-						<th>
-							<div class="slds-truncate" title="% Revenue">% Revenue Budget</div>
-						</th>
+						<template lwc:if={renderMargin}>
+							<th>
+								<div class="slds-truncate" title="% Gross Margin Actual">% Gross Margin Actual</div>
+							</th>
+							<th>
+								<div class="slds-truncate" title="% Gross Margin Budget">% Gross Margin Budget</div>
+							</th>
+						</template>
+						<template lwc:else>
+							<th>
+								<div class="slds-truncate" title="% Revenue">% Revenue Actual</div>
+							</th>
+							<th>
+								<div class="slds-truncate" title="% Revenue">% Revenue Budget</div>
+							</th>
+						</template>
 					</tr>
 					</thead>
 					<tbody>
@@ -301,34 +310,38 @@
 							<td data-label="Customer">
 								<div class="slds-truncate" title="Customer">{rl.label}</div>
 							</td>
-							<td data-label="% Gross Margin Actual">
-								<lightning-formatted-number class="dec"
-															format-style='percent'
-															maximum-fraction-digits="0"
-															minimum-fraction-digits="0"
-															value={rl.actualGrossMarginPercent}></lightning-formatted-number>
-							</td>
-							<td data-label="% Revenue">
-								<lightning-formatted-number class="dec"
-															format-style='percent'
-															maximum-fraction-digits="0"
-															minimum-fraction-digits="0"
-															value={rl.actualRevenuePercent}></lightning-formatted-number>
-							</td>
-							<td data-label="% Gross Margin Budget">
-								<lightning-formatted-number class="dec"
-															format-style='percent'
-															maximum-fraction-digits="0"
-															minimum-fraction-digits="0"
-															value={rl.budgetGrossMarginPercent}></lightning-formatted-number>
-							</td>
-							<td data-label="% Revenue">
-								<lightning-formatted-number class="dec"
-															format-style='percent'
-															maximum-fraction-digits="2"
-															minimum-fraction-digits="2"
-															value={rl.budgetRevenuePercent}></lightning-formatted-number>
-							</td>
+							<template lwc:if={renderMargin}>
+								<td data-label="% Gross Margin Actual">
+									<lightning-formatted-number class="dec"
+																format-style='percent'
+																maximum-fraction-digits="0"
+																minimum-fraction-digits="0"
+																value={rl.actualGrossMarginPercent}></lightning-formatted-number>
+								</td>
+								<td data-label="% Gross Margin Budget">
+									<lightning-formatted-number class="dec"
+																format-style='percent'
+																maximum-fraction-digits="0"
+																minimum-fraction-digits="0"
+																value={rl.budgetGrossMarginPercent}></lightning-formatted-number>
+								</td>
+							</template>
+							<template lwc:else>
+								<td data-label="% Revenue">
+									<lightning-formatted-number class="dec"
+																format-style='percent'
+																maximum-fraction-digits="0"
+																minimum-fraction-digits="0"
+																value={rl.actualRevenuePercent}></lightning-formatted-number>
+								</td>
+								<td data-label="% Revenue">
+									<lightning-formatted-number class="dec"
+																format-style='percent'
+																maximum-fraction-digits="2"
+																minimum-fraction-digits="2"
+																value={rl.budgetRevenuePercent}></lightning-formatted-number>
+								</td>
+							</template>
 
 						</tr>
 
@@ -339,7 +352,7 @@
 
 			</lightning-layout-item>
 			<lightning-layout-item class="slds-p-right_small" size="4">
-				<div  style="font-weight: bold">% Actual Revenue</div>
+				<div style="font-weight: bold">% Actual Revenue</div>
 				<template lwc:if={chartIsReadyToRender}>
 					<c-cb-chart chart-config={chartData}></c-cb-chart>
 				</template>
