@@ -1,4 +1,11 @@
 import {_message} from "c/cbUtils";
+import {
+	ACTUAL_BACKGROUND_COLOR,
+	ACTUAL_BORDER_COLOR,
+	BUDGET_BACKGROUND_COLOR,
+	BUDGET_BORDER_COLOR,
+	createDataset
+} from "./cbPLSummaryDashboardUtils";
 
 let c;
 
@@ -102,71 +109,44 @@ const getDataForCOGSBudgetByVar2Chart = (COGSReportLines, field, label) => {
 };
 
 const getDataForCOGSBudgetActualChart = (COGSReportLines) => {
-	const labels = ['Current Month', 'Prior Month', 'Prior Year Month'];
-	const actualData = [0, 0, 0];
-	const budgetData = [0, 0, 0];
+	const isCurrent = c.selectedPeriodMode === 'current';
+	const labels = isCurrent
+		? ['Current Month', 'Prior Month', 'Prior Year Month']
+		: ['Current Month YTD', 'Prior Year Month YTD'];
+
+	const actualData = Array(labels.length).fill(0);
+	const budgetData = Array(labels.length).fill(0);
 
 	COGSReportLines.forEach(rl => {
-		if(c.selectedPeriodMode === 'current') {
-			actualData[0] += rl.currentMonthActual;
-			actualData[1] += rl.priorMonthActual;
-			actualData[2] += rl.priorYearActual;
-			budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudget;
+		if (isCurrent) {
+			[actualData[0], actualData[1], actualData[2]] =
+				[actualData[0] + rl.currentMonthActual, actualData[1] + rl.priorMonthActual, actualData[2] + rl.priorYearActual];
+			budgetData.fill(budgetData[0] + rl.currentMonthBudget);
 		} else {
-			actualData[0] += rl.currentMonthActualYTD;
-			actualData[1] += rl.priorMonthActualYTD;
-			actualData[2] += rl.priorYearActualYTD;
-			budgetData[0] = budgetData[1] = budgetData[2] += rl.currentMonthBudgetYTD;
+			[actualData[0], actualData[1]] =
+				[actualData[0] + rl.currentMonthActualYTD, actualData[1] + rl.priorYearActualYTD];
+			budgetData.fill(budgetData[0] + rl.currentMonthBudgetYTD);
 		}
 	});
-
-	const actualDataset = {
-		label: 'Actual',
-		data: actualData,
-		backgroundColor: 'rgba(54, 162, 235, 0.2)',
-		borderColor: 'rgba(54, 162, 235, 1)',
-		borderWidth: 1
-	};
-	const budgetDataset = {
-		label: 'Budget',
-		data: budgetData,
-		type: 'line',
-		borderColor: 'rgba(255, 99, 132, 1)',
-		fill: false,
-		borderWidth: 2,
-		tension: 0
-	};
 
 	return {
 		type: 'bar',
 		data: {
 			labels,
-			datasets: [actualDataset, budgetDataset]
+			datasets: [
+				createDataset('Actual', actualData, 'bar', ACTUAL_BACKGROUND_COLOR, ACTUAL_BORDER_COLOR, 1),
+				createDataset('Budget', budgetData, 'line', BUDGET_BACKGROUND_COLOR, BUDGET_BORDER_COLOR, 2, false, 0)
+			]
 		},
 		options: {
 			scales: {
 				y: {
-					ticks: {
-						// Include a dollar sign in the ticks
-						callback: (value, index, ticks) => {
-							return '$' + value;
-						}
-					},
-					scaleLabel: {
-						display: true,
-						labelString: 'Amount ($)'
-					},
-					title: {
-						display: true,
-						text: 'Amount ($)',
-					}
+					ticks: { callback: value => '$' + value },
+					title: { display: true, text: 'Amount ($)' }
 				}
 			},
 			plugins: {
-				title: {
-					display: true,
-					text: 'COGS Budget vs Actual'
-				}
+				title: { display: true, text: 'Revenue Budget vs Actual' }
 			}
 		}
 	};

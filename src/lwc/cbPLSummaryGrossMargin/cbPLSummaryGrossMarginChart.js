@@ -1,13 +1,14 @@
 import {_message} from "c/cbUtils";
 
-const prepareDataForChart = (GMReportLines, var2ChartSectionMapping) => {
+const prepareDataForChart = (GMReportLines, var2ChartSectionMapping, renderMargin) => {
 	try {
 		const chartData = GMReportLines
 			.filter(line => !line.label.includes('TOTAL') && line.actualRevenuePercent > 0)
-			.reduce((r, {label, actualRevenuePercent}) => {
+			.reduce((r, {label, actualRevenuePercent, actualGrossMarginPercent}) => {
 				const sectionLabel = var2ChartSectionMapping[label];
+				const value = renderMargin ? actualGrossMarginPercent : actualRevenuePercent;
 				r[sectionLabel] = r[sectionLabel] || { label: sectionLabel, value: 0 };
-				r[sectionLabel].value += Math.round(actualRevenuePercent * 10000) / 100;
+				r[sectionLabel].value += Math.round(value * 10000) / 100;
 				return r;
 			}, {});
 

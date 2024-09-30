@@ -68,7 +68,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	getVar2Info = async () => {
 		const var2Array = await getVar2Server().catch(e => _parseServerError('Get Var2 Error: ', e));
 		this.var2SubtypeMapping = var2Array.reduce((r, v2) => {
-			r[v2.Name] = v2.Subtype__c ? v2.Subtype__c : '---';
+			r[v2.Name] = v2.Subtype__c ? v2.Subtype__c : 'Other';
 			return r;
 		}, {});
 		this.var2ChartSectionMapping = var2Array.reduce((r, v2) => {
@@ -220,7 +220,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	@track chartData;
 	@track chartIsReadyToRender = false;
 	generateDataForChart = () => {
-		this.chartData = prepareDataForChart(this.GMReportLines, this.var2ChartSectionMapping);
+		this.chartData = prepareDataForChart(this.GMReportLines, this.var2SubtypeMapping, this.renderMargin);
 		this.chartIsReadyToRender = true;
 	};
 	///////////
@@ -239,6 +239,13 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 		this.doInit();
 	};
 
-	toggleRenderMarginRevenue = () => this.renderMargin = !this.renderMargin;
+	toggleRenderMarginRevenue = () => {
+		this.chartIsReadyToRender = false;
+
+		setTimeout(() => {
+			this.renderMargin = !this.renderMargin;
+			this.generateDataForChart();
+		}, 10);
+	}
 
 }
