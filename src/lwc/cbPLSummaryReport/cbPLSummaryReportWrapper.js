@@ -76,6 +76,10 @@ class ReportLine {
 	priorYearDiffYTD;
 	priorYearDiffPercentYTD;
 
+	/**
+	 * The method takes a report line and add amounts to the internal values
+	 * @param reportLine
+	 */
 	sumUpLines = (reportLine) => {
 		try {
 			SUM_FIELDS.forEach(f => this[f] += +reportLine[f]);
@@ -83,7 +87,10 @@ class ReportLine {
 			_message('Sum Up Error : ' + e);
 		}
 	};
-
+	/**
+	 * The method takes a report line and subtract amounts from the internal values
+	 * @param reportLine
+	 */
 	subtractLines = (reportLine) => {
 		try {
 			SUM_FIELDS.forEach(f => this[f] -= +reportLine[f]);
@@ -91,7 +98,10 @@ class ReportLine {
 			_message('Subtract Error : ' + e);
 		}
 	};
-
+	/**
+	 * The method takes a report line and calculates percents form the current amounts
+	 * @param reportLine
+	 */
 	setPercent = (reportLine) => {
 		try {
 			SUM_FIELDS.forEach(f => this[f] = this[f] ? (reportLine[f] / this[f]) : 1);

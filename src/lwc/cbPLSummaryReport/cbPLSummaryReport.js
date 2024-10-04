@@ -64,6 +64,7 @@ export default class CBPLSummaryReport extends LightningElement {
 	@track currentMonthCubesYTD = [];
 	@track priorYearCubesYTD = [];
 	@track renderDashboard = false;
+	@track totalOnlyEnabled = false;
 
 	get renderCurrent() {
 		return this.selectedPeriodMode === 'current';
@@ -110,8 +111,9 @@ export default class CBPLSummaryReport extends LightningElement {
 	};
 
 	activateGrossMarginTab = async () => {
-		if (this.selectedReportType === 'summary') return null;
+		if (this.selectedReportType === 'summary' && !this.totalOnlyEnabled) return null;
 		this.selectedReportType = 'summary';
+		this.totalOnlyEnabled = false;
 		await this.renderReport();
 		this.activeTabValue = 'grossMarginTab';
 	};
@@ -210,15 +212,22 @@ export default class CBPLSummaryReport extends LightningElement {
 			this.priorYearCubesYTD.forEach(cube => convertCubeToReportLine(cube, reportLineMap, 'priorYearCubesYTD'));
 		}
 
-		const reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
+		let reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
 		reportLines.forEach(rl => rl.normalizeReportLine());
-		//reportLines.forEach(rl => console.log(JSON.stringify(rl)));
+		if(this.totalOnlyEnabled) {
+			reportLines = reportLines.filter(rl => rl.currentMonthActual && ['totalLine', 'green'].includes(rl.styleClass));
+		}
 		this.reportLines = reportLines;
 	};
 
 	downloadToExcel = () => {
 		setExcelLibContext(this);
 		downloadExcelFile();
+	};
+
+	toggleTotalOnly = () => {
+		this.totalOnlyEnabled = !this.totalOnlyEnabled;
+		this.renderReport().then(r => null);
 	};
 
 	////////// DRILL DOWN //////////

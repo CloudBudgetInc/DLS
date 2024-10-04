@@ -32,7 +32,7 @@ const getFacilityReportLines = reportLines => {
 		rLines.forEach(rl => console.log(JSON.stringify(rl)));
 		rLines.forEach(rl => groupTotal.sumUpLines(rl));
 		facilityTotal.sumUpLines(groupTotal);
-		rLines = addAccountST2Subtotals(rLines);
+		//rLines = addAccountST2Subtotals(rLines);
 		updatedReportLines = [...updatedReportLines, header, ...rLines, groupTotal, splitLine];
 	});
 	updatedReportLines.push(facilityTotal);

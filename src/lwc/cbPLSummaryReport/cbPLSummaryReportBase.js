@@ -158,17 +158,20 @@ const addSubLinesAndTotals = (reportLines) => {
 		const COGSTotal = new ReportLine('Total Cost of Goods Sold', 'totalLine');
 		const grossMargin = new ReportLine('Gross Margin', 'totalLine');
 		const grossMarginPercent = new ReportLine('Gross %', 'totalLine');
-		const fringeTotal = new ReportLine('Total Indirect Fringes', 'totalLine');
-		const overheadTotal = new ReportLine('Total Overhead', 'totalLine');
-		const facilitiesTotal = new ReportLine('Total Facilities', 'totalLine');
-		const eescTotal = new ReportLine('Total EE Support Center', 'totalLine');
-		const GATotal = new ReportLine('Total General & Administration', 'totalLine');
+
+		const fringeTotal = new ReportLine('Total Indirect Fringes', 'totalLine2');
+		const overheadTotal = new ReportLine('Total Overhead', 'totalLine2');
+		const facilitiesTotal = new ReportLine('Total Facilities', 'totalLine2');
+		const eescTotal = new ReportLine('Total EE Support Center', 'totalLine2');
+		const GATotal = new ReportLine('Total General & Administration', 'totalLine2');
+
 		const indirectExpenseTotal = new ReportLine('Total Indirect Expense', 'totalLine');
 		const netOrdinaryTotal = new ReportLine('Net Ordinary Income', 'totalLine');
 		const nonOperatingIncomeTotal = new ReportLine('Non-Operating Income');
 		const nonOperatingExpenseTotal = new ReportLine('Non-Operating Expenses');
 		const nonOperatingOtherIncomeExpenseTotal = new ReportLine('Total Non-Operating Other Income & Expense', 'totalLine');
 		const netProfit = new ReportLine('Net Profit', 'totalLine');
+		const netIncomePercent = new ReportLine('Net Profit %', 'totalLine');
 
 		let revenueLines = [];
 		let COGSLines = [];
@@ -222,6 +225,11 @@ const addSubLinesAndTotals = (reportLines) => {
 		nonOperatingOtherIncomeExpenseTotal.subtractLines(nonOperatingExpenseTotal);
 		netProfit.sumUpLines(netOrdinaryTotal);
 		netProfit.sumUpLines(nonOperatingOtherIncomeExpenseTotal);
+
+		netIncomePercent.formatStyle = 'percent';
+		netIncomePercent.styleClass = 'green';
+		netIncomePercent.sumUpLines(revenueTotal);
+		netIncomePercent.setPercent(netProfit);
 
 		const split = () => new ReportLine(' ', null, true);
 		const addHeader = (label, isWrapper) => new ReportLine(label, 'totalLine', true, isWrapper);
@@ -277,7 +285,8 @@ const addSubLinesAndTotals = (reportLines) => {
 			nonOperatingOtherIncomeExpenseTotal,
 			split(),
 
-			netProfit
+			netProfit,
+			netIncomePercent
 		]
 	} catch (e) {
 		_message('error', 'Add subtotals and totals error: ' + e);

@@ -43,6 +43,10 @@
 						<lightning-layout-item size="3">
 							<lightning-button-group class="slds-float_right">
 								<div class="slds-p-top_large">
+									<lightning-input type="toggle" label="Totals Only" checked={totalOnlyEnabled} onchange={toggleTotalOnly}>
+									</lightning-input>
+								</div>
+								<div class="slds-p-top_large">
 									<lightning-button label="Dashboard" icon-name="utility:chart"
 													  onclick={openDashboard}>
 									</lightning-button>
