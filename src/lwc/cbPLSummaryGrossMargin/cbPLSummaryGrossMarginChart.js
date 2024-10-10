@@ -12,6 +12,7 @@ const prepareDataForChart = (GMReportLines, var2ChartSectionMapping, renderMargi
 				return r;
 			}, {});
 
+		normalizePercent(chartData);
 		const data = Object.values(chartData);
 		const labels = data.map(item => item.label);
 		const values = data.map(item => item.value);
@@ -49,6 +50,21 @@ const prepareDataForChart = (GMReportLines, var2ChartSectionMapping, renderMargi
 };
 
 const getRandomColor = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0');
+
+/**
+ *   {"OTHER":{"label":"OTHER","value":376.79},"LT":{"label":"LT","value":293.16}}
+ */
+const normalizePercent = (chartData) => {
+	let total = 0;
+	Object.keys(chartData).forEach(key => {
+		const val = chartData[key];
+		total += val.value;
+	});
+	Object.keys(chartData).forEach(key => {
+		const val = chartData[key];
+		val.value =  (val.value / total) * 100;
+	});
+};
 
 
 export {prepareDataForChart};

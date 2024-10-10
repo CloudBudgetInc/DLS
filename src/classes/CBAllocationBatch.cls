@@ -32,16 +32,23 @@ public with sharing class CBAllocationBatch implements Database.Batchable<sObjec
 		this.bdgYear = byId;
 	}
 
+	/**
+	 * The number of records in a pack is 1
+	 */
 	public Database.QueryLocator start(Database.BatchableContext BC) {
 		cb5__CBBudgetYear__c budgetYear = [SELECT Id, Name FROM cb5__CBBudgetYear__c WHERE Id = :bdgYear];
-		insert new cb5__CBLog__c(Name = budgetYear.Name + ' allocation started', cb5__Status__c = 'PROGRESS', cb5__Type__c = 'TASK QUEUE', cb5__Title__c = 'Running', cb5__Description__c = 'Allocation for ' + budgetYear.Name + ' is started');
+		insert new cb5__CBLog__c(Name = budgetYear.Name + ' allocation started', cb5__Status__c = 'PROGRESS', cb5__Type__c = 'TASK QUEUE', cb5__Title__c = 'Running',
+				cb5__Description__c = 'Allocation for ' + budgetYear.Name + ' is started');
 		String query = 'SELECT Id FROM cb5__CBBudgetLine__c WHERE cb5__CBScenario__r.Name = \'Salary Allocation\'' +
 				' AND cb5__isAllocation__c = true AND cb5__CBBudgetYear__c = \'' + bdgYear + '\' ORDER BY Name';
 		return Database.getQueryLocator(query);
 	}
 
+	/**
+	 * @param salaryParentBudgetLines one salary before allocation budget line
+	 */
 	public void execute(Database.BatchableContext BC, List<cb5__CBBudgetLine__c> salaryParentBudgetLines) {
-		cb5__CBBudgetLine__c parentBudgetLine = [
+		cb5__CBBudgetLine__c parentBudgetLine = [ // before allocation parent budget line
 				SELECT Id, Name, cb5__ParentBudgetLine__c, cb5__CBBudgetYear__c, cb5__CBScenario__c
 				FROM cb5__CBBudgetLine__c
 				WHERE Id = :salaryParentBudgetLines[0].Id

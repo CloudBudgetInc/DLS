@@ -186,7 +186,6 @@ export default class CBPLSummaryReport extends LightningElement {
 					startPeriodId: this.BYFirstPeriodId,
 					endPeriodId: this.selectedPeriodId
 				}).catch(e => _parseServerError('Get Current Month YTD Data Error: ', e));
-				console.log('Prior Year: FROM: ' + BYFirstPeriodPriorYearId + ' TO:' + priorYearPeriodId);
 				this.priorYearCubesYTD = await getCBCubesForPeriodServer({
 					startPeriodId: BYFirstPeriodPriorYearId,
 					endPeriodId: priorYearPeriodId
@@ -215,7 +214,7 @@ export default class CBPLSummaryReport extends LightningElement {
 		let reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
 		reportLines.forEach(rl => rl.normalizeReportLine());
 		if(this.totalOnlyEnabled) {
-			reportLines = reportLines.filter(rl => rl.currentMonthActual && ['totalLine', 'green'].includes(rl.styleClass));
+			reportLines = reportLines.filter(rl => (rl.currentMonthActual || rl.currentMonthActualYTD)  && ['totalLine', 'green'].includes(rl.styleClass));
 		}
 		this.reportLines = reportLines;
 	};

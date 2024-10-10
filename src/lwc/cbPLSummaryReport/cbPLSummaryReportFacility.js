@@ -29,7 +29,6 @@ const getFacilityReportLines = reportLines => {
 		const header = new ReportLine(dimName, TOTAL_LINE_CSS, true);
 		const groupTotal = new ReportLine(`Total ${dimName}`, TOTAL_LINE_CSS);
 		const splitLine = new ReportLine(' ', null, true);
-		rLines.forEach(rl => console.log(JSON.stringify(rl)));
 		rLines.forEach(rl => groupTotal.sumUpLines(rl));
 		facilityTotal.sumUpLines(groupTotal);
 		//rLines = addAccountST2Subtotals(rLines);

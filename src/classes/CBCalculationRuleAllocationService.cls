@@ -28,7 +28,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 public with sharing class CBCalculationRuleAllocationService {
 
 	public static cb5__CBBudgetLine__c parentBudgetLine; // allocatedBudgetLine - main budget line before allocation
-	public static List<cb5__CBBudgetLine__c> allocatedBudgetLines; // allocatedBudgetLines
+	public static List<cb5__CBBudgetLine__c> allocatedBudgetLines; // children lines of the budget line from the before allocation scenario
 	public static final String TQ_DESCRIPTION = 'Salary Allocation';
 
 	public static Map<String, String> budgetYearNameIdMap {
@@ -83,7 +83,7 @@ public with sharing class CBCalculationRuleAllocationService {
 	/**
 	 *
 	 *
-	 * @param budgetLine budget line from the before allocation scenario. One employee = one budget line
+	 * @param budgetLine parent budget line from the before allocation scenario. One employee = one budget line
 	 */
 	public static void runAllocationProcess(cb5__CBBudgetLine__c budgetLine) {
 		if (!triggerIsNeeded(budgetLine)) return;
@@ -238,10 +238,10 @@ public with sharing class CBCalculationRuleAllocationService {
 		String mainScenarioId = scenarioNameIdMap.get('Main');
 		Map<cb5__CBBudgetLine__c, List<cb5__CBBudgetLine__c>> budgetLinesMapping = new Map<cb5__CBBudgetLine__c, List<cb5__CBBudgetLine__c>>();
 		List<cb5__CBBudgetLine__c> budgetLinesToInsert = new List<cb5__CBBudgetLine__c>();
-		for (cb5__CBBudgetLine__c bl : allocatedBudgetLines) {
+		for (cb5__CBBudgetLine__c bl : allocatedBudgetLines) { //children lines of the budget line from the before allocation scenario
 			for (cb5__CBCalculationRule__c cr : calculationRules) {
 				if ((cr.cb5__CBVariable1__c != null && cr.cb5__CBVariable1__c == bl.cb5__CBVariable1__c) || (cr.cb5__CBVariable2__c != null && cr.cb5__CBVariable2__c == bl.cb5__CBVariable2__c)) {
-					cb5__CBBudgetLine__c newAutoChildBudgetLine = new cb5__CBBudgetLine__c(
+					cb5__CBBudgetLine__c newAutoChildBudgetLine = new cb5__CBBudgetLine__c( // Children budget Line after allocation
 							Name = bl.Name,
 							cb5__Description__c = 'Allocated from budget line "' + bl.Name + '" using Calculation Rule "' + cr.Name + '" (' + System.now() + ')',
 							cb5__CBScenario__c = mainScenarioId,
@@ -249,7 +249,7 @@ public with sharing class CBCalculationRuleAllocationService {
 							cb5__CBAccount__c = cr.cb5__CBAccount__c,
 							cb5__CBBudgetYear__c = parentBudgetLine.cb5__CBBudgetYear__c,
 							cb5__CBCalculationRule__c = cr.Id,
-							cb5__DrillDownIds__c = bl.Id,
+							cb5__DrillDownIds__c = bl.Id, // source child budget line before alloocation
 							cb5__Code__c = parentBudgetLine.Id,
 							cb5__SystemAccessKey__c = bl.Id // workaround for delete trigger only
 					);
@@ -266,6 +266,7 @@ public with sharing class CBCalculationRuleAllocationService {
 			}
 		}
 		insert budgetLinesToInsert;
+		// Process amounts
 		List<cb5__CBAmount__c> newAmounts = new List<cb5__CBAmount__c>();
 		for (cb5__CBBudgetLine__c bl : budgetLinesMapping.keySet()) {
 			List<cb5__CBBudgetLine__c> internalList = budgetLinesMapping.get(bl);
