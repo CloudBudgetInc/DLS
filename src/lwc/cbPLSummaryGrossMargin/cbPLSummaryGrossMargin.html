@@ -351,19 +351,19 @@
 				</table>
 
 			</lightning-layout-item>
-			<lightning-layout-item class="slds-p-right_small" size="4">
-				<template lwc:if={renderMargin}>
-					<div style="font-weight: bold">%  Gross Margin Actual</div>
-				</template>
-				<template lwc:else>
-					<div style="font-weight: bold">% Revenue Actual</div>
-				</template>
-
-				<template lwc:if={chartIsReadyToRender}>
-					<c-cb-chart chart-config={chartData}></c-cb-chart>
-				</template>
-
-			</lightning-layout-item>
+			<template lwc:if={splitLT}>
+				<lightning-layout-item class="slds-p-right_small" size="4">
+					<template lwc:if={renderMargin}>
+						<div style="font-weight: bold">% Gross Margin Actual</div>
+					</template>
+					<template lwc:else>
+						<div style="font-weight: bold">% Revenue Actual</div>
+					</template>
+					<template lwc:if={chartIsReadyToRender}>
+						<c-cb-chart chart-config={chartData}></c-cb-chart>
+					</template>
+				</lightning-layout-item>
+			</template>
 		</lightning-layout>
 	</template>
 

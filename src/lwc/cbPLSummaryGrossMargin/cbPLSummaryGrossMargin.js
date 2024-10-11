@@ -220,6 +220,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 	@track chartData;
 	@track chartIsReadyToRender = false;
 	generateDataForChart = () => {
+		this.chartIsReadyToRender = false;
 		this.chartData = prepareDataForChart(this.GMReportLines, this.var2SubtypeMapping, this.renderMargin);
 		this.chartIsReadyToRender = true;
 	};
@@ -236,6 +237,7 @@ export default class CbPLSummaryGrossMargin extends LightningElement {
 
 	handleToggle = (event) => {
 		this[event.target.name] = event.target.checked;
+		this.chartIsReadyToRender = false;
 		this.doInit();
 	};
 
