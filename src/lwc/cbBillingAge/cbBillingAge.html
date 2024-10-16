@@ -1,0 +1,76 @@
+<template>
+
+	<div style="background-color: white;" class="slds-p-around_small">
+		<lightning-layout>
+			<lightning-layout-item size="11">
+
+			</lightning-layout-item>
+			<lightning-layout-item size="1">
+				<lightning-record-edit-form object-api-name="AcctSeed__Billing_Aging_History__c">
+					<lightning-input-field
+							field-name="AcctSeed__Accounting_Period__c"
+							value={ASPeriodId}
+							name="ASPeriodId"
+							onchange={handleChangeMainFilter}
+					></lightning-input-field>
+				</lightning-record-edit-form>
+			</lightning-layout-item>
+
+		</lightning-layout>
+
+		<template lwc:if={tableIsReadyToRender}>
+			<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered"
+				   aria-label="Example table of Opportunities with vertical borders">
+				<thead>
+				<tr class="slds-line-height_reset">
+					<th class="" scope="col">
+						<div class="slds-truncate" title="Customer">Customer</div>
+						<!-- ['0-Current', '1-30 Days', '31-60 Days', '61-90 Days', 'Over 90 Days', 'Closed']-->
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="0-Current">0-Current</div>
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="1-30 Days">1-30 Days</div>
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="31-60 Days">31-60 Days</div>
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="61-90 Days">61-90 Days</div>
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="Over 90 Days">Over 90 Days</div>
+					</th>
+					<th class="total" scope="col">
+						<div class="slds-truncate" title="Total">Total</div>
+					</th>
+				</tr>
+				</thead>
+				<tbody>
+				<template for:each={reportLines} for:item="rl">
+					<tr class={rl.lineStyleClass} key={rl}>
+						<td data-label="Customer">
+							<div class={rl.lineStyleClass} title="Customer">{rl.label}</div>
+						</td>
+						<template for:each={rl.values} for:item="item">
+							<td data-label="Amount" key={item}>
+								<div class="slds-truncate dec" title={rl.label}>
+									<lightning-formatted-number value={item.val} format-style={item.formatting}
+																class={item.styleClass}
+																currency-code="USD"></lightning-formatted-number>
+								</div>
+							</td>
+						</template>
+					</tr>
+				</template>
+
+				</tbody>
+
+			</table>
+			<div class="slds-m-around_medium"> {message}</div>
+		</template>
+	</div>
+
+
+</template>

@@ -145,6 +145,22 @@ public with sharing class CBPLSummaryReportPageController {
 		return aggr;
 	}
 
+	@AuraEnabled
+	public static List<AcctSeed__Billing_Aging_History__c> getBillingAgingHistoryDataServer(String ASPeriodId) {
+		Set<String> statuses = new Set<String>{
+				'Approved', 'In Process', 'Rejected', 'Waiting for Approval'
+		};
+		return [
+				SELECT Id, AcctSeed__Age__c, AcctSeed__Amount__c, AcctSeed__Billing__r.AcctSeed__Customer__r.Name
+				FROM AcctSeed__Billing_Aging_History__c
+				WHERE AcctSeed__Accounting_Period__c =: ASPeriodId
+				AND AcctSeed__Billing__r.AcctSeed__Status__c NOT IN:statuses
+				AND AcctSeed__Amount__c != 0
+				ORDER BY AcctSeed__Billing__r.AcctSeed__Customer__r.Name
+		];
+	}
+
+
 	public static void cover() {
 		Integer i = 0;
 		i++;

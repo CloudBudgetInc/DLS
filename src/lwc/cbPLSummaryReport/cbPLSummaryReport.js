@@ -43,6 +43,7 @@ export default class CBPLSummaryReport extends LightningElement {
 
 	librariesLoaded = false;
 	@track selectedPeriodId;
+	@track selectedSecondPeriodId;
 	@track BYFirstPeriodId;
 	@track showSpinner = true;
 	@track readyToRender = false;
@@ -57,6 +58,7 @@ export default class CBPLSummaryReport extends LightningElement {
 	@track reportPeriodModeSO = [
 		{label: 'Current', value: 'current'},
 		{label: 'YTD', value: 'YTD'},
+		{label: 'Custom Range', value: 'custom'},
 	];
 	@track currentMonthCubes = [];
 	@track priorMonthCubes = [];
@@ -66,8 +68,16 @@ export default class CBPLSummaryReport extends LightningElement {
 	@track renderDashboard = false;
 	@track totalOnlyEnabled = false;
 
+	get renderSecondPeriodSO() {
+		return this.selectedPeriodMode === 'custom';
+	}
+
 	get renderCurrent() {
 		return this.selectedPeriodMode === 'current';
+	}
+
+	get renderYTD() {
+		return this.selectedPeriodMode === 'YTD';
 	}
 
 	get reportLinesJSON() {
@@ -141,8 +151,19 @@ export default class CBPLSummaryReport extends LightningElement {
 
 	handleChangeMainFilter = async (event) => {
 		this[event.target.name] = event.target.value;
+		if (this.isEndPeriodLessThenStartPeriod()) {
+			_message('info', 'Till Period can not be less or equal to the current period');
+			return null;
+		}
 		localStorage.setItem(event.target.name, event.target.value);
 		this.renderReport();
+	};
+
+	isEndPeriodLessThenStartPeriod = () => {
+		if (!this.selectedSecondPeriodId) return false;
+		const firstPeriodIdx = this.periodSO.findIndex(obj => obj.value === this.selectedPeriodId);
+		const secondPeriodIdx = this.periodSO.findIndex(obj => obj.value === this.selectedSecondPeriodId);
+		return secondPeriodIdx >= firstPeriodIdx;
 	};
 
 	/**
@@ -170,6 +191,7 @@ export default class CBPLSummaryReport extends LightningElement {
 		const priorPeriodId = getPriorPeriodId(this.selectedPeriodId, this.periodSO);
 		this.BYFirstPeriodId = getBYFirstPeriodId(this.selectedPeriodId, this.periodSO);
 		const priorYearPeriodId = getPriorYearPeriodId(this.selectedPeriodId, this.periodSO);
+		const priorYearSecondPeriodId = getPriorYearPeriodId(this.selectedSecondPeriodId, this.periodSO);
 		const BYFirstPeriodPriorYearId = getBYFirstPeriodId(priorYearPeriodId, this.periodSO);
 		this.currentMonthCubes = [];
 		this.priorMonthCubes = [];
@@ -181,7 +203,7 @@ export default class CBPLSummaryReport extends LightningElement {
 				this.currentMonthCubes = await getCBCubesForPeriodServer({startPeriodId: this.selectedPeriodId}).catch(e => _parseServerError('Get Current Month Data Error: ', e));
 				this.priorMonthCubes = await getCBCubesForPeriodServer({startPeriodId: priorPeriodId}).catch(e => _parseServerError('Get Prior Month Data Error: ', e));
 				this.priorYearCubes = await getCBCubesForPeriodServer({startPeriodId: priorYearPeriodId}).catch(e => _parseServerError('Get Prior Year Month Data Error: ', e));
-			} else {
+			} else if (this.selectedPeriodMode === 'YTD') {
 				this.currentMonthCubesYTD = await getCBCubesForPeriodServer({
 					startPeriodId: this.BYFirstPeriodId,
 					endPeriodId: this.selectedPeriodId
@@ -190,6 +212,15 @@ export default class CBPLSummaryReport extends LightningElement {
 					startPeriodId: BYFirstPeriodPriorYearId,
 					endPeriodId: priorYearPeriodId
 				}).catch(e => _parseServerError('Get Prior Year YTD Data Error: ', e));
+			} else if(this.selectedPeriodMode === 'custom') {
+				this.currentMonthCubesYTD = await getCBCubesForPeriodServer({
+					startPeriodId: this.selectedPeriodId,
+					endPeriodId: this.selectedSecondPeriodId
+				}).catch(e => _parseServerError('Get Period Range Data Error: ', e));
+				this.priorYearCubesYTD = await getCBCubesForPeriodServer({
+					startPeriodId: priorYearPeriodId,
+					endPeriodId: priorYearSecondPeriodId
+				}).catch(e => _parseServerError('Get Prior Year Period Range Data Error: ', e));
 			}
 		} catch (e) {
 			this.showSpinner = false;
@@ -213,8 +244,8 @@ export default class CBPLSummaryReport extends LightningElement {
 
 		let reportLines = addSubLinesAndTotals(Object.values(reportLineMap));
 		reportLines.forEach(rl => rl.normalizeReportLine());
-		if(this.totalOnlyEnabled) {
-			reportLines = reportLines.filter(rl => (rl.currentMonthActual || rl.currentMonthActualYTD)  && ['totalLine', 'green'].includes(rl.styleClass));
+		if (this.totalOnlyEnabled) {
+			reportLines = reportLines.filter(rl => (rl.currentMonthActual || rl.currentMonthActualYTD) && ['totalLine', 'green'].includes(rl.styleClass));
 		}
 		this.reportLines = reportLines;
 	};

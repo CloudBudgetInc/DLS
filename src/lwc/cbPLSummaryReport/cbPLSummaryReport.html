@@ -24,11 +24,24 @@
 							name="selectedPeriodId"
 							label="Period"
 							value={selectedPeriodId}
-							placeholder="Select Some Period"
+							placeholder="Select Current Period"
 							options={periodSO}
 							onchange={handleChangeMainFilter}></lightning-combobox>
 				</div>
 			</lightning-layout-item>
+			<template lwc:if={renderSecondPeriodSO}>
+				<lightning-layout-item>
+					<div class="slds-p-top_xxx-small">
+						<lightning-combobox
+								name="selectedSecondPeriodId"
+								label="Till Period"
+								value={selectedSecondPeriodId}
+								placeholder="Select Till Period"
+								options={periodSO}
+								onchange={handleChangeMainFilter}></lightning-combobox>
+					</div>
+				</lightning-layout-item>
+			</template>
 		</lightning-layout>
 
 		<template lwc:if={readyToRender}>
@@ -43,7 +56,8 @@
 						<lightning-layout-item size="3">
 							<lightning-button-group class="slds-float_right">
 								<div class="slds-p-top_large">
-									<lightning-input type="toggle" label="Totals Only" checked={totalOnlyEnabled} onchange={toggleTotalOnly}>
+									<lightning-input type="toggle" label="Totals Only" checked={totalOnlyEnabled}
+													 onchange={toggleTotalOnly}>
 									</lightning-input>
 								</div>
 								<div class="slds-p-top_large">
@@ -114,7 +128,7 @@
 										</div>
 									</th>
 								</template>
-								<template lwc:else>
+								<template lwc:elseif={renderYTD}>
 									<th>
 										<div class="slds-truncate dec" title="YTD Current Month Actual">YTD Current
 											Month
@@ -146,6 +160,40 @@
 									</th>
 									<th>
 										<div class="slds-truncate dec" title="YTD Prior Year Percent Diff">YTD Percent
+											Diff
+										</div>
+									</th>
+								</template>
+								<template lwc:else>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Actual">Period Range Actual
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Budget">Period Range Budget
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Dollar Diff">Dollar
+											Diff
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Current Month Percent Diff">
+											Percent Diff
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Actual">Prior Year Actual
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Dollar Diff">Dollar
+											Diff
+										</div>
+									</th>
+									<th>
+										<div class="slds-truncate dec" title="YTD Prior Year Percent Diff">Percent
 											Diff
 										</div>
 									</th>
@@ -358,6 +406,9 @@
 							</c-cb-p-l-summary-gross-margin>
 						</template>
 					</template>
+				</lightning-tab>
+				<lightning-tab label="Billing Aging by Customers" class="slds-p-top_none">
+					<c-cb-billing-age></c-cb-billing-age>
 				</lightning-tab>
 			</lightning-tabset>
 
