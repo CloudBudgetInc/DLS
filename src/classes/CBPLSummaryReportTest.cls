@@ -74,6 +74,9 @@ private class CBPLSummaryReportTest {
 			));
 		}
 		insert cubes;
+
+		AcctSeed__Accounting_Period__c accPeriod = new AcctSeed__Accounting_Period__c(Name = '2024-01', AcctSeed__Start_Date__c = Date.newInstance(2024, 1, 1), AcctSeed__End_Date__c = Date.newInstance(2024, 1, 31));
+		insert accPeriod;
 	}
 
 	@isTest
@@ -88,6 +91,15 @@ private class CBPLSummaryReportTest {
 				new List<String>{
 						amount.Id
 				});
+		Object o = CBPLSummaryReportPageController.getVar2Server();
+		o = CBPLSummaryReportPageController.getReportConfigsServer();
+		o = CBPLSummaryReportPageController.getFringePercentServer(null);
+		o = CBPLSummaryReportPageController.getAFSATLaborTotalServer(startPeriodId, endPeriodId);
+		AcctSeed__Accounting_Period__c accPeriod = [SELECT Id FROM AcctSeed__Accounting_Period__c LIMIT 1];
+		o = CBPLSummaryReportPageController.getWageReportDataServer(accPeriod.Id);
+		o = CBPLSummaryReportPageController.getBillingAgingHistoryDataServer(accPeriod.Id);
+		o = CBPLSummaryReportPageController.getGSAReportingJEServer(accPeriod.Id);
+		o = CBPLSummaryReportPageController.getProjectMapServer();
 		CBPLSummaryReportPageController.cover();
 		Test.stopTest();
 	}

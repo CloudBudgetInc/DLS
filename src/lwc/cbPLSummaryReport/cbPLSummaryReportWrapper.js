@@ -121,17 +121,32 @@ class ReportLine {
 		this.priorMonthDiff = this.currentMonthActual - this.priorMonthActual;
 		this.priorMonthDiffPercent = this.priorMonthActual ? 1 - this.priorMonthActual / this.currentMonthActual : 1;
 		this.priorYearDiff = this.currentMonthActual - this.priorYearActual;
-		this.priorYearDiffPercent = this.priorYearActual ? 1 - this.priorYearActual / this.currentMonthActual : 1;
+		this.priorYearDiffPercent = this.currentMonthActual ? this.priorYearDiff / this.currentMonthActual : 0;
 		//// YTD
 		this.currentMonthDiffYTD = this.currentMonthActualYTD - this.currentMonthBudgetYTD;
 		this.currentMonthDiffPercentYTD = this.currentMonthActualYTD ? 1 - this.currentMonthBudgetYTD / this.currentMonthActualYTD : 1;
 		this.priorYearDiffYTD = this.currentMonthActualYTD - this.priorYearActualYTD;
-		this.priorYearDiffPercentYTD = this.priorYearActualYTD ? 1 - this.currentMonthActualYTD / this.priorYearActualYTD : 1;
-
+		this.priorYearDiffPercentYTD = this.priorYearActualYTD ? this.priorYearDiffYTD / this.priorYearActualYTD : 0;
 		this.currentMonthDiffPercentX100 = this.currentMonthDiffPercent * 100;
-
+		this.roundNumericFields(this);
 		this.updateDDInfo();
+	};
 
+	roundNumericFields = (obj) => {
+		for (let key in obj) {
+			if (obj.hasOwnProperty(key)) {
+				// Check if the field value is a number
+				if (typeof obj[key] === 'number') {
+					if (obj[key] >= 1) {
+						// Round to 2 decimal places for numbers >= 1
+						obj[key] = Math.round((obj[key] + Number.EPSILON) * 100) / 100;
+					} else if (obj[key] < 1) {
+						// Round to 4 decimal places for numbers < 1
+						obj[key] = Math.round((obj[key] + Number.EPSILON) * 1000) / 1000;
+					}
+				}
+			}
+		}
 	};
 
 	updateDDInfo = () => {

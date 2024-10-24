@@ -1,0 +1,72 @@
+<template>
+
+	<div style="background-color: white;" class="slds-p-around_small">
+		<lightning-layout>
+			<lightning-layout-item size="11">
+
+			</lightning-layout-item>
+			<lightning-layout-item size="1">
+				<lightning-record-edit-form object-api-name="AcctSeed__Billing_Aging_History__c">
+					<lightning-input-field
+							field-name="AcctSeed__Accounting_Period__c"
+							value={ASPeriodId}
+							name="ASPeriodId"
+							onchange={handleChangeMainFilter}
+					></lightning-input-field>
+				</lightning-record-edit-form>
+			</lightning-layout-item>
+
+		</lightning-layout>
+
+		<template lwc:if={tableIsReadyToRender}>
+			<table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered"
+				   aria-label="Example table of Opportunities with vertical borders">
+				<thead>
+				<tr class="slds-line-height_reset">
+					<th class="" scope="col">
+						<div class="slds-truncate" title="Customer">Label</div>
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="Hours">Hours</div>
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="Wage">Salary</div>
+					</th>
+					<th class="" scope="col">
+						<div class="slds-truncate" title="Average Rate">Av Rate</div>
+					</th>
+				</tr>
+				</thead>
+				<tbody>
+				<template for:each={reportLines} for:item="rl">
+					<tr class={rl.lineStyleClass} key={rl}>
+						<td data-label="Customer">
+							<div class={rl.lineStyleClass} title="Customer">{rl.label}</div>
+						</td>
+						<td data-label="Hours">
+							<div class={rl.lineStyleClass} title="Hours">{rl.hours}</div>
+						</td>
+						<td data-label="Wage">
+							<div class={rl.lineStyleClass} title="Salary">
+								<lightning-formatted-number value={rl.amount} format-style="currency"
+															currency-code="USD"></lightning-formatted-number>
+							</div>
+						</td>
+						<td data-label="Average Rate">
+							<lightning-formatted-number value={rl.rate} class={rl.lineStyleClass}
+														format-style="currency"
+														currency-code="USD"></lightning-formatted-number>
+						</td>
+					</tr>
+				</template>
+
+				</tbody>
+
+			</table>
+			<div class="slds-m-around_medium"> {message}</div>
+		</template>
+		<c-cb-spinner show={showSpinner}></c-cb-spinner>
+	</div>
+
+
+</template>

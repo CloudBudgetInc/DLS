@@ -4,7 +4,7 @@
     <inspection_tool class="HtmlUnknownTag" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="26">
+          <list size="29">
             <item index="0" class="java.lang.String" itemvalue="nobr" />
             <item index="1" class="java.lang.String" itemvalue="noembed" />
             <item index="2" class="java.lang.String" itemvalue="comment" />
@@ -31,6 +31,9 @@
             <item index="23" class="java.lang.String" itemvalue="c-cb-p-l-summary-dashboard" />
             <item index="24" class="java.lang.String" itemvalue="c-cb-p-l-summary-gross-margin" />
             <item index="25" class="java.lang.String" itemvalue="lightning-button-group" />
+            <item index="26" class="java.lang.String" itemvalue="lightning-record-edit-form" />
+            <item index="27" class="java.lang.String" itemvalue="lightning-input-field" />
+            <item index="28" class="java.lang.String" itemvalue="c-cb-billing-age" />
           </list>
         </value>
       </option>

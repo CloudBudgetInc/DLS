@@ -65,7 +65,7 @@ public with sharing class CBCalculationRuleGenerator {
 	 * @param byName name of the selected budget year
 	 */
 	private static cb5__CBFolder__c getRespectiveFolder(String byName) {
-		List<cb5__CBFolder__c> folders = [SELECT Id FROM cb5__CBFolder__c WHERE Name = :byName LIMIT 1];
+		List<cb5__CBFolder__c> folders = [SELECT Id FROM cb5__CBFolder__c WHERE Name = :byName AND cb5__FolderType__c = 'Calculation Rule' LIMIT 1];
 		if (folders.size() > 0) return folders[0];
 		cb5__CBFolder__c folder = new cb5__CBFolder__c(Name = byName, cb5__FolderType__c = 'Calculation Rule');
 		insert folder;
