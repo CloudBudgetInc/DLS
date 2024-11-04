@@ -7,8 +7,13 @@
     background-color: #f9f9f9;
 }
 
-.total{
-    font-weight: bolder;
+.simpleLine {
+    color: #797778;
+    font-style: italic;
+}
+
+.total {
+
 }
 
 .gradient-bar {

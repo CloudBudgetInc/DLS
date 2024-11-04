@@ -2,13 +2,18 @@
 
 	<div style="background-color: white;" class="slds-p-around_small">
 		<lightning-layout>
-			<lightning-layout-item size="9">
+			<lightning-layout-item size="8">
 
 			</lightning-layout-item>
 			<lightning-layout-item size="1">
 				<div class="slds-m-top_large">
 					<lightning-input type="toggle" checked={onlyTotals} label="Only Totals"
 									 onchange={toggleTotals}></lightning-input>
+				</div>
+			</lightning-layout-item>
+			<lightning-layout-item size="1">
+				<div class="slds-m-top_large">
+					<lightning-button label="Download" icon-name="doctype:excel" onclick={downloadToExcel} title = 'Download to an Excel file' ></lightning-button>
 				</div>
 			</lightning-layout-item>
 			<lightning-layout-item size="1">
@@ -63,15 +68,17 @@
 							<div style="font-size: smaller;">{rl.title}</div>
 						</td>
 						<td data-label="Rate">
-							<lightning-formatted-number value={rl.rate} class={rl.lineStyleClass}
-														format-style="currency"
-														currency-code="USD"></lightning-formatted-number>
+							<div class={rl.lineStyleClass} style="float: right;">
+								<lightning-formatted-number value={rl.rate}
+															format-style="currency"
+															currency-code="USD"></lightning-formatted-number>
+							</div>
 						</td>
 						<td data-label="Quantity">
-							<div class={rl.lineStyleClass} title="Quantity">{rl.hours}</div>
+							<div class={rl.lineStyleClass} title="Quantity" style="float: right;">{rl.hours}</div>
 						</td>
 						<td data-label="Sum">
-							<div class={rl.lineStyleClass} title="Sum">
+							<div class={rl.lineStyleClass} title="Sum" style="float: right;">
 								<lightning-formatted-number value={rl.amount} format-style="currency"
 															currency-code="USD"></lightning-formatted-number>
 							</div>
@@ -86,7 +93,6 @@
 		</template>
 		<c-cb-spinner show={showSpinner}></c-cb-spinner>
 	</div>
-
 
 
 </template>

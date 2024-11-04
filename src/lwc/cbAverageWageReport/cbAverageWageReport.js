@@ -35,6 +35,7 @@ export default class CbAverageWageReport extends LightningElement {
 		this.message = '';
 		if (!this.ASPeriodId) {
 			alert('Please select an Accounting Period to run report');
+			this.showSpinner = false;
 			return null;
 		}
 		this.wageData = await getWageReportDataServer({ASPeriodId: this.ASPeriodId}).catch(e => _parseServerError('Get Wage Data Error: ', e));

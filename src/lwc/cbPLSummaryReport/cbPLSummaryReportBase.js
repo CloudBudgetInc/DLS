@@ -290,6 +290,7 @@ const addSubLinesAndTotals = (reportLines) => {
 		]
 	} catch (e) {
 		_message('error', 'Add subtotals and totals error: ' + e);
+		this.showSpinner = false;
 	}
 };
 
@@ -321,7 +322,7 @@ const addSubtypeTotals = (rLines, defaultTitle) => {
 
 const sortReportLines = (reportLineSections) => {
 	const specialLabels = ["Direct Fringe", "GSA IFF Fee"];
-	const isSpecial = label => specialLabels.some(specialLabel => label.includes(specialLabel));
+	const isSpecial = label => specialLabels.some(specialLabel => label && label.includes(specialLabel));
 	const sortSection = (section) => {
 		section.sort((a, b) => {
 			const aIsSpecial = isSpecial(a.label);

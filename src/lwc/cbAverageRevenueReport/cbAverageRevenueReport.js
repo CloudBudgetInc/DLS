@@ -1,5 +1,6 @@
 import {LightningElement, track} from 'lwc';
 import {_applyDecStyle, _message, _parseServerError} from "c/cbUtils";
+import {downloadExcelFile, setExcelLibContext} from "./cbAverageRevenueReportExcel";
 import getGSAReportingJEServer from '@salesforce/apex/CBPLSummaryReportPageController.getGSAReportingJEServer';
 import getReportConfigsServer from '@salesforce/apex/CBPLSummaryReportPageController.getReportConfigsServer';
 import getProjectMapServer from '@salesforce/apex/CBPLSummaryReportPageController.getProjectMapServer';
@@ -56,13 +57,14 @@ export default class CbAverageRevenueReport extends LightningElement {
 		this.message = '';
 		if (!this.ASPeriodId) {
 			alert('Please select an Accounting Period to run report');
+			this.showSpinner = false;
 			return null;
 		}
 		this.revenueData = await getGSAReportingJEServer({ASPeriodId: this.ASPeriodId}).catch(e => _parseServerError('Get Revenue Data Error: ', e));
 		console.log('this.revenueData  = ' + JSON.stringify(this.revenueData));
 		this.processRevenueData();
 		if (this.onlyTotals) {
-			this.reportLinesGeneral = this.reportLinesGeneral.filter(rl => rl.lineStyleClass);
+			this.reportLinesGeneral = this.reportLinesGeneral.filter(rl => rl.lineStyleClass === 'total');
 		}
 		this.tableIsReadyToRender = true;
 		this.showSpinner = false;
@@ -92,7 +94,8 @@ export default class CbAverageRevenueReport extends LightningElement {
 			if (rl.contractNo) rl.contractNo = rl.contractNo.slice(0, 13);
 			const key = groupByContract ? rl.contractNo : rl.var2Name;
 			rl.label = key;
-			rl.title = 'Var2:"' + rl.var2Name + '"  Var1:"' + rl.var1Name + '"  Acc:"' + rl.accountName + (rl.contractNo ? '"  Contract:"' + rl.contractNo : '"') + '"  Project:"' + this.projectMap[rl.projectId] + '"';
+			rl.lineStyleClass = 'simpleLine';
+			rl.title = 'Var2:"' + rl.var2Name + '"  Var1:"' + rl.var1Name + '"  Acc:"' + rl.accountName + (rl.contractNo ? '"  Contract:"' + rl.contractNo : '"') + '"  Project:"' + rl.projectName + '"';
 			let rowArray = reportLinesObject[key];
 			if (!rowArray) {
 				rowArray = [];
@@ -103,19 +106,17 @@ export default class CbAverageRevenueReport extends LightningElement {
 		Object.values(reportLinesObject).forEach(rowArray => {
 			let totalAmount = 0;
 			let totalHours = 0;
-			let grossTotalHours = 0;
 			let label = '';
 			rowArray.forEach(line => {
 				totalAmount += +line.amount;
 				totalHours += +line.hours;
-				grossTotalHours += line.amount * line.hours;
 				label = line.label;
 				this.reportLinesGeneral.push(line);
 			});
 			const averageRow = {
 				label,
 				amount: totalAmount,
-				rate: grossTotalHours / totalAmount,
+				rate: +(totalAmount / totalHours).toFixed(2),
 				hours: totalHours,
 				lineStyleClass: 'total'
 			};
@@ -156,4 +157,9 @@ export default class CbAverageRevenueReport extends LightningElement {
 		this.onlyTotals = !this.onlyTotals;
 		this.doInit();
 	}
+
+	downloadToExcel = () => {
+		setExcelLibContext(this);
+		downloadExcelFile();
+	};
 }

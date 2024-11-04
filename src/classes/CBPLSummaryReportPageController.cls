@@ -241,14 +241,15 @@ public with sharing class CBPLSummaryReportPageController {
 						SUM(AcctSeed__Units__c) quantity,
 						SUM(AcctSeed__Debit__c) debit,
 						SUM(AcctSeed__Credit__c) credit,
-						AcctSeed__Journal_Entry__r.Project__c projectId,
+						MAX(AcctSeed__Journal_Entry__r.Project__r.Hourly_Rate__c) hourlyRate,
+						AcctSeed__Journal_Entry__r.Project__r.Name projectName,
 						AcctSeed__Journal_Entry__r.Project__r.Contract__r.Name contractNo,
 						AcctSeed__Journal_Entry__r.Project__r.AcctSeed__Account__r.Name accountName
 				FROM AcctSeed__Journal_Entry_Line__c
-				WHERE AcctSeed__GL_Account__r.Name IN:accounts
+				WHERE /*ExcludeFromReports__c != true AND*/ AcctSeed__GL_Account__r.Name IN:accounts
 				AND AcctSeed__Journal_Entry__r.AcctSeed__Accounting_Period__c = :ASPeriodId
 				AND (NOT AcctSeed__GL_Account_Variable_2__r.Name IN:excludedVar2)
-				GROUP BY AcctSeed__GL_Account_Variable_2__r.Name, AcctSeed__GL_Account_Variable_1__r.Name, AcctSeed__Journal_Entry__r.Project__c, AcctSeed__Journal_Entry__r.Project__r.Contract__r.Name, AcctSeed__Journal_Entry__r.Project__r.AcctSeed__Account__r.Name
+				GROUP BY AcctSeed__GL_Account_Variable_2__r.Name, AcctSeed__GL_Account_Variable_1__r.Name, AcctSeed__Journal_Entry__r.Project__r.Name, AcctSeed__Journal_Entry__r.Project__r.Contract__r.Name, AcctSeed__Journal_Entry__r.Project__r.AcctSeed__Account__r.Name
 				ORDER BY AcctSeed__GL_Account_Variable_2__r.Name, AcctSeed__Journal_Entry__r.Project__r.Contract__r.Name
 		];
 		List<AggregateResult> aggregateResults2 = [
@@ -256,26 +257,23 @@ public with sharing class CBPLSummaryReportPageController {
 						AcctSeed__GL_Account_Variable_1__r.Name var1Name,
 						SUM(AcctSeed__Hours_Units__c) quantity,
 						SUM(AcctSeed__Total__c) total,
-						AcctSeed__Billing__r.Project__c projectId,
+						MAX(AcctSeed__Billing__r.Project__r.Hourly_Rate__c) hourlyRate,
+						AcctSeed__Billing__r.Project__r.Name projectName,
 						AcctSeed__Billing__r.Project__r.Contract__r.Name contractNo,
 						AcctSeed__Billing__r.Project__r.AcctSeed__Account__r.Name accountName
 				FROM AcctSeed__Billing_Line__c
-				WHERE AcctSeed__Revenue_GL_Account__r.Name IN:accounts
+				WHERE  /*ExcludeFromReports__c != true AND*/ AcctSeed__Revenue_GL_Account__r.Name IN:accounts
 				AND AcctSeed__Billing__r.AcctSeed__Accounting_Period__c = :ASPeriodId
 				AND (NOT AcctSeed__GL_Account_Variable_2__r.Name IN:excludedVar2)
-				GROUP BY AcctSeed__GL_Account_Variable_2__r.Name, AcctSeed__GL_Account_Variable_1__r.Name, AcctSeed__Billing__r.Project__c, AcctSeed__Billing__r.Project__r.Contract__r.Name, AcctSeed__Billing__r.Project__r.AcctSeed__Account__r.Name
+				GROUP BY AcctSeed__GL_Account_Variable_2__r.Name, AcctSeed__GL_Account_Variable_1__r.Name, AcctSeed__Billing__r.Project__r.Name, AcctSeed__Billing__r.Project__r.Contract__r.Name, AcctSeed__Billing__r.Project__r.AcctSeed__Account__r.Name
 				ORDER BY AcctSeed__GL_Account_Variable_2__r.Name, AcctSeed__Billing__r.Project__r.Contract__r.Name
 		];
 
 		Set<String> projectIds = new Set<String>();
-		Map<Id, Decimal> projectRateMap = new Map<Id, Decimal>();
-		for (AggregateResult ar : aggregateResults) projectIds.add((String) ar.get('projectId'));
-		for (AggregateResult ar : aggregateResults2) projectIds.add((String) ar.get('projectId'));
-		for (AcctSeed__Project__c p : [SELECT Id, Hourly_Rate__c FROM AcctSeed__Project__c WHERE Id IN:projectIds]) projectRateMap.put(p.Id, p.Hourly_Rate__c);
 		for (AggregateResult ar : aggregateResults) {
 			ReportWrapper rw = new ReportWrapper();
-			String projectId = (String) ar.get('projectId');
-			rw.rate = projectRateMap.get(projectId);
+			rw.projectName = (String) ar.get('projectName');
+			rw.rate =  (Decimal) ar.get('hourlyRate');
 			rw.label = (String) ar.get('var2Name') + (String) ar.get('var1Name') + (String) ar.get('accountName');
 			Decimal debit = (Decimal) ar.get('debit');
 			Decimal credit = (Decimal) ar.get('credit');
@@ -285,13 +283,12 @@ public with sharing class CBPLSummaryReportPageController {
 			rw.accountName = (String) ar.get('accountName');
 			rw.var1Name = (String) ar.get('var1Name');
 			rw.var2Name = (String) ar.get('var2Name');
-			rw.projectId = projectId;
 			r.add(rw);
 		}
 		for (AggregateResult ar : aggregateResults2) {
 			ReportWrapper rw = new ReportWrapper();
-			String projectId = (String) ar.get('projectId');
-			rw.rate = projectRateMap.get(projectId);
+			rw.projectName = (String) ar.get('projectName');
+			rw.rate = (Decimal) ar.get('hourlyRate');
 			rw.label = (String) ar.get('var2Name') + (String) ar.get('var1Name') + (String) ar.get('accountName');
 			rw.amount = (Decimal) ar.get('total');
 			rw.hours = (Decimal) ar.get('quantity');
@@ -299,27 +296,15 @@ public with sharing class CBPLSummaryReportPageController {
 			rw.accountName = (String) ar.get('accountName');
 			rw.var1Name = (String) ar.get('var1Name');
 			rw.var2Name = (String) ar.get('var2Name');
-			rw.projectId = projectId;
 			r.add(rw);
 		}
-		//r = getWrappersGroupedByRate(r);
 		return r;
 	}
 
-	private static List<ReportWrapper> getWrappersGroupedByRate(List<ReportWrapper> wrappers) {
-		Map<String, ReportWrapper> wrapperReportMap = new Map<String, ReportWrapper>();
-		for (ReportWrapper sourceRW : wrappers) {
-			String key = sourceRW.label + sourceRW.rate;
-			ReportWrapper groupedRW = wrapperReportMap.get(key);
-			if (groupedRW == null) {
-				wrapperReportMap.put(key, sourceRW);
-				continue;
-			} else {
-				groupedRW.hours += sourceRW.hours;
-				groupedRW.amount += sourceRW.amount;
-			}
-		}
-		return wrapperReportMap.values();
+	@AuraEnabled
+	public static String getAccPeriodNameServer(String accPeriodId) {
+		if(accPeriodId == null) return 'N/A';
+		return [SELECT Name FROM AcctSeed__Accounting_Period__c WHERE Id =: accPeriodId LIMIT 1][0].Name;
 	}
 
 	@AuraEnabled
@@ -346,6 +331,7 @@ public with sharing class CBPLSummaryReportPageController {
 		@AuraEnabled public String var1Name { get; set; }
 		@AuraEnabled public String var2Name { get; set; }
 		@AuraEnabled public String projectId { get; set; }
+		@AuraEnabled public String projectName { get; set; }
 	}
 
 
